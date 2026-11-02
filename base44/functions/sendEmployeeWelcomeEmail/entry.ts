@@ -11,7 +11,7 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Employee not found' }, { status: 404 });
     }
 
-    const appUrl = 'https://app--candora--staffportal.base44.app';
+    const appUrl = 'https://candora-staff-link.base44.app';
     const registerUrl = `${appUrl}/register`;
 
     const body = `

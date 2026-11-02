@@ -14,9 +14,7 @@ Staff portal: ${STAFF_LOGIN_URL}
 
 Use the same email address that was invited: ${employee.email}.
 
-If this email is a Microsoft account, choose Continue with Microsoft. This lets you use that account without creating a separate portal password.
-
-Otherwise, choose Create one on the login page. Choose a password, create your account, and enter the newest 6-digit verification code sent to your email. If you already created your account, sign in instead of registering again.
+Choose Create one on the login page. Choose a password, create your account, and enter the newest 6-digit verification code sent to your email. If you already created your account, sign in instead of registering again.
 
 RETURNING STAFF
 Use the same staff portal link and the same sign-in method each time. This is the shared staff login link, not a personal invitation.
