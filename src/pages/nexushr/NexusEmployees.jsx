@@ -112,7 +112,24 @@ export default function NexusEmployees() {
 
       queryClient.invalidateQueries({ queryKey: ['employees'] });
 
-      // 4. Build welcome message for manual sending
+      // 4. Invite them to the app. This app is private, so only invited people
+      // can get in — creating the employee record alone leaves them locked out,
+      // and a self-registration link does not grant access.
+      let invited = false;
+      try {
+        await base44.users.inviteUser(data.email, 'user');
+        invited = true;
+        await base44.entities.Employee.update(employee.id, { invite_sent: true });
+        queryClient.invalidateQueries({ queryKey: ['employees'] });
+      } catch (err) {
+        toast({
+          title: 'Invitation not sent',
+          description: `The invitation email to ${data.email} failed — they may already have an account. Send them the login link below instead.`,
+          variant: 'destructive',
+        });
+      }
+
+      // 5. Build welcome message for manual sending
       const registerUrl = `${window.location.origin}/register`;
       const loginUrl = `${window.location.origin}/login`;
       const welcomeMessage = `Subject: Welcome to the Candora Staff Portal — Action Required
@@ -121,11 +138,16 @@ Hi ${data.first_name},
 
 Welcome to the team! Your staff account has been set up on the Candora Staff Portal.
 
-To get started, please create your account using the link below. Make sure to register using this exact email address: ${data.email}
+${
+  invited
+    ? `You've been sent an invitation email with a button to set up your account. Open it and choose your password — make sure the email address matches this one exactly: ${data.email}
+If you don't see it, check your junk mail.`
+    : `To get started, create your account using the link below. Make sure to register using this exact email address: ${data.email}
 
-👉 Create Your Account: ${registerUrl}
+👉 Create Your Account: ${registerUrl}`
+}
 
-Once you've registered, you can log in at any time here:
+You can log in at any time here:
 🔑 Staff Portal Login: ${loginUrl}
 
 You'll have access to your assigned portals and resources after logging in. If you have any trouble, reach out to your manager or HR.
@@ -133,7 +155,7 @@ You'll have access to your assigned portals and resources after logging in. If y
 Welcome aboard!
 — Candora HR Team`;
 
-      setWelcomeInfo({ employee: data, message: welcomeMessage, registerUrl, loginUrl });
+      setWelcomeInfo({ employee: data, message: welcomeMessage, registerUrl, loginUrl, invited });
       setStep(3);
     } catch (err) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
@@ -487,7 +509,10 @@ Welcome aboard!
             {step === 3 && welcomeInfo && (
               <div className="space-y-4">
                 <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-800">
-                  <strong>{welcomeInfo.employee.first_name} {welcomeInfo.employee.last_name}</strong> has been added successfully. Copy the message below and send it to <strong>{welcomeInfo.employee.email}</strong>.
+                  <strong>{welcomeInfo.employee.first_name} {welcomeInfo.employee.last_name}</strong> has been added successfully.{' '}
+                  {welcomeInfo.invited
+                    ? <>An invitation email has been sent to <strong>{welcomeInfo.employee.email}</strong> — they set their own password from it. Copy the message below as a backup.</>
+                    : <>The invitation email could not be sent. Copy the message below and send it to <strong>{welcomeInfo.employee.email}</strong>.</>}
                 </div>
 
                 <div>
