@@ -9,7 +9,6 @@ import RegistrationVerification from "@/components/auth/RegistrationVerification
 import { safeReturnTo } from "@/lib/authReturnTo";
 import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
-import MicrosoftSignInButton from "@/components/auth/MicrosoftSignInButton";
 import { toast } from "@/components/ui/use-toast";
 
 // Support older email-prefilled links as a convenience only.
@@ -118,7 +117,6 @@ export default function Register() {
         </>
       }
     >
-      <MicrosoftSignInButton />
       <Button
         variant="outline"
         className="w-full h-12 text-sm font-medium mb-6"

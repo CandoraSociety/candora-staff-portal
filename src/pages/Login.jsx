@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { LogIn, Mail, Lock, Loader2 } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
-import MicrosoftSignInButton from "@/components/auth/MicrosoftSignInButton";
 import { safeReturnTo } from "@/lib/authReturnTo";
 
 export default function Login() {
@@ -48,7 +47,6 @@ export default function Login() {
         </>
       }
     >
-      <MicrosoftSignInButton />
       <Button
         variant="outline"
         className="w-full h-12 text-sm font-medium mb-6"
