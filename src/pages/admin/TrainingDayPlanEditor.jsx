@@ -6,6 +6,7 @@ import { withTimes, planStats, emptyBlock, stripComputed, MODULE_OPTIONS } from 
 import PlanBlockCard from "@/components/training/plan/PlanBlockCard";
 import TrainingDayAIBuilder from "@/components/training/plan/TrainingDayAIBuilder";
 import PlanRefineChat from "@/components/training/plan/PlanRefineChat";
+import PlanPrintDialog from "@/components/training/plan/PlanPrintDialog";
 import FacilitatorRunSheet from "@/components/training/FacilitatorRunSheet";
 
 const inputCls = "w-full rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring/30";
@@ -24,17 +25,13 @@ export default function TrainingDayPlanEditor() {
   const [aiBlock, setAiBlock] = useState(null);
   const [showAI, setShowAI] = useState(false);
   const [showRefine, setShowRefine] = useState(false);
+  const [showPrint, setShowPrint] = useState(false);
 
   useEffect(() => {
     base44.entities.TrainingDayPlan.get(id)
       .then(setPlan)
       .catch(() => setNotFound(true));
   }, [id]);
-
-  useEffect(() => {
-    document.body.classList.add("trainingday-printing");
-    return () => document.body.classList.remove("trainingday-printing");
-  }, []);
 
   if (notFound) {
     return (
@@ -144,7 +141,7 @@ Write what each attendee does in the app's Test Mode sandbox during this block. 
           >
             <MessageSquare className="w-4 h-4" /> Refine
           </button>
-          <button onClick={() => window.print()} className="flex items-center gap-1.5 px-3 py-2 rounded-lg border text-sm font-medium hover:bg-accent">
+          <button onClick={() => setShowPrint(true)} className="flex items-center gap-1.5 px-3 py-2 rounded-lg border text-sm font-medium hover:bg-accent">
             <Printer className="w-4 h-4" /> Print
           </button>
           <button
@@ -318,6 +315,8 @@ Write what each attendee does in the app's Test Mode sandbox during this block. 
         onApply={patch}
         onClose={() => setShowRefine(false)}
       />
+
+      <PlanPrintDialog open={showPrint} plan={plan} onClose={() => setShowPrint(false)} />
 
       {runSheet && <FacilitatorRunSheet module={runSheet} open onClose={() => setRunSheet(null)} />}
     </div>
