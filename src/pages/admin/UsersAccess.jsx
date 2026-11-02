@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Users, Search, Shield, Building2, Activity, AppWindow, ChevronRight, LayoutGrid, FolderTree, KeyRound } from 'lucide-react';
+import { Users, Search, Shield, Building2, Activity, AppWindow, ChevronRight, LayoutGrid, FolderTree, KeyRound, UserPlus } from 'lucide-react';
+import StaffAccessSyncPanel from '@/components/admin/StaffAccessSyncPanel';
 import TierPresetsPanel from '@/components/admin/TierPresetsPanel';
 import FolderManagerPanel from '@/components/admin/FolderManagerPanel';
 import AccessBrokerPanel from '@/components/admin/AccessBrokerPanel';
@@ -216,6 +217,7 @@ export default function UsersAccess() {
 
   const tabs = [
     { id: 'broker', label: 'Access Broker', icon: KeyRound },
+    { id: 'staffaccess', label: 'Staff Access', icon: UserPlus },
     { id: 'users', label: 'Users', icon: Users },
     { id: 'live', label: 'Live Data', icon: Activity },
     { id: 'presets', label: 'Access Presets', icon: LayoutGrid },
@@ -255,6 +257,9 @@ export default function UsersAccess() {
 
       {activeTab === 'broker' && (
         <AccessBrokerPanel />
+      )}
+      {activeTab === 'staffaccess' && (
+        <StaffAccessSyncPanel />
       )}
       {activeTab === 'users' && (
         <UserListPanel users={visibleUsers} departments={departments} search={search} setSearch={setSearch} />
