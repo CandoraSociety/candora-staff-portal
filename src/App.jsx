@@ -22,6 +22,20 @@ import EmpowerUPublicApplication from '@/pages/portal/EmpowerUPublicApplication'
 import SelfRegister from '@/pages/portal/SelfRegister';
 import FillableMinutesPublic from '@/pages/board/FillableMinutesPublic';
 
+// Job Lab — a separate, external employment-centre portal. It has its own
+// participant sign-in and never reads anything from the staff portal.
+import JobLabProvider from '@/components/joblab/JobLabProvider';
+import JobLabGuard from '@/components/joblab/JobLabGuard';
+import JobLabLayout from '@/components/joblab/JobLabLayout';
+import JobLabEntry from '@/pages/joblab/JobLabEntry';
+import JobLabDashboard from '@/pages/joblab/JobLabDashboard';
+import JobLabSearch from '@/pages/joblab/JobLabSearch';
+import JobLabTracker from '@/pages/joblab/JobLabTracker';
+import JobLabResumeBuilder from '@/pages/joblab/JobLabResumeBuilder';
+import JobLabCareerPath from '@/pages/joblab/JobLabCareerPath';
+import JobLabResources from '@/pages/joblab/JobLabResources';
+import JobLabProfile from '@/pages/joblab/JobLabProfile';
+
 // Auth pages
 import Login from '@/pages/Login';
 import Register from '@/pages/Register';
@@ -393,6 +407,7 @@ const AuthenticatedApp = () => {
     || location.startsWith('/catering-portal')
     || location.startsWith('/employer-portal')
     || location.startsWith('/fillable-minutes')
+    || location.startsWith('/joblab')
     || location.startsWith('/empoweru-apply');
 
   // Only show loading spinner for protected routes, not public auth pages
@@ -433,6 +448,23 @@ const AuthenticatedApp = () => {
 
       {/* Fillable minutes — public link, no login required */}
       <Route path="/fillable-minutes/:id" element={<FillableMinutesPublic />} />
+
+      {/* Job Lab — separate external portal with its own participant session.
+          Reachable from the staff portal, but it never uses staff auth or data. */}
+      <Route element={<JobLabProvider />}>
+        <Route path="/joblab" element={<JobLabEntry />} />
+        <Route element={<JobLabGuard />}>
+          <Route element={<JobLabLayout />}>
+            <Route path="/joblab/dashboard" element={<JobLabDashboard />} />
+            <Route path="/joblab/job-search" element={<JobLabSearch />} />
+            <Route path="/joblab/job-tracker" element={<JobLabTracker />} />
+            <Route path="/joblab/resume-builder" element={<JobLabResumeBuilder />} />
+            <Route path="/joblab/career-path" element={<JobLabCareerPath />} />
+            <Route path="/joblab/resources" element={<JobLabResources />} />
+            <Route path="/joblab/profile" element={<JobLabProfile />} />
+          </Route>
+        </Route>
+      </Route>
 
       {/* Employer Portal — isolated, employer-only (login is public) */}
       <Route path="/employer-portal/login" element={<EmployerLogin />} />
