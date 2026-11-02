@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { ArrowLeft, Save, Printer, Plus, Loader2, CalendarDays, Clock, Users, User, X, Sparkles, MessageSquare } from "lucide-react";
+import { ArrowLeft, Save, Printer, Plus, Loader2, CalendarDays, Clock, Users, User, X, Sparkles, MessageSquare, Play } from "lucide-react";
 import { withTimes, planStats, emptyBlock, stripComputed, MODULE_OPTIONS } from "@/lib/training/planTimeline";
+import { startFacilitatedSession } from "@/lib/training/facilitatorSession";
+import { getTrainingModule } from "@/lib/training/trainingModules";
 import PlanBlockCard from "@/components/training/plan/PlanBlockCard";
 import TrainingDayAIBuilder from "@/components/training/plan/TrainingDayAIBuilder";
 import PlanRefineChat from "@/components/training/plan/PlanRefineChat";
@@ -50,6 +52,8 @@ export default function TrainingDayPlanEditor() {
   const { blocks: timedBlocks, endTime } = withTimes(plan);
   const stats = planStats(plan);
   const rawBlocks = plan.blocks || [];
+  const firstSession = rawBlocks.find(b => b.type === "session" && b.module_key && getTrainingModule(b.module_key));
+  const firstModule = firstSession ? getTrainingModule(firstSession.module_key) : null;
 
   const patch = (p) => { setPlan(prev => ({ ...prev, ...p })); setDirty(true); };
   const patchBlock = (index, p) => {
@@ -127,8 +131,17 @@ Write what each attendee does in the app's Test Mode sandbox during this block. 
         >
           <ArrowLeft className="w-4 h-4" /> All plans
         </button>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs text-muted-foreground">{dirty ? "Unsaved changes" : "Saved"}</span>
+          <button
+            onClick={() => firstModule && startFacilitatedSession(firstModule)}
+            disabled={!firstModule}
+            title={firstModule ? `Run the day, starting with ${firstModule.title}` : "Add a module block to run this day"}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg text-sm font-semibold disabled:opacity-40"
+            style={{ background: "hsl(230, 70%, 14%)", color: "hsl(45, 60%, 92%)" }}
+          >
+            <Play className="w-4 h-4" style={{ color: "hsl(45, 92%, 53%)" }} /> Start training day
+          </button>
           <button
             onClick={() => setShowAI(true)}
             className="flex items-center gap-1.5 px-3 py-2 rounded-lg border text-sm font-medium hover:bg-accent"
