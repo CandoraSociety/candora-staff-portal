@@ -5,7 +5,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Users, UserCheck, UserX, Footprints, Building2, Globe, Search } from 'lucide-react';
+import { Users, UserCheck, UserX, Footprints, Building2, Globe, Search, Download } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import moment from 'moment';
 
 const PERIODS = {
@@ -90,6 +91,30 @@ export default function CasualClientStats() {
     };
   }, [stats]);
 
+  const exportCsv = () => {
+    const header = ['Name', 'Email', 'Phone', 'Account', 'Visits', 'Onsite visits', 'Offsite visits', 'First visit', 'Last visit'];
+    const lines = stats.map((row) => [
+      row.full_name || '',
+      row.email || '',
+      row.phone || '',
+      row.has_account ? 'Registered' : 'No account',
+      row.total_visits || 0,
+      row.onsite_visits || 0,
+      row.offsite_visits || 0,
+      formatDate(row.first_visit),
+      formatDateTime(row.last_visit),
+    ]);
+    const csv = [header, ...lines]
+      .map((line) => line.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8;' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `casual-clients-${moment().format('YYYY-MM-DD')}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-24">
@@ -128,6 +153,9 @@ export default function CasualClientStats() {
               <SelectItem value="guest">No account (guest)</SelectItem>
             </SelectContent>
           </Select>
+          <Button variant="outline" onClick={exportCsv} disabled={stats.length === 0} className="gap-1.5">
+            <Download className="h-4 w-4" /> Export CSV
+          </Button>
         </div>
       </div>
 

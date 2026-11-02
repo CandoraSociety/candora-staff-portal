@@ -146,6 +146,12 @@ export default function ReportingHome() {
           </div>
         </div>
       )}
+
+      {/* Casual client data from Job Lab — pull it into any report */}
+      <div>
+        <h2 className="font-heading font-semibold text-base mb-3">Casual Client Data (Job Lab)</h2>
+        <CasualClientStats />
+      </div>
     </div>
   );
 }
