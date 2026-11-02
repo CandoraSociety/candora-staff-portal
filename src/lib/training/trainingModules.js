@@ -22,6 +22,7 @@ import { FILE_MANAGER_ADVANCED_MODULES } from "@/lib/training/modules/fileManage
 import { WELCOME_MODULES } from "@/lib/training/modules/welcomeModules";
 import { RECEPTION_MODULES } from "@/lib/training/modules/receptionModules";
 import { CENTRAL_DATABASE_MODULES } from "@/lib/training/modules/centralDatabaseModules";
+import { MINI_MODULES } from "@/lib/training/modules/miniModules";
 
 export const TRAINING_MODULES = [
   // Welcome & app tour leads the catalog — every staff member starts here.
@@ -1198,7 +1199,9 @@ export const TRAINING_MODULES = [
   },
   ...RECEPTION_MODULES,
   ...FILE_MANAGER_MODULES,
-  ...FILE_MANAGER_ADVANCED_MODULES
+  ...FILE_MANAGER_ADVANCED_MODULES,
+  // Short single-tool trainings, surfaced in a portal's "Mini-Modules" category.
+  ...MINI_MODULES
 ];
 
 // Which portal a training module belongs to — used to show each staff member
@@ -1223,6 +1226,7 @@ export const TRAINING_MODULE_ACCESS = {
   reception: "reception",
   filemanager: "filemanager",
   filemanager_advanced: "filemanager",
+  pathways_resources: "pathways",
 };
 
 export const getTrainingModule = (key) => TRAINING_MODULES.find(m => m.key === key) || null;
@@ -1242,6 +1246,7 @@ export const moduleForPath = (pathname) => {
     ["/pathways/client/", "pathways_journey_part2"],
     ["/pathways/assessment/", "pathways_assessment"],
     ["/pathways/workshops", "pathways_workshops"],
+    ["/pathways/resources", "pathways_resources"],
     ["/pathways", "pathways"],
     ["/rc", "central_database_basics"],
     ["/ell", "ell"],

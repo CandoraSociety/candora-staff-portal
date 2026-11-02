@@ -26,6 +26,7 @@ export const TRAINING_MODULE_SERIES = {
   reception: "reception",
   filemanager: "filemanager",
   filemanager_advanced: "filemanager",
+  pathways_resources: "mini",
 };
 
 // Display name of each training series (the "portal" a module belongs to) —
@@ -39,6 +40,7 @@ export const TRAINING_SERIES_TITLES = {
   centralreg: "Central Registration",
   reception: "Reception",
   filemanager: "File Manager",
+  mini: "Mini-Modules",
 };
 
 // Section boundaries follow step titles, so inserting a slide keeps jump indices accurate.

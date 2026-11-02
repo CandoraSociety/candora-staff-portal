@@ -10,6 +10,8 @@ export const TRAINING_MODULE_SECTIONS = [
   { key: "centralreg", title: "Central Registration", moduleKeys: ["centralreg"] },
   { key: "reception", title: "Reception", moduleKeys: ["reception"] },
   { key: "filemanager", title: "File Manager", moduleKeys: ["filemanager", "filemanager_advanced"] },
+  // Short single-tool trainings — a category of their own, not part of a portal series.
+  { key: "mini", title: "Mini-Modules", moduleKeys: ["pathways_resources"] },
 ];
 
 // Splits the modules a staff member can take into portal sections. Any module

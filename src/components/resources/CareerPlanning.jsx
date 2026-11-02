@@ -190,7 +190,7 @@ export default function CareerPlanning() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card data-tour="pw-resources-background">
         <CardHeader className="pb-2">
           <CardTitle className="text-base">
             Client Background {selectedClient ? `(${selectedClient.first_name} ${selectedClient.last_name})` : '(Manual Entry)'}
@@ -259,7 +259,7 @@ export default function CareerPlanning() {
         <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded p-3">{error}</p>
       )}
 
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3" data-tour="pw-resources-generate">
         <Button onClick={generate} disabled={!jobType.trim() || loading}>
           {loading && <Loader2 className="w-4 h-4 mr-1 animate-spin" />}
           {loading ? 'Generating plan…' : 'Generate Career Plan'}

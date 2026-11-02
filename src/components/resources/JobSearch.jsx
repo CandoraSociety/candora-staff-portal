@@ -85,7 +85,7 @@ export default function JobSearch() {
   };
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" data-tour="pw-resources-jobs">
       {/* Search Form */}
       <div className="flex gap-3 flex-wrap items-end">
         <div className="flex-1 min-w-[220px]">
