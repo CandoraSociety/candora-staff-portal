@@ -73,18 +73,6 @@ export const RESOURCE_TABS = [
         url: 'https://www.keybr.com',
         tag: 'Free',
       },
-      {
-        title: 'ALIS — Explore Education and Training',
-        description: 'Alberta guide to programs, funding and upgrading your skills.',
-        url: 'https://alis.alberta.ca/explore-education-and-training/',
-        tag: 'Free',
-      },
-      {
-        title: 'ALIS CareerInsite',
-        description: 'Free self-assessment and career planning tools for Albertans.',
-        url: 'https://alis.alberta.ca/careerinsite/',
-        tag: 'Free',
-      },
     ],
   },
   {

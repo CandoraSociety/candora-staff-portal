@@ -11,7 +11,9 @@ export default function JobLabResources() {
     <div>
       <div className="mb-5">
         <h1 className="jl-heading text-2xl font-bold text-jl-fg sm:text-3xl">Resources &amp; Training</h1>
-        <p className="mt-1 text-sm text-jl-muted-fg">Everything you need to succeed in your job search</p>
+        <p className="mt-1 text-sm text-jl-muted-fg">
+          Free courses, certificates and training videos — nothing here costs money
+        </p>
       </div>
 
       <JLTabs className="mb-4" value={tab} onChange={setTab} tabs={RESOURCE_TABS.map(({ value, label }) => ({ value, label }))} />
