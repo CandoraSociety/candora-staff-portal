@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { UserCheck, Loader2, ShieldCheck, RefreshCw } from 'lucide-react';
+import { UserCheck, Loader2, ShieldCheck, RefreshCw, Mail } from 'lucide-react';
 
 // Authorizes every active HR staff profile that has an email but no portal
 // account yet. Authorizing = sending them an app invitation, which is what
@@ -30,7 +30,8 @@ export default function StaffAccessSyncPanel() {
     [users]
   );
 
-  const pending = useMemo(
+  // Active staff with an email but no portal account yet.
+  const withoutAccount = useMemo(
     () =>
       employees.filter(
         (e) =>
@@ -42,6 +43,10 @@ export default function StaffAccessSyncPanel() {
       ),
     [employees, userIds]
   );
+
+  // Of those, the ones who have never been sent an invitation. An invited person
+  // only becomes a portal user once they accept and set a password.
+  const pending = useMemo(() => withoutAccount.filter((e) => !e.invite_sent), [withoutAccount]);
 
   const authorizeAll = async () => {
     setRunning(true);
@@ -81,14 +86,19 @@ export default function StaffAccessSyncPanel() {
               </p>
             </div>
             <Badge variant="outline" className="text-xs whitespace-nowrap">
-              {pending.length} without access
+              {pending.length} not invited yet
             </Badge>
           </div>
+
+          <p className="text-xs text-muted-foreground">
+            An invitation is what grants access to this private app. The staff member appears as “Authorized” once they
+            open the email and set their password. {withoutAccount.length} staff are still without an account.
+          </p>
 
           <div className="flex flex-wrap items-center gap-2">
             <Button onClick={authorizeAll} disabled={running || pending.length === 0}>
               {running ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <UserCheck className="w-4 h-4 mr-2" />}
-              {running ? 'Authorizing…' : `Authorize all ${pending.length || ''} staff`}
+              {running ? 'Authorizing…' : pending.length === 0 ? 'Everyone has been invited' : `Authorize all ${pending.length} staff`}
             </Button>
             <Button variant="outline" onClick={() => { refetchUsers(); queryClient.invalidateQueries({ queryKey: ['employees'] }); }} disabled={running}>
               <RefreshCw className="w-4 h-4 mr-2" /> Refresh
@@ -98,7 +108,7 @@ export default function StaffAccessSyncPanel() {
 
           {summary && (
             <div className="rounded-lg border border-border bg-muted/30 p-3 text-sm space-y-1">
-              <p className="font-medium text-foreground">{summary.authorized} staff authorized.</p>
+              <p className="font-medium text-foreground">{summary.authorized} invitation{summary.authorized === 1 ? '' : 's'} sent.</p>
               {summary.failed.length > 0 && (
                 <ul className="text-xs text-destructive space-y-0.5">
                   {summary.failed.map((line) => <li key={line}>{line}</li>)}
@@ -137,8 +147,12 @@ export default function StaffAccessSyncPanel() {
                           <span className="inline-flex items-center gap-1 text-xs text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
                             <ShieldCheck className="w-3 h-3" /> Authorized
                           </span>
+                        ) : emp.invite_sent ? (
+                          <span className="inline-flex items-center gap-1 text-xs text-sky-700 bg-sky-50 border border-sky-200 px-2 py-0.5 rounded-full" title="An invitation has been sent — they appear as Authorized once they set a password.">
+                            <Mail className="w-3 h-3" /> Invited — awaiting sign-up
+                          </span>
                         ) : (
-                          <span className="text-xs text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">Not authorized</span>
+                          <span className="text-xs text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">Not invited</span>
                         )}
                       </td>
                     </tr>
