@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { ArrowLeft, Save, Printer, Plus, Loader2, CalendarDays, Clock, Users, User, X } from "lucide-react";
+import { ArrowLeft, Save, Printer, Plus, Loader2, CalendarDays, Clock, Users, User, X, Sparkles } from "lucide-react";
 import { withTimes, planStats, emptyBlock, stripComputed, MODULE_OPTIONS } from "@/lib/training/planTimeline";
 import PlanBlockCard from "@/components/training/plan/PlanBlockCard";
+import TrainingDayAIBuilder from "@/components/training/plan/TrainingDayAIBuilder";
 import FacilitatorRunSheet from "@/components/training/FacilitatorRunSheet";
 
 const inputCls = "w-full rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring/30";
@@ -20,6 +21,7 @@ export default function TrainingDayPlanEditor() {
   const [dirty, setDirty] = useState(false);
   const [runSheet, setRunSheet] = useState(null);
   const [aiBlock, setAiBlock] = useState(null);
+  const [showAI, setShowAI] = useState(false);
 
   useEffect(() => {
     base44.entities.TrainingDayPlan.get(id)
@@ -127,6 +129,13 @@ Write what each attendee does in the app's Test Mode sandbox during this block. 
         </button>
         <div className="flex items-center gap-2">
           <span className="text-xs text-muted-foreground">{dirty ? "Unsaved changes" : "Saved"}</span>
+          <button
+            onClick={() => setShowAI(true)}
+            className="flex items-center gap-1.5 px-3 py-2 rounded-lg border text-sm font-medium hover:bg-accent"
+            style={{ background: "hsl(45, 92%, 53%, 0.16)" }}
+          >
+            <Sparkles className="w-4 h-4" /> Assistant
+          </button>
           <button onClick={() => window.print()} className="flex items-center gap-1.5 px-3 py-2 rounded-lg border text-sm font-medium hover:bg-accent">
             <Printer className="w-4 h-4" /> Print
           </button>
@@ -287,6 +296,13 @@ Write what each attendee does in the app's Test Mode sandbox during this block. 
           </button>
         </div>
       </div>
+
+      <TrainingDayAIBuilder
+        open={showAI}
+        plan={plan}
+        onClose={() => setShowAI(false)}
+        onGenerated={(built) => { patch(built); setShowAI(false); }}
+      />
 
       {runSheet && <FacilitatorRunSheet module={runSheet} open onClose={() => setRunSheet(null)} />}
     </div>
