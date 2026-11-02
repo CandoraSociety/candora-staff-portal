@@ -1,52 +1,27 @@
 import { useState } from 'react';
-import { NavLink, Outlet, useNavigate } from 'react-router-dom';
+import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
-  Briefcase, LayoutDashboard, Search, ClipboardList, FileText, Route, BookOpen,
-  Menu, X, LogOut, AlertTriangle,
+  Home, Search, ClipboardList, FileText, Route, BookOpen, UserRound, LogOut, X, AlertTriangle,
 } from 'lucide-react';
 import { useParticipant } from '@/lib/joblab/ParticipantContext';
 import JobLabBrand, { CandoraMark } from '@/components/joblab/JobLabBrand';
+import JobLabBottomNav from '@/components/joblab/JobLabBottomNav';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
-  { to: '/joblab/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/joblab/job-search', label: 'Job Search', icon: Search },
-  { to: '/joblab/job-tracker', label: 'Job Tracker', icon: ClipboardList },
-  { to: '/joblab/resume-builder', label: 'Resume Builder', icon: FileText },
-  { to: '/joblab/career-path', label: 'Career Path', icon: Route },
-  { to: '/joblab/resources', label: 'Resources', icon: BookOpen },
-  { to: '/joblab/profile', label: 'My Profile', icon: Briefcase },
+  { to: '/joblab/dashboard', label: 'Home', icon: Home },
+  { to: '/joblab/job-search', label: 'Find jobs', icon: Search },
+  { to: '/joblab/job-tracker', label: 'Applications', icon: ClipboardList },
+  { to: '/joblab/resume-builder', label: 'My resume', icon: FileText },
+  { to: '/joblab/career-path', label: 'Career path', icon: Route },
+  { to: '/joblab/resources', label: 'Learn', icon: BookOpen },
+  { to: '/joblab/profile', label: 'Profile', icon: UserRound },
 ];
-
-function NavItems({ onNavigate }) {
-  return (
-    <nav className="flex-1 space-y-1 px-3">
-      {NAV_ITEMS.map(({ to, label, icon: Icon }) => (
-        <NavLink
-          key={to}
-          to={to}
-          onClick={onNavigate}
-          className={({ isActive }) =>
-            cn(
-              'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
-              isActive
-                ? 'bg-jl-navy-accent text-jl-navy-fg shadow-[inset_3px_0_0_0_hsl(var(--jl-gold))]'
-                : 'text-jl-navy-fg/70 hover:bg-white/5 hover:text-jl-navy-fg'
-            )
-          }
-        >
-          <Icon className="w-4 h-4" />
-          {label}
-        </NavLink>
-      ))}
-    </nav>
-  );
-}
 
 export default function JobLabLayout() {
   const { participant, isGuest, logout } = useParticipant();
   const navigate = useNavigate();
-  const [drawer, setDrawer] = useState(false);
+  const [more, setMore] = useState(false);
 
   const signOut = () => {
     logout();
@@ -55,90 +30,106 @@ export default function JobLabLayout() {
 
   const initial = (participant?.name || 'G')[0].toUpperCase();
 
-  const footer = (
-    <div className="px-3 pb-4 space-y-3">
-      {isGuest && (
-        <div className="flex items-start gap-2 rounded-lg bg-jl-accent/15 px-3 py-2 text-[11px] text-jl-accent">
-          <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-          <span>Guest session — nothing is saved after you sign out.</span>
-        </div>
-      )}
-      <div className="flex items-center gap-2.5 px-1">
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-jl-primary text-sm font-semibold text-jl-primary-fg">
-          {initial}
-        </div>
-        <div className="min-w-0">
-          <p className="truncate text-sm font-medium text-jl-navy-fg">{participant?.name || 'Guest'}</p>
-          <p className="truncate text-[11px] text-jl-navy-fg/60">{participant?.email || 'No email'}</p>
-        </div>
-      </div>
-      <button
-        onClick={signOut}
-        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-jl-navy-fg/70 transition-colors hover:bg-white/5 hover:text-jl-navy-fg"
-      >
-        <LogOut className="w-4 h-4" /> Sign Out
-      </button>
-      <div className="flex items-center gap-2 border-t border-white/10 px-1 pt-3">
-        <CandoraMark className="h-5 w-5" />
-        <p className="text-[10px] leading-tight text-jl-navy-fg/50">
-          Candora Society
-          <br />
-          Employment &amp; Community Development
-        </p>
-      </div>
-    </div>
-  );
-
   return (
-    <div className="joblab">
-      {/* Desktop sidebar */}
-      <aside className="fixed left-0 top-0 z-30 hidden h-screen w-64 flex-col bg-jl-navy lg:flex">
-        <div className="px-5 py-5">
-          <JobLabBrand />
-        </div>
-        <div className="mx-5 mb-3 h-px bg-gradient-to-r from-jl-gold/60 via-jl-gold/20 to-transparent" />
-        <NavItems />
-        {footer}
-      </aside>
+    <div className="joblab flex min-h-screen flex-col">
+      <header className="sticky top-0 z-40 border-b border-jl-gold/30 bg-jl-navy">
+        <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
+          <Link to="/joblab/dashboard" aria-label="Job Lab home">
+            <JobLabBrand compact />
+          </Link>
 
-      {/* Mobile top bar */}
-      <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center justify-between bg-jl-navy px-4 lg:hidden">
-        <button onClick={() => setDrawer(true)} aria-label="Open menu" className="p-1 text-jl-navy-fg">
-          <Menu className="w-5 h-5" />
-        </button>
-        <JobLabBrand compact />
-        {isGuest ? (
-          <span className="rounded-full bg-jl-accent px-2 py-0.5 text-[10px] font-bold text-white">Guest</span>
-        ) : (
-          <div className="flex h-7 w-7 items-center justify-center rounded-full bg-jl-primary text-xs font-semibold text-jl-primary-fg">
-            {initial}
+          <nav className="hidden items-center gap-0.5 lg:flex">
+            {NAV_ITEMS.map(({ to, label }) => (
+              <NavLink
+                key={to}
+                to={to}
+                className={({ isActive }) =>
+                  cn(
+                    'rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors',
+                    isActive
+                      ? 'bg-jl-gold text-jl-navy'
+                      : 'text-jl-navy-fg/70 hover:bg-white/10 hover:text-jl-navy-fg'
+                  )
+                }
+              >
+                {label}
+              </NavLink>
+            ))}
+          </nav>
+
+          <div className="flex items-center gap-2">
+            {isGuest && (
+              <span className="hidden rounded-full bg-jl-accent px-2.5 py-0.5 text-[10px] font-bold text-white sm:inline">
+                Guest
+              </span>
+            )}
+            <Link
+              to="/joblab/profile"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-jl-gold text-sm font-bold text-jl-navy"
+              aria-label="My profile"
+            >
+              {initial}
+            </Link>
+            <button
+              onClick={signOut}
+              className="flex items-center gap-1.5 rounded-full px-2.5 py-2 text-xs font-medium text-jl-navy-fg/70 transition-colors hover:bg-white/10 hover:text-jl-navy-fg"
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="hidden sm:inline">Sign out</span>
+            </button>
           </div>
-        )}
+        </div>
       </header>
 
-      {/* Mobile drawer */}
-      {drawer && (
+      <main className="mx-auto w-full max-w-6xl flex-1 px-4 pb-28 pt-5 sm:px-6 sm:pt-7 lg:pb-14">
+        <Outlet />
+      </main>
+
+      <JobLabBottomNav onMore={() => setMore(true)} />
+
+      {more && (
         <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-black/50" onClick={() => setDrawer(false)} />
-          <div className="absolute inset-y-0 left-0 flex w-64 flex-col bg-jl-navy">
-            <div className="flex items-center justify-between px-4 py-4">
-              <JobLabBrand />
-              <button onClick={() => setDrawer(false)} aria-label="Close menu" className="text-jl-navy-fg">
-                <X className="w-5 h-5" />
+          <div className="absolute inset-0 bg-black/40" onClick={() => setMore(false)} />
+          <div className="absolute inset-x-0 bottom-0 rounded-t-2xl bg-white p-5 pb-8 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between">
+              <p className="jl-heading text-base font-semibold text-jl-fg">More in Job Lab</p>
+              <button onClick={() => setMore(false)} aria-label="Close menu" className="rounded-lg p-1 text-jl-muted-fg">
+                <X className="h-4 w-4" />
               </button>
             </div>
-            <div className="mx-4 mb-2 h-px bg-gradient-to-r from-jl-gold/60 via-jl-gold/20 to-transparent" />
-            <NavItems onNavigate={() => setDrawer(false)} />
-            {footer}
+
+            <div className="space-y-1">
+              {NAV_ITEMS.slice(4).map(({ to, label, icon: Icon }) => (
+                <Link
+                  key={to}
+                  to={to}
+                  onClick={() => setMore(false)}
+                  className="flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium text-jl-fg hover:bg-jl-secondary"
+                >
+                  <Icon className="h-4 w-4 text-jl-primary" />
+                  {label}
+                </Link>
+              ))}
+            </div>
+
+            {isGuest && (
+              <div className="mt-3 flex items-start gap-2 rounded-lg bg-jl-accent/10 px-3 py-2 text-[11px] text-jl-accent">
+                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                <span>Guest session — nothing is saved after you sign out.</span>
+              </div>
+            )}
+
+            <div className="mt-4 border-t border-jl-border pt-3">
+              <div className="flex items-center gap-2 px-1">
+                <CandoraMark className="h-6 w-6" />
+                <p className="text-[10px] leading-tight text-jl-muted-fg">
+                  Candora Society · Employment &amp; Community Development
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       )}
-
-      <main className="pt-14 lg:ml-64 lg:pt-0">
-        <div className="mx-auto max-w-7xl p-4 sm:p-6 lg:p-8">
-          <Outlet />
-        </div>
-      </main>
     </div>
   );
 }
