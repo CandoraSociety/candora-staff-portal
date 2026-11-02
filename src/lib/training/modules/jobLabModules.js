@@ -82,7 +82,7 @@ export const JOBLAB_MODULES = [
       {
         title: "Resume, career path, learn and profile",
         body:
-          "The resume builder seeds a resume from their profile, offers four templates, and lets them edit every section before printing or emailing it to an employer. Career path turns a target job into milestones with dates and the skills each one needs. Learn holds the free training, certificates and job boards we point people to. Profile is the foundation: education, work history, skills, interests and career goals — the more complete it is, the better the job suggestions and career plans get.",
+          "The resume builder seeds a resume from their profile, offers four templates, and lets them edit every section before printing or emailing it to an employer. Career path turns a target job into milestones with dates and the skills each one needs. Learn is the resource library, and it's organised for someone who doesn't know where to start: an Entry Level tab for no-experience clients, a By Industry tab with retail, food service, healthcare, trades, warehouse and driving, office, childcare, cleaning, security and agriculture — each with the free training, the certificates that sector actually asks for, and current openings — plus free certificates, videos, job search, resume and interview guides. Profile is the foundation: education, work history, skills, interests and career goals — the more complete it is, the better the job suggestions and career plans get.",
       },
       {
         title: "Kiosk habits — idle sign-out and easy return",
