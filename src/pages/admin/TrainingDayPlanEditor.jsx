@@ -7,6 +7,7 @@ import PlanBlockCard from "@/components/training/plan/PlanBlockCard";
 import TrainingDayAIBuilder from "@/components/training/plan/TrainingDayAIBuilder";
 import PlanRefineChat from "@/components/training/plan/PlanRefineChat";
 import PlanPrintDialog from "@/components/training/plan/PlanPrintDialog";
+import PlanMaterials from "@/components/training/plan/PlanMaterials";
 import FacilitatorRunSheet from "@/components/training/FacilitatorRunSheet";
 
 const inputCls = "w-full rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring/30";
@@ -289,6 +290,8 @@ Write what each attendee does in the app's Test Mode sandbox during this block. 
             {(plan.follow_up || []).length === 0 && <p className="text-sm text-muted-foreground">Nothing set aside yet.</p>}
           </div>
         </div>
+
+        <PlanMaterials plan={plan} />
 
         <div className="flex justify-end print:hidden">
           <button
