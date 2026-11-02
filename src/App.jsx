@@ -10,6 +10,7 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import KeepAliveOutlet from '@/components/KeepAliveOutlet';
 import TrainingPill from '@/components/training/TrainingPill';
 import TrainingMirror from '@/components/training/TrainingMirror';
+import TrainingPresenter from '@/components/training/TrainingPresenter';
 import TrainingTourProvider from '@/components/training/TrainingTourProvider';
 import { TabProvider } from '@/lib/tabContext';
 
@@ -460,7 +461,7 @@ const AuthenticatedApp = () => {
       <Route path="/reset-password" element={<ResetPassword />} />
       
       <Route element={<ProtectedRoute unauthenticatedElement={<Navigate to="/login" replace />} />}>
-        <Route element={<TrainingTourProvider><KeepAliveOutlet /><TrainingPill /><TrainingMirror /></TrainingTourProvider>}>
+        <Route element={<TrainingTourProvider><KeepAliveOutlet /><TrainingPill /><TrainingMirror /><TrainingPresenter /></TrainingTourProvider>}>
         <Route element={<AppLayout />}>
           <Route path="/" element={<Dashboard />} />
           <Route path="/portal" element={<Portal />} />

@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   CalendarDays, ChevronDown, ChevronRight, ClipboardCheck, FileText, GraduationCap,
-  ListChecks, LogOut, MonitorPlay, PanelRightClose, PanelRightOpen, Play, Printer,
+  ListChecks, LogOut, MonitorPlay, MonitorUp, PanelRightClose, PanelRightOpen, Play, Printer,
 } from "lucide-react";
+import { toast } from "sonner";
+import { openPresenterWindow } from "@/lib/training/presenter";
 import { withTimes } from "@/lib/training/planTimeline";
 import { getSectionNote, getPracticeNote, getModuleTips, getRoomHandouts } from "@/lib/training/facilitatorResources";
 import HandoutPrintDialog from "@/components/training/plan/HandoutPrintDialog";
@@ -105,6 +107,22 @@ export default function FacilitatorSidebar({
                   : { background: "hsl(230, 45%, 24%)", color: "hsl(45, 55%, 82%)" }}
               >
                 {mirrorOn ? "ON" : "OFF"}
+              </span>
+            </button>
+
+            {/* The screen plugged into this device — projector, TV, second monitor */}
+            <button
+              onClick={() => {
+                if (!openPresenterWindow()) toast.error("Allow pop-ups for this site to open the presentation screen.");
+              }}
+              title="Opens a clean window for the plugged-in screen: the app, its sidebar and the training window, with none of your notes"
+              className="mt-1.5 flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left hover:opacity-90"
+              style={{ background: NAVY_DEEP, border: LINE, color: "hsl(45, 55%, 85%)" }}
+            >
+              <MonitorUp className="h-3.5 w-3.5 shrink-0" style={{ color: GOLD }} />
+              <span className="min-w-0 flex-1">
+                <span className="block text-[11px] font-bold leading-snug">Open presentation screen</span>
+                <span className="block text-[10px] leading-snug opacity-80">For the projector — no notes on it</span>
               </span>
             </button>
           </div>

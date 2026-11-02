@@ -19,7 +19,7 @@ import ModuleWrapUp from "@/components/training/ModuleWrapUp";
 import { getModuleRecap } from "@/lib/training/moduleRecaps";
 
 
-export default function SpotlightTour({ open, module, progress, updateProgress, onClose, withWrapUp, facilitator, onStepChange, onStage, mirror, mirrorStep }) {
+export default function SpotlightTour({ open, module, progress, updateProgress, onClose, withWrapUp, facilitator, onStepChange, onStage, mirror, mirrorStep, presenter }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { setRevealedWidget, setRevealedNavPath, setWidgetsWalkthrough, jumpRequest } = useTrainingTour();
@@ -122,6 +122,11 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
   useEffect(() => {
     onStage?.(!open ? "closed" : wrappingUp ? "wrapup" : "slide");
   }, [open, wrappingUp]);
+
+  // A plugged-in screen shows the room-sized slide from the first frame.
+  useEffect(() => {
+    if (open && presenter) setPresentation(true);
+  }, [open, presenter]);
 
   // Restore position + presentation preference when the tour opens
   useEffect(() => {
@@ -238,7 +243,7 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
                 {module.shortTitle || module.title}
               </span>
               <span className={`font-semibold ${presentation ? "text-base" : "text-xs"}`} style={{ color: "hsl(45, 60%, 80%)" }}>
-                {wrappingUp ? "What we've learned" : mirrored ? `Following · ${index + 1} of ${steps.length}` : `Step ${index + 1} of ${steps.length}`}
+                {wrappingUp ? "What we've learned" : presenter ? `Slide ${index + 1} of ${steps.length}` : mirrored ? `Following · ${index + 1} of ${steps.length}` : `Step ${index + 1} of ${steps.length}`}
               </span>
             </div>
             <div className="flex items-center gap-1">

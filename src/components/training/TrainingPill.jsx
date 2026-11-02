@@ -7,6 +7,7 @@ import { getTrainingModule, moduleForPath } from "@/lib/training/trainingModules
 import { getModuleRecap } from "@/lib/training/moduleRecaps";
 import { readSession, SESSION_KEY, startTrainingSession } from "@/lib/training/trainingSession";
 import { readFacilitatorSession } from "@/lib/training/facilitatorSession";
+import { isPresenterWindow } from "@/lib/training/presenter";
 import FacilitatorSession from "@/components/training/FacilitatorSession";
 import ConfirmDialog from "@/components/training/ConfirmDialog";
 import SpotlightTour from "@/components/training/SpotlightTour";
@@ -18,6 +19,9 @@ import useTrainingWindowDrag from "@/components/training/useTrainingWindowDrag";
 
 
 export default function TrainingPill() {
+  // The plugged-in screen is a clean display: no training launcher, no
+  // facilitator sidebar, no notes — the tour window itself is rendered there.
+  const cleanScreen = isPresenterWindow();
   const { user } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
@@ -65,7 +69,7 @@ export default function TrainingPill() {
     }
   }, [module?.key]);
 
-  if (!user) return null;
+  if (!user || cleanScreen) return null;
 
   // A facilitated session (started from the Training Hub) takes over from the
   // normal learner UI: the facilitator gets the tour, talking points and

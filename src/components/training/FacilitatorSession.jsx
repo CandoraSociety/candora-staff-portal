@@ -10,6 +10,7 @@ import {
   readFacilitatorSession, endFacilitatedSession, goToFacilitatorBlock, wasBriefed, markBriefed,
 } from "@/lib/training/facilitatorSession";
 import { useMirrorBroadcast, clearMirrorRecord } from "@/lib/training/liveMirror";
+import usePresenterBroadcast from "@/components/training/usePresenterBroadcast";
 
 // In-facilitation progress writes go nowhere: a facilitated session never
 // creates or updates the facilitator's own TrainingProgress record.
@@ -39,6 +40,9 @@ export default function FacilitatorSession({ module }) {
   // practice, tests, the quiz and the wrap-up pause it automatically.
   const broadcastStage = checklistOpen ? "practice" : stage;
   useMirrorBroadcast({ module, plan, on: mirrorOn, stepIndex, stage: broadcastStage });
+  // The plugged-in screen always follows: the page you are on, and the slide
+  // while one is up, so the room never sees notes, practice or a blank window.
+  usePresenterBroadcast({ moduleKey: module.key, stepIndex, stage: broadcastStage, open: tourOpen });
 
   const mirrorLive = mirrorOn && broadcastStage === "slide";
   const mirrorCount = (plan?.attendees || []).length;
