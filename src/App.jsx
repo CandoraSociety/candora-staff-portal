@@ -35,7 +35,6 @@ import JobLabResumeBuilder from '@/pages/joblab/JobLabResumeBuilder';
 import JobLabCareerPath from '@/pages/joblab/JobLabCareerPath';
 import JobLabResources from '@/pages/joblab/JobLabResources';
 import JobLabProfile from '@/pages/joblab/JobLabProfile';
-import JobLabLocalJobs from '@/pages/joblab/JobLabLocalJobs';
 
 // Auth pages
 import Login from '@/pages/Login';
@@ -459,7 +458,6 @@ const AuthenticatedApp = () => {
           <Route element={<JobLabLayout />}>
             <Route path="/joblab/dashboard" element={<JobLabDashboard />} />
             <Route path="/joblab/job-search" element={<JobLabSearch />} />
-            <Route path="/joblab/local-jobs" element={<JobLabLocalJobs />} />
             <Route path="/joblab/job-tracker" element={<JobLabTracker />} />
             <Route path="/joblab/resume-builder" element={<JobLabResumeBuilder />} />
             <Route path="/joblab/career-path" element={<JobLabCareerPath />} />

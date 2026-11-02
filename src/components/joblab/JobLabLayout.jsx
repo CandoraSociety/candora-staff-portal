@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
-  Home, Search, ClipboardList, FileText, Route, BookOpen, UserRound, LogOut, X, AlertTriangle, MapPin,
+  Home, Search, ClipboardList, FileText, Route, BookOpen, UserRound, LogOut, X, AlertTriangle,
 } from 'lucide-react';
 import { useParticipant } from '@/lib/joblab/ParticipantContext';
 import JobLabBrand, { CandoraMark } from '@/components/joblab/JobLabBrand';
@@ -14,7 +14,6 @@ import { cn } from '@/lib/utils';
 const NAV_ITEMS = [
   { to: '/joblab/dashboard', label: 'Home', icon: Home },
   { to: '/joblab/job-search', label: 'Find jobs', icon: Search },
-  { to: '/joblab/local-jobs', label: 'Local jobs', icon: MapPin },
   { to: '/joblab/job-tracker', label: 'Applications', icon: ClipboardList },
   { to: '/joblab/resume-builder', label: 'My resume', icon: FileText },
   { to: '/joblab/career-path', label: 'Career path', icon: Route },
@@ -24,7 +23,7 @@ const NAV_ITEMS = [
 
 // Everything not already on the phone's bottom bar, for the "More" sheet.
 const MORE_ITEMS = NAV_ITEMS.filter((item) =>
-  ['/joblab/local-jobs', '/joblab/career-path', '/joblab/resources', '/joblab/profile'].includes(item.to)
+  ['/joblab/career-path', '/joblab/resources', '/joblab/profile'].includes(item.to)
 );
 
 export default function JobLabLayout() {

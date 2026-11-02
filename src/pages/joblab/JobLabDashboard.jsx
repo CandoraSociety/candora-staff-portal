@@ -7,7 +7,6 @@ import { useParticipant } from '@/lib/joblab/ParticipantContext';
 import { JLBadge } from '@/components/joblab/ui';
 import { CandoraMark } from '@/components/joblab/JobLabBrand';
 import FollowUpNudges from '@/components/joblab/FollowUpNudges';
-import LocalJobsStrip from '@/components/joblab/LocalJobsStrip';
 
 const START = [
   {
@@ -139,8 +138,6 @@ export default function JobLabDashboard() {
           ))}
         </div>
       </section>
-
-      <LocalJobsStrip />
 
       {/* Keep going */}
       <section>
