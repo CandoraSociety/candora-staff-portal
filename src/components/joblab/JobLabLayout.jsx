@@ -8,6 +8,7 @@ import JobLabBrand, { CandoraMark } from '@/components/joblab/JobLabBrand';
 import JobLabBottomNav from '@/components/joblab/JobLabBottomNav';
 import IdleSignOutDialog from '@/components/joblab/IdleSignOutDialog';
 import useIdleSignOut from '@/lib/joblab/useIdleSignOut';
+import { isOnsite } from '@/lib/joblab/constants';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
@@ -36,8 +37,12 @@ export default function JobLabLayout() {
     navigate('/joblab', { replace: true });
   };
 
-  // Kiosk hygiene: a visitor who walks away is signed out automatically.
-  const { warning, secondsLeft, stayActive } = useIdleSignOut({ onExpire: signOut });
+  // Kiosk hygiene: a kiosk visitor who walks away is signed out quickly; someone
+  // using Job Lab from home gets a lot more room before the prompt appears.
+  const { warning, secondsLeft, stayActive } = useIdleSignOut({
+    onExpire: signOut,
+    idleMs: isOnsite() ? 8 * 60 * 1000 : 30 * 60 * 1000,
+  });
 
   const initial = (participant?.name || 'G')[0].toUpperCase();
 
