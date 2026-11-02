@@ -5,7 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { UserPlus, Mail, Lock, Loader2 } from "lucide-react";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import RegistrationVerification from "@/components/auth/RegistrationVerification";
+import { safeReturnTo } from "@/lib/authReturnTo";
 import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
 import { toast } from "@/components/ui/use-toast";
@@ -18,6 +19,8 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [showOtp, setShowOtp] = useState(false);
   const [otpCode, setOtpCode] = useState("");
+  const [registrationEmail, setRegistrationEmail] = useState("");
+  const [verificationComplete, setVerificationComplete] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -28,7 +31,11 @@ export default function Register() {
     }
     setLoading(true);
     try {
-      await base44.auth.register({ email, password });
+      const accountEmail = email.trim().toLowerCase();
+      await base44.auth.register({ email: accountEmail, password });
+      setRegistrationEmail(accountEmail);
+      setVerificationComplete(false);
+      setOtpCode("");
       setShowOtp(true);
     } catch (err) {
       setError(err.message || "Registration failed");
@@ -37,17 +44,26 @@ export default function Register() {
     }
   };
 
-  const handleVerify = async () => {
+  const handleVerify = async (event) => {
+    event.preventDefault();
     setError("");
     setLoading(true);
+    let emailVerified = verificationComplete;
     try {
-      const result = await base44.auth.verifyOtp({ email, otpCode });
-      if (result?.access_token) {
-        base44.auth.setToken(result.access_token);
+      if (!emailVerified) {
+        await base44.auth.verifyOtp({ email: registrationEmail, otpCode });
+        emailVerified = true;
+        setVerificationComplete(true);
       }
-      window.location.href = "/";
+      // OTP confirmation is not a login. Establish the session explicitly,
+      // including when verification did not return an access token.
+      const result = await base44.auth.loginViaEmailPassword(registrationEmail, password);
+      if (!result?.access_token) throw new Error("Your email is verified, but sign-in did not finish. Please sign in using your password.");
+      window.location.assign(safeReturnTo());
     } catch (err) {
-      setError(err.message || "Invalid verification code");
+      setError(!emailVerified && /user not found/i.test(err.message || "")
+        ? "This code could not be matched to a pending account. If you already verified your email, use Sign in below. Otherwise, start again using the email address you were invited with."
+        : err.message || (emailVerified ? "Your email is verified. Please sign in using your password." : "Invalid verification code"));
     } finally {
       setLoading(false);
     }
@@ -55,14 +71,15 @@ export default function Register() {
 
   const handleResend = async () => {
     setError("");
+    setLoading(true);
     try {
-      await base44.auth.resendOtp(email);
-      toast({
-        title: "Code sent",
-        description: "Check your email for the new code.",
-      });
+      await base44.auth.resendOtp(registrationEmail);
+      setOtpCode("");
+      toast({ title: "Code sent", description: "Use only the newest code from your email." });
     } catch (err) {
       setError(err.message || "Failed to resend code");
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -72,55 +89,12 @@ export default function Register() {
 
   if (showOtp) {
     return (
-      <AuthLayout
-        icon={Mail}
-        title="Verify your email"
-        subtitle={`We sent a code to ${email}`}
-      >
-        {error && (
-          <div className="mb-4 p-3 rounded-lg bg-destructive/10 text-destructive text-sm">
-            {error}
-          </div>
-        )}
-        <div className="flex justify-center mb-6">
-          <InputOTP
-            maxLength={6}
-            value={otpCode}
-            onChange={setOtpCode}
-            autoFocus
-            autoComplete="one-time-code"
-          >
-            <InputOTPGroup>
-              <InputOTPSlot index={0} />
-              <InputOTPSlot index={1} />
-              <InputOTPSlot index={2} />
-              <InputOTPSlot index={3} />
-              <InputOTPSlot index={4} />
-              <InputOTPSlot index={5} />
-            </InputOTPGroup>
-          </InputOTP>
-        </div>
-        <Button
-          className="w-full h-12 font-medium"
-          onClick={handleVerify}
-          disabled={loading || otpCode.length < 6}
-        >
-          {loading ? (
-            <>
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-              Verifying...
-            </>
-          ) : (
-            "Verify"
-          )}
-        </Button>
-        <p className="text-center text-sm text-muted-foreground mt-4">
-          Didn't receive the code?{" "}
-          <button onClick={handleResend} className="text-primary font-medium hover:underline">
-            Resend
-          </button>
-        </p>
-      </AuthLayout>
+      <RegistrationVerification
+        email={registrationEmail} code={otpCode} onCodeChange={setOtpCode}
+        onVerify={handleVerify} onResend={handleResend} loading={loading}
+        error={error} verified={verificationComplete}
+        onRestart={() => { setShowOtp(false); setOtpCode(""); setError(""); setVerificationComplete(false); }}
+      />
     );
   }
 
