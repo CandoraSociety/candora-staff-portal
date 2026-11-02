@@ -1,0 +1,172 @@
+{
+  "name": "TrainingDayPlan",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Name of the training day, e.g. 'Pathways Crew Training Day'"
+    },
+    "audience_type": {
+      "type": "string",
+      "enum": [
+        "group",
+        "individual"
+      ],
+      "default": "group",
+      "description": "Whether this day is for a group or a single person"
+    },
+    "audience": {
+      "type": "string",
+      "description": "The group name or the person this plan is for"
+    },
+    "plan_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Day the session runs"
+    },
+    "start_time": {
+      "type": "string",
+      "description": "Start of the day in 24-hour HH:MM (block times are calculated from this)"
+    },
+    "summary": {
+      "type": "string",
+      "description": "One paragraph describing the shape of the day"
+    },
+    "outcomes": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "What attendees can do by the end of the day"
+    },
+    "setup": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Room, projector and Test Mode preparation"
+    },
+    "blocks": {
+      "type": "array",
+      "description": "The agenda, in order. Each block's start and end times are derived from start_time and the minutes before it.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "session",
+              "admin",
+              "break"
+            ],
+            "description": "session = a training module is taught; admin = arrival/wrap-up; break = pause"
+          },
+          "title": {
+            "type": "string"
+          },
+          "minutes": {
+            "type": "number"
+          },
+          "module_key": {
+            "type": "string",
+            "description": "Key of the training module taught in this block (empty for admin and break blocks)"
+          },
+          "why": {
+            "type": "string",
+            "description": "Why this block sits here in the sequence"
+          },
+          "cue": {
+            "type": "string",
+            "description": "The one thing the facilitator says out loud in this block"
+          },
+          "activities": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "What everyone does in Test Mode during this block"
+          }
+        }
+      }
+    },
+    "follow_up": {
+      "type": "array",
+      "description": "Modules that don't fit in the room, finished by attendees on their own afterwards",
+      "items": {
+        "type": "object",
+        "properties": {
+          "module_key": {
+            "type": "string"
+          },
+          "who": {
+            "type": "string"
+          },
+          "why": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "created_by_name": {
+      "type": "string",
+      "description": "Facilitator who built the plan"
+    }
+  },
+  "required": [
+    "title"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

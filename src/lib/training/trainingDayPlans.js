@@ -204,3 +204,26 @@ export const PATHWAYS_TRAINING_DAY = {
 };
 
 export const TRAINING_DAY_PLANS = [PATHWAYS_TRAINING_DAY];
+
+// The Pathways day as a saved-plan record (used by "Pathways template" on the
+// planner page). Blocks keep only their length; times are derived on render.
+export const pathwaysPlanSeed = () => ({
+  title: PATHWAYS_TRAINING_DAY.title,
+  audience_type: "group",
+  audience: "Pathways crew",
+  plan_date: "",
+  start_time: "08:45",
+  summary: PATHWAYS_TRAINING_DAY.summary,
+  outcomes: PATHWAYS_TRAINING_DAY.outcomes,
+  setup: PATHWAYS_TRAINING_DAY.setup,
+  blocks: PATHWAYS_TRAINING_DAY.blocks.map(b => ({
+    type: b.type,
+    title: b.title,
+    minutes: b.minutes,
+    module_key: b.module || "",
+    why: b.why || "",
+    cue: b.cue || "",
+    activities: b.activities || [],
+  })),
+  follow_up: PATHWAYS_TRAINING_DAY.followUp.map(f => ({ module_key: f.module, who: f.who, why: f.why })),
+});
