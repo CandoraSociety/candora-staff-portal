@@ -7,7 +7,7 @@ import {
 import { toast } from "sonner";
 import { openPresenterWindow } from "@/lib/training/presenter";
 import { withTimes } from "@/lib/training/planTimeline";
-import { getSectionNote, getPracticeNote, getModuleTips, getRoomHandouts } from "@/lib/training/facilitatorResources";
+import { getSectionNote, getPracticeNote, getModuleTips, getRoomHandouts, getModuleObjectives, getModuleDuration } from "@/lib/training/facilitatorResources";
 import HandoutPrintDialog from "@/components/training/plan/HandoutPrintDialog";
 
 const NAVY = "hsl(230, 70%, 10%)";
@@ -35,8 +35,16 @@ export default function FacilitatorSidebar({
   const plan = session?.plan || null;
   const steps = module?.steps || [];
   const tips = getModuleTips(module);
+  const objectives = getModuleObjectives(module);
+  const duration = getModuleDuration(module);
   const handouts = getRoomHandouts(module, plan);
   const agenda = plan ? withTimes(plan).blocks : [];
+  // The block the facilitator is on now — what to say, why it sits there, and
+  // the activity the room does in Test Mode while it runs.
+  const currentBlock = agenda.find(b => b.index === (session?.blockIndex || 0))
+    || agenda.find(b => b.module?.key === module?.key)
+    || null;
+  const blockActivities = currentBlock?.activities || [];
 
   // The sidebar follows the tour: the section being taught is the one open.
   useEffect(() => { setExpanded(stepIndex); }, [stepIndex]);
@@ -128,6 +136,27 @@ export default function FacilitatorSidebar({
           </div>
 
           <div className="flex-1 space-y-4 overflow-y-auto p-2">
+            {/* What this session is for — the facilitator's instructions */}
+            {(duration || objectives.length > 0) && (
+              <section aria-label="Session plan">
+                <h2 className="mb-1.5 border-b px-2 pb-1 text-[10px] font-bold uppercase tracking-wide" style={{ color: "hsl(45, 70%, 68%)", borderColor: "hsl(230, 45%, 24%)" }}>
+                  Session
+                </h2>
+                {duration && (
+                  <p className="px-2 text-[10px] font-semibold leading-snug" style={{ color: "hsl(45, 60%, 72%)" }}>{duration}</p>
+                )}
+                {objectives.length > 0 && (
+                  <ul className="mt-1.5 space-y-1 px-2">
+                    {objectives.map((o, i) => (
+                      <li key={i} className="flex gap-1.5 text-[10px] leading-snug" style={{ color: "hsl(45, 30%, 84%)" }}>
+                        <span style={{ color: GOLD }}>•</span><span>{o}</span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </section>
+            )}
+
             {/* The training day this session belongs to */}
             {plan && (
               <section aria-label="Day agenda">
@@ -168,6 +197,39 @@ export default function FacilitatorSidebar({
                       );
                     })}
                   </div>
+                )}
+              </section>
+            )}
+
+            {/* The block running right now — what to say and what the room does */}
+            {currentBlock && (currentBlock.cue || currentBlock.why || blockActivities.length > 0) && (
+              <section aria-label="This block" className="space-y-1">
+                <h2 className="mb-1.5 border-b px-2 pb-1 text-[10px] font-bold uppercase tracking-wide" style={{ color: "hsl(45, 70%, 68%)", borderColor: "hsl(230, 45%, 24%)" }}>
+                  This block
+                </h2>
+                {currentBlock.cue && (
+                  <Row>
+                    <p className="text-[10px] font-bold uppercase tracking-wide" style={{ color: GOLD }}>Say this</p>
+                    <p className="mt-1 text-[11px] leading-relaxed" style={{ color: "hsl(45, 40%, 90%)" }}>{currentBlock.cue}</p>
+                  </Row>
+                )}
+                {currentBlock.why && (
+                  <Row>
+                    <p className="text-[10px] font-bold uppercase tracking-wide" style={{ color: "hsl(45, 70%, 68%)" }}>Why here</p>
+                    <p className="mt-1 text-[10px] leading-snug" style={{ color: "hsl(45, 30%, 84%)" }}>{currentBlock.why}</p>
+                  </Row>
+                )}
+                {blockActivities.length > 0 && (
+                  <Row>
+                    <p className="text-[10px] font-bold uppercase tracking-wide" style={{ color: "hsl(45, 70%, 68%)" }}>Room does in Test Mode</p>
+                    <ul className="mt-1 space-y-1">
+                      {blockActivities.map((a, i) => (
+                        <li key={i} className="flex gap-1 text-[10px] leading-snug" style={{ color: "hsl(45, 30%, 84%)" }}>
+                          <span style={{ color: GOLD }}>•</span>{a}
+                        </li>
+                      ))}
+                    </ul>
+                  </Row>
                 )}
               </section>
             )}

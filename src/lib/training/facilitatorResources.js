@@ -19,6 +19,8 @@ export const isPathwaysModule = (moduleKey) => PATHWAYS_MODULES.has(String(modul
 
 export const getModuleObjectives = (module) => getFacilitatorGuide(module?.key)?.objectives || [];
 
+export const getModuleDuration = (module) => getFacilitatorGuide(module?.key)?.duration || "";
+
 export const getModuleTips = (module) => getFacilitatorGuide(module?.key)?.tips || [];
 
 // Handouts are printed from the day's plan, so they only exist while a plan is
@@ -86,11 +88,22 @@ export const getBriefingItems = (module, plan) => {
 // A section's own talking point plus the one screen it lives on. Sections with
 // no written guidance still get the slide's own text, so the panel is never
 // empty while the room watches.
+const normalise = (s) => String(s || "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+
 export const getSectionNote = (module, step) => {
-  const guide = getFacilitatorGuide(module?.key);
-  return guide?.stepNotes?.[step?.title]
-    || step?.body
-    || "Follow the words on the slide and keep the pace moving.";
+  const notes = getFacilitatorGuide(module?.key)?.stepNotes || {};
+  if (step?.title && notes[step.title]) return notes[step.title];
+  // Slide titles get reworded as modules are edited: fall back to a loose match
+  // so the written talking point survives instead of the slide's own text.
+  const wanted = normalise(step?.title);
+  if (wanted) {
+    const hit = Object.keys(notes).find((k) => {
+      const n = normalise(k);
+      return n === wanted || n.startsWith(wanted) || wanted.startsWith(n);
+    });
+    if (hit) return notes[hit];
+  }
+  return step?.body || "Follow the words on the slide and keep the pace moving.";
 };
 
 export const getPracticeNote = (module, task) => {
