@@ -435,6 +435,17 @@ Give 4 to 6 milestones in chronological order. Each milestone needs a title, a d
         });
       }
 
+      case 'localJobs': {
+        const rows = await db.entities.JobLabJob.filter(
+          { is_active: true },
+          { sort: '-created_date', limit: 100 }
+        ).then((page) => (Array.isArray(page) ? page : page.items || []));
+        const today = new Date().toISOString().slice(0, 10);
+        return Response.json({
+          items: rows.filter((job) => !job.closing_date || job.closing_date >= today),
+        });
+      }
+
       case 'emailResume': {
         const to = String(body.to || me.email || '').trim();
         if (!to) return Response.json({ error: 'There is no email address on your profile.' }, { status: 400 });

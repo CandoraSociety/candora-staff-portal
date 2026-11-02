@@ -1,11 +1,13 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
-  Search, ClipboardList, FileText, Route, BookOpen, UserRound, AlertTriangle, ArrowRight, LifeBuoy,
+  Search, ClipboardList, FileText, Route, BookOpen, UserRound, AlertTriangle, ArrowRight, LifeBuoy, LogOut,
 } from 'lucide-react';
 import { useParticipant } from '@/lib/joblab/ParticipantContext';
 import { JLBadge } from '@/components/joblab/ui';
 import { CandoraMark } from '@/components/joblab/JobLabBrand';
+import FollowUpNudges from '@/components/joblab/FollowUpNudges';
+import LocalJobsStrip from '@/components/joblab/LocalJobsStrip';
 
 const START = [
   {
@@ -41,8 +43,14 @@ const STEPS = [
 ];
 
 export default function JobLabDashboard() {
-  const { participant, isGuest } = useParticipant();
+  const { participant, isGuest, logout } = useParticipant();
+  const navigate = useNavigate();
   const firstName = (participant?.name || '').split(' ')[0];
+
+  const finishSession = () => {
+    logout();
+    navigate('/joblab', { replace: true });
+  };
 
   return (
     <div className="space-y-8">
@@ -85,6 +93,8 @@ export default function JobLabDashboard() {
           </Link>
         </div>
       </section>
+
+      <FollowUpNudges />
 
       {/* How it works */}
       <section>
@@ -130,6 +140,8 @@ export default function JobLabDashboard() {
         </div>
       </section>
 
+      <LocalJobsStrip />
+
       {/* Keep going */}
       <section>
         <h2 className="jl-heading mb-3 text-base font-semibold text-jl-fg">Keep going</h2>
@@ -148,6 +160,21 @@ export default function JobLabDashboard() {
             </Link>
           ))}
         </div>
+      </section>
+
+      <section className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-jl-border bg-white p-4">
+        <div>
+          <p className="jl-heading text-sm font-semibold text-jl-fg">Finished for today?</p>
+          <p className="mt-0.5 text-xs text-jl-muted-fg">
+            Sign out so the next person has a private session. Anything you saved stays on your account.
+          </p>
+        </div>
+        <button
+          onClick={finishSession}
+          className="inline-flex items-center gap-2 rounded-lg bg-jl-navy px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-jl-navy/90"
+        >
+          <LogOut className="h-4 w-4" /> Finish &amp; sign out
+        </button>
       </section>
 
       <div className="flex items-start gap-2.5 rounded-xl bg-jl-navy/[0.04] px-4 py-3">

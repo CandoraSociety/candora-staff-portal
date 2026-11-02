@@ -35,6 +35,7 @@ import JobLabResumeBuilder from '@/pages/joblab/JobLabResumeBuilder';
 import JobLabCareerPath from '@/pages/joblab/JobLabCareerPath';
 import JobLabResources from '@/pages/joblab/JobLabResources';
 import JobLabProfile from '@/pages/joblab/JobLabProfile';
+import JobLabLocalJobs from '@/pages/joblab/JobLabLocalJobs';
 
 // Auth pages
 import Login from '@/pages/Login';
@@ -124,6 +125,7 @@ import PathwaysResources from '@/pages/pathways/PathwaysResources';
 import PathwaysCompass from '@/pages/pathways/PathwaysCompass';
 import PathwaysBilling from '@/pages/pathways/PathwaysBilling';
 import PathwaysEmployers from '@/pages/pathways/PathwaysEmployers';
+import PathwaysJobBoard from '@/pages/pathways/PathwaysJobBoard';
 import PathwaysInternalTraining from '@/pages/pathways/PathwaysInternalTraining';
 import PathwaysWorkshops from '@/pages/pathways/PathwaysWorkshops';
 import PathwaysAssessment from '@/pages/pathways/PathwaysAssessment';
@@ -457,6 +459,7 @@ const AuthenticatedApp = () => {
           <Route element={<JobLabLayout />}>
             <Route path="/joblab/dashboard" element={<JobLabDashboard />} />
             <Route path="/joblab/job-search" element={<JobLabSearch />} />
+            <Route path="/joblab/local-jobs" element={<JobLabLocalJobs />} />
             <Route path="/joblab/job-tracker" element={<JobLabTracker />} />
             <Route path="/joblab/resume-builder" element={<JobLabResumeBuilder />} />
             <Route path="/joblab/career-path" element={<JobLabCareerPath />} />
@@ -862,6 +865,7 @@ const AuthenticatedApp = () => {
           <Route path="/pathways/billing" element={<PathwaysBilling />} />
           <Route path="/pathways/childminding" element={<PathwaysChildminding />} />
           <Route path="/pathways/employers" element={<PathwaysEmployers />} />
+          <Route path="/pathways/job-board" element={<PathwaysJobBoard />} />
           <Route path="/pathways/training" element={<PathwaysInternalTraining />} />
           <Route path="/pathways/workshops" element={<PathwaysWorkshops />} />
           <Route path="/pathways/assessment/:id" element={<PathwaysAssessment />} />

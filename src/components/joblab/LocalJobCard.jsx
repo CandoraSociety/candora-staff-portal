@@ -67,7 +67,7 @@ export default function LocalJobCard({ job, saved, saving, onSave }) {
           {saved ? 'Saved to tracker' : saving ? 'Saving…' : 'Save to tracker'}
         </JLButton>
         {job.apply_url && (
-          <JLButton as="a" size="sm" variant="ghost" onClick={() => window.open(job.apply_url, '_blank', 'noopener')}>
+          <JLButton size="sm" variant="ghost" onClick={() => window.open(job.apply_url, '_blank', 'noopener')}>
             <ExternalLink className="h-3.5 w-3.5" /> Apply online
           </JLButton>
         )}

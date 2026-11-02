@@ -1,22 +1,30 @@
 import { useState } from 'react';
 import { Link, NavLink, Outlet, useNavigate } from 'react-router-dom';
 import {
-  Home, Search, ClipboardList, FileText, Route, BookOpen, UserRound, LogOut, X, AlertTriangle,
+  Home, Search, ClipboardList, FileText, Route, BookOpen, UserRound, LogOut, X, AlertTriangle, MapPin,
 } from 'lucide-react';
 import { useParticipant } from '@/lib/joblab/ParticipantContext';
 import JobLabBrand, { CandoraMark } from '@/components/joblab/JobLabBrand';
 import JobLabBottomNav from '@/components/joblab/JobLabBottomNav';
+import IdleSignOutDialog from '@/components/joblab/IdleSignOutDialog';
+import useIdleSignOut from '@/lib/joblab/useIdleSignOut';
 import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
   { to: '/joblab/dashboard', label: 'Home', icon: Home },
   { to: '/joblab/job-search', label: 'Find jobs', icon: Search },
+  { to: '/joblab/local-jobs', label: 'Local jobs', icon: MapPin },
   { to: '/joblab/job-tracker', label: 'Applications', icon: ClipboardList },
   { to: '/joblab/resume-builder', label: 'My resume', icon: FileText },
   { to: '/joblab/career-path', label: 'Career path', icon: Route },
   { to: '/joblab/resources', label: 'Learn', icon: BookOpen },
   { to: '/joblab/profile', label: 'Profile', icon: UserRound },
 ];
+
+// Everything not already on the phone's bottom bar, for the "More" sheet.
+const MORE_ITEMS = NAV_ITEMS.filter((item) =>
+  ['/joblab/local-jobs', '/joblab/career-path', '/joblab/resources', '/joblab/profile'].includes(item.to)
+);
 
 export default function JobLabLayout() {
   const { participant, isGuest, logout } = useParticipant();
@@ -27,6 +35,9 @@ export default function JobLabLayout() {
     logout();
     navigate('/joblab', { replace: true });
   };
+
+  // Kiosk hygiene: a visitor who walks away is signed out automatically.
+  const { warning, secondsLeft, stayActive } = useIdleSignOut({ onExpire: signOut });
 
   const initial = (participant?.name || 'G')[0].toUpperCase();
 
@@ -87,6 +98,10 @@ export default function JobLabLayout() {
 
       <JobLabBottomNav onMore={() => setMore(true)} />
 
+      {warning && (
+        <IdleSignOutDialog secondsLeft={secondsLeft} onStay={stayActive} onSignOut={signOut} />
+      )}
+
       {more && (
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-black/40" onClick={() => setMore(false)} />
@@ -99,7 +114,7 @@ export default function JobLabLayout() {
             </div>
 
             <div className="space-y-1">
-              {NAV_ITEMS.slice(4).map(({ to, label, icon: Icon }) => (
+              {MORE_ITEMS.map(({ to, label, icon: Icon }) => (
                 <Link
                   key={to}
                   to={to}

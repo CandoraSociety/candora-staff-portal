@@ -4,7 +4,7 @@ import { callJobLab } from '@/lib/joblab/api';
 import { JLButton, JLEmpty, JLTabs } from '@/components/joblab/ui';
 import ApplicationCard from '@/components/joblab/ApplicationCard';
 import ApplicationDialog from '@/components/joblab/ApplicationDialog';
-import { STATUS_LABELS } from '@/lib/joblab/constants';
+import { STATUS_LABELS, addDays } from '@/lib/joblab/constants';
 import { useToast } from '@/components/ui/use-toast';
 
 const today = () => new Date().toISOString().slice(0, 10);
@@ -77,7 +77,8 @@ export default function JobLabTracker() {
     try {
       const data = await callJobLab('updateApplication', {
         id: application.id,
-        data: { status: 'applied', date_applied: today() },
+        // Book a follow-up a week out — the dashboard nudges them about it.
+        data: { status: 'applied', date_applied: today(), follow_up_date: addDays(today(), 7) },
       });
       setItems((prev) => prev.map((item) => (item.id === data.item.id ? data.item : item)));
       toast({ title: 'Marked as applied!' });

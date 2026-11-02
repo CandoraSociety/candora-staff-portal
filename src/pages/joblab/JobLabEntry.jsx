@@ -23,8 +23,12 @@ export default function JobLabEntry() {
   const [tab, setTab] = useState('signin');
   const [busy, setBusy] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  // Easy return: remember the last email used on this device, never the password.
+  const [lastEmail] = useState(() => {
+    try { return localStorage.getItem('joblab_last_email') || ''; } catch { return ''; }
+  });
   const [form, setForm] = useState({
-    name: '', email: '', phone: '', password: '', confirm: '',
+    name: '', email: lastEmail, phone: '', password: '', confirm: '',
   });
 
   useEffect(() => {
@@ -34,6 +38,9 @@ export default function JobLabEntry() {
   const set = (key) => (event) => setForm((prev) => ({ ...prev, [key]: event.target.value }));
 
   const finish = (data, message) => {
+    if (data.participant?.email) {
+      try { localStorage.setItem('joblab_last_email', data.participant.email); } catch { /* ignore */ }
+    }
     login(data);
     toast({ title: message });
     navigate('/joblab/dashboard', { replace: true });
@@ -139,6 +146,11 @@ export default function JobLabEntry() {
               <div>
                 <JLLabel>Email</JLLabel>
                 <JLInput type="email" value={form.email} onChange={set('email')} placeholder="you@example.com" autoComplete="email" />
+                {lastEmail && (
+                  <p className="mt-1 text-[11px] text-jl-muted-fg">
+                    Welcome back — we filled in the last email used on this device.
+                  </p>
+                )}
               </div>
               <div>
                 <JLLabel>Password</JLLabel>
