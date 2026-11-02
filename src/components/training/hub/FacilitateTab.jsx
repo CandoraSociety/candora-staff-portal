@@ -143,6 +143,7 @@ export default function FacilitateTab() {
           {plans.map(plan => {
             const keys = planModuleKeys(plan);
             const sessions = (plan.blocks || []).filter(b => b.type === "session" && b.module_key);
+            const firstModule = sessions.length ? getTrainingModule(sessions[0].module_key) : null;
             return (
               <div key={plan.id} className="rounded-xl border overflow-hidden">
                 <div className="flex flex-wrap items-start justify-between gap-3 px-4 py-3" style={{ background: "hsl(230, 70%, 98%)" }}>
@@ -160,7 +161,16 @@ export default function FacilitateTab() {
                       </span>
                     </div>
                   </div>
-                  <div className="flex gap-2 shrink-0">
+                  <div className="flex flex-wrap gap-2 shrink-0">
+                    <button
+                      onClick={() => firstModule && startFacilitatedSession(firstModule)}
+                      disabled={!firstModule}
+                      title={firstModule ? `Run the day, starting with ${firstModule.title}` : "Add a module block to run this day"}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold hover:opacity-90 disabled:opacity-40"
+                      style={goldBtn}
+                    >
+                      <Play className="w-3.5 h-3.5" /> Start training day
+                    </button>
                     <button
                       onClick={() => setPrintPlan(plan)}
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border bg-card text-xs font-semibold hover:bg-accent"
