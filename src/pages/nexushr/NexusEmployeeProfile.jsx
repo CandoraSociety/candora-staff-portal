@@ -12,6 +12,7 @@ import { format } from 'date-fns';
 import { useToast } from '@/components/ui/use-toast';
 import EmployeeForm from '@/components/employees/EmployeeForm';
 import EmployeeHourStats from '@/components/employees/EmployeeHourStats';
+import EmployeeTrainingCompletions from '@/components/employees/EmployeeTrainingCompletions';
 import StatusBadge from '@/components/shared/StatusBadge';
 import { calculateMilestones } from '@/lib/employeeMilestones';
 import { formatPhoneNumber } from '@/lib/utils';
@@ -443,6 +444,8 @@ function OverviewTab({ employee, timeLogs, recognitions, pendingMilestones, mana
   return (
     <div className="space-y-6">
       <EmployeeHourStats timeLogs={timeLogs} />
+
+      <EmployeeTrainingCompletions employee={employee} />
 
       {/* Personal Details */}
       <Card>
