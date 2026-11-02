@@ -117,18 +117,21 @@ export default function JobLabEntry() {
       <div className="w-full max-w-md animate-[fadeUp_0.5s_ease-out]">
         <div className="mb-7 text-center">
           <div className="mx-auto mb-3 w-fit">
-            <CandoraMark className="h-16 w-16 shadow-md" />
+            <CandoraMark className="h-20 w-20 shadow-md" />
           </div>
-          <div className="mx-auto mb-4 h-0.5 w-14 rounded-full bg-jl-gold" />
-          <h1 className="jl-heading text-3xl font-bold text-jl-fg">Job Lab</h1>
-          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-jl-primary">A Candora program</p>
-          <p className="mt-2 text-sm font-medium text-jl-fg">
+          <p className="text-[10px] font-bold uppercase tracking-[0.3em] text-jl-accent">Candora Society</p>
+          <h1 className="jl-heading mt-1.5 text-4xl font-bold tracking-tight text-jl-fg">Job Lab</h1>
+          <div className="mx-auto my-3 h-0.5 w-16 rounded-full bg-jl-gold" />
+          <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-jl-navy/60">
+            Employment &amp; Community Development
+          </p>
+          <p className="mt-2.5 text-sm font-medium text-jl-fg">
             {onsite ? 'Riverview Crossing Jobs Lab' : 'Your career starts here'}
           </p>
           <p className="text-xs text-jl-muted-fg">{onsite ? 'Onsite Portal' : 'Public Portal'}</p>
         </div>
 
-        <JLCard className="overflow-hidden p-6">
+        <JLCard className="overflow-hidden border-t-[3px] border-t-jl-gold p-6">
           <JLTabs tabs={TABS} value={tab} onChange={setTab} className="mb-5 w-full" />
 
           {tab === 'signin' && (

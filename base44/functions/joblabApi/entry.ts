@@ -37,6 +37,90 @@ export default async function (req) {
         location_type: onsiteOrOffsite(body.locationType),
       });
 
+    // Every Job Lab sign-in also files the visitor as a casual client in the
+    // Pathways CM portal, and keeps their visit stats on a stat row the
+    // Pathways reports read. These clients are never pushed to the Central
+    // Database — nobody has checked them for duplicates yet.
+    const syncCasualClient = async (participant) => {
+      const stamp = new Date().toISOString();
+      const email = String(participant.email || '').trim().toLowerCase();
+      const phone = String(participant.phone || '').trim();
+      const site = onsiteOrOffsite(body.locationType);
+      const parts = String(participant.name || '').trim().split(/\s+/).filter(Boolean);
+      const firstName = parts[0] || 'Job Lab';
+      const lastName = parts.slice(1).join(' ') || 'Visitor';
+      const registered = !participant.is_guest;
+
+      let stat = null;
+      if (participant.pathways_client_id) {
+        const rows = await db.entities.JobLabClientStat.filter({ client_id: participant.pathways_client_id });
+        stat = rows[0] || null;
+      }
+      if (!stat && email) {
+        const rows = await db.entities.JobLabClientStat.filter({ email });
+        stat = rows[0] || null;
+      }
+      if (!stat && !email && participant.name) {
+        const rows = await db.entities.JobLabClientStat.filter({ full_name: participant.name, has_account: false });
+        stat = rows[0] || null;
+      }
+
+      let clientId = stat?.client_id || '';
+      if (!stat) {
+        const client = await db.entities.Client.create({
+          first_name: firstName,
+          last_name: lastName,
+          email,
+          phone,
+          service_type: 'casual',
+          status: 'active',
+          intake_date: stamp.slice(0, 10),
+          intake_notes: registered
+            ? 'Casual client created automatically from a Job Lab registration.'
+            : 'Casual client created automatically from a Job Lab guest session — no registered Job Lab account.',
+        });
+        clientId = client.id;
+        stat = await db.entities.JobLabClientStat.create({
+          participant_id: participant.id,
+          client_id: clientId,
+          full_name: participant.name || 'Guest',
+          email,
+          phone,
+          has_account: registered,
+          total_visits: 1,
+          onsite_visits: site === 'onsite' ? 1 : 0,
+          offsite_visits: site === 'offsite' ? 1 : 0,
+          first_visit: stamp,
+          last_visit: stamp,
+        });
+      } else {
+        stat = await db.entities.JobLabClientStat.update(stat.id, {
+          last_visit: stamp,
+          total_visits: (stat.total_visits || 0) + 1,
+          onsite_visits: (stat.onsite_visits || 0) + (site === 'onsite' ? 1 : 0),
+          offsite_visits: (stat.offsite_visits || 0) + (site === 'offsite' ? 1 : 0),
+          has_account: stat.has_account || registered,
+          participant_id: registered ? participant.id : stat.participant_id,
+          full_name: participant.name || stat.full_name,
+          email: email || stat.email,
+          phone: phone || stat.phone,
+        });
+        clientId = stat.client_id;
+      }
+
+      if (clientId && participant.pathways_client_id !== clientId) {
+        await db.entities.Participant.update(participant.id, { pathways_client_id: clientId });
+      }
+      return clientId;
+    };
+
+    const recordArrival = async (participant) => {
+      await logVisit(participant);
+      await syncCasualClient(participant).catch((error) =>
+        console.warn('Casual client sync failed:', error.message)
+      );
+    };
+
     // ---------- entry actions (no session yet) ----------
     if (action === 'register') {
       const name = String(body.name || '').trim();
@@ -63,7 +147,7 @@ export default async function (req) {
         skills: [],
         interests: [],
       });
-      await logVisit(participant);
+      await recordArrival(participant);
       return Response.json({ participant: clean(participant), token });
     }
 
@@ -83,7 +167,7 @@ export default async function (req) {
         total_visits: (found.total_visits || 1) + 1,
         last_visit: now,
       });
-      await logVisit(participant);
+      await recordArrival(participant);
       return Response.json({ participant: clean(participant), token });
     }
 
@@ -103,7 +187,7 @@ export default async function (req) {
         skills: [],
         interests: [],
       });
-      await logVisit(participant);
+      await recordArrival(participant);
       return Response.json({ participant: clean(participant), token });
     }
 

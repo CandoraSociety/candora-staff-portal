@@ -14,24 +14,26 @@ export function CandoraMark({ className }) {
   );
 }
 
-// Job Lab's lock-up. It carries the Candora mark and endorsement line, while the
-// wordmark and the blue/gold palette keep it distinct from the staff portal.
+// Job Lab's lock-up: the Candora mark and name lead, with Job Lab as the program
+// line underneath — navy and gold, the same identity the staff portal carries.
 export default function JobLabBrand({ compact = false }) {
   if (compact) {
     return (
       <div className="flex items-center gap-2">
         <CandoraMark className="h-8 w-8" />
-        <span className="jl-heading text-sm font-semibold text-jl-navy-fg">Job Lab</span>
+        <span className="jl-heading text-sm font-bold leading-none text-jl-navy-fg">
+          Candora <span className="font-medium text-jl-gold">Job Lab</span>
+        </span>
       </div>
     );
   }
 
   return (
-    <div className="flex items-center gap-2.5">
-      <CandoraMark className="h-10 w-10" />
+    <div className="flex items-center gap-3">
+      <CandoraMark className="h-11 w-11" />
       <div>
-        <p className="jl-heading text-sm font-semibold leading-tight text-jl-navy-fg">Job Lab</p>
-        <p className="text-[11px] text-jl-gold/80">A Candora program</p>
+        <p className="jl-heading text-[17px] font-bold leading-none tracking-tight text-jl-navy-fg">Candora</p>
+        <p className="mt-1.5 text-[10px] font-bold uppercase leading-none tracking-[0.22em] text-jl-gold">Job Lab</p>
       </div>
     </div>
   );

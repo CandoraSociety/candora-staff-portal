@@ -2,7 +2,7 @@ import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import EAFloatingWidget from '@/components/ed/EAFloatingWidget';
 import ModuleGate from '@/components/shared/ModuleGate';
-import { LayoutDashboard, CalendarCheck, Users, Star, BookOpen, FileText } from 'lucide-react';
+import { LayoutDashboard, CalendarCheck, Users, Star, BookOpen, FileText, Footprints } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useOrgSettings } from '@/lib/useOrgSettings';
 
@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { path: '/reporting/internal',  label: 'Internal Reports',       icon: CalendarCheck },
   { path: '/reporting/funder',    label: 'Funder Reports',         icon: Users },
   { path: '/reporting/special',   label: 'Special Reports',        icon: Star },
+  { path: '/reporting/casual-clients', label: 'Casual Clients',     icon: Footprints },
   { path: '/reporting/agr',       label: 'Annual General Report',  icon: BookOpen },
 ];
 

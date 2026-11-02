@@ -20,6 +20,10 @@
       "type": "string",
       "description": "Random per-login token the Job Lab backend requires with every request from this participant."
     },
+    "pathways_client_id": {
+      "type": "string",
+      "description": "Pathways casual Client record this participant is filed under \u2014 set the first time they sign in"
+    },
     "is_guest": {
       "type": "boolean",
       "default": false

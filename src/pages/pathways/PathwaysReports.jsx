@@ -7,6 +7,7 @@ import StaffMonthlyReports from "@/components/reports/StaffMonthlyReports";
 import DataReportsSidebar from "@/components/reports/DataReportsSidebar";
 import QuickviewStats from "@/components/pathways/QuickviewStats";
 import CrtOutcomesTab from "@/components/reports/CrtOutcomesTab";
+import CasualClientStats from "@/components/reports/CasualClientStats";
 import { DEMOGRAPHIC_FILTERS, getDateRange, REPORT_SECTIONS } from "@/components/reports/DataReportsSidebar";
 
 export default function PathwaysReports() {
@@ -96,6 +97,7 @@ export default function PathwaysReports() {
           <TabsTrigger value="data">Data Reports</TabsTrigger>
           <TabsTrigger value="staff">Staff Monthly Reports</TabsTrigger>
           <TabsTrigger value="quickview">Quickview Program Stats</TabsTrigger>
+          <TabsTrigger value="casual">Casual Clients</TabsTrigger>
         </TabsList>
 
         {/* TAB 1: OUTCOMES — drawn from the live CRT Client Data sheet */}
@@ -154,6 +156,11 @@ export default function PathwaysReports() {
         {/* TAB 4: QUICKVIEW PROGRAM STATS */}
         <TabsContent value="quickview">
           <QuickviewStats />
+        </TabsContent>
+
+        {/* TAB 5: CASUAL CLIENTS — Job Lab registrations and guest visits */}
+        <TabsContent value="casual">
+          <CasualClientStats />
         </TabsContent>
       </Tabs>
     </div>

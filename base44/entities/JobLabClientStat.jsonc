@@ -1,0 +1,85 @@
+{
+  "name": "JobLabClientStat",
+  "type": "object",
+  "description": "Visit statistics for a Job Lab visitor who is filed as a casual client in the Pathways CM portal. One row per person; the linked Client record is never pushed to the Central Database.",
+  "properties": {
+    "participant_id": {
+      "type": "string",
+      "description": "Job Lab participant account (empty while the visitor has only ever used a guest session)"
+    },
+    "client_id": {
+      "type": "string",
+      "description": "Pathways Client record this visitor is filed as (service type: casual)"
+    },
+    "full_name": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "has_account": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this visitor has a registered Job Lab account. Guest-only visitors stay false (no registered account)."
+    },
+    "total_visits": {
+      "type": "number",
+      "default": 0
+    },
+    "onsite_visits": {
+      "type": "number",
+      "default": 0,
+      "description": "Visits made at the onsite kiosk"
+    },
+    "offsite_visits": {
+      "type": "number",
+      "default": 0,
+      "description": "Visits made from the public portal"
+    },
+    "first_visit": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "last_visit": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "full_name"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
