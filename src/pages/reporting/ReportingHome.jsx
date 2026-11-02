@@ -3,7 +3,8 @@ import PortalQuickUpload from '@/components/portal/PortalQuickUpload';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { Button } from '@/components/ui/button';
-import { Plus, FileText, CalendarCheck, Users, Star, BookOpen, Clock, CheckCircle, Footprints } from 'lucide-react';
+import { Plus, FileText, CalendarCheck, Users, Star, BookOpen, Clock, CheckCircle } from 'lucide-react';
+import CasualClientStats from '@/components/reports/CasualClientStats';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 
@@ -109,16 +110,6 @@ export default function ReportingHome() {
               </Link>
             );
           })}
-          <Link
-            to="/reporting/casual-clients"
-            className="bg-white border rounded-xl p-5 hover:shadow-md hover:border-accent/30 transition-all group"
-          >
-            <div className="p-2.5 rounded-lg bg-accent/5 text-accent w-fit mb-3 group-hover:bg-accent group-hover:text-white transition-colors">
-              <Footprints className="w-5 h-5" />
-            </div>
-            <h3 className="font-semibold text-sm">Casual Clients</h3>
-            <p className="text-xs text-muted-foreground mt-1">Job Lab visitor statistics</p>
-          </Link>
         </div>
       </div>
 

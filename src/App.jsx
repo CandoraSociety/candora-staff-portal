@@ -180,7 +180,6 @@ import ReportingHome from '@/pages/reporting/ReportingHome';
 import ReportingInternal from '@/pages/reporting/ReportingInternal';
 import ReportingFunder from '@/pages/reporting/ReportingFunder';
 import ReportingSpecial from '@/pages/reporting/ReportingSpecial';
-import ReportingCasualClients from '@/pages/reporting/ReportingCasualClients';
 import ReportingAGR from '@/pages/reporting/ReportingAGR';
 import ReportingAGREditor from '@/pages/reporting/ReportingAGREditor';
 import ReportingAGRPreview from '@/pages/reporting/ReportingAGRPreview';
@@ -599,7 +598,6 @@ const AuthenticatedApp = () => {
           <Route path="/reporting/internal" element={<ReportingInternal />} />
           <Route path="/reporting/funder" element={<ReportingFunder />} />
           <Route path="/reporting/special" element={<ReportingSpecial />} />
-          <Route path="/reporting/casual-clients" element={<ReportingCasualClients />} />
           <Route path="/reporting/agr" element={<ReportingAGR />} />
           <Route path="/reporting/agr/:id/edit" element={<ReportingAGREditor />} />
           <Route path="/reporting/agr/:id/preview" element={<ReportingAGRPreview />} />
