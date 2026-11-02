@@ -7,7 +7,10 @@
 // recap:  { kicker, title, body, audioUrl, takeaways[] }
 // quiz:   [{ question, options[], answer, explain }]
 //         answer = index of the correct option.
+import { JOBLAB_RECAP } from '@/lib/training/recapVideos/jobLabRecap';
+
 export const MODULE_RECAPS = {
+  joblab: JOBLAB_RECAP,
   welcome: {
     kicker: "What we've learned",
     title: "Familiar, not fluent — and that's the point.",

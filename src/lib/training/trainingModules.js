@@ -23,6 +23,7 @@ import { WELCOME_MODULES } from "@/lib/training/modules/welcomeModules";
 import { RECEPTION_MODULES } from "@/lib/training/modules/receptionModules";
 import { CENTRAL_DATABASE_MODULES } from "@/lib/training/modules/centralDatabaseModules";
 import { MINI_MODULES } from "@/lib/training/modules/miniModules";
+import { JOBLAB_MODULES } from "@/lib/training/modules/jobLabModules";
 
 export const TRAINING_MODULES = [
   // Welcome & app tour leads the catalog — every staff member starts here.
@@ -1037,6 +1038,7 @@ export const TRAINING_MODULES = [
     ]
   },
   ...PATHWAYS_EXTRA_MODULES,
+  ...JOBLAB_MODULES,
   {
     key: "ell",
     title: "ELL (English Language Learning)",
@@ -1227,6 +1229,7 @@ export const TRAINING_MODULE_ACCESS = {
   filemanager: "filemanager",
   filemanager_advanced: "filemanager",
   pathways_resources: "pathways",
+  joblab: "pathways",
 };
 
 export const getTrainingModule = (key) => TRAINING_MODULES.find(m => m.key === key) || null;

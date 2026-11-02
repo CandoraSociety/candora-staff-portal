@@ -124,7 +124,7 @@ export default function CasualClientStats() {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5" data-tour="reports-casual-clients">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-muted-foreground">
           Job Lab visitors are filed automatically as casual clients in Pathways CM. They are never added to the

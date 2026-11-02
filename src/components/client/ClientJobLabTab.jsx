@@ -74,14 +74,14 @@ export default function ClientJobLabTab({ client }) {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3" data-tour="jl-activity-stats">
             <Stat icon={Clock} label="Visits" value={visits.length} />
             <Stat icon={Laptop} label="Onsite visits" value={onsite} />
             <Stat icon={Briefcase} label="Jobs tracked" value={applications.length} />
             <Stat icon={FileText} label="Resumes" value={resumes.length} />
           </div>
 
-          <Card>
+          <Card data-tour="jl-activity-visits">
             <CardHeader><CardTitle className="text-base">Recent visits</CardTitle></CardHeader>
             <CardContent>
               {visits.length === 0 ? (
@@ -101,7 +101,7 @@ export default function ClientJobLabTab({ client }) {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card data-tour="jl-activity-jobs">
             <CardHeader><CardTitle className="text-base">Jobs tracked</CardTitle></CardHeader>
             <CardContent>
               {applications.length === 0 ? (

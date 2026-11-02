@@ -79,7 +79,7 @@ export default function JobLabAccountCard({ client }) {
   };
 
   return (
-    <div className="border border-slate-200 rounded-lg p-4 space-y-3">
+    <div className="border border-slate-200 rounded-lg p-4 space-y-3" data-tour="jl-account-card">
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <div className="flex items-center gap-2">
           <Laptop className="w-4 h-4" style={{ color: 'hsl(231,64%,20%)' }} />
@@ -138,7 +138,7 @@ export default function JobLabAccountCard({ client }) {
           <p className="text-xs text-slate-500">
             Set the client up so they can use the Job Lab kiosk or online portal. Their activity is logged on this file.
           </p>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2" data-tour="jl-account-form">
             <div>
               <Label className="mb-1 block text-xs font-medium text-slate-600">Name</Label>
               <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} className="h-9" />
@@ -153,7 +153,7 @@ export default function JobLabAccountCard({ client }) {
                 className="h-9"
               />
             </div>
-            <div className="sm:col-span-2 flex items-end gap-2">
+            <div className="sm:col-span-2 flex items-end gap-2" data-tour="jl-account-password">
               <div className="flex-1">
                 <Label className="mb-1 block text-xs font-medium text-slate-600">Password</Label>
                 <Input value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} className="h-9" />
@@ -169,7 +169,7 @@ export default function JobLabAccountCard({ client }) {
               </Button>
             </div>
           </div>
-          <div className="flex justify-end">
+          <div className="flex justify-end" data-tour="jl-account-create">
             <Button size="sm" onClick={handleCreate} disabled={saving}>
               {saving ? 'Creating…' : 'Create Job Lab account'}
             </Button>

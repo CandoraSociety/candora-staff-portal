@@ -250,7 +250,7 @@ export default function PathwaysClientProfile() {
             <TabsTrigger value="employment" data-tour="pw-tab-employment">Employment</TabsTrigger>
             <TabsTrigger value="referrals" data-tour="pw-tab-referrals">Referrals</TabsTrigger>
             <TabsTrigger value="assessments" data-tour="pw-tab-bit">BIT / ERA</TabsTrigger>
-            <TabsTrigger value="joblab">Job Lab</TabsTrigger>
+            <TabsTrigger value="joblab" data-tour="pw-tab-joblab">Job Lab</TabsTrigger>
             <TabsTrigger value="stream_switches" data-tour="pw-tab-switches" className="relative">
               Stream Switches
               {client.program_stream_switches?.length > 0 && (
