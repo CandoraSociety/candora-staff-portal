@@ -78,11 +78,32 @@ module.exports = {
   			'cp-admin-sidebar': 'hsl(var(--cp-admin-sidebar))',
   			'cp-admin-sidebar-accent': 'hsl(var(--cp-admin-sidebar-accent))',
   			'cp-sidebar-fg': 'hsl(var(--cp-sidebar-fg))',
+  			/* Job Lab — its own isolated palette, scoped under .joblab */
+  			jl: {
+  				bg: 'hsl(var(--jl-bg))',
+  				fg: 'hsl(var(--jl-fg))',
+  				card: 'hsl(var(--jl-card))',
+  				primary: 'hsl(var(--jl-primary))',
+  				'primary-fg': 'hsl(var(--jl-primary-fg))',
+  				secondary: 'hsl(var(--jl-secondary))',
+  				muted: 'hsl(var(--jl-muted))',
+  				'muted-fg': 'hsl(var(--jl-muted-fg))',
+  				accent: 'hsl(var(--jl-accent))',
+  				border: 'hsl(var(--jl-border))',
+  				ring: 'hsl(var(--jl-ring))',
+  				success: 'hsl(var(--jl-success))',
+  				purple: 'hsl(var(--jl-purple))',
+  				pink: 'hsl(var(--jl-pink))',
+  				navy: 'hsl(var(--jl-navy))',
+  				'navy-accent': 'hsl(var(--jl-navy-accent))',
+  				'navy-fg': 'hsl(var(--jl-navy-fg))'
+  			},
   		},
   		fontFamily: {
   			heading: ['Playfair Display', 'var(--font-heading)', 'serif'],
   			body: ['DM Sans', 'var(--font-body)', 'sans-serif'],
   			display: ['Nunito', 'var(--font-display)', 'sans-serif'],
+  			jlheading: ['DM Sans', 'sans-serif'],
   			mono: ['var(--font-mono)']
   		},
   		keyframes: {

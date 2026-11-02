@@ -1,0 +1,58 @@
+{
+  "name": "VisitLog",
+  "type": "object",
+  "description": "Job Lab visit record used for centre reporting \u2014 which participant came in, and whether from the onsite kiosk or the public portal.",
+  "properties": {
+    "participant_id": {
+      "type": "string"
+    },
+    "participant_name": {
+      "type": "string"
+    },
+    "participant_email": {
+      "type": "string"
+    },
+    "is_guest": {
+      "type": "boolean",
+      "default": false
+    },
+    "visit_date": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "location_type": {
+      "type": "string",
+      "enum": [
+        "onsite",
+        "offsite"
+      ],
+      "default": "offsite"
+    }
+  },
+  "required": [
+    "participant_name",
+    "visit_date"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

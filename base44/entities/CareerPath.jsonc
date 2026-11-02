@@ -1,0 +1,92 @@
+{
+  "name": "CareerPath",
+  "type": "object",
+  "description": "A career path a Job Lab participant generated: current role, target role, and milestones.",
+  "properties": {
+    "participant_id": {
+      "type": "string"
+    },
+    "title": {
+      "type": "string"
+    },
+    "current_role": {
+      "type": "string"
+    },
+    "target_role": {
+      "type": "string"
+    },
+    "timeline_years": {
+      "type": "number"
+    },
+    "milestones": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "target_date": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "not_started",
+              "in_progress",
+              "completed"
+            ],
+            "default": "not_started"
+          },
+          "skills_needed": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "required_skills": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "required_education": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "participant_id",
+    "title"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
