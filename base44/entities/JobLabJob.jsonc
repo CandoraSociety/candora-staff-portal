@@ -1,0 +1,147 @@
+{
+  "name": "JobLabJob",
+  "type": "object",
+  "description": "A local job posting on the Job Lab's community job board \u2014 posted by Candora staff for the people who use the Job Lab. Participants read these through the Job Lab, never directly.",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Job title as the employer advertises it"
+    },
+    "employer_name": {
+      "type": "string",
+      "description": "Hiring employer"
+    },
+    "location": {
+      "type": "string",
+      "description": "Where the work is (city or site)"
+    },
+    "employment_type": {
+      "type": "string",
+      "enum": [
+        "full_time",
+        "part_time",
+        "casual",
+        "contract",
+        "seasonal"
+      ],
+      "default": "full_time"
+    },
+    "wage": {
+      "type": "string",
+      "description": "Wage as advertised, e.g. '$19.50/hour'"
+    },
+    "hours": {
+      "type": "string",
+      "description": "Schedule or hours per week, e.g. 'Mon\u2013Fri, 8am\u20134pm'"
+    },
+    "description": {
+      "type": "string",
+      "description": "What the job involves"
+    },
+    "requirements": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "What the employer is looking for"
+    },
+    "how_to_apply": {
+      "type": "string",
+      "description": "Instructions for applying (bring a resume in person, email the manager, apply online\u2026)"
+    },
+    "apply_url": {
+      "type": "string",
+      "description": "Online application link, if there is one"
+    },
+    "contact_email": {
+      "type": "string"
+    },
+    "contact_phone": {
+      "type": "string"
+    },
+    "posted_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "closing_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Last day applications are accepted \u2014 the posting drops off the board after this date"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether the posting shows on the Job Lab board"
+    },
+    "created_by_name": {
+      "type": "string",
+      "description": "Staff member who posted it"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Internal notes \u2014 never shown to participants"
+    }
+  },
+  "required": [
+    "title",
+    "employer_name"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

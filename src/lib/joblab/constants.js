@@ -35,6 +35,25 @@ export const HOW_TO_APPLY_OPTIONS = [
   { value: 'other', label: 'Other' },
 ];
 
+export const EMPLOYMENT_TYPES = [
+  { value: 'full_time', label: 'Full-time' },
+  { value: 'part_time', label: 'Part-time' },
+  { value: 'casual', label: 'Casual' },
+  { value: 'contract', label: 'Contract' },
+  { value: 'seasonal', label: 'Seasonal' },
+];
+
+export const EMPLOYMENT_TYPE_LABELS = EMPLOYMENT_TYPES.reduce(
+  (acc, t) => ({ ...acc, [t.value]: t.label }),
+  {}
+);
+
+export const addDays = (dateStr, days) => {
+  const base = dateStr ? new Date(`${dateStr}T12:00:00`) : new Date();
+  base.setDate(base.getDate() + days);
+  return base.toISOString().slice(0, 10);
+};
+
 export const TEMPLATE_OPTIONS = [
   { value: 'professional', label: 'Professional' },
   { value: 'modern', label: 'Modern' },
