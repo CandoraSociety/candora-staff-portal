@@ -129,7 +129,8 @@ export default function NexusEmployees() {
         });
       }
 
-      // 5. Build welcome message for manual sending
+      // 5. Build welcome message for manual sending — it has to work on its own,
+      // without depending on the invitation email arriving.
       const registerUrl = `${window.location.origin}/register`;
       const loginUrl = `${window.location.origin}/login`;
       const welcomeMessage = `Subject: Welcome to the Candora Staff Portal — Action Required
@@ -138,19 +139,17 @@ Hi ${data.first_name},
 
 Welcome to the team! Your staff account has been set up on the Candora Staff Portal.
 
-${
-  invited
-    ? `You've been sent an invitation email with a button to set up your account. Open it and choose your password — make sure the email address matches this one exactly: ${data.email}
-If you don't see it, check your junk mail.`
-    : `To get started, create your account using the link below. Make sure to register using this exact email address: ${data.email}
+TWO QUICK STEPS
+1. Open this link: ${registerUrl}
+2. Choose "Create one", then sign up using this exact email address: ${data.email}
 
-👉 Create Your Account: ${registerUrl}`
-}
+You'll be sent a 6-digit code by email (from no-reply@base44-apps.com — check your junk mail) to confirm your address. Enter it, then choose your password.
 
-You can log in at any time here:
+Once you're set up, log in any time here:
 🔑 Staff Portal Login: ${loginUrl}
 
-You'll have access to your assigned portals and resources after logging in. If you have any trouble, reach out to your manager or HR.
+You'll have access to your assigned portals and resources after logging in.
+If the link tells you that you don't have access, or the code never arrives, contact your manager or HR.
 
 Welcome aboard!
 — Candora HR Team`;
@@ -509,10 +508,7 @@ Welcome aboard!
             {step === 3 && welcomeInfo && (
               <div className="space-y-4">
                 <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-800">
-                  <strong>{welcomeInfo.employee.first_name} {welcomeInfo.employee.last_name}</strong> has been added successfully.{' '}
-                  {welcomeInfo.invited
-                    ? <>An invitation email has been sent to <strong>{welcomeInfo.employee.email}</strong> — they set their own password from it. Copy the message below as a backup.</>
-                    : <>The invitation email could not be sent. Copy the message below and send it to <strong>{welcomeInfo.employee.email}</strong>.</>}
+                  <strong>{welcomeInfo.employee.first_name} {welcomeInfo.employee.last_name}</strong> has been added and given access. Copy the message below and send it to <strong>{welcomeInfo.employee.email}</strong> — the link in it is all they need.
                 </div>
 
                 <div>
