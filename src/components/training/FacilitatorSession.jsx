@@ -1,116 +1,98 @@
 import { useState } from "react";
-import { GraduationCap, ListChecks, Map, LogOut, Lightbulb, ChevronDown, ChevronUp } from "lucide-react";
+import { GraduationCap, ListChecks, ClipboardCheck, LogOut, Map } from "lucide-react";
 import SpotlightTour from "@/components/training/SpotlightTour";
 import PracticeChecklist from "@/components/training/PracticeChecklist";
 import ConfirmDialog from "@/components/training/ConfirmDialog";
-import { getFacilitatorGuide } from "@/lib/training/facilitatorGuide";
-import { endFacilitatedSession } from "@/lib/training/facilitatorSession";
-import useTrainingWindowDrag from "@/components/training/useTrainingWindowDrag";
+import FacilitatorSidebar from "@/components/training/facilitator/FacilitatorSidebar";
+import FacilitatorStartPrompt from "@/components/training/facilitator/FacilitatorStartPrompt";
+import { useTrainingTour } from "@/components/training/TrainingTourProvider";
+import {
+  readFacilitatorSession, endFacilitatedSession, goToFacilitatorBlock, wasBriefed, markBriefed,
+} from "@/lib/training/facilitatorSession";
 
 // In-facilitation progress writes go nowhere: a facilitated session never
 // creates or updates the facilitator's own TrainingProgress record.
 const noopUpdate = async () => {};
 
-// The facilitator's live control centre, shown (by TrainingPill) while a
-// facilitated session is running on the current portal: the projected tour in
-// presentation mode, a private talking-points panel, and the practice
-// checklist for the hands-on portion.
+// The facilitator's live control centre while a session runs on this portal:
+// the projected tour in presentation mode, their own sidebar with the day's
+// agenda and every section's talking point, and the practice checklist.
 export default function FacilitatorSession({ module }) {
-  const [tourOpen, setTourOpen] = useState(true);
+  const session = readFacilitatorSession();
+  const { requestJump } = useTrainingTour();
+  const [briefing, setBriefing] = useState(() => !wasBriefed(module.key));
+  const [tourOpen, setTourOpen] = useState(false);
   const [checklistOpen, setChecklistOpen] = useState(false);
   const [stepIndex, setStepIndex] = useState(0);
-  const [notesOpen, setNotesOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(true);
   const [confirmExit, setConfirmExit] = useState(false);
-  const notesDrag = useTrainingWindowDrag(notesOpen, module.key);
-  const controlsDrag = useTrainingWindowDrag(true, module.key);
 
-  const guide = getFacilitatorGuide(module.key);
-  const step = module.steps[stepIndex];
-  const stepNote = guide?.stepNotes?.[step?.title] || "No extra talking points for this step — follow the on-screen text.";
+  const plan = session?.plan || null;
 
-  const exit = () => setConfirmExit(true);
+  const begin = () => {
+    markBriefed(module.key);
+    setBriefing(false);
+    setTourOpen(true);
+  };
+
+  // Jumping writes the position first so the tour's own restore can't land on
+  // an older step; the request itself follows one tick later.
+  const jumpTo = (index) => {
+    setChecklistOpen(false);
+    setTourOpen(true);
+    try { sessionStorage.setItem(`candora-tour-step-f-${module.key}`, String(index)); } catch { /* ignore */ }
+    setTimeout(() => requestJump(module.key, index), 0);
+  };
+
+  const openPractice = () => {
+    setTourOpen(false);
+    setChecklistOpen(true);
+  };
 
   return (
     <>
-      {/* Facilitator control bar */}
-      <div ref={controlsDrag.ref} style={controlsDrag.style} className="fixed bottom-4 left-4 z-[60] print:hidden">
-        <div {...controlsDrag.handleProps} className="training-window-glow rounded-2xl border shadow-2xl px-3 py-2.5 flex items-center gap-2 flex-wrap max-w-[calc(100vw-32px)] cursor-grab active:cursor-grabbing select-none touch-none" style={{ background: "hsl(230, 70%, 10%)", borderColor: "hsl(45, 60%, 45%)" }}>
+      {/* Small screens only — the sidebar itself is docked on wider screens */}
+      <div className="fixed bottom-4 left-4 z-[60] print:hidden md:hidden">
+        <div className="training-window-glow rounded-2xl border shadow-2xl px-3 py-2.5 flex items-center gap-2 flex-wrap max-w-[calc(100vw-32px)]" style={{ background: "hsl(230, 70%, 10%)", borderColor: "hsl(45, 60%, 45%)" }}>
           <span className="flex items-center gap-1.5 text-xs font-bold" style={{ color: "hsl(45, 60%, 85%)" }}>
             <GraduationCap className="w-4 h-4" style={{ color: "hsl(45, 92%, 53%)" }} /> Facilitating
           </span>
-          <button
-            onClick={() => { setChecklistOpen(false); setTourOpen(true); }}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors hover:opacity-80"
-            style={{ background: "hsl(45, 92%, 53%)", color: "hsl(230, 70%, 10%)" }}
-          >
+          <button onClick={() => setTourOpen(true)} className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold" style={{ background: "hsl(45, 92%, 53%)", color: "hsl(230, 70%, 10%)" }}>
             <Map className="w-3.5 h-3.5" /> Tour
           </button>
-          <button
-            onClick={() => { setTourOpen(false); setChecklistOpen(true); }}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors hover:opacity-80"
-            style={{ background: "hsl(230, 55%, 20%)", color: "hsl(45, 60%, 85%)" }}
-          >
+          <button onClick={openPractice} className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold" style={{ background: "hsl(230, 55%, 20%)", color: "hsl(45, 60%, 85%)" }}>
             <ListChecks className="w-3.5 h-3.5" /> Practice
           </button>
-          <button
-            onClick={() => setNotesOpen(v => !v)}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors hover:opacity-80"
-            style={{ background: notesOpen ? "hsl(45, 70%, 22%)" : "hsl(230, 55%, 20%)", color: "hsl(45, 60%, 85%)" }}
-            title="Show or hide your talking-points panel"
-          >
-            {notesOpen ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronUp className="w-3.5 h-3.5" />} Notes
+          <button onClick={() => setBriefing(true)} className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold" style={{ background: "hsl(230, 55%, 20%)", color: "hsl(45, 60%, 85%)" }}>
+            <ClipboardCheck className="w-3.5 h-3.5" /> Checklist
           </button>
-          <button
-            onClick={exit}
-            className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold transition-colors hover:opacity-80"
-            style={{ background: "hsl(0, 45%, 28%)", color: "hsl(0, 0%, 95%)" }}
-          >
-            <LogOut className="w-3.5 h-3.5" /> End session
+          <button onClick={() => setConfirmExit(true)} className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-bold" style={{ background: "hsl(0, 45%, 28%)", color: "hsl(0, 0%, 95%)" }}>
+            <LogOut className="w-3.5 h-3.5" /> End
           </button>
         </div>
       </div>
 
-      {/* Talking points — private to the facilitator, never projected */}
-      {notesOpen && (
-        <div ref={notesDrag.ref} style={notesDrag.style} className="fixed top-4 right-4 z-[99] w-[330px] max-w-[calc(100vw-32px)] max-h-[calc(100vh-32px)] overflow-y-auto print:hidden">
-          <div className="rounded-2xl border shadow-2xl overflow-hidden training-window-glow" style={{ background: "hsl(230, 70%, 10%)", borderColor: "hsl(45, 60%, 45%)" }}>
-            <div {...notesDrag.handleProps} className="flex items-center gap-2 px-4 py-2.5 cursor-grab active:cursor-grabbing select-none touch-none" style={{ background: "hsl(230, 70%, 14%)", borderBottom: "1px solid hsl(230, 50%, 22%)" }}>
-              <Lightbulb className="w-4 h-4" style={{ color: "hsl(45, 92%, 53%)" }} />
-              <span className="text-xs font-bold" style={{ color: "hsl(45, 60%, 85%)" }}>Your talking points</span>
-            </div>
-            <div className="px-4 py-3 max-h-[60vh] overflow-y-auto">
-              {tourOpen && step && (
-                <>
-                  <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "hsl(45, 70%, 65%)" }}>
-                    Step {stepIndex + 1} of {module.steps.length} — {step.title}
-                  </p>
-                  <p className="text-sm leading-relaxed mt-1.5" style={{ color: "hsl(45, 45%, 88%)" }}>{stepNote}</p>
-                </>
-              )}
-              {checklistOpen && !!module.tasks?.length && (
-                <>
-                  <p className="text-[11px] font-semibold uppercase tracking-wide" style={{ color: "hsl(45, 70%, 65%)" }}>Practice — circulate and coach</p>
-                  <div className="mt-2 space-y-2">
-                    {module.tasks.map(t => (
-                      <div key={t.id} className="rounded-xl p-2.5" style={{ background: "hsl(230, 60%, 13%)", border: "1px solid hsl(230, 45%, 22%)" }}>
-                        <p className="text-xs font-semibold" style={{ color: "hsl(45, 50%, 90%)" }}>{t.title}</p>
-                        <p className="text-[11px] mt-0.5 leading-snug" style={{ color: "hsl(230, 25%, 65%)" }}>
-                          {guide?.practiceNotes?.[t.id] || t.body}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
-              {!tourOpen && !checklistOpen && (
-                <p className="text-sm" style={{ color: "hsl(230, 25%, 65%)" }}>
-                  Open the Tour or Practice to see your notes for it.
-                </p>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      <FacilitatorSidebar
+        module={module}
+        session={session}
+        stepIndex={stepIndex}
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        onOpen={() => setSidebarOpen(true)}
+        onJumpStep={jumpTo}
+        onOpenTour={() => setTourOpen(true)}
+        onOpenPractice={openPractice}
+        onOpenBriefing={() => setBriefing(true)}
+        onEndSession={() => setConfirmExit(true)}
+        onGoToBlock={goToFacilitatorBlock}
+      />
+
+      <FacilitatorStartPrompt
+        open={briefing}
+        module={module}
+        plan={plan}
+        onBegin={begin}
+      />
 
       <SpotlightTour
         open={tourOpen}
@@ -119,7 +101,7 @@ export default function FacilitatorSession({ module }) {
         updateProgress={noopUpdate}
         facilitator
         onStepChange={setStepIndex}
-        onClose={(finished) => { setTourOpen(false); if (finished) setChecklistOpen(true); }}
+        onClose={(finished) => { setTourOpen(false); if (finished) openPractice(); }}
       />
       <PracticeChecklist
         open={checklistOpen}
