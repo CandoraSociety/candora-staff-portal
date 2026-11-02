@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { ArrowLeft, Mail, Phone, MapPin, Calendar, Award, Clock, Edit2, Trash2, Pencil, Shield, FileText, Star, Activity, ChevronRight, Check, X, UserX, RotateCcw, MessageSquare, Copy, CheckCheck } from 'lucide-react';
+import { ArrowLeft, Mail, Phone, MapPin, Calendar, Award, Clock, Edit2, Trash2, Pencil, Shield, FileText, Star, Activity, ChevronRight, Check, X, UserX, RotateCcw, MessageSquare } from 'lucide-react';
 import { format } from 'date-fns';
 import { useToast } from '@/components/ui/use-toast';
 import EmployeeForm from '@/components/employees/EmployeeForm';
@@ -17,7 +17,7 @@ import StatusBadge from '@/components/shared/StatusBadge';
 import { calculateMilestones } from '@/lib/employeeMilestones';
 import { formatPhoneNumber } from '@/lib/utils';
 import { PORTAL_MODULES, TIER_LABELS } from '@/lib/tierPermissionPresets';
-import { appParams } from '@/lib/app-params';
+import StaffWelcomeDetails from '@/components/employees/StaffWelcomeDetails';
 import ConcludeEmploymentDialog from '@/components/employees/ConcludeEmploymentDialog';
 import DeleteEmployeeDialog from '@/components/employees/DeleteEmployeeDialog';
 import ReportsToDialog from '@/components/employees/ReportsToDialog';
@@ -51,7 +51,6 @@ export default function NexusEmployeeProfile() {
   const [concludeOpen, setConcludeOpen] = useState(false);
   const [welcomeOpen, setWelcomeOpen] = useState(false);
   const [reportsToOpen, setReportsToOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   const { data: employee, isLoading } = useQuery({
     queryKey: ['employee', id],
@@ -389,45 +388,7 @@ export default function NexusEmployeeProfile() {
       <Dialog open={welcomeOpen} onOpenChange={setWelcomeOpen}>
         <DialogContent className="max-w-lg">
           <DialogHeader><DialogTitle>Welcome Message</DialogTitle></DialogHeader>
-          {(() => {
-            const baseUrl = (appParams.appBaseUrl || window.location.origin).replace(/\/$/, '');
-            const registerUrl = `${baseUrl}/register?email=${encodeURIComponent(employee.email)}`;
-            const loginUrl = `${baseUrl}/login`;
-            const message = `Subject: Welcome to the Candora Staff Portal — Action Required
-
-Hi ${employee.first_name},
-
-Welcome to the team! Your staff account has been set up on the Candora Staff Portal.
-
-This link is yours alone — it opens the sign-up form with your email already filled in. Please don't forward it.
-
-👉 Create Your Account: ${registerUrl}
-
-Your email (${employee.email}) is already set — leave it as it is.
-
-Once you've registered, you can log in at any time here:
-🔑 Staff Portal Login: ${loginUrl}
-
-You'll have access to your assigned portals and resources after logging in. If you have any trouble, reach out to your manager or HR.
-
-Welcome aboard!
-— Candora HR Team`;
-            return (
-              <div className="space-y-3">
-                <p className="text-sm text-muted-foreground">Send this to <strong>{employee.email}</strong> manually.</p>
-                <div className="flex justify-end">
-                  <Button size="sm" variant="outline" className="h-7 text-xs gap-1" onClick={() => { navigator.clipboard.writeText(message); setCopied(true); setTimeout(() => setCopied(false), 2500); }}>
-                    {copied ? <><CheckCheck className="w-3.5 h-3.5 text-green-600" />Copied!</> : <><Copy className="w-3.5 h-3.5" />Copy Message</>}
-                  </Button>
-                </div>
-                <textarea readOnly value={message} className="w-full h-64 text-xs font-mono bg-muted/40 border rounded-md p-3 resize-none focus:outline-none" />
-                <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-xs text-blue-800 space-y-1">
-                  <div><strong>Register (first time):</strong> <span className="font-mono">{registerUrl}</span></div>
-                  <div><strong>Login (returning):</strong> <span className="font-mono">{loginUrl}</span></div>
-                </div>
-              </div>
-            );
-          })()}
+          <StaffWelcomeDetails employee={employee} />
         </DialogContent>
       </Dialog>
 

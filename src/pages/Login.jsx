@@ -7,6 +7,8 @@ import { Label } from "@/components/ui/label";
 import { LogIn, Mail, Lock, Loader2 } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
+import MicrosoftSignInButton from "@/components/auth/MicrosoftSignInButton";
+import { safeReturnTo } from "@/lib/authReturnTo";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -19,8 +21,8 @@ export default function Login() {
     setError("");
     setLoading(true);
     try {
-      await base44.auth.loginViaEmailPassword(email, password);
-      window.location.href = "/";
+      await base44.auth.loginViaEmailPassword(email.trim().toLowerCase(), password);
+      window.location.assign(safeReturnTo());
     } catch (err) {
       setError(err.message || "Invalid email or password");
     } finally {
@@ -29,23 +31,24 @@ export default function Login() {
   };
 
   const handleGoogle = () => {
-    base44.auth.loginWithProvider("google", "/");
+    base44.auth.loginWithProvider("google", safeReturnTo());
   };
 
   return (
     <AuthLayout
       icon={LogIn}
       title="Welcome back"
-      subtitle="Log in to your account"
+      subtitle="Use the email address invited to the staff portal"
       footer={
         <>
           Don't have an account?{" "}
-          <Link to="/register" className="text-primary font-medium hover:underline">
+          <Link to={`/register?returnTo=${encodeURIComponent(safeReturnTo())}`} className="text-primary font-medium hover:underline">
             Create one
           </Link>
         </>
       }
     >
+      <MicrosoftSignInButton />
       <Button
         variant="outline"
         className="w-full h-12 text-sm font-medium mb-6"

@@ -1,14 +1,14 @@
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { useOutletContext } from 'react-router-dom';
+import { useAuth } from '@/lib/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { EMPLOYEE_STATUSES } from '@/lib/employeeDepartments';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Plus, Search, Eye, ShieldCheck, UserPlus, UserX, ArrowLeft, RotateCcw, Trash2, Copy, CheckCheck } from 'lucide-react';
+import { Plus, Search, Eye, ShieldCheck, UserPlus, UserX, ArrowLeft, RotateCcw, Trash2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/components/ui/use-toast';
 import { PORTAL_MODULES, TIER_PRESETS } from '@/lib/tierPermissionPresets';
@@ -19,6 +19,7 @@ import { format } from 'date-fns';
 import EmployeeForm from '@/components/employees/EmployeeForm';
 import PortalAccessSelector from '@/components/employees/PortalAccessSelector';
 import FileAccessSelector from '@/components/files/FileAccessSelector';
+import StaffWelcomeDetails from '@/components/employees/StaffWelcomeDetails';
 
 export default function NexusEmployees() {
   const [search, setSearch] = useState('');
@@ -33,12 +34,10 @@ export default function NexusEmployees() {
   const [selectedFileAccess, setSelectedFileAccess] = useState([]); // extra file access levels
   const [saving, setSaving] = useState(false);
   const [welcomeInfo, setWelcomeInfo] = useState(null); // shown on step 3
-  const [copied, setCopied] = useState(false);
   const [confirmPurgeId, setConfirmPurgeId] = useState(null);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
-  const outletContext = useOutletContext();
-  const user = outletContext?.user;
+  const { user } = useAuth();
   const { toast } = useToast();
 
   const ADMIN_TIERS = ['executive_director', 'director'];
@@ -48,7 +47,6 @@ export default function NexusEmployees() {
     setSelectedPortals([]);
     setSelectedFileAccess([]);
     setWelcomeInfo(null);
-    setCopied(false);
     setStep(1);
     setShowForm(true);
   };
@@ -66,7 +64,7 @@ export default function NexusEmployees() {
     if (!pendingEmployee) return;
     setSaving(true);
     try {
-      const data = pendingEmployee;
+      const data = { ...pendingEmployee, email: pendingEmployee.email.trim().toLowerCase() };
 
       // 1. Create employee record
       const employee = await base44.entities.Employee.create(data);
@@ -112,63 +110,30 @@ export default function NexusEmployees() {
 
       queryClient.invalidateQueries({ queryKey: ['employees'] });
 
-      // 4. Invite them to the app. This app is private, so only invited people
-      // can get in — creating the employee record alone leaves them locked out,
-      // and a self-registration link does not grant access.
+      // Saving an HR profile does not create an account or grant private-app access.
       let invited = false;
-      try {
-        await base44.users.inviteUser(data.email, 'user');
-        invited = true;
+      let invitationError = '';
+      if (user?.role === 'admin') {
+        try {
+          await base44.users.inviteUser(data.email, 'user');
+          invited = true;
+        } catch (err) {
+          invitationError = err.message || 'The app invitation could not be sent.';
+        }
+      } else {
+        invitationError = 'Only an app administrator can invite staff to this private app.';
+      }
+      if (invited) {
         await base44.entities.Employee.update(employee.id, { invite_sent: true });
         queryClient.invalidateQueries({ queryKey: ['employees'] });
-      } catch (err) {
-        toast({
-          title: 'Invitation not sent',
-          description: `The invitation email to ${data.email} failed — they may already have an account. Send them the login link below instead.`,
-          variant: 'destructive',
-        });
       }
-
-      // 5. Build welcome message for manual sending — it has to work on its own,
-      // without depending on the invitation email arriving.
-      const registerUrl = `${window.location.origin}/register?email=${encodeURIComponent(data.email)}`;
-      const loginUrl = `${window.location.origin}/login`;
-      const welcomeMessage = `Subject: Welcome to the Candora Staff Portal — Action Required
-
-Hi ${data.first_name},
-
-Welcome to the team! Your staff account has been set up on the Candora Staff Portal.
-
-This link is yours alone — it opens the sign-up form with your email already filled in. Please don't forward it.
-
-TWO QUICK STEPS
-1. Open your personal link: ${registerUrl}
-2. Choose a password and create your account. Your email (${data.email}) is already set — leave it as it is.
-
-You'll be sent a 6-digit code by email (from no-reply@base44-apps.com — check your junk mail) to confirm your address. Enter it, then choose your password.
-
-Once you're set up, log in any time here:
-🔑 Staff Portal Login: ${loginUrl}
-
-You'll have access to your assigned portals and resources after logging in.
-If the link tells you that you don't have access, or the code never arrives, contact your manager or HR.
-
-Welcome aboard!
-— Candora HR Team`;
-
-      setWelcomeInfo({ employee: data, message: welcomeMessage, registerUrl, loginUrl, invited });
+      setWelcomeInfo({ employee: data, invited, invitationError });
       setStep(3);
     } catch (err) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
     } finally {
       setSaving(false);
     }
-  };
-
-  const handleCopy = () => {
-    navigator.clipboard.writeText(welcomeInfo.message);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2500);
   };
 
   const { data: employees = [], isLoading } = useQuery({ 
@@ -509,35 +474,7 @@ Welcome aboard!
 
             {step === 3 && welcomeInfo && (
               <div className="space-y-4">
-                <div className="bg-green-50 border border-green-200 rounded-lg p-3 text-sm text-green-800">
-                  <strong>{welcomeInfo.employee.first_name} {welcomeInfo.employee.last_name}</strong> has been added and given access. Copy the message below and send it to <strong>{welcomeInfo.employee.email}</strong> — the link in it is all they need.
-                </div>
-
-                <div>
-                  <div className="flex items-center justify-between mb-1">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Welcome Message</p>
-                    <Button size="sm" variant="outline" onClick={handleCopy} className="h-7 text-xs gap-1">
-                      {copied ? <><CheckCheck className="w-3.5 h-3.5 text-green-600" />Copied!</> : <><Copy className="w-3.5 h-3.5" />Copy Message</>}
-                    </Button>
-                  </div>
-                  <textarea
-                    readOnly
-                    value={welcomeInfo.message}
-                    className="w-full h-64 text-xs font-mono bg-muted/40 border rounded-md p-3 resize-none focus:outline-none"
-                  />
-                </div>
-
-                <div className="bg-blue-50 border border-blue-200 rounded-md p-3 text-xs text-blue-800 space-y-2">
-                  <div>
-                    <strong>Register (first time):</strong>
-                    <div className="mt-0.5 font-mono break-all">{welcomeInfo.registerUrl}</div>
-                  </div>
-                  <div>
-                    <strong>Login (returning):</strong>
-                    <div className="mt-0.5 font-mono break-all">{welcomeInfo.loginUrl}</div>
-                  </div>
-                </div>
-
+                <StaffWelcomeDetails employee={welcomeInfo.employee} invitationSent={welcomeInfo.invited} invitationError={welcomeInfo.invitationError} />
                 <Button className="w-full" onClick={() => setShowForm(false)}>Done</Button>
               </div>
             )}

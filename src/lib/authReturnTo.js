@@ -9,11 +9,13 @@
 // //evil.com when assigned to location.href — an open redirect. So require the
 // resolved path to be exactly one leading slash (no "//" prefix, no backslash).
 export function safeReturnTo() {
-  const raw = new URLSearchParams(window.location.search).get("returnTo");
+  const params = new URLSearchParams(window.location.search);
+  const raw = params.get("returnTo") || params.get("from_url");
   if (!raw) return "/";
   try {
     const url = new URL(raw, window.location.origin);
     if (url.origin !== window.location.origin) return "/";
+    if (["/login", "/register", "/forgot-password", "/reset-password"].includes(url.pathname.replace(/\/$/, ""))) return "/";
     // Strip app-bootstrap params: app-params.js persists these from the URL into
     // localStorage before the SDK initializes, so a crafted returnTo could
     // otherwise poison the freshly issued session — repointing the app at an

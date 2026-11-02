@@ -9,11 +9,11 @@ import RegistrationVerification from "@/components/auth/RegistrationVerification
 import { safeReturnTo } from "@/lib/authReturnTo";
 import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
+import MicrosoftSignInButton from "@/components/auth/MicrosoftSignInButton";
 import { toast } from "@/components/ui/use-toast";
 
-// Each employee gets their own create-account link carrying their work email
-// (/register?email=…). Prefilling it means nobody can sign up under an address
-// that was never invited, which is what makes verification fail later.
+// Support older email-prefilled links as a convenience only.
+// A query parameter is not an invitation and never grants app access.
 const linkEmail = (new URLSearchParams(window.location.search).get("email") || "").trim().toLowerCase();
 
 export default function Register() {
@@ -90,7 +90,7 @@ export default function Register() {
   };
 
   const handleGoogle = () => {
-    base44.auth.loginWithProvider("google", "/");
+    base44.auth.loginWithProvider("google", safeReturnTo());
   };
 
   if (showOtp) {
@@ -108,16 +108,17 @@ export default function Register() {
     <AuthLayout
       icon={UserPlus}
       title="Create your account"
-      subtitle="Sign up to get started"
+      subtitle="For staff who have received an app invitation"
       footer={
         <>
           Already have an account?{" "}
-          <Link to="/login" className="text-primary font-medium hover:underline">
+          <Link to={`/login?returnTo=${encodeURIComponent(safeReturnTo())}`} className="text-primary font-medium hover:underline">
             Log in
           </Link>
         </>
       }
     >
+      <MicrosoftSignInButton />
       <Button
         variant="outline"
         className="w-full h-12 text-sm font-medium mb-6"
