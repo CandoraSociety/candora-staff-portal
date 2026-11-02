@@ -11,8 +11,14 @@ import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
 import { toast } from "@/components/ui/use-toast";
 
+// Each employee gets their own create-account link carrying their work email
+// (/register?email=…). Prefilling it means nobody can sign up under an address
+// that was never invited, which is what makes verification fail later.
+const linkEmail = (new URLSearchParams(window.location.search).get("email") || "").trim().toLowerCase();
+
 export default function Register() {
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(linkEmail);
+  const [emailLocked, setEmailLocked] = useState(Boolean(linkEmail));
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState("");
@@ -145,14 +151,27 @@ export default function Register() {
               id="email"
               type="email"
               autoComplete="email"
-              autoFocus
+              autoFocus={!emailLocked}
               placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="pl-10 h-12"
+              readOnly={emailLocked}
+              className={`pl-10 h-12 ${emailLocked ? "bg-muted text-muted-foreground" : ""}`}
               required
             />
           </div>
+          {emailLocked && (
+            <p className="text-xs text-muted-foreground">
+              This link is set up for your work email.{" "}
+              <button
+                type="button"
+                className="text-primary font-medium hover:underline"
+                onClick={() => { setEmailLocked(false); setEmail(""); }}
+              >
+                Use a different email
+              </button>
+            </p>
+          )}
         </div>
         <div className="space-y-2">
           <Label htmlFor="password">Password</Label>

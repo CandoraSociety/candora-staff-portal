@@ -131,7 +131,7 @@ export default function NexusEmployees() {
 
       // 5. Build welcome message for manual sending — it has to work on its own,
       // without depending on the invitation email arriving.
-      const registerUrl = `${window.location.origin}/register`;
+      const registerUrl = `${window.location.origin}/register?email=${encodeURIComponent(data.email)}`;
       const loginUrl = `${window.location.origin}/login`;
       const welcomeMessage = `Subject: Welcome to the Candora Staff Portal — Action Required
 
@@ -139,9 +139,11 @@ Hi ${data.first_name},
 
 Welcome to the team! Your staff account has been set up on the Candora Staff Portal.
 
+This link is yours alone — it opens the sign-up form with your email already filled in. Please don't forward it.
+
 TWO QUICK STEPS
-1. Open this link: ${registerUrl}
-2. Choose "Create one", then sign up using this exact email address: ${data.email}
+1. Open your personal link: ${registerUrl}
+2. Choose a password and create your account. Your email (${data.email}) is already set — leave it as it is.
 
 You'll be sent a 6-digit code by email (from no-reply@base44-apps.com — check your junk mail) to confirm your address. Enter it, then choose your password.
 

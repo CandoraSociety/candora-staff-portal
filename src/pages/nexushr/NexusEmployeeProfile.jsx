@@ -391,7 +391,7 @@ export default function NexusEmployeeProfile() {
           <DialogHeader><DialogTitle>Welcome Message</DialogTitle></DialogHeader>
           {(() => {
             const baseUrl = (appParams.appBaseUrl || window.location.origin).replace(/\/$/, '');
-            const registerUrl = `${baseUrl}/register`;
+            const registerUrl = `${baseUrl}/register?email=${encodeURIComponent(employee.email)}`;
             const loginUrl = `${baseUrl}/login`;
             const message = `Subject: Welcome to the Candora Staff Portal — Action Required
 
@@ -399,9 +399,11 @@ Hi ${employee.first_name},
 
 Welcome to the team! Your staff account has been set up on the Candora Staff Portal.
 
-To get started, please create your account using the link below. Make sure to register using this exact email address: ${employee.email}
+This link is yours alone — it opens the sign-up form with your email already filled in. Please don't forward it.
 
 👉 Create Your Account: ${registerUrl}
+
+Your email (${employee.email}) is already set — leave it as it is.
 
 Once you've registered, you can log in at any time here:
 🔑 Staff Portal Login: ${loginUrl}
