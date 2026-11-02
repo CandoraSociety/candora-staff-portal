@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import {
   CalendarDays, ChevronDown, ChevronRight, ClipboardCheck, FileText, GraduationCap,
-  ListChecks, LogOut, PanelRightClose, PanelRightOpen, Play, Printer,
+  ListChecks, LogOut, MonitorPlay, PanelRightClose, PanelRightOpen, Play, Printer,
 } from "lucide-react";
 import { withTimes } from "@/lib/training/planTimeline";
 import { getSectionNote, getPracticeNote, getModuleTips, getRoomHandouts } from "@/lib/training/facilitatorResources";
@@ -24,6 +24,7 @@ const Row = ({ children, className = "" }) => (
 export default function FacilitatorSidebar({
   module, session, stepIndex, open, onClose, onOpen,
   onJumpStep, onOpenTour, onOpenPractice, onOpenBriefing, onEndSession, onGoToBlock,
+  mirrorOn, mirrorLive, mirrorCount, onToggleMirror,
 }) {
   const [expanded, setExpanded] = useState(stepIndex);
   const [agendaOpen, setAgendaOpen] = useState(true);
@@ -73,6 +74,38 @@ export default function FacilitatorSidebar({
             </div>
             <button onClick={onClose} title="Hide sidebar" className="rounded-lg p-1 hover:opacity-70" style={{ color: MUTED }}>
               <PanelRightClose className="h-4 w-4" />
+            </button>
+          </div>
+
+          {/* Mirror the facilitator's slide onto the participants' screens */}
+          <div className="shrink-0 px-2 pt-2">
+            <button
+              onClick={onToggleMirror}
+              title="Show the slide you are presenting on the screens of everyone listed as a participant"
+              className="flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left hover:opacity-90"
+              style={mirrorOn
+                ? { background: GOLD, color: "hsl(230, 70%, 12%)", border: "1px solid hsl(45, 92%, 45%)" }
+                : { background: NAVY_DEEP, border: LINE, color: "hsl(45, 55%, 85%)" }}
+            >
+              <MonitorPlay className="h-3.5 w-3.5 shrink-0" />
+              <span className="min-w-0 flex-1">
+                <span className="block text-[11px] font-bold leading-snug">Mirror my screen</span>
+                <span className="block text-[10px] leading-snug opacity-80">
+                  {mirrorOn
+                    ? (mirrorLive
+                      ? `Live · ${mirrorCount || "all"} participant${mirrorCount === 1 ? "" : "s"}`
+                      : "Paused — practice, test or quiz")
+                    : "Participants follow the slide when on"}
+                </span>
+              </span>
+              <span
+                className="shrink-0 rounded-full px-1.5 py-0.5 text-[9px] font-bold"
+                style={mirrorOn
+                  ? { background: "hsl(230, 70%, 12%)", color: GOLD }
+                  : { background: "hsl(230, 45%, 24%)", color: "hsl(45, 55%, 82%)" }}
+              >
+                {mirrorOn ? "ON" : "OFF"}
+              </span>
             </button>
           </div>
 

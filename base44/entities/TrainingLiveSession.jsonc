@@ -1,0 +1,130 @@
+{
+  "name": "TrainingLiveSession",
+  "type": "object",
+  "properties": {
+    "facilitator_email": {
+      "type": "string",
+      "description": "Staff member running the session"
+    },
+    "facilitator_name": {
+      "type": "string",
+      "description": "Display name of the facilitator (denormalized)"
+    },
+    "plan_id": {
+      "type": "string",
+      "description": "TrainingDayPlan the session belongs to (empty for a single module)"
+    },
+    "plan_title": {
+      "type": "string",
+      "description": "Training day title (denormalized)"
+    },
+    "module_key": {
+      "type": "string",
+      "description": "Training module currently being taught"
+    },
+    "module_title": {
+      "type": "string",
+      "description": "Module title (denormalized for the participant takeover)"
+    },
+    "attendees": {
+      "type": "array",
+      "description": "Participants whose screens follow this session. Empty means every signed-in staff member follows.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "mirroring": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether participants' screens are currently mirroring the facilitator's slide"
+    },
+    "stage": {
+      "type": "string",
+      "enum": [
+        "slide",
+        "practice",
+        "wrapup",
+        "closed"
+      ],
+      "default": "closed",
+      "description": "What the facilitator is showing right now. Only 'slide' is mirrored \u2014 practice, tests, quizzes and wrap-ups never are."
+    },
+    "step_index": {
+      "type": "number",
+      "description": "Slide number the facilitator is on"
+    },
+    "step_title": {
+      "type": "string",
+      "description": "Title of the current slide (denormalized)"
+    },
+    "heartbeat": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last time the facilitator's screen reported in \u2014 a stale session stops mirroring on its own"
+    }
+  },
+  "required": [
+    "facilitator_email",
+    "module_key"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by_id": "{{user.id}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

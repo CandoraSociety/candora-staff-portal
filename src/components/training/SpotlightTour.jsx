@@ -19,7 +19,7 @@ import ModuleWrapUp from "@/components/training/ModuleWrapUp";
 import { getModuleRecap } from "@/lib/training/moduleRecaps";
 
 
-export default function SpotlightTour({ open, module, progress, updateProgress, onClose, withWrapUp, facilitator, onStepChange }) {
+export default function SpotlightTour({ open, module, progress, updateProgress, onClose, withWrapUp, facilitator, onStepChange, onStage, mirror, mirrorStep }) {
   const navigate = useNavigate();
   const location = useLocation();
   const { setRevealedWidget, setRevealedNavPath, setWidgetsWalkthrough, jumpRequest } = useTrainingTour();
@@ -34,6 +34,9 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
 
   const steps = module?.steps || [];
   const step = steps[index];
+  // A mirrored tour belongs to a participant: it shows the facilitator's slide
+  // and never advances on its own.
+  const mirrored = !!mirror;
   const path = spotlightPath(module, index);
   // Steps that live on dynamic pages (a client file sits at /pathways/client/:id)
   // declare a routePrefix instead of a fixed path: the slide stays on whichever
@@ -107,15 +110,28 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
     if (open) onStepChange?.(index);
   }, [open, index]);
 
+  // A participant's mirrored tour follows the facilitator's slide.
+  useEffect(() => {
+    if (!open || !mirrored) return;
+    const total = steps.length || 1;
+    setIndex(Math.max(0, Math.min(total - 1, Number(mirrorStep) || 0)));
+  }, [open, mirrored, mirrorStep, steps.length]);
+
+  // Tell a facilitating session what is on screen: only "slide" is mirrored —
+  // practice, tests, quizzes and the wrap-up release participants' screens.
+  useEffect(() => {
+    onStage?.(!open ? "closed" : wrappingUp ? "wrapup" : "slide");
+  }, [open, wrappingUp]);
+
   // Restore position + presentation preference when the tour opens
   useEffect(() => {
-    if (!open || !module) return;
+    if (!open || !module || mirrored) return;
     try {
       const saved = Number(sessionStorage.getItem(stepKey)) || 0;
       setIndex(saved < steps.length ? saved : 0);
       setPresentation(facilitator ? sessionStorage.getItem(presentationKey) !== "0" : sessionStorage.getItem(presentationKey) === "1");
     } catch { /* ignore */ }
-  }, [open, module?.key]);
+  }, [open, module?.key, mirrored]);
 
   // Part 2 follows the same demo client Part 1 showed unplanned: applying the
   // journey demo state before the first navigation puts the WD plan and the
@@ -222,7 +238,7 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
                 {module.shortTitle || module.title}
               </span>
               <span className={`font-semibold ${presentation ? "text-base" : "text-xs"}`} style={{ color: "hsl(45, 60%, 80%)" }}>
-                {wrappingUp ? "What we've learned" : `Step ${index + 1} of ${steps.length}`}
+                {wrappingUp ? "What we've learned" : mirrored ? `Following · ${index + 1} of ${steps.length}` : `Step ${index + 1} of ${steps.length}`}
               </span>
             </div>
             <div className="flex items-center gap-1">
@@ -246,6 +262,7 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
                 <Presentation className="w-4 h-4" />
                 {presentation && <span className="text-[10px] font-semibold">Presenting</span>}
               </button>
+              {!mirrored && (
               <button
                 onClick={() => { saveStep(index); onClose(false); }}
                 className="p-1.5 rounded-lg hover:opacity-70"
@@ -254,6 +271,7 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
               >
                 <X className="w-4 h-4" />
               </button>
+              )}
             </div>
           </div>
 
@@ -289,7 +307,20 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
           </div>
 
           {!wrappingUp && (
-          <div className="flex shrink-0 items-center justify-between px-4 py-3" style={{ borderTop: "1px solid hsl(230, 50%, 22%)" }}>
+          <div className="flex shrink-0 items-center justify-between gap-2 px-4 py-3" style={{ borderTop: "1px solid hsl(230, 50%, 22%)" }}>
+            {mirrored ? (
+              <>
+                <span className="text-[11px] font-semibold" style={{ color: "hsl(45, 60%, 78%)" }}>
+                  Following your facilitator
+                </span>
+                <div className="flex gap-1">
+                  {steps.map((_, i) => (
+                    <span key={i} className="w-1.5 h-1.5 rounded-full" style={{ background: i === index ? "hsl(45, 92%, 53%)" : "hsl(230, 40%, 30%)" }} />
+                  ))}
+                </div>
+              </>
+            ) : (
+              <>
             <button
               onClick={back}
               disabled={index === 0}
@@ -310,6 +341,8 @@ export default function SpotlightTour({ open, module, progress, updateProgress, 
             >
               {index === steps.length - 1 ? (recap ? "What we've learned" : "Start practice") : "Next"} <ArrowRight className="w-3.5 h-3.5" />
             </button>
+              </>
+            )}
           </div>
           )}
         </div>
