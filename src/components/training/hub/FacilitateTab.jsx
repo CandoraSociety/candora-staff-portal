@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { TRAINING_MODULES, getTrainingModule } from "@/lib/training/trainingModules";
+import { groupModulesBySection } from "@/lib/training/moduleSections";
 import { startFacilitatedSession } from "@/lib/training/facilitatorSession";
 import { planModuleKeys } from "@/lib/training/planAssignment";
 import FacilitatorRunSheet from "@/components/training/FacilitatorRunSheet";
@@ -60,20 +61,29 @@ export default function FacilitateTab() {
         title="Facilitate one module"
         subtitle="Project it for the room, with your talking points beside it."
       >
-        <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
-          {TRAINING_MODULES.map(m => {
-            const active = selectedModule === m.key;
-            return (
-              <button
-                key={m.key}
-                onClick={() => setSelectedModule(m.key)}
-                className={`rounded-xl border px-3 py-2.5 text-left text-sm font-medium leading-snug transition-colors ${active ? "border-transparent shadow-sm" : "hover:bg-accent"}`}
-                style={active ? goldBtn : undefined}
-              >
-                {m.shortTitle || m.title}
-              </button>
-            );
-          })}
+        <div className="space-y-3">
+          {groupModulesBySection(TRAINING_MODULES).map(section => (
+            <div key={section.key}>
+              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground mb-1.5">
+                {section.title}
+              </p>
+              <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                {section.modules.map(m => {
+                  const active = selectedModule === m.key;
+                  return (
+                    <button
+                      key={m.key}
+                      onClick={() => setSelectedModule(m.key)}
+                      className={`rounded-xl border px-3 py-2.5 text-left text-sm font-medium leading-snug transition-colors ${active ? "border-transparent shadow-sm" : "hover:bg-accent"}`}
+                      style={active ? goldBtn : undefined}
+                    >
+                      {m.shortTitle || m.title}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </div>
 
         <div className="mt-4 rounded-xl p-4 flex flex-wrap items-center justify-between gap-4" style={{ background: NAVY }}>
