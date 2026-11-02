@@ -8,7 +8,6 @@ import TrainingDayAIBuilder from "@/components/training/plan/TrainingDayAIBuilde
 import PlanRefineChat from "@/components/training/plan/PlanRefineChat";
 import PlanPrintDialog from "@/components/training/plan/PlanPrintDialog";
 import PlanMaterials from "@/components/training/plan/PlanMaterials";
-import PlanCompletionCard from "@/components/training/plan/PlanCompletionCard";
 import FacilitatorRunSheet from "@/components/training/FacilitatorRunSheet";
 
 const inputCls = "w-full rounded-lg border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring/30";
@@ -293,8 +292,6 @@ Write what each attendee does in the app's Test Mode sandbox during this block. 
         </div>
 
         <PlanMaterials plan={plan} />
-
-        <PlanCompletionCard plan={plan} />
 
         <div className="flex justify-end print:hidden">
           <button

@@ -9,6 +9,7 @@ import { startTrainingSession } from '@/lib/training/trainingSession';
 import { useSupervisorAccess } from '@/lib/useSupervisorAccess';
 import ConfirmDialog from '@/components/training/ConfirmDialog';
 import TrainingModuleCard from '@/components/training/TrainingModuleCard';
+import MyTrainingPlans from '@/components/training/MyTrainingPlans';
 
 // Sidebar tab listing every training module the signed-in staff member can
 // take, grouped by the portal each one teaches — modules for portals they
@@ -69,6 +70,8 @@ export default function StaffPortalTraining() {
           Training runs on simulated demo data, so nothing you do while training affects real records.
         </p>
       </div>
+
+      <MyTrainingPlans user={user} progress={progress} />
 
       <div data-tour="training-catalog" className="rounded-xl border bg-muted/30 px-4 py-3 text-sm">
         <span className="font-semibold">{completedCount} of {modules.length}</span> training modules completed
