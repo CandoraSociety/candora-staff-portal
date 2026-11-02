@@ -95,7 +95,7 @@ export default function AppLayout() {
 
       {/* Main content */}
       <div className={cn(
-        "transition-all duration-300",
+        "app-main transition-all duration-300",
         collapsed ? "lg:ml-[68px]" : "lg:ml-[240px]"
       )}>
         <TopBar user={user} sidebarCollapsed={collapsed} onToggleMobile={() => setMobileOpen(!mobileOpen)} className="app-topbar" />

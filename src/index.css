@@ -189,6 +189,24 @@
   }
 }
 
+/* ===== Presentation screen =====
+   The window that goes on the plugged-in screen shows only the portal page and
+   the slide: no staff sidebar, no top bar, no tab bar. Slides that teach the
+   sidebar or the top bar bring those back, since that is what the room is
+   being shown at that moment. The facilitator's own window is untouched. */
+body.presenter-screen { padding-right: 0 !important; }
+body.presenter-screen .app-sidebar,
+body.presenter-screen .app-sidebar-mobile,
+body.presenter-screen .app-topbar,
+body.presenter-screen [data-tour="global-tabbar"] {
+  display: none !important;
+}
+body.presenter-screen .app-main { margin-left: 0 !important; }
+body.presenter-screen.presenter-chrome .app-sidebar { display: block !important; }
+body.presenter-screen.presenter-chrome .app-main { margin-left: 240px !important; }
+body.presenter-screen.presenter-chrome .app-topbar,
+body.presenter-screen.presenter-chrome [data-tour="global-tabbar"] { display: block !important; }
+
 /* ===== Training simulated cursor — click ripple ===== */
 .sim-cursor-click {
   animation: sim-cursor-click 0.5s ease-out both;

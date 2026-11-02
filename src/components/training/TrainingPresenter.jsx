@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Maximize2, MonitorUp } from "lucide-react";
 import SpotlightTour from "@/components/training/SpotlightTour";
@@ -56,6 +56,30 @@ export default function TrainingPresenter() {
     if (!active || !path) return;
     if (path !== `${location.pathname}${location.search}`) navigate(path);
   }, [active, path, location.pathname, location.search, navigate]);
+
+  // This window carries the screen, so it drops the staff chrome: no sidebar,
+  // top bar or tab bar — just the portal and the slide. Slides that teach the
+  // sidebar or the top bar bring them back for that step.
+  const chromeRevealed = useMemo(() => {
+    const m = state?.module_key ? getTrainingModule(state.module_key) : null;
+    const step = m?.steps?.[state?.step_index || 0];
+    const selectors = [].concat(step?.target?.selector || [], step?.target?.selectors || []);
+    return selectors.some(s => /sidebar|topbar|global-tabbar|tabbar/.test(String(s)));
+  }, [state?.module_key, state?.step_index]);
+
+  useEffect(() => {
+    if (!active) return undefined;
+    document.body.classList.add("presenter-screen");
+    return () => {
+      document.body.classList.remove("presenter-screen");
+      document.body.classList.remove("presenter-chrome");
+    };
+  }, [active]);
+
+  useEffect(() => {
+    if (!active) return;
+    document.body.classList.toggle("presenter-chrome", chromeRevealed);
+  }, [active, chromeRevealed]);
 
   if (!active) return null;
 
