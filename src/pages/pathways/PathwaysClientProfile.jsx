@@ -11,6 +11,7 @@ import ClientProfileOverview from '@/components/client/ClientProfileOverview';
 import ClientReferrals from '@/components/client/ClientReferrals';
 import ClientEmployment from '@/components/client/ClientEmployment';
 import ClientAssessments from '@/components/client/ClientAssessments';
+import ClientJobLabTab from '@/components/client/ClientJobLabTab';
 import ClientStreamSwitches from '@/components/client/ClientStreamSwitches';
 import CentralDatabasePreviewTab from '@/components/client/CentralDatabasePreviewTab';
 import CloseFileDialog from '@/components/client/CloseFileDialog';
@@ -249,6 +250,7 @@ export default function PathwaysClientProfile() {
             <TabsTrigger value="employment" data-tour="pw-tab-employment">Employment</TabsTrigger>
             <TabsTrigger value="referrals" data-tour="pw-tab-referrals">Referrals</TabsTrigger>
             <TabsTrigger value="assessments" data-tour="pw-tab-bit">BIT / ERA</TabsTrigger>
+            <TabsTrigger value="joblab">Job Lab</TabsTrigger>
             <TabsTrigger value="stream_switches" data-tour="pw-tab-switches" className="relative">
               Stream Switches
               {client.program_stream_switches?.length > 0 && (
@@ -288,6 +290,10 @@ export default function PathwaysClientProfile() {
 
           <TabsContent value="assessments" data-tour="pw-assessments-content">
             <ClientAssessments client={client} onSave={handleSave} />
+          </TabsContent>
+
+          <TabsContent value="joblab">
+            <ClientJobLabTab client={client} />
           </TabsContent>
 
           <TabsContent value="stream_switches" data-tour="pw-switches-content">

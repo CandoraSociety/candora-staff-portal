@@ -5,9 +5,10 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { CheckCircle2, ClipboardList } from 'lucide-react';
+import { CheckCircle2, ClipboardList, Laptop } from 'lucide-react';
 import { toast } from 'sonner';
 import BarrierIdentificationTool from '@/components/wizard/BarrierIdentificationTool';
+import JobLabAccountCard from '@/components/client/JobLabAccountCard';
 
 export default function ClientAssessments({ client, onSave }) {
   const [assessmentNotes, setAssessmentNotes] = useState(client.intake_notes || '');
@@ -128,6 +129,19 @@ export default function ClientAssessments({ client, onSave }) {
               {savingERA ? 'Saving...' : 'Save ERA'}
             </Button>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Job Lab account — set up during the ERA so activity logs on this file */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Laptop className="w-5 h-5" style={{ color: 'hsl(231,64%,20%)' }} />
+            <CardTitle>Job Lab Account</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <JobLabAccountCard client={client} />
         </CardContent>
       </Card>
     </div>

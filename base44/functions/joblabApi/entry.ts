@@ -67,19 +67,24 @@ export default async function (req) {
 
       let clientId = stat?.client_id || '';
       if (!stat) {
-        const client = await db.entities.Client.create({
-          first_name: firstName,
-          last_name: lastName,
-          email,
-          phone,
-          service_type: 'casual',
-          status: 'active',
-          intake_date: stamp.slice(0, 10),
-          intake_notes: registered
-            ? 'Casual client created automatically from a Job Lab registration.'
-            : 'Casual client created automatically from a Job Lab guest session — no registered Job Lab account.',
-        });
-        clientId = client.id;
+        // Accounts set up from a Pathways client profile carry that client's id —
+        // their visits belong to the existing file, never a new casual client.
+        clientId = participant.pathways_client_id || '';
+        if (!clientId) {
+          const client = await db.entities.Client.create({
+            first_name: firstName,
+            last_name: lastName,
+            email,
+            phone,
+            service_type: 'casual',
+            status: 'active',
+            intake_date: stamp.slice(0, 10),
+            intake_notes: registered
+              ? 'Casual client created automatically from a Job Lab registration.'
+              : 'Casual client created automatically from a Job Lab guest session — no registered Job Lab account.',
+          });
+          clientId = client.id;
+        }
         stat = await db.entities.JobLabClientStat.create({
           participant_id: participant.id,
           client_id: clientId,

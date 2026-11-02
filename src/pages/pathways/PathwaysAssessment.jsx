@@ -13,6 +13,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { createCompassTask, taskBitEraCompleted } from '@/lib/compassTasks';
 import SuggestedPlanItemsEditor from '@/components/pathways/SuggestedPlanItemsEditor';
+import JobLabAccountCard from '@/components/client/JobLabAccountCard';
 
 export default function PathwaysAssessment() {
   const { id } = useParams();
@@ -328,6 +329,9 @@ export default function PathwaysAssessment() {
                 </div>
               )}
             </div>
+
+            {/* Job Lab account — set up during the ERA so activity logs on this file */}
+            <JobLabAccountCard client={client} />
 
             <div>
               <Label className="mb-1 block text-sm font-medium text-slate-700">Assessment Notes &amp; Determination</Label>
