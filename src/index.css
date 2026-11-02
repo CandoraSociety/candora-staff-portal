@@ -513,6 +513,9 @@ ul.ql-list-sunflower > li {
   --jl-navy: 222 47% 11%;
   --jl-navy-accent: 222 40% 18%;
   --jl-navy-fg: 220 14% 96%;
+  /* Candora signature gold — used sparingly so Job Lab still reads as its own space */
+  --jl-gold: 45 92% 53%;
+  --jl-gold-fg: 230 70% 10%;
 
   background-color: hsl(var(--jl-bg));
   color: hsl(var(--jl-fg));

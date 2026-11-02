@@ -96,7 +96,9 @@ module.exports = {
   				pink: 'hsl(var(--jl-pink))',
   				navy: 'hsl(var(--jl-navy))',
   				'navy-accent': 'hsl(var(--jl-navy-accent))',
-  				'navy-fg': 'hsl(var(--jl-navy-fg))'
+  				'navy-fg': 'hsl(var(--jl-navy-fg))',
+  				gold: 'hsl(var(--jl-gold))',
+  				'gold-fg': 'hsl(var(--jl-gold-fg))'
   			},
   		},
   		fontFamily: {

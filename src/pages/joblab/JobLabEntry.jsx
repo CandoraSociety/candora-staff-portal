@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Briefcase, Eye, EyeOff, AlertTriangle } from 'lucide-react';
+import { Eye, EyeOff, AlertTriangle } from 'lucide-react';
+import { CandoraMark } from '@/components/joblab/JobLabBrand';
 import { useParticipant } from '@/lib/joblab/ParticipantContext';
 import { callJobLab } from '@/lib/joblab/api';
 import { isOnsite, locationType } from '@/lib/joblab/constants';
@@ -115,11 +116,13 @@ export default function JobLabEntry() {
     <div className="joblab flex min-h-screen items-center justify-center bg-gradient-to-b from-jl-bg via-jl-bg to-jl-primary/5 px-4 py-10">
       <div className="w-full max-w-md animate-[fadeUp_0.5s_ease-out]">
         <div className="mb-7 text-center">
-          <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-jl-primary/10">
-            <Briefcase className="h-7 w-7 text-jl-primary" />
+          <div className="mx-auto mb-3 w-fit">
+            <CandoraMark className="h-16 w-16 shadow-md" />
           </div>
+          <div className="mx-auto mb-4 h-0.5 w-14 rounded-full bg-jl-gold" />
           <h1 className="jl-heading text-3xl font-bold text-jl-fg">Job Lab</h1>
-          <p className="mt-1 text-sm font-medium text-jl-fg">
+          <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-jl-primary">A Candora program</p>
+          <p className="mt-2 text-sm font-medium text-jl-fg">
             {onsite ? 'Riverview Crossing Jobs Lab' : 'Your career starts here'}
           </p>
           <p className="text-xs text-jl-muted-fg">{onsite ? 'Onsite Portal' : 'Public Portal'}</p>
@@ -219,6 +222,9 @@ export default function JobLabEntry() {
 
         <p className="mt-5 text-center text-[11px] text-jl-muted-fg">
           Need help? Ask the staff at the front desk.
+        </p>
+        <p className="mt-1.5 text-center text-[10px] text-jl-muted-fg/80">
+          Job Lab is a Candora Society program · Edmonton, Alberta
         </p>
       </div>
     </div>

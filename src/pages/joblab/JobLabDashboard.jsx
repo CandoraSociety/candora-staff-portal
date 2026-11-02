@@ -5,6 +5,7 @@ import {
 } from 'lucide-react';
 import { useParticipant } from '@/lib/joblab/ParticipantContext';
 import { JLBadge, JLCard } from '@/components/joblab/ui';
+import { CandoraMark } from '@/components/joblab/JobLabBrand';
 
 const ACTIONS = [
   { to: '/joblab/job-search', label: 'Search Jobs', description: 'Find jobs tailored to your skills', icon: Search, tint: 'bg-jl-primary/10 text-jl-primary' },
@@ -34,20 +35,27 @@ export default function JobLabDashboard() {
 
   return (
     <div>
-      <div className="mb-6 flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="jl-heading text-2xl font-bold text-jl-fg sm:text-3xl">
-            Welcome{firstName ? `, ${firstName}` : ''}
-          </h1>
-          <p className="mt-1 text-sm text-jl-muted-fg">
-            Here's your career command centre. What would you like to work on today?
-          </p>
+      <div className="relative mb-6 overflow-hidden rounded-xl bg-jl-navy p-5">
+        <div className="pointer-events-none absolute -right-8 -top-10 h-32 w-32 rounded-full bg-jl-gold/15 blur-2xl" />
+        <div className="relative flex flex-wrap items-start justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <CandoraMark className="h-10 w-10 shrink-0" />
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-jl-gold">Candora Job Lab</p>
+              <h1 className="jl-heading text-2xl font-bold text-white sm:text-3xl">
+                Welcome{firstName ? `, ${firstName}` : ''}
+              </h1>
+              <p className="mt-0.5 text-sm text-jl-navy-fg/70">
+                Here's your career command centre. What would you like to work on today?
+              </p>
+            </div>
+          </div>
+          {isGuest && (
+            <JLBadge className="border border-jl-accent/40 bg-jl-accent/10 px-3 py-1 text-jl-accent">
+              <AlertTriangle className="h-3 w-3" /> Guest Session — work not saved
+            </JLBadge>
+          )}
         </div>
-        {isGuest && (
-          <JLBadge className="border border-jl-accent/40 bg-white px-3 py-1 text-jl-accent">
-            <AlertTriangle className="h-3 w-3" /> Guest Session — work not saved
-          </JLBadge>
-        )}
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
