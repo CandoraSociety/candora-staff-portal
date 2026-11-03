@@ -1133,71 +1133,49 @@ export const TRAINING_MODULES = [
       },
       {
         title: "The dashboard",
-        body: "Your overview of registrations, capacity and requests across all programs.",
+        body: "Every program reports in here. The counts at the top tell you what is waiting on you — registrations still pending a decision, people sitting on waitlists, volunteer applications to review — and below them each program area shows how many of its places are filled. Start a shift here and you will know what needs attention before anyone asks.",
         target: { selector: 'a[href="/central-registration"]' },
         path: "/central-registration"
       },
       {
-        title: "One front door, many portals",
-        body: "Central Registration is the shared front door: every program's registrations, capacity and waitlists pass through here. The program's own portal takes over once someone is enrolled, keeping that person's attendance, assessments and progress. Approving a registration is the hand-off between the two, and it can create the participant record in the program's portal automatically."
-      },
-      {
-        title: "Programs & Registration",
-        body: "Every program and its sessions, with capacity controls, live here.",
-        target: { selector: 'a[href="/central-registration/programs"]' },
-        path: "/central-registration/programs"
-      },
-      {
-        title: "Capacity and sessions",
-        body: "Each program area on this page shows the places filled against its maximum. While there is room, Register puts the person straight into the program; once the area is full the same button adds them to the waitlist instead. Create Session adds a new date to a program so it can take registrations, and the small QR button next to a program is where its public self-registration link and settings live. Kids Gift Shop registrations are taken here too, with their own time slots.",
+        title: "Programs: seats, sessions and sign-ups",
+        body: "Every program lives on this page with its sessions and its areas. Each area shows the places filled against its maximum, and that number decides what Register does: while there is room the person goes straight in, and once the area is full the same button adds them to the waitlist. A program with no session scheduled cannot take registrations at all, so Create Session is often the fix. The small QR button on a program opens its public sign-up link — copy the link, print the code, and choose whether scanned requests need your approval.",
         target: { selector: 'a[href="/central-registration/programs"]' },
         path: "/central-registration/programs"
       },
       {
         title: "All Registrations",
-        body: "All participant registrations with their status — pending approval, enrolled, waitlisted. Approving a registration can automatically create the participant record in the program's portal.",
+        body: "Every registration, whatever program it came from, in one list with its status: pending approval, enrolled or waitlisted. Approving is the hand-off — it can create the participant record in that program's own portal, which is why attendance, assessments and progress are kept there and not here. When you are unsure where a person should be entered, the answer is almost always the same: register them here, approve them, then work in the program's portal.",
         target: { selector: 'a[href="/central-registration/registrations"]' },
         path: "/central-registration/registrations"
       },
       {
         title: "Registration Requests",
-        body: "People who scan a program's QR code can sign themselves up. Their requests arrive here for you to approve, waitlist or decline — no approval needed at all if a program is set that way. EmpowerU applications waiting on a decision are reviewed here as well.",
+        body: "People who scan a program's QR code sign themselves up, and their requests arrive here. Each one needs a decision: approve, waitlist or decline. Some programs are set to register people straight away — those requests still appear on this page, already approved, so nothing is lost. EmpowerU applications waiting on a decision are reviewed from this same page.",
         target: { selector: 'a[href="/central-registration/requests"]' },
         path: "/central-registration/requests"
       },
       {
-        title: "Self-registration links and settings",
-        body: "The QR button next to a program opens its public sign-up link and settings. Copy the link for an email, print the QR code for a classroom or a poster, and decide whether scanned requests need your approval or register the person straight away. Whatever you choose, scanned sign-ups arrive in Registration Requests, never lost in someone's inbox.",
-        target: { selector: 'a[href="/central-registration/programs"]' },
-        path: "/central-registration/programs"
-      },
-      {
-        title: "Waitlists",
-        body: "When a program is full, registrations land on the waitlist — with their position so you can offer seats in a fair order.",
-        target: { selector: 'a[href="/central-registration/waitlists"]' },
-        path: "/central-registration/waitlists"
-      },
-      {
-        title: "Offering a seat fairly",
-        body: "When a seat opens, work the waitlist from the top. The position number is the promise we make to people, so offers go in order, each contact attempt is recorded, and the next person is only called when someone declines or cannot be reached. Promoting a waitlisted person moves their details into the registration, so nothing is retyped.",
+        title: "Waitlists and offering seats",
+        body: "A full area sends registrations to the waitlist with a position, and that position is the promise we make to people. When a seat opens, work from position one: record each contact attempt as it happens, and only move on to the next person when someone declines or cannot be reached. Promoting a waitlisted person carries their details into the registration, so nothing has to be retyped.",
         target: { selector: 'a[href="/central-registration/waitlists"]' },
         path: "/central-registration/waitlists"
       },
       {
         title: "Volunteer Registration",
-        body: "Volunteer applications from the public portal arrive in this page. Approve takes someone straight to active, Waitlist holds them for a later placement, and Decline closes the application. Every decision here updates the Volunteer Manager immediately — it is the same record, not a copy. Promoted volunteers return to the queue so references and screening can be finished.",
+        body: "Public volunteer applications arrive on this page. Approve takes someone straight to active, Waitlist holds them for a later placement, and Decline closes the application. Every decision here changes the same record the Volunteer Manager uses, so nothing gets entered twice. Promote moves a waitlisted volunteer back into the queue to finish references and screening.",
         target: { selector: 'a[href="/central-registration/volunteers"]' },
         path: "/central-registration/volunteers"
       },
       {
         title: "Calendar",
-        body: "Sessions by day and room — useful when someone asks what's running when.",
+        body: "Sessions laid out by day and room. Use it to answer what's running when for a caller, to check whether a room is free before you book something else, and to spot a program with no sessions ahead of it — an empty stretch here is a program that cannot take registrations.",
         target: { selector: 'a[href="/central-registration/calendar"]' },
         path: "/central-registration/calendar"
       },
       {
         title: "Time to practice",
-        body: "That's the tour! Now register a demo participant, review a self-registration request, check a waitlist and process a volunteer application."
+        body: "That's the tour. Now register a demo participant, create a session for a program, review a self-registration request, offer a seat from a waitlist, set a program area's capacity, and process a volunteer application."
       }
     ],
     tasks: [

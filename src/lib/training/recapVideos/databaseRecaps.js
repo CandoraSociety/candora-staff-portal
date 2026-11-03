@@ -35,9 +35,15 @@ export const DATABASE_RECAP_SCENES = {
     ] },
     { title: 'Handle QR self-registration correctly', audioUrl: audio('0d6de7788'), points: [
       'Public entry: Participants reach a program’s registration page from its QR code.',
-      'Review requests: Open Self-registration Requests to approve or decline pending submissions.',
+      'Review requests: Open Registration Requests to approve, waitlist or decline pending submissions.',
       'Check the program setting: Some programs allow registration without registrar approval.',
       'Confirm the outcome: Check the resulting registration status and the relevant program record.',
+    ] },
+    { title: 'Volunteer applications are the same record', audioUrl: audio('7e7f2e506'), points: [
+      'Volunteer Registration: Public applications land here for Approve, Waitlist or Decline.',
+      'Same record: Every decision updates the Volunteer Manager, so nothing is entered twice.',
+      'Promote: Returns a waitlisted volunteer to the queue to finish references and screening.',
+      'Calendar: Sessions by day and room — an empty stretch is a program that cannot take registrations.',
     ] },
   ],
   filemanager: [

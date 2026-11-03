@@ -466,9 +466,9 @@ export const MODULE_RECAPS = {
     quiz: [
       {
         question: "Where do QR self-registrations arrive?",
-        options: ["Registrations", "Self-registration requests", "Waitlists", "The calendar"],
+        options: ["All Registrations", "Registration Requests", "Waitlists", "The Calendar"],
         answer: 1,
-        explain: "People who scan a program's QR code land in Self-registration requests for you to approve or decline.",
+        explain: "People who scan a program's QR code land in Registration Requests for you to approve, waitlist or decline.",
       },
       {
         question: "What happens when a program is full?",

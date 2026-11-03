@@ -281,7 +281,7 @@ export const FACILITATOR_GUIDE = {
   },
 
   centralreg: {
-    duration: "About 55 minutes (8 intro · 27 tour · 15 practice · 5 wrap-up)",
+    duration: "About 45 minutes (7 intro · 20 tour · 13 practice · 5 wrap-up)",
     objectives: [
       "Staff can register a participant into any program from one place",
       "Staff can say what Central Registration holds and what the program's own portal holds afterwards",
@@ -294,14 +294,10 @@ export const FACILITATOR_GUIDE = {
     stepNotes: {
       "Welcome to Central Registration": "One framing sentence: this portal registers people into ANY Candora program from one place, so rosters and waitlists stay consistent across programs.",
       "The dashboard": "The cross-program overview: pending approvals, waitlist totals, volunteer applications, and the program-area counts. Start here each shift.",
-      "One front door, many portals": "Draw the line for them: registration, capacity, waitlist position and volunteer applications live here; attendance, assessments and progress live in the program's own portal. Approval is the hand-off — that single sentence prevents most 'where do I enter this?' questions.",
-      "Self-registration links and settings": "Open the QR button live. Show the copyable link, the printable code, and the per-program choice between 'requests need approval' and 'register instantly'. Stress that scanned sign-ups still land in Registration Requests — the inbox is the same regardless of the setting.",
-      "Offering a seat fairly": "The fairness slide. Position one gets the call first, every contact attempt is recorded, and the next person is only called when someone declines or can't be reached. Promoting pulls their details into the registration so nothing is retyped.",
-      "Programs & Registration": "Every program, its sessions and capacity controls live here. Capacity is what moves registrations onto the waitlist automatically.",
-      "Capacity and sessions": "This is the slide to slow down on. Point at the filled-against-maximum figure on one area, then register with the room available, then fill the area and show the button turn into Add to Waitlist. Mention Create Session — a program with no sessions scheduled cannot take registrations — and the QR button, which is where a program's public sign-up link is set up. Kids Gift Shop is registered from this page too, with its time slots.",
-      "All Registrations": "Statuses matter: pending approval, enrolled, waitlisted. Approving a registration can automatically create the participant record in that program's own portal — that's the magic sentence.",
-      "Registration Requests": "People who scan a program's QR code sign themselves up. Requests arrive here to approve, waitlist or decline — and some programs are configured to register instantly with no approval step. EmpowerU applications waiting on a decision are reviewed in this same page.",
-      "Waitlists": "Full program = registrations land on the waitlist with a position. Positions are the fairness mechanism: seats get offered in order.",
+      "Programs: seats, sessions and sign-ups": "This is the slide to slow down on — it is the whole portal in one screen. Point at the filled-against-maximum figure on one area, register while there is room, then fill the area and show the button turn into Add to Waitlist. Cover Create Session (a program with no sessions cannot take registrations — this is the most common 'it won't let me register' cause) and open the QR button so they see the link, the printable code and the approval choice. Mention Kids Gift Shop takes its own time slots here.",
+      "All Registrations": "Statuses matter: pending approval, enrolled, waitlisted. Then land the hand-off sentence — approving can create the participant record in that program's own portal, so attendance and progress are never kept here. Ask the room: 'so where do you record attendance?'",
+      "Registration Requests": "People who scan a program's QR code sign themselves up. Requests arrive here to approve, waitlist or decline — and some programs are configured to register instantly, with those requests arriving already approved. EmpowerU applications waiting on a decision are reviewed on this same page.",
+      "Waitlists and offering seats": "The fairness slide, and the one people get wrong. Position one gets the call first, every contact attempt is recorded, and the next person is only called when someone declines or can't be reached. Promoting pulls their details into the registration so nothing is retyped. Say out loud: nobody gets skipped, and nobody gets jumped.",
       "Volunteer Registration": "Public volunteer applications land here. Approve, Waitlist or Decline each one — and say clearly that this is the same Volunteer record the Volunteer Manager uses, so nothing has to be entered twice. Promote brings a waitlisted volunteer back into the review queue.",
       "Calendar": "Sessions by day and room — the answer screen for 'what's running when?'. Switch sources on and off to answer 'is that room free?'.",
       "Time to practice": "Hands-on: register a demo participant, create a session, work a self-registration request, offer a waitlisted seat, process one volunteer application, and set an area's capacity.",
