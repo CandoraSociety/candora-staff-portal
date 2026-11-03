@@ -272,7 +272,7 @@ export default function EDOrgChart() {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuLabel>Save as PDF</DropdownMenuLabel>
+              <DropdownMenuLabel>Tiered chart PDF</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <div className="px-2 py-1 space-y-1">
                 {allSheets.map(sheet => (

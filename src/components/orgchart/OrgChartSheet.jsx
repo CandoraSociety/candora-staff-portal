@@ -1,8 +1,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Plus, User, UserX, Pencil, Trash2, GripVertical, Network, Rows3, RotateCcw, Undo2, Redo2, ChevronDown, ChevronUp, ListOrdered } from "lucide-react";
+import { Plus, User, UserX, Pencil, Trash2, GripVertical, Network, Rows3, RotateCcw, Undo2, Redo2, ChevronDown, ChevronUp } from "lucide-react";
 import OrgTreeLayout from "./OrgTreeLayout";
-import OrgListLayout from "./OrgListLayout";
 import { Badge } from "@/components/ui/badge";
 import OrgChartPositionForm, { EMPTY_POS } from "./OrgChartPositionForm";
 import PayrollSummary from "./PayrollSummary";
@@ -148,7 +147,7 @@ export default function OrgChartSheet({
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState(EMPTY_POS);
   const [editId, setEditId] = useState(null);
-  const [layout, setLayout] = useState("list"); // "list" | "tree" | "tiers"
+  const [layout, setLayout] = useState("tree"); // "tree" | "tiers"
   const [payrollOpen, setPayrollOpen] = useState(true);
   const [removedPositions, setRemovedPositions] = useState(initialRemovedPositions || []);
   useEffect(() => {
@@ -397,16 +396,10 @@ export default function OrgChartSheet({
           </div>
           {/* Layout toggle */}
           <div className="flex rounded-md border overflow-hidden">
-            <button
-              onClick={() => setLayout("list")}
-              className={`flex items-center gap-1 px-2.5 py-1 text-xs transition-colors ${layout === "list" ? "bg-accent text-accent-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
-              title="List view — one row per position with department, manager and report count"
-            >
-              <ListOrdered className="w-3.5 h-3.5" /> List
-            </button>
+
             <button
               onClick={() => setLayout("tree")}
-              className={`flex items-center gap-1 px-2.5 py-1 text-xs transition-colors border-l ${layout === "tree" ? "bg-accent text-accent-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
+              className={`flex items-center gap-1 px-2.5 py-1 text-xs transition-colors ${layout === "tree" ? "bg-accent text-accent-foreground" : "bg-background text-muted-foreground hover:bg-muted"}`}
               title="Tree view — shows reporting hierarchy"
             >
               <Network className="w-3.5 h-3.5" /> Tree
@@ -428,19 +421,6 @@ export default function OrgChartSheet({
       <div className="flex-1 overflow-auto pb-6">
         {working.length === 0 && (
           <p className="text-sm text-muted-foreground text-center py-8">No positions yet. Add one to get started.</p>
-        )}
-
-        {/* List layout */}
-        {layout === "list" && (
-          <OrgListLayout
-            positions={working}
-            originalPositions={originalPositions}
-            isScenario={!isOriginal}
-            showSalary={showSalary}
-            showNames={showNames}
-            onEdit={openEdit}
-            onDelete={handleDelete}
-          />
         )}
 
         {/* Tree layout */}
