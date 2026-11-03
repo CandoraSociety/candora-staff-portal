@@ -247,7 +247,7 @@ const INTRO_SCENES_BY_MODULE = {
       kicker: 'Central Registration',
       title: 'One front door, many programs.',
       body: "Central Registration is one front door for every Candora program. All registrations start here, in the same format, so nothing depends on who answered the phone. This portal keeps the shared record: who registered, for which program, and whether they are enrolled, waiting or declined. The program's own portal takes over once someone is in: attendance in English Language Learning, cohort work in EmpowerU, and session rosters in Community and the Family Resource Network.",
-      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/117f0418f_speech.mp3',
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/a3063f931_speech.mp3',
     },
     {
       kicker: 'Central Registration',
