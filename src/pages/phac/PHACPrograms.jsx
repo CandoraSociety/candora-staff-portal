@@ -1,18 +1,20 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Plus, Search, Pencil, Clock, MapPin } from 'lucide-react';
+import { Plus, Search, Pencil, Clock, MapPin, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import ProgramFormDialog from '@/components/phac/ProgramFormDialog';
 import StatusBadge from '@/components/phac/StatusBadge';
+import ProgramDocumentsDialog from '@/components/programs/ProgramDocumentsDialog';
 import { PROGRAM_STATUS_OPTIONS, WEEKDAY_LABELS, formatAgeRange } from '@/lib/phacConstants';
 
 export default function PHACPrograms() {
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [docProgram, setDocProgram] = useState(null);
   const queryClient = useQueryClient();
 
   const { data: programs = [], isLoading } = useQuery({
@@ -28,6 +30,12 @@ export default function PHACPrograms() {
   const handleEdit = (program) => { setEditing(program); setDialogOpen(true); };
   const handleAdd = () => { setEditing(null); setDialogOpen(true); };
   const handleSaved = () => { queryClient.invalidateQueries({ queryKey: ['phac-programs'] }); setDialogOpen(false); };
+
+  const saveDocuments = async (next) => {
+    setDocProgram(current => (current ? { ...current, documents: next } : current));
+    await base44.entities.PHACProgram.update(docProgram.id, { documents: next });
+    queryClient.invalidateQueries({ queryKey: ['phac-programs'] });
+  };
 
   return (
     <div className="space-y-4">
@@ -60,9 +68,14 @@ export default function PHACPrograms() {
                     <p className="font-medium text-sm text-foreground truncate">{p.name}</p>
                     {p.description && <p className="text-xs text-muted-foreground line-clamp-2 mt-0.5">{p.description}</p>}
                   </div>
-                  <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0" onClick={() => handleEdit(p)}>
-                    <Pencil className="h-3.5 w-3.5" />
-                  </Button>
+                  <div className="flex items-center gap-0.5 flex-shrink-0">
+                    <Button variant="ghost" size="sm" className="h-8 gap-1 px-2 text-xs text-muted-foreground" title="Program documents" onClick={() => setDocProgram(p)}>
+                      <FileText className="h-3.5 w-3.5" /> {(p.documents || []).length}
+                    </Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(p)}>
+                      <Pencil className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
                 </div>
                 <div className="flex flex-wrap gap-2 items-center text-xs text-muted-foreground">
                   <StatusBadge status={p.status} options={PROGRAM_STATUS_OPTIONS} />
@@ -89,6 +102,17 @@ export default function PHACPrograms() {
       )}
 
       <ProgramFormDialog open={dialogOpen} onOpenChange={setDialogOpen} program={editing} onSaved={handleSaved} />
+
+      {docProgram && (
+        <ProgramDocumentsDialog
+          open={!!docProgram}
+          onOpenChange={(v) => { if (!v) setDocProgram(null); }}
+          title={`${docProgram.name} — Documents`}
+          subtitle="Handouts, curriculum and forms for this program"
+          documents={docProgram.documents || []}
+          onChange={saveDocuments}
+        />
+      )}
     </div>
   );
 }

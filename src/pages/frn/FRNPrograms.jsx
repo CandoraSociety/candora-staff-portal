@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, Search, Users, CalendarDays, Pencil } from 'lucide-react';
+import { Plus, Search, Users, CalendarDays, Pencil, FileText } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -105,6 +105,7 @@ export default function FRNPrograms() {
                   <div className="flex items-center gap-3 mt-3 pt-2 border-t border-border/50 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1"><Users className="h-3 w-3" /> {enrolled} enrolled</span>
                     <span className="flex items-center gap-1"><CalendarDays className="h-3 w-3" /> {sessionCount(p)} sessions</span>
+                    <span className="flex items-center gap-1"><FileText className="h-3 w-3" /> {(p.documents || []).length} docs</span>
                     <Button
                       size="sm"
                       variant="ghost"

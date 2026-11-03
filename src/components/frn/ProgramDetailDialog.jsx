@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
@@ -6,11 +6,12 @@ import { Pencil, Users, CalendarDays, Plus } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import StatusBadge from '@/components/frn/StatusBadge';
+import ProgramDocuments from '@/components/programs/ProgramDocuments';
 import { FRN_PROGRAM_CATEGORY_LABELS, FRN_PROGRAM_STATUS_OPTIONS, enrolledReferralsForProgram, todayISO } from '@/lib/frnPrograms';
 
 const fmtDate = (str) => str ? new Date(str + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '';
 
-export default function ProgramDetailDialog({ open, onOpenChange, program, onEdit, onAddSession }) {
+export default function ProgramDetailDialog({ open, onOpenChange, program, onEdit, onAddSession, onChanged }) {
   const { data: referrals = [] } = useQuery({
     queryKey: ['frn-referrals'],
     queryFn: () => base44.entities.FRNReferral.list('-referral_date', 500),
@@ -22,7 +23,19 @@ export default function ProgramDetailDialog({ open, onOpenChange, program, onEdi
     enabled: open,
   });
 
+  const [documents, setDocuments] = useState(program?.documents || []);
+
+  useEffect(() => {
+    setDocuments(program?.documents || []);
+  }, [program?.id, program?.updated_date]);
+
   if (!program) return null;
+
+  const saveDocuments = async (next) => {
+    setDocuments(next);
+    await base44.entities.FRNProgram.update(program.id, { documents: next });
+    onChanged?.();
+  };
 
   const enrolled = enrolledReferralsForProgram(referrals, program);
   const programSessions = sessions.filter(s => (s.program_name || '').toLowerCase() === program.name.toLowerCase());
@@ -116,6 +129,14 @@ export default function ProgramDetailDialog({ open, onOpenChange, program, onEdi
                 ))}
               </div>
             )}
+          </div>
+
+          <div className="border-t border-border pt-3">
+            <ProgramDocuments
+              documents={documents}
+              onChange={saveDocuments}
+              emptyText="No course documents yet — upload the curriculum, handouts or forms for this program."
+            />
           </div>
         </DialogContent>
       </Dialog>

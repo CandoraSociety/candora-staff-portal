@@ -72,6 +72,33 @@
       "type": "string",
       "description": "Staff member facilitating the program"
     },
+    "documents": {
+      "type": "array",
+      "description": "Course documents attached to this program \u2014 handouts, curriculum, forms and materials staff upload from the program card",
+      "items": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string",
+            "description": "Name shown on the program card"
+          },
+          "file_name": {
+            "type": "string"
+          },
+          "file_uri": {
+            "type": "string",
+            "description": "Private storage URI of the uploaded document"
+          },
+          "uploaded_by": {
+            "type": "string"
+          },
+          "uploaded_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    },
     "notes": {
       "type": "string"
     }
