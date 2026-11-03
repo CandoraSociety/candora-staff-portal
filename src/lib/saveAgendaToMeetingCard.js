@@ -1,7 +1,7 @@
 import { base44 } from "@/api/base44Client";
 import { format } from "date-fns";
 import { parseDateSmart } from "@/lib/dateUtils";
-import { buildPackageBasePdf } from "@/components/board/meetingPackagePdf";
+import { buildAgendaPdf } from "@/components/board/agendaPdf";
 
 /**
  * Builds the meeting agenda as a PDF and files it on the meeting card as the
@@ -9,14 +9,7 @@ import { buildPackageBasePdf } from "@/components/board/meetingPackagePdf";
  * instead of piling up copies.
  */
 export async function saveAgendaToMeetingCard({ meeting, items }) {
-  const pdf = await buildPackageBasePdf({
-    meeting,
-    agendaItems: items,
-    contents: [],
-    showCover: false,
-    documentLabel: "BOARD MEETING AGENDA",
-    footerLabel: "Board Meeting Agenda",
-  });
+  const pdf = await buildAgendaPdf({ meeting, items });
 
   const dateTag = format(parseDateSmart(meeting.meeting_date), "MMM-d-yyyy");
   const fileName = `Candora-Board-Agenda_${dateTag}.pdf`;
