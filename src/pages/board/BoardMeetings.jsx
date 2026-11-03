@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Plus, Calendar, Clock, MapPin, Trash2, Upload, FileText } from "lucide-react";
+import { Plus, Calendar, Clock, MapPin, Trash2, Upload, FileText, DollarSign } from "lucide-react";
 import { format } from "date-fns";
 import BoardNewMeetingModal from "@/components/board/BoardNewMeetingModal";
-import UploadMinutesDialog from "@/components/board/UploadMinutesDialog";
+import UploadMeetingDocDialog from "@/components/board/UploadMeetingDocDialog";
 
 const statusColors = {
   upcoming: "bg-blue-100 text-blue-700",
@@ -13,20 +13,33 @@ const statusColors = {
   cancelled: "bg-red-100 text-red-700",
 };
 
+// Paperwork attached to a meeting, shown under its details with a link to open
+function AttachedDocs({ label, docs }) {
+  if (!docs.length) return null;
+  return (
+    <div className="flex items-center gap-2 mt-2 text-xs flex-wrap">
+      <span className="flex items-center gap-1 text-green-700 font-medium"><FileText size={12} /> {label}</span>
+      {docs.map(d => (
+        <a key={d.id} href={d.file_url} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground underline truncate max-w-[220px]">{d.title}</a>
+      ))}
+    </div>
+  );
+}
+
 export default function BoardMeetings() {
   const [meetings, setMeetings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showNew, setShowNew] = useState(false);
-  const [minutesDocs, setMinutesDocs] = useState([]);
+  const [meetingDocs, setMeetingDocs] = useState([]);
   const [uploadFor, setUploadFor] = useState(null);
 
   const load = async () => {
-    const [data, minutes] = await Promise.all([
+    const [data, docs] = await Promise.all([
       base44.entities.Meeting.list("-meeting_date"),
-      base44.entities.BoardDocument.filter({ document_type: "minutes" }),
+      base44.entities.BoardDocument.filter({ document_type: { $in: ["minutes", "financial_report"] } }),
     ]);
     setMeetings(data);
-    setMinutesDocs(minutes);
+    setMeetingDocs(docs);
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
@@ -37,7 +50,7 @@ export default function BoardMeetings() {
     setMeetings(prev => prev.filter(m => m.id !== id));
   };
 
-  const minutesFor = (meetingId) => minutesDocs.filter(d => d.meeting_id === meetingId);
+  const docsFor = (meetingId, type) => meetingDocs.filter(d => d.meeting_id === meetingId && d.document_type === type);
 
   const grouped = meetings.reduce((acc, m) => {
     const s = m.status || "upcoming";
@@ -83,19 +96,14 @@ export default function BoardMeetings() {
                             <span className="flex items-center gap-1"><Clock size={13} />{format(new Date(meeting.meeting_date), "h:mm a")}</span>
                             {meeting.location && <span className="flex items-center gap-1"><MapPin size={13} />{meeting.location}</span>}
                           </div>
-                          {minutesFor(meeting.id).length > 0 && (
-                            <div className="flex items-center gap-2 mt-2 text-xs flex-wrap">
-                              <span className="flex items-center gap-1 text-green-700 font-medium"><FileText size={12} /> Minutes attached</span>
-                              {minutesFor(meeting.id).map(d => (
-                                <a key={d.id} href={d.file_url} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground underline truncate max-w-[220px]">{d.title}</a>
-                              ))}
-                            </div>
-                          )}
+                          <AttachedDocs label="Minutes attached" docs={docsFor(meeting.id, "minutes")} />
+                          <AttachedDocs label="Financials attached" docs={docsFor(meeting.id, "financial_report")} />
                         </div>
-                        <div className="flex items-center gap-2 shrink-0">
+                        <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
                           <Link to={`/board/meetings/${meeting.id}/agenda`} className="text-xs border border-border px-3 py-1.5 rounded-lg hover:bg-muted transition text-foreground">Agenda</Link>
                           <Link to={`/board/meetings/${meeting.id}/minutes`} className="text-xs border border-border px-3 py-1.5 rounded-lg hover:bg-muted transition text-foreground">Minutes</Link>
-                          <button onClick={() => setUploadFor(meeting)} className="flex items-center gap-1 text-xs border border-border px-3 py-1.5 rounded-lg hover:bg-muted transition text-foreground"><Upload size={13} /> Upload Minutes</button>
+                          <button onClick={() => setUploadFor({ meeting, documentType: "minutes" })} className="flex items-center gap-1 text-xs border border-border px-3 py-1.5 rounded-lg hover:bg-muted transition text-foreground"><Upload size={13} /> Upload Minutes</button>
+                          <button onClick={() => setUploadFor({ meeting, documentType: "financial_report" })} className="flex items-center gap-1 text-xs border border-border px-3 py-1.5 rounded-lg hover:bg-muted transition text-foreground"><DollarSign size={13} /> Upload Financials</button>
                           <button onClick={() => handleDelete(meeting.id)} className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition"><Trash2 size={15} /></button>
                         </div>
                       </div>
@@ -114,10 +122,11 @@ export default function BoardMeetings() {
         </div>
       )}
       {uploadFor && (
-        <UploadMinutesDialog
-          meeting={uploadFor}
+        <UploadMeetingDocDialog
+          meeting={uploadFor.meeting}
+          documentType={uploadFor.documentType}
           onClose={() => setUploadFor(null)}
-          onUploaded={(doc) => { setMinutesDocs(prev => [doc, ...prev]); setUploadFor(null); }}
+          onUploaded={(doc) => { setMeetingDocs(prev => [doc, ...prev]); setUploadFor(null); }}
         />
       )}
       {showNew && (
