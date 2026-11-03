@@ -8,7 +8,6 @@ const INK = [40, 48, 66];
 const MUTED = [120, 126, 140];
 const BORDER = [214, 220, 229];
 const LINE = [184, 194, 209];
-const DOTTED = [198, 158, 40];
 const CANDORA_LOGO_URL =
   "https://media.base44.com/images/public/6a249282cb496579542673b7/c6b242905_Candoracirclelogo_noanniversary.png";
 
@@ -239,26 +238,6 @@ function drawReportingLines(doc, cards, cardsById) {
   });
 }
 
-// Dotted (dashed) advisory line from manager to report
-function drawDottedLines(doc, cards, cardsById) {
-  doc.setDrawColor(...DOTTED);
-  doc.setLineWidth(0.7);
-  doc.setLineDashPattern([3, 2], 0);
-  cards.forEach((card) => {
-    const parent = cardsById.get(card.p.dotted_line_reports_to_id);
-    if (!parent) return;
-    const x1 = parent.x + parent.w / 2;
-    const y1 = parent.y + CARD_H;
-    const x2 = card.x + card.w / 2;
-    const y2 = card.y;
-    const midY = y1 + Math.max((y2 - y1) * 0.5, 10);
-    doc.line(x1, y1, x1, midY);
-    doc.line(x1, midY, x2, midY);
-    doc.line(x2, midY, x2, y2);
-  });
-  doc.setLineDashPattern([], 0);
-}
-
 /**
  * Builds a clean, printable org chart PDF for one chart version — every active
  * position in reporting order, with its manager-to-report lines drawn in.
@@ -298,7 +277,6 @@ export async function generateOrgChartPdf({ positions, label, showNames = true }
     doc.setTextColor(...MUTED);
     doc.text(String(band.people.length), MARGIN, band.cards[0].y + 35);
 
-    drawDottedLines(doc, band.cards, cardsById);
     drawReportingLines(doc, band.cards, cardsById);
     band.cards.forEach((card) => drawCard(doc, card, showNames));
     band.cards.forEach((card) => cardsById.set(card.p.id, card));
