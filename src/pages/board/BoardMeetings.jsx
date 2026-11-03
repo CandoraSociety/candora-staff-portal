@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Plus, Calendar, Clock, MapPin, Trash2, Upload, FileText, DollarSign, Package, Pencil, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
+import { parseDateSmart } from "@/lib/dateUtils";
 import { toast } from "sonner";
 import BoardNewMeetingModal from "@/components/board/BoardNewMeetingModal";
 import UploadMeetingDocDialog from "@/components/board/UploadMeetingDocDialog";
@@ -130,6 +131,21 @@ export default function BoardMeetings() {
   };
 
   const docsFor = (meetingId, type) => meetingDocs.filter(d => d.meeting_id === meetingId && d.document_type === type);
+
+  // The most recent earlier meeting that has finalized minutes — those minutes
+  // ride along on this meeting's card automatically, ready to approve.
+  const prevMinutesFor = (meeting) => {
+    const date = parseDateSmart(meeting.meeting_date);
+    if (!date) return null;
+    const earlier = meetings
+      .filter(m => m.id !== meeting.id && parseDateSmart(m.meeting_date) && parseDateSmart(m.meeting_date) < date)
+      .sort((a, b) => parseDateSmart(b.meeting_date) - parseDateSmart(a.meeting_date));
+    for (const m of earlier) {
+      const doc = meetingDocs.find(d => d.meeting_id === m.id && d.document_type === "minutes");
+      if (doc) return doc;
+    }
+    return null;
+  };
   const packagesFor = (meetingId) => packages.filter(p => p.meeting_id === meetingId);
 
   // Build a package straight from the meeting card — its agenda is loaded first
@@ -198,6 +214,10 @@ export default function BoardMeetings() {
                           </div>
                           <AttachedDocs label="Agenda attached" docs={docsFor(meeting.id, "agenda")} />
                           <AttachedDocs label="Minutes attached" docs={docsFor(meeting.id, "minutes")} />
+                          {(() => {
+                            const prev = prevMinutesFor(meeting);
+                            return prev ? <AttachedDocs label="Last meeting's minutes" docs={[prev]} /> : null;
+                          })()}
                           <AttachedDocs label="Financials attached" docs={docsFor(meeting.id, "financial_report")} />
                           <AttachedDocs label="ED report attached" docs={docsFor(meeting.id, "ed_report")} />
                           <PackageAttachments
