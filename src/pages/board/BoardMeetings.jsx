@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Plus, Calendar, Clock, MapPin, Trash2 } from "lucide-react";
+import { Plus, Calendar, Clock, MapPin, Trash2, Upload, FileText } from "lucide-react";
 import { format } from "date-fns";
 import BoardNewMeetingModal from "@/components/board/BoardNewMeetingModal";
+import UploadMinutesDialog from "@/components/board/UploadMinutesDialog";
 
 const statusColors = {
   upcoming: "bg-blue-100 text-blue-700",
@@ -16,10 +17,16 @@ export default function BoardMeetings() {
   const [meetings, setMeetings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showNew, setShowNew] = useState(false);
+  const [minutesDocs, setMinutesDocs] = useState([]);
+  const [uploadFor, setUploadFor] = useState(null);
 
   const load = async () => {
-    const data = await base44.entities.Meeting.list("-meeting_date");
+    const [data, minutes] = await Promise.all([
+      base44.entities.Meeting.list("-meeting_date"),
+      base44.entities.BoardDocument.filter({ document_type: "minutes" }),
+    ]);
     setMeetings(data);
+    setMinutesDocs(minutes);
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
@@ -29,6 +36,8 @@ export default function BoardMeetings() {
     await base44.entities.Meeting.delete(id);
     setMeetings(prev => prev.filter(m => m.id !== id));
   };
+
+  const minutesFor = (meetingId) => minutesDocs.filter(d => d.meeting_id === meetingId);
 
   const grouped = meetings.reduce((acc, m) => {
     const s = m.status || "upcoming";
@@ -74,10 +83,19 @@ export default function BoardMeetings() {
                             <span className="flex items-center gap-1"><Clock size={13} />{format(new Date(meeting.meeting_date), "h:mm a")}</span>
                             {meeting.location && <span className="flex items-center gap-1"><MapPin size={13} />{meeting.location}</span>}
                           </div>
+                          {minutesFor(meeting.id).length > 0 && (
+                            <div className="flex items-center gap-2 mt-2 text-xs flex-wrap">
+                              <span className="flex items-center gap-1 text-green-700 font-medium"><FileText size={12} /> Minutes attached</span>
+                              {minutesFor(meeting.id).map(d => (
+                                <a key={d.id} href={d.file_url} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground underline truncate max-w-[220px]">{d.title}</a>
+                              ))}
+                            </div>
+                          )}
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           <Link to={`/board/meetings/${meeting.id}/agenda`} className="text-xs border border-border px-3 py-1.5 rounded-lg hover:bg-muted transition text-foreground">Agenda</Link>
                           <Link to={`/board/meetings/${meeting.id}/minutes`} className="text-xs border border-border px-3 py-1.5 rounded-lg hover:bg-muted transition text-foreground">Minutes</Link>
+                          <button onClick={() => setUploadFor(meeting)} className="flex items-center gap-1 text-xs border border-border px-3 py-1.5 rounded-lg hover:bg-muted transition text-foreground"><Upload size={13} /> Upload Minutes</button>
                           <button onClick={() => handleDelete(meeting.id)} className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition"><Trash2 size={15} /></button>
                         </div>
                       </div>
@@ -94,6 +112,13 @@ export default function BoardMeetings() {
             </div>
           )}
         </div>
+      )}
+      {uploadFor && (
+        <UploadMinutesDialog
+          meeting={uploadFor}
+          onClose={() => setUploadFor(null)}
+          onUploaded={(doc) => { setMinutesDocs(prev => [doc, ...prev]); setUploadFor(null); }}
+        />
       )}
       {showNew && (
         <BoardNewMeetingModal
