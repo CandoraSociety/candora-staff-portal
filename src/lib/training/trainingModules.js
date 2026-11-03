@@ -1084,6 +1084,10 @@ export const TRAINING_MODULES = [
         path: "/central-registration/requests"
       },
       {
+        title: "Referrals from FRN partners and the hub",
+        body: "Expect this later, not now: referrals from FRN partner agencies and from the Network's hub will be received through this Central Registration portal. That process is still being developed by the Network's hub, so there is nothing to set up here today and no referrals to look for yet. Once the process is fully established, referrals will be directed here in some capacity, and this training will be updated to walk through how they arrive and how you action them."
+      },
+      {
         title: "Waitlists and offering seats",
         body: "A full area sends registrations to the waitlist with a position, and that position is the promise we make to people. When a seat opens, work from position one: record each contact attempt as it happens, and only move on to the next person when someone declines or cannot be reached. Registering from a waitlist is where ELL and EmpowerU work differently from the other areas. Open Register on an ELL class and the waitlist is split in two: learners who asked for that class, or whose CLB level matches it, come first, then everyone else waiting — so a level-matched person is offered the seat before someone who never asked for it. EmpowerU splits the same way against its cohort waitlist. Adding someone carries their existing record into the class or cohort, so nothing has to be retyped.",
         target: { selector: 'a[href="/central-registration/waitlists"]' },
