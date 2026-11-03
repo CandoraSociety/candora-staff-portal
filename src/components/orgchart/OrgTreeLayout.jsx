@@ -398,14 +398,19 @@ export default function OrgTreeLayout({
     };
   }, [drag, findReparentTarget, positions, posMap, onReparentRequest, onReorder, zoom]);
 
-  // Build SVG lines — use cubic bezier curves to avoid passing through nodes
-  // The control points pull the line out through the vertical gap between rows,
-  // so lines arc cleanly without cutting across sibling cards.
-  function makePath(px, py, cx, cy) {
-    const dy = cy - py;
-    // Control point offset: 60% of the vertical distance, keeping lines in the gap
-    const cpOffset = Math.max(Math.abs(dy) * 0.6, 40);
-    return `M ${px} ${py} C ${px} ${py + cpOffset}, ${cx} ${cy - cpOffset}, ${cx} ${cy}`;
+  // Build SVG lines — right-angle connectors instead of long sweeping curves.
+  // Every sibling drops off one shared horizontal bus that sits in the gap
+  // directly above its row, so lines never slice across neighbouring cards and
+  // two reporting relationships can't pile up on top of each other.
+  const BUS_INSET = 14;
+
+  function elbowPath(px, py, cx, cy, busY) {
+    if (cy <= py + 4) {
+      // Child sits above its manager (unusual ordering) — step out and back up.
+      return `M ${px} ${py} V ${py + BUS_INSET} H ${cx} V ${cy}`;
+    }
+    const y = busY ?? cy - BUS_INSET;
+    return `M ${px} ${py} V ${y} H ${cx} V ${cy}`;
   }
 
   // Stop words to ignore when comparing titles
@@ -469,35 +474,64 @@ export default function OrgTreeLayout({
   });
 
   const lines = [];
-  positions.forEach(p => {
-    if (!p.reports_to_id || p.reports_to_id === "" || p.reports_to_id === null) return;
-    const parent = posMap[p.reports_to_id];
-    const child = posMap[p.id];
-    if (!parent || !child) return;
-    const px = parent.x + TIER_LABEL_W + PAD;
-    const py = parent.y + NODE_H + PAD;
-    const cx = child.x + TIER_LABEL_W + PAD;
-    const cy = child.y + PAD;
-    lines.push(
-      <path key={`solid-${p.reports_to_id}-${p.id}`}
-        d={makePath(px, py, cx, cy)}
-        fill="none" stroke="hsl(var(--border))" strokeWidth="1.5" />
-    );
+  const absX = (p) => p.x + TIER_LABEL_W + PAD;
+  const absTop = (p) => p.y + PAD;
+  const absBottom = (p) => p.y + NODE_H + PAD;
+
+  // Solid reporting lines — one bus per manager, placed just above the children's row
+  Object.entries(byParent).forEach(([parentId, kids]) => {
+    if (parentId === "__root__") return;
+    const parent = posMap[parentId];
+    if (!parent) return;
+    const px = absX(parent);
+    const py = absBottom(parent);
+    const rows = kids.map(k => posMap[k.id]).filter(Boolean);
+    if (rows.length === 0) return;
+    const sameRow = new Set(rows.map(r => r.y)).size === 1;
+    const busY = sameRow && absTop(rows[0]) > py + BUS_INSET
+      ? absTop(rows[0]) - BUS_INSET
+      : null;
+
+    if (busY != null) {
+      const xs = rows.map(absX);
+      // Shared spine so siblings read as one group instead of a fan of crossings
+      lines.push(
+        <path key={`bus-${parentId}`}
+          d={`M ${Math.min(px, ...xs)} ${busY} H ${Math.max(px, ...xs)}`}
+          fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="1.5" opacity="0.45" />
+      );
+    }
+
+    kids.forEach(k => {
+      const pos = posMap[k.id];
+      if (!pos) return;
+      const d = busY != null
+        ? `M ${px} ${py} V ${busY} M ${absX(pos)} ${busY} V ${absTop(pos)}`
+        : elbowPath(px, py, absX(pos), absTop(pos), null);
+      lines.push(
+        <path key={`solid-${parentId}-${k.id}`}
+          d={d}
+          fill="none" stroke="hsl(var(--muted-foreground))" strokeWidth="1.5"
+          opacity="0.45" strokeLinecap="square" />
+      );
+    });
   });
+
+  // Dotted (advisory) lines — offset a little higher so they never merge with
+  // a solid line running into the same card
   positions.forEach(p => {
     const dottedId = p.dotted_line_reports_to_id;
     if (!dottedId || dottedId === "" || dottedId === null) return;
     const parent = posMap[dottedId];
     const child = posMap[p.id];
     if (!parent || !child) return;
-    const px = parent.x + TIER_LABEL_W + PAD;
-    const py = parent.y + NODE_H + PAD;
-    const cx = child.x + TIER_LABEL_W + PAD;
-    const cy = child.y + PAD;
+    const cx = absX(child);
+    const cy = absTop(child);
+    const busY = cy - BUS_INSET - 7;
     lines.push(
       <path key={`dotted-${dottedId}-${p.id}`}
-        d={makePath(px, py, cx, cy)}
-        fill="none" stroke="hsl(var(--accent))" strokeWidth="1.5" strokeDasharray="5 4" opacity="0.6" />
+        d={elbowPath(absX(parent), absBottom(parent), cx, cy, busY)}
+        fill="none" stroke="hsl(var(--accent))" strokeWidth="1.5" strokeDasharray="5 4" opacity="0.65" />
     );
   });
 
