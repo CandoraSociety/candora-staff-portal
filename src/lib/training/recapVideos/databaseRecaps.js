@@ -99,7 +99,7 @@ export const DATABASE_RECAP_SCENES = {
       'Staff notes are for the next worker — what they must know to pick the file up.',
       'A safety alert needs an explanation, because that explanation is what shows in red on the file.',
     ] },
-    { title: 'What you write, others rely on', audioUrl: audio('aa6413710'), points: [
+    { title: 'What you write, others rely on', audioUrl: audio('c884c7b5a'), points: [
       'Add Note and Client Visit both land on this one file; there is no second notebook.',
       'Program portals feed this record: registering someone in Pathways, ELL, EmpowerU, FRN, PHAC, Community or Digital Literacy adds a profile and a strip.',
       'Matching runs on email, then name with date of birth — which is why spelling matters.',
