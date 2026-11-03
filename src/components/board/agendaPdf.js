@@ -1,32 +1,13 @@
 import { jsPDF } from "jspdf";
 import { format } from "date-fns";
 import { parseDateSmart } from "@/lib/dateUtils";
-import { AGENDA_SECTIONS, sectionOf, CANDORA_LOGO_URL } from "@/components/board/agendaDocumentHtml";
+import { AGENDA_SECTIONS, sectionOf } from "@/components/board/agendaDocumentHtml";
+import { getPdfLogo } from "@/components/board/pdfLogo";
 
 const NAVY = [30, 47, 77];
 const INK = [17, 17, 17];
 const MUTED = [85, 85, 85];
 const RULE = [227, 230, 234];
-
-// Logo as a data URL so jsPDF can place it; cached for the session
-let logoPromise = null;
-function getLogoDataUrl() {
-  if (!logoPromise) {
-    logoPromise = fetch(CANDORA_LOGO_URL)
-      .then((r) => (r.ok ? r.blob() : Promise.reject(new Error("logo unavailable"))))
-      .then(
-        (blob) =>
-          new Promise((resolve, reject) => {
-            const fr = new FileReader();
-            fr.onload = () => resolve(fr.result);
-            fr.onerror = reject;
-            fr.readAsDataURL(blob);
-          })
-      )
-      .catch(() => null);
-  }
-  return logoPromise;
-}
 
 /**
  * Builds the board agenda PDF in the same document format as "Save / Print
@@ -35,7 +16,7 @@ function getLogoDataUrl() {
  * nothing else is ever added to this document.
  */
 export async function buildAgendaPdf({ meeting, items }) {
-  const doc = new jsPDF({ unit: "pt", format: "letter" });
+  const doc = new jsPDF({ unit: "pt", format: "letter", compress: true });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
   const M = 54;
@@ -51,13 +32,12 @@ export async function buildAgendaPdf({ meeting, items }) {
   const sorted = [...(items || [])].sort((a, b) => (a.order_index || 0) - (b.order_index || 0));
 
   // ── Meeting heading ──
-  const logo = await getLogoDataUrl();
+  const logo = await getPdfLogo();
   if (logo) {
     try {
-      const props = doc.getImageProperties(logo);
       const h = 54;
-      const w = (props.width / props.height) * h;
-      doc.addImage(logo, "PNG", (pageW - w) / 2, y, w, h);
+      const w = (logo.width / logo.height) * h;
+      doc.addImage(logo.dataUrl, "PNG", (pageW - w) / 2, y, w, h);
       y += h + 10;
     } catch {
       y += 4;

@@ -2,34 +2,13 @@ import { jsPDF } from "jspdf";
 import { format } from "date-fns";
 import { parseDateSmart } from "@/lib/dateUtils";
 import { AGENDA_SECTIONS, sectionOf } from "@/components/board/agendaDocumentHtml";
+import { getPdfLogo } from "@/components/board/pdfLogo";
 
 // Candora brand — same logo and palette used on the ED board report and agendas
-const CANDORA_LOGO_URL =
-  "https://media.base44.com/images/public/6a249282cb496579542673b7/c6b242905_Candoracirclelogo_noanniversary.png";
 const NAVY = [30, 47, 77];
 const GOLD = [245, 190, 25];
 const GRAY = [100, 100, 100];
 const MARGIN = 26;
-
-// Fetch the logo once and cache it (as a data URL for jsPDF); returns null if unavailable
-let logoPromise = null;
-function getLogoDataUrl() {
-  if (!logoPromise) {
-    logoPromise = fetch(CANDORA_LOGO_URL)
-      .then((r) => (r.ok ? r.blob() : Promise.reject(new Error("logo unavailable"))))
-      .then(
-        (blob) =>
-          new Promise((resolve, reject) => {
-            const fr = new FileReader();
-            fr.onload = () => resolve(fr.result);
-            fr.onerror = reject;
-            fr.readAsDataURL(blob);
-          })
-      )
-      .catch(() => null);
-  }
-  return logoPromise;
-}
 
 function decodeEntities(t) {
   return t
@@ -81,7 +60,7 @@ export function buildPackageBasePdf({
   documentLabel = "BOARD MEETING PACKAGE",
   footerLabel = "Board Meeting Package",
 }) {
-  const doc = new jsPDF();
+  const doc = new jsPDF({ compress: true });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const contentWidth = pageWidth - MARGIN * 2;
@@ -100,10 +79,10 @@ export function buildPackageBasePdf({
     doc.setFillColor(...NAVY);
     doc.rect(0, 0, pageWidth, BAND_H, "F");
     let nameX = 28;
-    const logo = await getLogoDataUrl();
+    const logo = await getPdfLogo();
     if (logo) {
       try {
-        doc.addImage(logo, "PNG", 28, 9, 22, 22);
+        doc.addImage(logo.dataUrl, "PNG", 28, 9, 22, 22);
         nameX = 28 + 31;
       } catch {
         nameX = 28;
