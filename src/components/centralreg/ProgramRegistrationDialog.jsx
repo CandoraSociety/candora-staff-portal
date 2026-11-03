@@ -7,6 +7,7 @@ import { Hourglass, UserPlus } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import UniversalRegistrationDialog from '@/components/centralreg/UniversalRegistrationDialog';
 import ProgramWaitlistGroup from '@/components/centralreg/ProgramWaitlistGroup';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { REG_AREA_LABELS } from '@/lib/centralRegConstants';
 import { ELL_CLB_LABELS } from '@/lib/ellConstants';
 
@@ -189,30 +190,42 @@ export default function ProgramRegistrationDialog({ open, onOpenChange, area, pr
                 <Hourglass className="h-4 w-4 text-muted-foreground" /> On the waitlist ({waitlist.length})
               </p>
               {isEll ? (
-                <div className="space-y-5">
-                  <ProgramWaitlistGroup
-                    isEll
-                    title={`Asked for this class${levelLabel ? ` or ${levelLabel}` : ''} (${matchedWaiters.length})`}
-                    hint="Learners who named this class on their waitlist entry, or whose assessed CLB level matches it — offer these seats first."
-                    entries={matchedWaiters}
-                    emptyText="No waitlisted learner has asked for this class or level yet."
-                    expandedId={expandedId}
-                    onToggle={toggleExpanded}
-                    seatingId={seatingId}
-                    onGiveSeat={giveSeat}
-                  />
-                  <ProgramWaitlistGroup
-                    isEll
-                    title={`Everyone else on the ELL waitlist (${otherWaiters.length})`}
-                    hint="Longest wait first — offer these seats only once the level-matched learners above have been called."
-                    entries={otherWaiters}
-                    emptyText="Nobody else is waiting for English classes."
-                    expandedId={expandedId}
-                    onToggle={toggleExpanded}
-                    seatingId={seatingId}
-                    onGiveSeat={giveSeat}
-                  />
-                </div>
+                <Tabs key={program?.id || 'ell'} defaultValue={matchedWaiters.length ? 'matched' : 'others'}>
+                  <TabsList className="grid w-full grid-cols-2">
+                    <TabsTrigger value="matched">
+                      Asked for this class{levelLabel ? ` · ${levelLabel}` : ''} ({matchedWaiters.length})
+                    </TabsTrigger>
+                    <TabsTrigger value="others">Everyone else ({otherWaiters.length})</TabsTrigger>
+                  </TabsList>
+                  <TabsContent value="matched" className="mt-3 space-y-2">
+                    <p className="text-xs text-muted-foreground">
+                      Learners who named this class on their waitlist entry, or whose assessed CLB level matches it — offer these seats first.
+                    </p>
+                    <ProgramWaitlistGroup
+                      isEll
+                      entries={matchedWaiters}
+                      emptyText="No waitlisted learner has asked for this class or level yet."
+                      expandedId={expandedId}
+                      onToggle={toggleExpanded}
+                      seatingId={seatingId}
+                      onGiveSeat={giveSeat}
+                    />
+                  </TabsContent>
+                  <TabsContent value="others" className="mt-3 space-y-2">
+                    <p className="text-xs text-muted-foreground">
+                      Longest wait first — offer these seats only once the class- and level-matched learners have been called.
+                    </p>
+                    <ProgramWaitlistGroup
+                      isEll
+                      entries={otherWaiters}
+                      emptyText="Nobody else is waiting for English classes."
+                      expandedId={expandedId}
+                      onToggle={toggleExpanded}
+                      seatingId={seatingId}
+                      onGiveSeat={giveSeat}
+                    />
+                  </TabsContent>
+                </Tabs>
               ) : (
                 <ProgramWaitlistGroup
                   entries={otherWaiters}
