@@ -145,55 +145,55 @@ export default function BoardMeetings() {
       {loading ? (
         <div className="flex justify-center py-12"><div className="w-6 h-6 border-2 border-border border-t-primary rounded-full animate-spin" /></div>
       ) : (
-        <div className="space-y-8">
+        <div className="space-y-6">
           {["in_progress", "upcoming", "completed", "cancelled"].map(status => {
             const group = grouped[status];
             if (!group?.length) return null;
             return (
               <div key={status}>
-                <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{status.replace(/_/g, " ")}</h2>
-                <div className="space-y-3">
+                <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{status.replace(/_/g, " ")}</h2>
+                <div className="space-y-2">
                   {group.map(meeting => (
-                    <div key={meeting.id} className="bg-card border border-border rounded-xl p-4 hover:shadow-sm transition group">
-                      <div className="flex items-start justify-between gap-4">
+                    <div key={meeting.id} className="bg-card border border-border rounded-xl p-3.5 hover:shadow-sm transition group">
+                      <div className="flex items-start justify-between gap-3">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-semibold text-foreground">{meeting.title}</h3>
-                            <span className={`text-xs px-2 py-0.5 rounded-full ${statusColors[meeting.status]}`}>{meeting.status?.replace(/_/g, " ")}</span>
-                            <span className="text-xs bg-secondary text-secondary-foreground px-2 py-0.5 rounded-full">{meeting.meeting_type}</span>
+                            <h3 className="font-semibold text-foreground leading-snug">{meeting.title}</h3>
+                            <span className={`text-[11px] px-2 py-0.5 rounded-full ${statusColors[meeting.status]}`}>{meeting.status?.replace(/_/g, " ")}</span>
+                            <span className="text-[11px] bg-secondary text-secondary-foreground px-2 py-0.5 rounded-full">{meeting.meeting_type}</span>
                           </div>
                           <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
-                            <span className="flex items-center gap-1"><Calendar size={13} />{format(new Date(meeting.meeting_date), "MMMM d, yyyy")}</span>
-                            <span className="flex items-center gap-1"><Clock size={13} />{format(new Date(meeting.meeting_date), "h:mm a")}</span>
-                            {meeting.location && <span className="flex items-center gap-1"><MapPin size={13} />{meeting.location}</span>}
+                            <span className="flex items-center gap-1"><Calendar size={12} />{format(new Date(meeting.meeting_date), "MMMM d, yyyy")}</span>
+                            <span className="flex items-center gap-1"><Clock size={12} />{format(new Date(meeting.meeting_date), "h:mm a")}</span>
+                            {meeting.location && <span className="flex items-center gap-1"><MapPin size={12} />{meeting.location}</span>}
                           </div>
-                          <MeetingCardDocuments
-                            chips={docChipsFor(meeting)}
-                            packages={packagesFor(meeting.id)}
-                            onDelete={setDeleteDoc}
-                            onEditPackage={setEditPkg}
-                            onDeletePackage={setDeletePkg}
-                          />
                         </div>
-                        <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
-                          <Link to={`/board/meetings/${meeting.id}/agenda`} className="text-xs border border-border px-2.5 py-1 rounded-lg hover:bg-muted transition text-foreground">Agenda</Link>
-                          <Link to={`/board/meetings/${meeting.id}/minutes`} className="text-xs border border-border px-2.5 py-1 rounded-lg hover:bg-muted transition text-foreground">Minutes</Link>
-                          <button onClick={() => setAddDocFor(meeting)} className="flex items-center gap-1 text-xs border border-border px-3 py-1.5 rounded-lg hover:bg-muted transition text-foreground"><FilePlus2 size={13} /> Add Document</button>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <Link to={`/board/meetings/${meeting.id}/agenda`} className="text-xs border border-border px-2 py-1 rounded-lg hover:bg-muted transition text-foreground">Agenda</Link>
+                          <Link to={`/board/meetings/${meeting.id}/minutes`} className="text-xs border border-border px-2 py-1 rounded-lg hover:bg-muted transition text-foreground">Minutes</Link>
+                          <button onClick={() => setAddDocFor(meeting)} title="Add a document" className="p-1.5 border border-border rounded-lg hover:bg-muted transition text-foreground"><FilePlus2 size={13} /></button>
                           <button
                             onClick={() => openPackageDialog(meeting)}
                             disabled={openingPackageId === meeting.id}
-                            className="flex items-center gap-1 text-xs border border-border px-3 py-1.5 rounded-lg hover:bg-muted transition text-foreground disabled:opacity-60"
+                            title="Create a meeting package"
+                            className="p-1.5 border border-border rounded-lg hover:bg-muted transition text-foreground disabled:opacity-60"
                           >
                             {openingPackageId === meeting.id
-                              ? <span className="w-3 h-3 border-2 border-border border-t-primary rounded-full animate-spin" />
+                              ? <span className="block w-3.5 h-3.5 border-2 border-border border-t-primary rounded-full animate-spin" />
                               : <Package size={13} />}
-                            Create Package
                           </button>
-                          <button onClick={() => setUploadFor({ meeting, documentType: "minutes" })} className="flex items-center gap-1 text-xs border border-border px-3 py-1.5 rounded-lg hover:bg-muted transition text-foreground"><Upload size={13} /> Upload Minutes</button>
-                          <button onClick={() => setUploadFor({ meeting, documentType: "financial_report" })} className="flex items-center gap-1 text-xs border border-border px-3 py-1.5 rounded-lg hover:bg-muted transition text-foreground"><DollarSign size={13} /> Upload Financials</button>
-                          <button onClick={() => handleDelete(meeting.id)} className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition"><Trash2 size={15} /></button>
+                          <button onClick={() => setUploadFor({ meeting, documentType: "minutes" })} title="Upload minutes" className="p-1.5 border border-border rounded-lg hover:bg-muted transition text-foreground"><Upload size={13} /></button>
+                          <button onClick={() => setUploadFor({ meeting, documentType: "financial_report" })} title="Upload financials" className="p-1.5 border border-border rounded-lg hover:bg-muted transition text-foreground"><DollarSign size={13} /></button>
+                          <button onClick={() => handleDelete(meeting.id)} title="Delete this meeting" className="p-1.5 text-muted-foreground hover:text-destructive transition"><Trash2 size={14} /></button>
                         </div>
                       </div>
+                      <MeetingCardDocuments
+                        chips={docChipsFor(meeting)}
+                        packages={packagesFor(meeting.id)}
+                        onDelete={setDeleteDoc}
+                        onEditPackage={setEditPkg}
+                        onDeletePackage={setDeletePkg}
+                      />
                     </div>
                   ))}
                 </div>

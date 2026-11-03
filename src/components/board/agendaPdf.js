@@ -31,7 +31,7 @@ function getLogoDataUrl() {
 /**
  * Builds the board agenda PDF in the same document format as "Save / Print
  * Agenda" — centred logo and meeting heading, underlined section headings, then
- * numbered items with presenter and notes (no time allocations). Agenda items only:
+ * numbered items with their presenter (no notes or time allocations). Agenda items only:
  * nothing else is ever added to this document.
  */
 export async function buildAgendaPdf({ meeting, items }) {
@@ -119,12 +119,7 @@ export async function buildAgendaPdf({ meeting, items }) {
       .filter((i) => sectionOf(i) === key)
       .forEach((item, idx) => {
         const titleLines = doc.splitTextToSize(item.title || "", titleW);
-        const notesLines = item.description ? doc.splitTextToSize(item.description, titleW) : [];
-        const rowH =
-          titleLines.length * 12 +
-          (item.presenter ? 11 : 0) +
-          notesLines.length * 11 +
-          10;
+        const rowH = titleLines.length * 12 + (item.presenter ? 11 : 0) + 10;
 
         if (y + rowH > bottom) newPage();
 
@@ -162,15 +157,6 @@ export async function buildAgendaPdf({ meeting, items }) {
           doc.setTextColor(68, 68, 68);
           doc.text(item.presenter, M + numW, ty);
           ty += 11;
-        }
-        if (notesLines.length) {
-          doc.setFont("helvetica", "normal");
-          doc.setFontSize(10);
-          doc.setTextColor(51, 51, 51);
-          notesLines.forEach((line) => {
-            doc.text(line, M + numW, ty);
-            ty += 11;
-          });
         }
 
         y = ty + 2;
