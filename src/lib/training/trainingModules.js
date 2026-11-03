@@ -18,6 +18,7 @@
 
 import { PATHWAYS_EXTRA_MODULES } from "@/lib/training/modules/pathwaysModules";
 import { FILE_MANAGER_MODULES } from "@/lib/training/modules/fileManagerModules";
+import { ELL_MODULES } from "@/lib/training/modules/ellModules";
 import { FILE_MANAGER_ADVANCED_MODULES } from "@/lib/training/modules/fileManagerAdvancedModules";
 import { WELCOME_MODULES } from "@/lib/training/modules/welcomeModules";
 import { RECEPTION_MODULES } from "@/lib/training/modules/receptionModules";
@@ -1039,86 +1040,7 @@ export const TRAINING_MODULES = [
   },
   ...PATHWAYS_EXTRA_MODULES,
   ...JOBLAB_MODULES,
-  {
-    key: "ell",
-    title: "ELL (English Language Learning)",
-    shortTitle: "ELL",
-    blurb: "Learners, classes, CLB levels, waitlist and assessments.",
-    path: "/ell",
-    steps: [
-      {
-        title: "Welcome to the ELL portal",
-        body: "Press Play to hear a quick overview of the ELL portal and what this module covers. Each scene stays on screen until its narration finishes. When you're ready, press Next below to continue training.",
-        introExplainer: true
-      },
-      {
-        title: "The dashboard",
-        body: "Your starting overview of the ELL program: learners, classes and current capacity at a glance.",
-        target: { selector: 'a[href="/ell"]' },
-        path: "/ell"
-      },
-      {
-        title: "Learners",
-        body: "The learner roster shows each learner's CLB level, enrollment status and class assignment. Click a learner to update their progress.",
-        target: { selector: 'a[href="/ell/learners"]' },
-        path: "/ell/learners"
-      },
-      {
-        title: "Classes",
-        body: "Each class shows its schedule, room and instructor. Open a class to manage attendance, lesson plans and notes.",
-        target: { selector: 'a[href="/ell/classes"]' },
-        path: "/ell/classes"
-      },
-      {
-        title: "Courses",
-        body: "Courses are the curriculum offerings learners can be placed into across terms.",
-        target: { selector: 'a[href="/ell/courses"]' },
-        path: "/ell/courses"
-      },
-      {
-        title: "The waitlist",
-        body: "Learners waiting for a seat are tracked here with a contact state: waiting, contacted, assessment booked, and so on. Keeping these states current is what makes the waitlist manageable.",
-        target: { selector: 'a[href="/ell/waitlist"]' },
-        path: "/ell/waitlist"
-      },
-      {
-        title: "Assessments",
-        body: "CLB assessments are recorded here — before and after levels, so you can see each learner's progress over time.",
-        target: { selector: 'a[href="/ell/assessments"]' },
-        path: "/ell/assessments"
-      },
-      {
-        title: "Time to practice",
-        body: "That's the tour! Now you'll add a demo learner, work a waitlist entry, and record an assessment."
-      }
-    ],
-    tasks: [
-      {
-        id: "ell-learner",
-        title: "Add a new learner",
-        body: "Register a demo learner with their language background and CLB level.",
-        hint: "Go to Learners, click Add Learner and fill in their first language, country of origin and CLB level.",
-        path: "/ell/learners",
-        verify: { kind: "created", entity: "ELLLearner" }
-      },
-      {
-        id: "ell-waitlist",
-        title: "Work a waitlist entry",
-        body: "Open the waitlist, contact a waiting learner and update their contact state with a note.",
-        hint: "Open the Waitlist, pick a waiting learner and use the contact buttons to update their state with a note.",
-        path: "/ell/waitlist",
-        verify: { kind: "self" }
-      },
-      {
-        id: "ell-assess",
-        title: "Record a CLB assessment",
-        body: "Record an assessment for one of the demo learners, showing their before and after levels.",
-        hint: "Open Assessments and record a new CLB assessment with the before and after levels.",
-        path: "/ell/assessments",
-        verify: { kind: "self" }
-      }
-    ]
-  },
+  ...ELL_MODULES,
   {
     key: "centralreg",
     title: "Central Registration",

@@ -448,6 +448,18 @@ export const MODULE_RECAPS = {
         answer: 1,
         explain: "Courses describe what is taught; learners are placed into them term by term.",
       },
+      {
+        question: "An instructor isn't showing up in a class's instructor list — why?",
+        options: ["They teach a different CLB level", "They have not been added here, or their status is not active", "Only managers can choose instructors", "The class has no room set"],
+        answer: 1,
+        explain: "An instructor must exist on the Instructors page and be active before a class can name them.",
+      },
+      {
+        question: "A learner says they were already registered at the front desk. What do you do first?",
+        options: ["Add them as a new learner", "Search the roster and update the existing learner", "Put them on the waitlist", "Ask Central Registration to delete the registration"],
+        answer: 1,
+        explain: "Central Registration can create the learner record here, so search first — one person, one learner record.",
+      },
     ],
   },
 
