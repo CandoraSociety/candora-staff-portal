@@ -1,13 +1,14 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Plus, Calendar, Clock, MapPin, Trash2, Upload, FileText, DollarSign, Package, Pencil, ExternalLink, X, FilePlus2 } from "lucide-react";
+import { Plus, Calendar, Clock, MapPin, Trash2, Upload, DollarSign, Package, FilePlus2 } from "lucide-react";
 import { format } from "date-fns";
 import { parseDateSmart } from "@/lib/dateUtils";
 import { toast } from "sonner";
 import BoardNewMeetingModal from "@/components/board/BoardNewMeetingModal";
 import UploadMeetingDocDialog from "@/components/board/UploadMeetingDocDialog";
 import AddMeetingDocumentDialog from "@/components/board/AddMeetingDocumentDialog";
+import MeetingCardDocuments from "@/components/board/MeetingCardDocuments";
 import EditMeetingPackageDialog from "@/components/board/EditMeetingPackageDialog";
 import MeetingPackageDialog from "@/components/board/MeetingPackageDialog";
 import ConfirmDialog from "@/components/training/ConfirmDialog";
@@ -18,99 +19,6 @@ const statusColors = {
   completed: "bg-gray-100 text-gray-600",
   cancelled: "bg-red-100 text-red-700",
 };
-
-// Paperwork attached to a meeting, shown under its details with a link to open
-// and, when the document lives on this meeting, a button to take it off
-function AttachedDocs({ label, docs, onDelete }) {
-  if (!docs.length) return null;
-  return (
-    <div className="flex items-center gap-2 mt-2 text-xs flex-wrap">
-      <span className="flex items-center gap-1 text-green-700 font-medium"><FileText size={12} /> {label}</span>
-      {docs.map(d => (
-        <span key={d.id} className="inline-flex items-center gap-1.5 max-w-[290px] rounded-md border border-border bg-card px-2 py-1">
-          {d.file_url ? (
-            <a
-              href={d.file_url}
-              target="_blank"
-              rel="noreferrer"
-              title={d.file_name || d.title}
-              className="inline-flex items-center gap-1.5 min-w-0 font-medium text-foreground hover:underline"
-            >
-              <FileText size={11} className="shrink-0 text-muted-foreground" />
-              <span className="truncate">{d.title}</span>
-              <ExternalLink size={11} className="shrink-0 text-muted-foreground" />
-            </a>
-          ) : (
-            <span className="truncate text-muted-foreground">{d.title}</span>
-          )}
-          {onDelete && (
-            <button
-              type="button"
-              onClick={() => onDelete(d)}
-              title="Remove this document from the meeting"
-              className="shrink-0 text-muted-foreground hover:text-destructive transition"
-            >
-              <X size={12} />
-            </button>
-          )}
-        </span>
-      ))}
-    </div>
-  );
-}
-
-// A meeting package built in the Agenda Builder — the zip itself plus a direct
-// link to every document inside it, so either can be opened without unzipping
-function PackageAttachments({ packages, onEdit, onDelete }) {
-  if (!packages.length) return null;
-  return (
-    <div className="mt-2 space-y-1.5">
-      {packages.map((pkg) => (
-        <div key={pkg.id} className="rounded-lg border border-border bg-muted/40 px-3 py-2 group/pkg">
-          <div className="flex items-center gap-2">
-            <a href={pkg.file_url} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-xs font-medium text-foreground hover:underline flex-1 min-w-0">
-              <Package size={13} className="shrink-0" />
-              <span className="truncate max-w-[260px]">{pkg.file_name || "Meeting Package.zip"}</span>
-              <span className="font-normal text-muted-foreground">download zip</span>
-            </a>
-            <button
-              type="button"
-              onClick={() => onEdit(pkg)}
-              title="Add or remove items"
-              className="flex items-center gap-1 text-xs border border-border bg-card px-2 py-1 rounded-md hover:bg-muted transition text-foreground"
-            >
-              <Pencil size={12} /> Manage items
-            </button>
-            <button
-              type="button"
-              onClick={() => onDelete(pkg)}
-              title="Delete this package"
-              className="text-muted-foreground hover:text-destructive transition"
-            >
-              <Trash2 size={14} />
-            </button>
-          </div>
-          {(pkg.package_files || []).length > 0 && (
-            <div className="flex items-center gap-x-3 gap-y-1 flex-wrap mt-1.5">
-              {(pkg.package_files || []).map((f) => (
-                <a
-                  key={f.file_url}
-                  href={f.file_url}
-                  target="_blank"
-                  rel="noreferrer"
-                  title={f.file_name || f.label}
-                  className="text-xs text-muted-foreground hover:text-foreground underline truncate max-w-[220px]"
-                >
-                  {f.label}
-                </a>
-              ))}
-            </div>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
 
 export default function BoardMeetings() {
   const [meetings, setMeetings] = useState([]);
@@ -180,6 +88,21 @@ export default function BoardMeetings() {
   };
   const packagesFor = (meetingId) => packages.filter(p => p.meeting_id === meetingId);
 
+  // Every document on a meeting as one list of compact chips, each carrying its
+  // type (prev minutes belong to the earlier meeting, so they can't be removed)
+  const docChipsFor = (meeting) => {
+    const chips = [];
+    const add = (docs, kind) => docs.forEach(doc => chips.push({ doc, kind }));
+    add(docsFor(meeting.id, "agenda"), "Agenda");
+    add(docsFor(meeting.id, "minutes"), "Minutes");
+    const prev = prevMinutesFor(meeting);
+    if (prev) chips.push({ doc: prev, kind: "Prev. minutes", readOnly: true });
+    add(docsFor(meeting.id, "financial_report"), "Financials");
+    add(docsFor(meeting.id, "ed_report"), "ED report");
+    add(otherDocsFor(meeting.id), "Document");
+    return chips;
+  };
+
   // Build a package straight from the meeting card — its agenda is loaded first
   const openPackageDialog = async (meeting) => {
     setOpeningPackageId(meeting.id);
@@ -231,7 +154,7 @@ export default function BoardMeetings() {
                 <h2 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{status.replace(/_/g, " ")}</h2>
                 <div className="space-y-3">
                   {group.map(meeting => (
-                    <div key={meeting.id} className="bg-card border border-border rounded-xl p-5 hover:shadow-sm transition group">
+                    <div key={meeting.id} className="bg-card border border-border rounded-xl p-4 hover:shadow-sm transition group">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
@@ -239,29 +162,22 @@ export default function BoardMeetings() {
                             <span className={`text-xs px-2 py-0.5 rounded-full ${statusColors[meeting.status]}`}>{meeting.status?.replace(/_/g, " ")}</span>
                             <span className="text-xs bg-secondary text-secondary-foreground px-2 py-0.5 rounded-full">{meeting.meeting_type}</span>
                           </div>
-                          <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground flex-wrap">
+                          <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground flex-wrap">
                             <span className="flex items-center gap-1"><Calendar size={13} />{format(new Date(meeting.meeting_date), "MMMM d, yyyy")}</span>
                             <span className="flex items-center gap-1"><Clock size={13} />{format(new Date(meeting.meeting_date), "h:mm a")}</span>
                             {meeting.location && <span className="flex items-center gap-1"><MapPin size={13} />{meeting.location}</span>}
                           </div>
-                          <AttachedDocs label="Agenda attached" docs={docsFor(meeting.id, "agenda")} onDelete={setDeleteDoc} />
-                          <AttachedDocs label="Minutes attached" docs={docsFor(meeting.id, "minutes")} onDelete={setDeleteDoc} />
-                          {(() => {
-                            const prev = prevMinutesFor(meeting);
-                            return prev ? <AttachedDocs label="Last meeting's minutes" docs={[prev]} /> : null;
-                          })()}
-                          <AttachedDocs label="Financials attached" docs={docsFor(meeting.id, "financial_report")} onDelete={setDeleteDoc} />
-                          <AttachedDocs label="ED report attached" docs={docsFor(meeting.id, "ed_report")} onDelete={setDeleteDoc} />
-                          <AttachedDocs label="Documents attached" docs={otherDocsFor(meeting.id)} onDelete={setDeleteDoc} />
-                          <PackageAttachments
+                          <MeetingCardDocuments
+                            chips={docChipsFor(meeting)}
                             packages={packagesFor(meeting.id)}
-                            onEdit={setEditPkg}
-                            onDelete={setDeletePkg}
+                            onDelete={setDeleteDoc}
+                            onEditPackage={setEditPkg}
+                            onDeletePackage={setDeletePkg}
                           />
                         </div>
                         <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
-                          <Link to={`/board/meetings/${meeting.id}/agenda`} className="text-xs border border-border px-3 py-1.5 rounded-lg hover:bg-muted transition text-foreground">Agenda</Link>
-                          <Link to={`/board/meetings/${meeting.id}/minutes`} className="text-xs border border-border px-3 py-1.5 rounded-lg hover:bg-muted transition text-foreground">Minutes</Link>
+                          <Link to={`/board/meetings/${meeting.id}/agenda`} className="text-xs border border-border px-2.5 py-1 rounded-lg hover:bg-muted transition text-foreground">Agenda</Link>
+                          <Link to={`/board/meetings/${meeting.id}/minutes`} className="text-xs border border-border px-2.5 py-1 rounded-lg hover:bg-muted transition text-foreground">Minutes</Link>
                           <button onClick={() => setAddDocFor(meeting)} className="flex items-center gap-1 text-xs border border-border px-3 py-1.5 rounded-lg hover:bg-muted transition text-foreground"><FilePlus2 size={13} /> Add Document</button>
                           <button
                             onClick={() => openPackageDialog(meeting)}
