@@ -197,6 +197,7 @@ const SECTION_STARTS = {
   centralreg: {
     "Welcome to Central Registration": "Overview",
     "The dashboard": "Overview",
+    "Where the programs come from": "Programs & capacity",
     "Programs: seats, sessions and sign-ups": "Programs & capacity",
     "All Registrations": "Registrations & requests",
     "Registration Requests": "Registrations & requests",

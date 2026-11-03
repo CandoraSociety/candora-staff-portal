@@ -1138,6 +1138,12 @@ export const TRAINING_MODULES = [
         path: "/central-registration"
       },
       {
+        title: "Where the programs come from",
+        body: "No program starts here — Central Registration never creates one. Every program is created and kept in its own portal: English classes in the ELL portal, cohorts in EmpowerU, programs in PHAC, sessions in Community and the Family Resource Network. This page only ever shows the active ones, so a program switched off upstream drops off this page. That means a missing program is never a registration problem: go to its portal, create it or switch it on, and it appears here. What registration owns is capacity, sessions and the QR sign-up link.",
+        target: { selector: '[data-tour="sidebar-nav"]' },
+        path: "/central-registration"
+      },
+      {
         title: "Programs: seats, sessions and sign-ups",
         body: "Every program lives on this page with its sessions and its areas. Each area shows the places filled against its maximum, and that number decides what Register does: while there is room the person goes straight in, and once the area is full the same button adds them to the waitlist. A program with no session scheduled cannot take registrations at all, so Create Session is often the fix. The small QR button on a program opens its public sign-up link — copy the link, print the code, and choose whether scanned requests need your approval.",
         target: { selector: 'a[href="/central-registration/programs"]' },
