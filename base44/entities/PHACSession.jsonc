@@ -60,6 +60,44 @@
       "type": "string",
       "description": "Who facilitated this session"
     },
+    "facilitator_email": {
+      "type": "string",
+      "description": "Facilitator email, set when the facilitator is picked from staff"
+    },
+    "attendance": {
+      "type": "array",
+      "description": "Attendance marked for each session occurrence, one entry per family per date",
+      "items": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date",
+            "description": "Session occurrence this attendance belongs to"
+          },
+          "participant_id": {
+            "type": "string",
+            "description": "PHACParticipant family this mark belongs to"
+          },
+          "participant_name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "present",
+              "absent",
+              "late",
+              "excused"
+            ],
+            "default": "present"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "attendee_count": {
       "type": "number",
       "default": 0,

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Plus } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -12,21 +13,24 @@ import { useToast } from '@/components/ui/use-toast';
 import { SESSION_STATUS_OPTIONS, isOffSeason } from '@/lib/phacConstants';
 import { ROOM_OPTIONS } from '@/lib/centralRegConstants';
 import TimeSlotPicker from '@/components/shared/TimeSlotPicker';
+import FacilitatorSelect from '@/components/frn/FacilitatorSelect';
+import AddFacilitatorDialog from '@/components/frn/AddFacilitatorDialog';
 import { timeToMinutes, minutesToTime } from '@/lib/sessionAvailability';
 
 const EMPTY = {
   program_id: '', program_name: '', session_date: '', start_time: '', end_time: '',
   location: '', room: '', recurrence_pattern: 'none', recurrence_end_date: '', facilitator: '',
-  attendee_count: 0, adult_count: 0, child_count: 0,
+  facilitator_email: '', attendee_count: 0, adult_count: 0, child_count: 0,
   status: 'scheduled', notes: '',
 };
 
-export default function SessionFormDialog({ open, onOpenChange, session, onSaved }) {
+export default function SessionFormDialog({ open, onOpenChange, session, presetProgramId, onSaved }) {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(EMPTY);
   const [duration, setDuration] = useState(60);
   const [timeOk, setTimeOk] = useState(true);
+  const [addFacilitatorOpen, setAddFacilitatorOpen] = useState(false);
 
   const { data: programs = [] } = useQuery({
     queryKey: ['phac-programs'],
@@ -36,12 +40,28 @@ export default function SessionFormDialog({ open, onOpenChange, session, onSaved
 
   useEffect(() => {
     if (open) {
-      setForm(session ? { ...EMPTY, ...session } : { ...EMPTY, session_date: new Date().toISOString().split('T')[0] });
+      setForm(session ? { ...EMPTY, ...session } : { ...EMPTY, program_id: presetProgramId || '', session_date: new Date().toISOString().split('T')[0] });
       const d = session?.start_time && session?.end_time ? timeToMinutes(session.end_time) - timeToMinutes(session.start_time) : 60;
       setDuration(d > 0 ? d : 60);
       setTimeOk(true);
     }
-  }, [open, session]);
+  }, [open, session, presetProgramId]);
+
+  // Starting a session from a program card pre-fills that program's usual slot.
+  useEffect(() => {
+    if (!open || session || !presetProgramId || !programs.length) return;
+    const p = programs.find(x => x.id === presetProgramId);
+    if (!p) return;
+    setForm(prev => ({
+      ...prev,
+      program_id: p.id,
+      program_name: p.name,
+      start_time: prev.start_time || p.start_time || '',
+      end_time: prev.end_time || p.end_time || '',
+      location: prev.location || p.location || '',
+      facilitator: prev.facilitator || p.facilitator || '',
+    }));
+  }, [open, session, presetProgramId, programs]);
 
   const update = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
 
@@ -64,6 +84,10 @@ export default function SessionFormDialog({ open, onOpenChange, session, onSaved
       update('location', p.location || '');
       update('facilitator', p.facilitator || '');
     }
+  };
+
+  const pickFacilitator = (name, email) => {
+    setForm(prev => ({ ...prev, facilitator: name, facilitator_email: email || prev.facilitator_email || '' }));
   };
 
   const offSeason = form.session_date ? isOffSeason(form.session_date) : false;
@@ -125,7 +149,12 @@ export default function SessionFormDialog({ open, onOpenChange, session, onSaved
           </div>
           <div className="space-y-1.5">
             <Label>Facilitator</Label>
-            <Input value={form.facilitator || ''} onChange={(e) => update('facilitator', e.target.value)} />
+            <div className="flex gap-1.5">
+              <FacilitatorSelect className="flex-1" value={form.facilitator || ''} onChange={pickFacilitator} />
+              <Button type="button" variant="outline" size="icon" title="Add an eligible facilitator" onClick={() => setAddFacilitatorOpen(true)}>
+                <Plus className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
           <div className="space-y-1.5">
             <Label>Room</Label>
@@ -198,6 +227,15 @@ export default function SessionFormDialog({ open, onOpenChange, session, onSaved
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
           <Button onClick={handleSave} disabled={saving || !timeOk}>{saving ? 'Saving...' : 'Save'}</Button>
         </DialogFooter>
+
+        <AddFacilitatorDialog
+          open={addFacilitatorOpen}
+          onOpenChange={setAddFacilitatorOpen}
+          onSaved={(record) => {
+            setAddFacilitatorOpen(false);
+            if (record?.name) setForm(prev => ({ ...prev, facilitator: record.name, facilitator_email: record.email || '' }));
+          }}
+        />
       </DialogContent>
     </Dialog>
   );

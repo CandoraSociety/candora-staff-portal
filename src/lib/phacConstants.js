@@ -16,6 +16,22 @@ export const SESSION_STATUS_OPTIONS = [
 export const SESSION_STATUS_LABELS = Object.fromEntries(SESSION_STATUS_OPTIONS.map(s => [s.value, s.label]));
 export const SESSION_STATUS_COLORS = Object.fromEntries(SESSION_STATUS_OPTIONS.map(s => [s.value, s.color]));
 
+export const PARTICIPANT_STATUS_OPTIONS = [
+  { value: 'registered', label: 'Registered', color: '#22c55e' },
+  { value: 'waitlisted', label: 'Waitlisted', color: '#f59e0b' },
+  { value: 'withdrawn', label: 'Withdrawn', color: '#64748b' },
+];
+
+export const PHAC_PROGRAM_CATEGORY_OPTIONS = [
+  { value: 'play_based', label: 'Play-based' },
+  { value: 'parenting', label: 'Parenting support' },
+  { value: 'early_learning', label: 'Early learning' },
+  { value: 'health_wellness', label: 'Health & wellness' },
+  { value: 'other', label: 'Other' },
+];
+
+export const PHAC_PROGRAM_CATEGORY_LABELS = Object.fromEntries(PHAC_PROGRAM_CATEGORY_OPTIONS.map(c => [c.value, c.label]));
+
 export const WEEKDAY_OPTIONS = [
   { value: 'monday', label: 'Monday' },
   { value: 'tuesday', label: 'Tuesday' },

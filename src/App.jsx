@@ -299,6 +299,7 @@ import PHACDashboard from '@/pages/phac/PHACDashboard';
 import PHACPrograms from '@/pages/phac/PHACPrograms';
 import PHACSessions from '@/pages/phac/PHACSessions';
 import PHACParticipants from '@/pages/phac/PHACParticipants';
+import PHACFamilyDetail from '@/pages/phac/PHACFamilyDetail';
 
 // Resource Centre Portal
 import RCLayout from '@/components/rc/RCLayout';
@@ -724,6 +725,7 @@ const AuthenticatedApp = () => {
           <Route path="/phac/programs" element={<PHACPrograms />} />
           <Route path="/phac/sessions" element={<PHACSessions />} />
           <Route path="/phac/participants" element={<PHACParticipants />} />
+          <Route path="/phac/participants/:id" element={<PHACFamilyDetail />} />
         </Route>
 
         {/* Resource Centre Portal - standalone layout */}

@@ -10,6 +10,22 @@
       "type": "string",
       "description": "What the program involves"
     },
+    "category": {
+      "type": "string",
+      "enum": [
+        "play_based",
+        "parenting",
+        "early_learning",
+        "health_wellness",
+        "other"
+      ],
+      "default": "play_based",
+      "description": "Program category, used to group and filter the program cards"
+    },
+    "eligibility": {
+      "type": "string",
+      "description": "Who can attend \u2014 age range, residency, registration requirements"
+    },
     "target_age_min_months": {
       "type": "number",
       "default": 0,
@@ -71,6 +87,17 @@
     "facilitator": {
       "type": "string",
       "description": "Staff member facilitating the program"
+    },
+    "coordinator_name": {
+      "type": "string",
+      "description": "Staff member who coordinates the program"
+    },
+    "coordinator_email": {
+      "type": "string"
+    },
+    "capacity": {
+      "type": "number",
+      "description": "Maximum families per session"
     },
     "documents": {
       "type": "array",

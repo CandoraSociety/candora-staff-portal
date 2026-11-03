@@ -8,12 +8,14 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/components/ui/use-toast';
-import { WEEKDAY_OPTIONS, PROGRAM_STATUS_OPTIONS, MONTH_LABELS } from '@/lib/phacConstants';
+import { WEEKDAY_OPTIONS, PROGRAM_STATUS_OPTIONS, MONTH_LABELS, PHAC_PROGRAM_CATEGORY_OPTIONS } from '@/lib/phacConstants';
 
 const EMPTY = {
-  name: '', description: '', target_age_min_months: 0, target_age_max_months: 72,
+  name: '', description: '', category: 'play_based', eligibility: '',
+  target_age_min_months: 0, target_age_max_months: 72,
   schedule_days: [], start_time: '', end_time: '', location: '',
-  season_start_month: 9, season_end_month: 6, status: 'active', facilitator: '', notes: '',
+  season_start_month: 9, season_end_month: 6, status: 'active',
+  facilitator: '', coordinator_name: '', coordinator_email: '', capacity: 0, notes: '',
 };
 
 export default function ProgramFormDialog({ open, onOpenChange, program, onSaved }) {
@@ -74,6 +76,23 @@ export default function ProgramFormDialog({ open, onOpenChange, program, onSaved
             <Textarea value={form.description || ''} onChange={(e) => update('description', e.target.value)} rows={2} />
           </div>
           <div className="space-y-1.5">
+            <Label>Category</Label>
+            <Select value={form.category || 'play_based'} onValueChange={(v) => update('category', v)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {PHAC_PROGRAM_CATEGORY_OPTIONS.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Capacity (families)</Label>
+            <Input type="number" min="0" value={form.capacity ?? 0} onChange={(e) => update('capacity', e.target.value ? parseInt(e.target.value) : 0)} />
+          </div>
+          <div className="space-y-1.5 col-span-2">
+            <Label>Eligibility</Label>
+            <Textarea value={form.eligibility || ''} onChange={(e) => update('eligibility', e.target.value)} rows={2} placeholder="Who can attend — age range, residency, registration requirements" />
+          </div>
+          <div className="space-y-1.5">
             <Label>Min Age (months)</Label>
             <Input type="number" value={form.target_age_min_months ?? 0} onChange={(e) => update('target_age_min_months', parseInt(e.target.value) || 0)} />
           </div>
@@ -111,6 +130,14 @@ export default function ProgramFormDialog({ open, onOpenChange, program, onSaved
           <div className="space-y-1.5">
             <Label>Facilitator</Label>
             <Input value={form.facilitator || ''} onChange={(e) => update('facilitator', e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Coordinator</Label>
+            <Input value={form.coordinator_name || ''} onChange={(e) => update('coordinator_name', e.target.value)} />
+          </div>
+          <div className="space-y-1.5">
+            <Label>Coordinator Email</Label>
+            <Input type="email" value={form.coordinator_email || ''} onChange={(e) => update('coordinator_email', e.target.value)} />
           </div>
           <div className="space-y-1.5">
             <Label>Season Starts</Label>

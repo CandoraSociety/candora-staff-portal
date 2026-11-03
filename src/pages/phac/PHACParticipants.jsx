@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Plus, Search, Pencil, Phone, Mail, Baby } from 'lucide-react';
+import { Plus, Search, Pencil, Phone, Mail, Baby, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -24,6 +25,7 @@ function formatAge(months) {
 }
 
 export default function PHACParticipants() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -71,7 +73,11 @@ export default function PHACParticipants() {
           {filtered.map(p => {
             const ageMonths = calculateAge(p.child_date_of_birth);
             return (
-              <Card key={p.id} className="hover:shadow-md transition-shadow">
+              <Card
+                key={p.id}
+                className="hover:shadow-md hover:border-primary/50 transition-shadow cursor-pointer"
+                onClick={() => navigate(`/phac/participants/${p.id}`)}
+              >
                 <CardContent className="p-4">
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-3">
@@ -85,7 +91,7 @@ export default function PHACParticipants() {
                         )}
                       </div>
                     </div>
-                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(p)}>
+                    <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); handleEdit(p); }}>
                       <Pencil className="h-3.5 w-3.5" />
                     </Button>
                   </div>
@@ -103,6 +109,9 @@ export default function PHACParticipants() {
                   {p.notes && (
                     <p className="text-xs text-muted-foreground mt-2 pt-2 border-t border-border/50 line-clamp-2">{p.notes}</p>
                   )}
+                  <p className="text-xs text-primary flex items-center gap-1 mt-2 pt-2 border-t border-border/50">
+                    Open family file <ArrowRight className="h-3 w-3" />
+                  </p>
                 </CardContent>
               </Card>
             );
