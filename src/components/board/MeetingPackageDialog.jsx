@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { CheckCircle2, Package, X } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { buildPackageBasePdf } from "@/components/board/meetingPackagePdf";
+import { buildAgendaPdf } from "@/components/board/agendaPdf";
+import { mergePdfBytes } from "@/components/board/appendPdfPages";
 import { buildMeetingPackageZip } from "@/components/board/meetingPackageZip";
 import { gatherPackageCandidates } from "@/lib/boardPackageCandidates";
 
@@ -51,16 +53,22 @@ export default function MeetingPackageDialog({ meeting, items, onClose, onCreate
         .filter((p) => p.id !== "agenda")
         .map((p) => ({ label: p.label, fileUrl: p.fileUrl }));
 
-      const agendaPdf = agendaPart
-        ? await buildPackageBasePdf({
-            meeting,
-            contents: selected.map((p) => p.label),
-            agendaItems: items,
-            minutes: null,
-          })
-        : null;
-      const baseBytes = agendaPdf ? agendaPdf.output("arraybuffer") : null;
-      const basePdfName = "Agenda";
+      // The cover keeps its contents list, but the agenda pages are the real
+      // agenda document (same builder as "Save Agenda to Meeting Card"), so the
+      // formatting and layout inside the package match the agenda exactly.
+      const coverPdf = await buildPackageBasePdf({
+        meeting,
+        contents: selected.map((p) => p.label),
+        agendaItems: null,
+        minutes: null,
+      });
+      const baseParts = [coverPdf.output("arraybuffer")];
+      if (agendaPart) {
+        const agendaDoc = await buildAgendaPdf({ meeting, items });
+        baseParts.push(agendaDoc.output("arraybuffer"));
+      }
+      const baseBytes = await mergePdfBytes(baseParts);
+      const basePdfName = agendaPart ? "Agenda & Contents" : "Package Contents";
       const { blob, skipped, included } = await buildMeetingPackageZip({
         basePdfBuffer: baseBytes,
         basePdfName,
@@ -76,11 +84,9 @@ export default function MeetingPackageDialog({ meeting, items, onClose, onCreate
       // The generated agenda PDF is also kept on its own, so the meeting card can
       // link to it directly instead of forcing a download of the whole zip.
       const agendaFileName = `Candora-${basePdfName.replace(" & ", "-and-")}_${dateTag}.pdf`;
-      const agendaUpload = baseBytes
-        ? await base44.integrations.Core.UploadPublicFile({
-            file: new File([baseBytes], agendaFileName, { type: "application/pdf" }),
-          })
-        : null;
+      const agendaUpload = await base44.integrations.Core.UploadPublicFile({
+        file: new File([baseBytes], agendaFileName, { type: "application/pdf" }),
+      });
 
       const fileName = `Candora-Meeting-Package_${dateTag}.zip`;
       const { file_url } = await base44.integrations.Core.UploadPublicFile({ file: new File([blob], fileName, { type: "application/zip" }) });
@@ -92,7 +98,7 @@ export default function MeetingPackageDialog({ meeting, items, onClose, onCreate
         file_name: fileName,
         description: "Board meeting package zip — the agenda plus every document on the meeting card, each as its own file",
         package_files: [
-          ...(agendaUpload ? [{ label: basePdfName, file_name: agendaFileName, file_url: agendaUpload.file_url }] : []),
+          { label: basePdfName, file_name: agendaFileName, file_url: agendaUpload.file_url },
           ...included,
         ],
       });
