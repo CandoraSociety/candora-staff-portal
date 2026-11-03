@@ -2,6 +2,12 @@ import JSZip from "jszip";
 
 const pad = (n) => String(n).padStart(2, "0");
 
+// JSZip stores entries uncompressed unless told otherwise — DEFLATE keeps the
+// package a fraction of the size of the documents it holds.
+function generateCompressedBlob(zip) {
+  return zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } });
+}
+
 // File names inside the zip stay readable and safe on every OS
 function sanitize(name) {
   const clean = String(name || "document")
@@ -45,7 +51,7 @@ export async function buildMeetingPackageZip({ basePdfBuffer, basePdfName, files
     }
   }
 
-  const blob = await zip.generateAsync({ type: "blob" });
+  const blob = await generateCompressedBlob(zip);
   return { blob, skipped, included };
 }
 
@@ -73,6 +79,6 @@ export async function rebuildPackageZip(files = []) {
     }
   }
 
-  const blob = await zip.generateAsync({ type: "blob" });
+  const blob = await generateCompressedBlob(zip);
   return { blob, skipped, included };
 }

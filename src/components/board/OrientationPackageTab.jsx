@@ -73,7 +73,7 @@ export default function OrientationPackageTab() {
         throw err;
       }
     }
-    return zip.generateAsync({ type: "blob" });
+    return zip.generateAsync({ type: "blob", compression: "DEFLATE", compressionOptions: { level: 6 } });
   };
 
   const handleDownload = async () => {
