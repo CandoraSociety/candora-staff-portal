@@ -8,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/components/ui/use-toast';
-import ExistingClientToggle from '@/components/centralreg/ExistingClientToggle';
+import CentralClientMatch from '@/components/shared/CentralClientMatch';
 import { REG_AREA_LABELS, VOLUNTEER_TYPE_OPTIONS, REGISTRATION_OVERRIDE_CODE, today } from '@/lib/centralRegConstants';
 
 const EMPTY = { first_name: '', last_name: '', phone: '', email: '', notes: '', parent_guardian_name: '', parent_guardian_phone: '', parent_guardian_email: '', volunteer_type: 'community', waitlist: false };
@@ -73,6 +73,7 @@ export default function UniversalRegistrationDialog({ open, onOpenChange, area, 
         await base44.entities.PHACParticipant.create({
           child_first_name: form.first_name, child_last_name: form.last_name,
           parent_guardian_name: form.parent_guardian_name, parent_guardian_phone: form.parent_guardian_phone, parent_guardian_email: form.parent_guardian_email,
+          linked_rc_client_id,
           status: forced ? 'waitlisted' : 'registered',
           notes: [program?.name ? `Registered for: ${program.name}` : '', form.notes].filter(Boolean).join('\n'),
         });
@@ -123,17 +124,26 @@ export default function UniversalRegistrationDialog({ open, onOpenChange, area, 
       <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader><DialogTitle>Register — {programLabel}</DialogTitle></DialogHeader>
         <div className="grid grid-cols-2 gap-3">
-          {!isChild && (
-            <div className="col-span-2">
-              <ExistingClientToggle onSelect={(c) => { setLinkedClient(c); setForm(p => ({ ...p, first_name: c.first_name || '', last_name: c.last_name || '', phone: c.phone || '', email: c.email || '' })); }} />
-              {linkedClient && (
-                <p className="mt-2 text-xs text-muted-foreground">
-                  Linked to central file: <span className="font-medium text-foreground">{linkedClient.first_name} {linkedClient.last_name}</span>
-                  <button type="button" className="ml-2 underline hover:text-foreground" onClick={() => setLinkedClient(null)}>Remove link</button>
-                </p>
-              )}
-            </div>
-          )}
+          <div className="col-span-2">
+            <CentralClientMatch
+              form={form}
+              linkedId={linkedClient?.id || null}
+              linkedClient={linkedClient}
+              onPick={(c) => {
+                setLinkedClient(c);
+                setForm(p => ({
+                  ...p,
+                  first_name: p.first_name || c.first_name || '',
+                  last_name: p.last_name || c.last_name || '',
+                  phone: p.phone || c.phone || '',
+                  email: p.email || c.email || '',
+                  parent_guardian_phone: p.parent_guardian_phone || c.phone || '',
+                  parent_guardian_email: p.parent_guardian_email || c.email || '',
+                }));
+              }}
+              onUnlink={() => setLinkedClient(null)}
+            />
+          </div>
           <div className="space-y-1.5"><Label>{isChild ? "Child's First Name *" : 'First Name *'}</Label><Input value={form.first_name || ''} onChange={(e) => update('first_name', e.target.value)} /></div>
           <div className="space-y-1.5"><Label>{isChild ? "Child's Last Name *" : 'Last Name *'}</Label><Input value={form.last_name || ''} onChange={(e) => update('last_name', e.target.value)} /></div>
           <div className="space-y-1.5"><Label>Phone</Label><Input value={form.phone || ''} onChange={(e) => update('phone', e.target.value)} /></div>

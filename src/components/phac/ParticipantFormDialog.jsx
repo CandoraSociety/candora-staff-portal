@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -6,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
+import CentralClientMatch from '@/components/shared/CentralClientMatch';
 
 const EMPTY = {
   child_first_name: '', child_last_name: '', child_date_of_birth: '',
@@ -19,12 +21,37 @@ export default function ParticipantFormDialog({ open, onOpenChange, participant,
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(EMPTY);
+  const [linkedId, setLinkedId] = useState(null);
+
+  const { data: linkedClient } = useQuery({
+    queryKey: ['rc-client', linkedId],
+    queryFn: () => base44.entities.RCClient.get(linkedId),
+    enabled: !!linkedId,
+  });
 
   useEffect(() => {
-    if (open) setForm(participant ? { ...EMPTY, ...participant } : EMPTY);
+    if (open) {
+      setForm(participant ? { ...EMPTY, ...participant } : EMPTY);
+      setLinkedId(participant?.linked_rc_client_id || null);
+    }
   }, [open, participant]);
 
   const update = (field, value) => setForm(prev => ({ ...prev, [field]: value }));
+
+  // Link the child's existing Central Database file; fill any blanks from it.
+  const pickClient = (c) => {
+    setForm((f) => ({
+      ...f,
+      child_first_name: f.child_first_name || c.first_name || '',
+      child_last_name: f.child_last_name || c.last_name || '',
+      child_date_of_birth: f.child_date_of_birth || c.date_of_birth || '',
+      parent_guardian_phone: f.parent_guardian_phone || c.phone || '',
+      parent_guardian_email: f.parent_guardian_email || c.email || '',
+      preferred_language: f.preferred_language || c.preferred_language || '',
+    }));
+    setLinkedId(c.id);
+    toast({ title: 'Linked to their existing Central Database file' });
+  };
 
   const handleSave = async () => {
     if (!form.child_first_name || !form.child_last_name) {
@@ -32,14 +59,16 @@ export default function ParticipantFormDialog({ open, onOpenChange, participant,
       return;
     }
     setSaving(true);
+    const payload = { ...form, linked_rc_client_id: linkedId || null };
     try {
       if (participant?.id) {
-        await base44.entities.PHACParticipant.update(participant.id, form);
+        await base44.entities.PHACParticipant.update(participant.id, payload);
         toast({ title: 'Family updated' });
       } else {
-        if (!form.first_visit_date) update('first_visit_date', new Date().toISOString().split('T')[0]);
-        await base44.entities.PHACParticipant.create({ ...form, first_visit_date: form.first_visit_date || new Date().toISOString().split('T')[0] });
-        toast({ title: 'Family added' });
+        await base44.entities.PHACParticipant.create({ ...payload, first_visit_date: form.first_visit_date || new Date().toISOString().split('T')[0] });
+        toast({
+          title: linkedId ? 'Family added and linked to their Central Database file' : 'Family added — a Central Database file will be created for them',
+        });
       }
       onSaved?.();
     } catch (err) {
@@ -55,6 +84,15 @@ export default function ParticipantFormDialog({ open, onOpenChange, participant,
         <DialogHeader>
           <DialogTitle>{participant ? 'Edit Family' : 'Add Family'}</DialogTitle>
         </DialogHeader>
+        <CentralClientMatch
+          form={form}
+          linkedId={linkedId}
+          linkedClient={linkedClient}
+          onPick={pickClient}
+          onUnlink={() => setLinkedId(null)}
+          firstKey="child_first_name"
+          lastKey="child_last_name"
+        />
         <div className="grid grid-cols-2 gap-3">
           <div className="col-span-2"><p className="text-sm font-medium text-foreground mb-1">Child</p></div>
           <div className="space-y-1.5">
