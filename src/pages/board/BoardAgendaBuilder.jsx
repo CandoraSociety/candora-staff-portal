@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Plus, Trash2, ArrowLeft, ChevronUp, ChevronDown, Lock, X, Lightbulb, Pencil, MapPin, Package } from "lucide-react";
+import { Plus, Trash2, ArrowLeft, ChevronUp, ChevronDown, Lock, X, Lightbulb, Pencil, MapPin, Package, FilePlus2 } from "lucide-react";
+import { toast } from "sonner";
 import MeetingPackageDialog from "@/components/board/MeetingPackageDialog";
+import { saveAgendaToMeetingCard } from "@/lib/saveAgendaToMeetingCard";
 import { format } from "date-fns";
 import { parseDateSmart } from "@/lib/dateUtils";
 import BoardAgendaSuggestions from "@/components/board/BoardAgendaSuggestions";
@@ -42,7 +44,21 @@ export default function BoardAgendaBuilder() {
   const [meetingList, setMeetingList] = useState([]);
   const [minutesEdit, setMinutesEdit] = useState(null);
   const [showPackage, setShowPackage] = useState(false);
+  const [savingAgenda, setSavingAgenda] = useState(false);
   const formRef = useRef(null);
+
+  const handleAddToMeetingCard = async () => {
+    if (!meeting || items.length === 0) return;
+    setSavingAgenda(true);
+    try {
+      await saveAgendaToMeetingCard({ meeting, items });
+      toast.success("Agenda added to the meeting card");
+    } catch {
+      toast.error("The agenda couldn't be added to the meeting card. Please try again.");
+    } finally {
+      setSavingAgenda(false);
+    }
+  };
 
   // The item form sits above the sections, so bring it into view when it opens
   useEffect(() => {
@@ -285,7 +301,16 @@ export default function BoardAgendaBuilder() {
 
       <div className="flex items-center justify-between mb-6 mt-4 flex-wrap gap-2">
         <p className="text-sm text-muted-foreground">{items.length} items · {totalDuration} min total</p>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
+          <button
+            type="button"
+            onClick={handleAddToMeetingCard}
+            disabled={!meeting || items.length === 0 || savingAgenda}
+            className="flex items-center gap-1.5 border border-border bg-card rounded-lg px-3 py-2 text-sm font-medium hover:bg-muted transition disabled:opacity-50"
+          >
+            {savingAgenda ? <span className="w-3.5 h-3.5 border-2 border-border border-t-primary rounded-full animate-spin" /> : <FilePlus2 size={14} />}
+            Add to Meeting Card
+          </button>
           <button
             type="button"
             onClick={() => setShowPackage(true)}

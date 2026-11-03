@@ -71,7 +71,16 @@ export function minutesHtmlToLines(html) {
 // branded cover page with contents list → the meeting agenda → the previous
 // meeting's minutes (from its stored HTML). External PDFs (financials, ED
 // report, other meeting documents) are merged in afterwards with mergePdfParts.
-export function buildPackageBasePdf({ meeting, org, contents, agendaItems, minutes }) {
+export function buildPackageBasePdf({
+  meeting,
+  org,
+  contents,
+  agendaItems,
+  minutes,
+  showCover = true,
+  documentLabel = "BOARD MEETING PACKAGE",
+  footerLabel = "Board Meeting Package",
+}) {
   const doc = new jsPDF();
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
@@ -125,8 +134,8 @@ export function buildPackageBasePdf({ meeting, org, contents, agendaItems, minut
   };
 
   return (async () => {
-    // ── Cover page ──────────────────────────────────────
-    await brandBand("BOARD MEETING PACKAGE");
+    // ── Cover page (skipped when this is a standalone agenda) ──
+    await brandBand(documentLabel);
     y = 64;
     doc.setFont(undefined, "bold");
     doc.setFontSize(16);
@@ -141,37 +150,45 @@ export function buildPackageBasePdf({ meeting, org, contents, agendaItems, minut
       y += 6;
       doc.text(meeting.location, MARGIN, y);
     }
-    y += 24;
 
-    doc.setFont(undefined, "bold");
-    doc.setFontSize(13);
-    doc.setTextColor(...NAVY);
-    doc.text("Package contents", MARGIN, y);
-    y += 9;
-    doc.setFont(undefined, "normal");
-    doc.setFontSize(10.5);
-    (contents || []).forEach((label, i) => {
-      const lines = doc.splitTextToSize(`${i + 1}. ${label}`, contentWidth - 12);
-      lines.forEach((line) => {
-        ensureSpace(7);
-        doc.setFillColor(...GOLD);
-        doc.circle(MARGIN + 2, y - 1.5, 1.2, "F");
-        doc.setTextColor(35, 35, 35);
-        doc.text(line, MARGIN + 10, y);
-        y += 7;
+    if (showCover) {
+      y += 24;
+
+      doc.setFont(undefined, "bold");
+      doc.setFontSize(13);
+      doc.setTextColor(...NAVY);
+      doc.text("Package contents", MARGIN, y);
+      y += 9;
+      doc.setFont(undefined, "normal");
+      doc.setFontSize(10.5);
+      (contents || []).forEach((label, i) => {
+        const lines = doc.splitTextToSize(`${i + 1}. ${label}`, contentWidth - 12);
+        lines.forEach((line) => {
+          ensureSpace(7);
+          doc.setFillColor(...GOLD);
+          doc.circle(MARGIN + 2, y - 1.5, 1.2, "F");
+          doc.setTextColor(35, 35, 35);
+          doc.text(line, MARGIN + 10, y);
+          y += 7;
+        });
       });
-    });
-    y += 14;
-    ensureSpace(10);
-    doc.setFontSize(9);
-    doc.setTextColor(...GRAY);
-    doc.text(`Compiled ${format(new Date(), "MMMM d, yyyy")}`, MARGIN, y);
+      y += 14;
+      ensureSpace(10);
+      doc.setFontSize(9);
+      doc.setTextColor(...GRAY);
+      doc.text(`Compiled ${format(new Date(), "MMMM d, yyyy")}`, MARGIN, y);
+    }
 
     // ── Agenda ──────────────────────────────────────────
     if (agendaItems && agendaItems.length) {
-      doc.addPage();
-      y = MARGIN;
-      sectionHeading("Meeting Agenda");
+      if (showCover) {
+        doc.addPage();
+        y = MARGIN;
+        sectionHeading("Meeting Agenda");
+      } else {
+        y += 16;
+        ensureSpace(30);
+      }
       AGENDA_SECTIONS.forEach(({ key, label }) => {
         const secItems = agendaItems
           .filter((i) => sectionOf(i) === key)
@@ -255,7 +272,7 @@ export function buildPackageBasePdf({ meeting, org, contents, agendaItems, minut
       doc.setFontSize(8);
       doc.setFont(undefined, "normal");
       doc.setTextColor(...GRAY);
-      doc.text(`${orgName} \u2014 Board Meeting Package`, MARGIN, pageHeight - 15);
+      doc.text(`${orgName} \u2014 ${footerLabel}`, MARGIN, pageHeight - 15);
       doc.text(`Page ${i}`, pageWidth - MARGIN, pageHeight - 15, { align: "right" });
     }
 
