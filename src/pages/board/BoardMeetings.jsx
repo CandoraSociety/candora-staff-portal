@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Plus, Calendar, Clock, MapPin, Trash2, Upload, FileText, DollarSign, Package } from "lucide-react";
+import { Plus, Calendar, Clock, MapPin, Trash2, Upload, FileText, DollarSign, Package, Pencil } from "lucide-react";
 import { format } from "date-fns";
+import { toast } from "sonner";
 import BoardNewMeetingModal from "@/components/board/BoardNewMeetingModal";
 import UploadMeetingDocDialog from "@/components/board/UploadMeetingDocDialog";
+import EditMeetingPackageDialog from "@/components/board/EditMeetingPackageDialog";
+import ConfirmDialog from "@/components/training/ConfirmDialog";
 
 const statusColors = {
   upcoming: "bg-blue-100 text-blue-700",
@@ -28,17 +31,35 @@ function AttachedDocs({ label, docs }) {
 
 // A meeting package built in the Agenda Builder — the zip itself plus a direct
 // link to every document inside it, so either can be opened without unzipping
-function PackageAttachments({ packages }) {
+function PackageAttachments({ packages, onEdit, onDelete }) {
   if (!packages.length) return null;
   return (
     <div className="mt-2 space-y-1.5">
       {packages.map((pkg) => (
-        <div key={pkg.id} className="rounded-lg border border-border bg-muted/40 px-3 py-2">
-          <a href={pkg.file_url} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-xs font-medium text-foreground hover:underline">
-            <Package size={13} className="shrink-0" />
-            <span className="truncate max-w-[260px]">{pkg.file_name || "Meeting Package.zip"}</span>
-            <span className="font-normal text-muted-foreground">download zip</span>
-          </a>
+        <div key={pkg.id} className="rounded-lg border border-border bg-muted/40 px-3 py-2 group/pkg">
+          <div className="flex items-center gap-2">
+            <a href={pkg.file_url} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-xs font-medium text-foreground hover:underline flex-1 min-w-0">
+              <Package size={13} className="shrink-0" />
+              <span className="truncate max-w-[260px]">{pkg.file_name || "Meeting Package.zip"}</span>
+              <span className="font-normal text-muted-foreground">download zip</span>
+            </a>
+            <button
+              type="button"
+              onClick={() => onEdit(pkg)}
+              title="Add or remove items"
+              className="flex items-center gap-1 text-xs border border-border bg-card px-2 py-1 rounded-md hover:bg-muted transition text-foreground"
+            >
+              <Pencil size={12} /> Manage items
+            </button>
+            <button
+              type="button"
+              onClick={() => onDelete(pkg)}
+              title="Delete this package"
+              className="text-muted-foreground hover:text-destructive transition"
+            >
+              <Trash2 size={14} />
+            </button>
+          </div>
           {(pkg.package_files || []).length > 0 && (
             <div className="flex items-center gap-x-3 gap-y-1 flex-wrap mt-1.5">
               {(pkg.package_files || []).map((f) => (
@@ -68,6 +89,8 @@ export default function BoardMeetings() {
   const [meetingDocs, setMeetingDocs] = useState([]);
   const [packages, setPackages] = useState([]);
   const [uploadFor, setUploadFor] = useState(null);
+  const [editPkg, setEditPkg] = useState(null);
+  const [deletePkg, setDeletePkg] = useState(null);
 
   const load = async () => {
     const [data, docs, corporateDocs] = await Promise.all([
@@ -90,6 +113,14 @@ export default function BoardMeetings() {
 
   const docsFor = (meetingId, type) => meetingDocs.filter(d => d.meeting_id === meetingId && d.document_type === type);
   const packagesFor = (meetingId) => packages.filter(p => p.meeting_id === meetingId);
+
+  const handleDeletePackage = async () => {
+    if (!deletePkg) return;
+    await base44.entities.BoardDocument.delete(deletePkg.id);
+    setPackages(prev => prev.filter(p => p.id !== deletePkg.id));
+    setDeletePkg(null);
+    toast.success("Meeting package deleted");
+  };
 
   const grouped = meetings.reduce((acc, m) => {
     const s = m.status || "upcoming";
@@ -137,7 +168,11 @@ export default function BoardMeetings() {
                           </div>
                           <AttachedDocs label="Minutes attached" docs={docsFor(meeting.id, "minutes")} />
                           <AttachedDocs label="Financials attached" docs={docsFor(meeting.id, "financial_report")} />
-                          <PackageAttachments packages={packagesFor(meeting.id)} />
+                          <PackageAttachments
+                            packages={packagesFor(meeting.id)}
+                            onEdit={setEditPkg}
+                            onDelete={setDeletePkg}
+                          />
                         </div>
                         <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
                           <Link to={`/board/meetings/${meeting.id}/agenda`} className="text-xs border border-border px-3 py-1.5 rounded-lg hover:bg-muted transition text-foreground">Agenda</Link>
@@ -175,6 +210,27 @@ export default function BoardMeetings() {
           onSaved={(m) => { setMeetings(prev => [m, ...prev]); setShowNew(false); }}
         />
       )}
+      {editPkg && meetings.some(m => m.id === editPkg.meeting_id) && (
+        <EditMeetingPackageDialog
+          pkg={editPkg}
+          meeting={meetings.find(m => m.id === editPkg.meeting_id)}
+          onClose={() => setEditPkg(null)}
+          onSaved={(updated) => {
+            setPackages(prev => prev.map(p => (p.id === updated.id ? updated : p)));
+            setEditPkg(null);
+            toast.success("Meeting package updated");
+          }}
+        />
+      )}
+      <ConfirmDialog
+        open={!!deletePkg}
+        onOpenChange={(open) => { if (!open) setDeletePkg(null); }}
+        title="Delete this meeting package?"
+        description="The zip and its document links are removed from the meeting. The original board documents stay in the library."
+        confirmLabel="Delete"
+        destructive
+        onConfirm={handleDeletePackage}
+      />
     </div>
   );
 }

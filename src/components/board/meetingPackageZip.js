@@ -48,3 +48,31 @@ export async function buildMeetingPackageZip({ basePdfBuffer, basePdfName, files
   const blob = await zip.generateAsync({ type: "blob" });
   return { blob, skipped, included };
 }
+
+/**
+ * Rebuilds a package zip from its saved file list — used after items are added
+ * to or removed from a package that already exists. Files are renumbered in
+ * their new order, so every entry links straight to the document it holds.
+ */
+export async function rebuildPackageZip(files = []) {
+  const zip = new JSZip();
+  const skipped = [];
+  const included = [];
+  let index = 0;
+  for (const file of files) {
+    try {
+      const res = await fetch(file.file_url);
+      if (!res.ok) throw new Error("could not load the file");
+      const bytes = await res.arrayBuffer();
+      const fileName = `${pad(index)} - ${sanitize(file.label)}.${extensionOf(file.file_url)}`;
+      zip.file(fileName, bytes);
+      included.push({ label: file.label, file_name: fileName, file_url: file.file_url });
+      index += 1;
+    } catch {
+      skipped.push(file.label);
+    }
+  }
+
+  const blob = await zip.generateAsync({ type: "blob" });
+  return { blob, skipped, included };
+}
