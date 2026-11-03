@@ -1123,7 +1123,7 @@ export const TRAINING_MODULES = [
     key: "centralreg",
     title: "Central Registration",
     shortTitle: "Central Reg",
-    blurb: "One place to register participants across all programs, manage waitlists and approve QR self-registrations.",
+    blurb: "One place to register participants across all programs, manage capacity and waitlists, process volunteer applications and approve QR self-registrations.",
     path: "/central-registration",
     steps: [
       {
@@ -1138,16 +1138,28 @@ export const TRAINING_MODULES = [
         path: "/central-registration"
       },
       {
-        title: "Programs",
+        title: "Programs & Registration",
         body: "Every program and its sessions, with capacity controls, live here.",
         target: { selector: 'a[href="/central-registration/programs"]' },
         path: "/central-registration/programs"
       },
       {
-        title: "Registrations",
+        title: "Capacity and sessions",
+        body: "Each program area on this page shows the places filled against its maximum. While there is room, Register puts the person straight into the program; once the area is full the same button adds them to the waitlist instead. Create Session adds a new date to a program so it can take registrations, and the small QR button next to a program is where its public self-registration link and settings live. Kids Gift Shop registrations are taken here too, with their own time slots.",
+        target: { selector: 'a[href="/central-registration/programs"]' },
+        path: "/central-registration/programs"
+      },
+      {
+        title: "All Registrations",
         body: "All participant registrations with their status — pending approval, enrolled, waitlisted. Approving a registration can automatically create the participant record in the program's portal.",
         target: { selector: 'a[href="/central-registration/registrations"]' },
         path: "/central-registration/registrations"
+      },
+      {
+        title: "Registration Requests",
+        body: "People who scan a program's QR code can sign themselves up. Their requests arrive here for you to approve, waitlist or decline — no approval needed at all if a program is set that way. EmpowerU applications waiting on a decision are reviewed here as well.",
+        target: { selector: 'a[href="/central-registration/requests"]' },
+        path: "/central-registration/requests"
       },
       {
         title: "Waitlists",
@@ -1156,10 +1168,10 @@ export const TRAINING_MODULES = [
         path: "/central-registration/waitlists"
       },
       {
-        title: "Self-registration requests",
-        body: "People who scan a program's QR code can sign themselves up. Their requests arrive here for you to approve or decline — no approval needed at all if a program is set that way.",
-        target: { selector: 'a[href="/central-registration/requests"]' },
-        path: "/central-registration/requests"
+        title: "Volunteer Registration",
+        body: "Volunteer applications from the public portal arrive in this page. Approve takes someone straight to active, Waitlist holds them for a later placement, and Decline closes the application. Every decision here updates the Volunteer Manager immediately — it is the same record, not a copy. Promoted volunteers return to the queue so references and screening can be finished.",
+        target: { selector: 'a[href="/central-registration/volunteers"]' },
+        path: "/central-registration/volunteers"
       },
       {
         title: "Calendar",
@@ -1169,7 +1181,7 @@ export const TRAINING_MODULES = [
       },
       {
         title: "Time to practice",
-        body: "That's the tour! Now register a demo participant, review a self-registration request, and check a waitlist."
+        body: "That's the tour! Now register a demo participant, review a self-registration request, check a waitlist and process a volunteer application."
       }
     ],
     tasks: [
@@ -1177,15 +1189,15 @@ export const TRAINING_MODULES = [
         id: "cr-register",
         title: "Register a participant into a program",
         body: "Create a registration for a demo participant in any program.",
-        hint: "Go to Registrations, use the register/new-registration button and pick a program and participant.",
-        path: "/central-registration/registrations",
+        hint: "Go to Program Registration, pick a program area and press Register, then enter the demo participant's details.",
+        path: "/central-registration/programs",
         verify: { kind: "created", entity: "ProgramRegistration" }
       },
       {
         id: "cr-request",
         title: "Review a self-registration request",
-        body: "Approve or decline one of the pending QR self-registration requests.",
-        hint: "Open Self-Registration Requests and use Approve or Decline on one of the pending requests.",
+        body: "Approve, waitlist or decline one of the pending QR self-registration requests.",
+        hint: "Open Registration Requests and use Approve, Waitlist or Decline on one of the pending requests.",
         path: "/central-registration/requests",
         verify: { kind: "self" }
       },
@@ -1195,6 +1207,22 @@ export const TRAINING_MODULES = [
         body: "Open the waitlists view and find the position order of a full program.",
         hint: "Open Waitlists, pick a full program and look at the numbered waitlist positions.",
         path: "/central-registration/waitlists",
+        verify: { kind: "self" }
+      },
+      {
+        id: "cr-volunteer",
+        title: "Process a volunteer application",
+        body: "Approve or decline one of the pending volunteer applications.",
+        hint: "Open Volunteer Registration and use Approve, Waitlist or Decline on one of the applications awaiting review.",
+        path: "/central-registration/volunteers",
+        verify: { kind: "self" }
+      },
+      {
+        id: "cr-capacity",
+        title: "Set a program area's capacity",
+        body: "Change the maximum number of places for one program area, and see the filled count beside it.",
+        hint: "Open Program Registration, use the capacity control on one of the areas, and set a maximum.",
+        path: "/central-registration/programs",
         verify: { kind: "self" }
       }
     ]

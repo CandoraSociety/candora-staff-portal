@@ -196,8 +196,14 @@ const SECTION_STARTS = {
   },
   centralreg: {
     "Welcome to Central Registration": "Overview",
-    "Programs": "Programs & registration",
-    "Self-registration requests": "Self-registration & calendar",
+    "The dashboard": "Overview",
+    "Programs & Registration": "Programs & capacity",
+    "Capacity and sessions": "Programs & capacity",
+    "All Registrations": "Registrations & waitlists",
+    "Registration Requests": "Registrations & waitlists",
+    "Waitlists": "Registrations & waitlists",
+    "Volunteer Registration": "Volunteer applications",
+    "Calendar": "Volunteer applications",
     "Time to practice": "Practice",
   },
   filemanager: {

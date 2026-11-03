@@ -488,6 +488,24 @@ export const MODULE_RECAPS = {
         answer: 2,
         explain: "The calendar lays sessions out by day and room — the fastest answer to 'what's running when'.",
       },
+      {
+        question: "What happens when a program area is already full?",
+        options: ["Registration is blocked entirely", "The Register button adds the person to the waitlist instead", "A new area is created", "The capacity maximum is raised automatically"],
+        answer: 1,
+        explain: "A full area turns the same Register button into Add to Waitlist, so nobody is lost — they keep a queued place.",
+      },
+      {
+        question: "Where do volunteer applications get approved?",
+        options: ["The Volunteer Manager only", "Volunteer Registration in Central Registration", "Programs & Registration", "Registration Requests"],
+        answer: 1,
+        explain: "Volunteer Registration processes applications, and every decision updates the same Volunteer record the Volunteer Manager uses.",
+      },
+      {
+        question: "A program shows no sessions scheduled — what does that mean?",
+        options: ["It is closed for the year", "Register is disabled until a session is created", "It only accepts volunteers", "Waitlists are not available"],
+        answer: 1,
+        explain: "Registrations need a date to belong to. Create Session adds one, and Register becomes available again.",
+      },
     ],
   },
 
