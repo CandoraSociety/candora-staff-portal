@@ -123,8 +123,8 @@ export default function ProgramsRegistrationView() {
   const ellPrograms = ellClasses
     .filter(c => c.status !== 'cancelled' && !c.course_id)
     .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-  const ellWaitlistCount = (Array.isArray(ellLearners) ? ellLearners : ellLearners?.items || [])
-    .filter(l => l.enrollment_status === 'waitlisted').length;
+  const ellAll = Array.isArray(ellLearners) ? ellLearners : ellLearners?.items || [];
+  const ellWaitlistCount = ellAll.filter(l => l.enrollment_status === 'waitlisted').length;
 
   const ellClassMeta = (cls) => {
     const clb = { clb_1: 'CLB 1', clb_2: 'CLB 2', clb_3: 'CLB 3', clb_4: 'CLB 4', clb_5: 'CLB 5', clb_6: 'CLB 6', mixed: 'Mixed levels' }[cls.clb_level];
@@ -138,7 +138,7 @@ export default function ProgramsRegistrationView() {
     empoweru: empowerRegs.filter(r => ['registered', 'enrolled'].includes(r.status)).length,
     phac: phacParticipants.filter(p => p.status === 'registered').length,
     digilit: digilitParticipants.filter(p => ['registered', 'started'].includes(p.status)).length,
-    ell: ellLearners.filter(l => ['enrolled', 'active'].includes(l.enrollment_status)).length,
+    ell: ellAll.filter(l => ['enrolled', 'active'].includes(l.enrollment_status)).length,
     volunteer: volunteers.filter(v => ['pending', 'active', 'occasional'].includes(v.status)).length,
     kids_gift_shop: programRegs.filter(r => r.program_name === 'Kids Gift Shop' && ['approved', 'enrolled'].includes(r.status)).length,
     frn: programRegs.filter(r => r.program_portal === 'frn' && ['approved', 'enrolled'].includes(r.status)).length,

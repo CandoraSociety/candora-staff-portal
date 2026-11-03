@@ -4,6 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Table, TableHeader, TableBody, TableHead, TableRow, TableCell } from '@/components/ui/table';
+import { listEllClasses, listEllLearners } from '@/lib/ellLists';
 
 const CLB_LABELS = {
   clb_1: 'CLB 1', clb_2: 'CLB 2', clb_3: 'CLB 3', clb_4: 'CLB 4', clb_5: 'CLB 5',
@@ -27,8 +28,8 @@ const daysWaitlisted = (l) => {
 };
 
 export function useEllRosters() {
-  const learnersQ = useQuery({ queryKey: ['ellLearners'], queryFn: () => base44.entities.ELLLearner.list('-created_date', 500) });
-  const classesQ = useQuery({ queryKey: ['ell-roster-classes'], queryFn: () => base44.entities.ELLClass.list() });
+  const learnersQ = useQuery({ queryKey: ['ellLearners'], queryFn: listEllLearners });
+  const classesQ = useQuery({ queryKey: ['ell-roster-classes'], queryFn: listEllClasses });
 
   const learners = learnersQ.data || [];
   const classes = (classesQ.data || []).filter(c => c.status !== 'cancelled');
