@@ -456,6 +456,39 @@ export const FACILITATOR_GUIDE = {
       "Keep the progress-note discussion short but specific: one rating, one next step, per family they would write up this week.",
     ],
   },
+  childminding: {
+    duration: "About 30 minutes (5 intro · 15 tour · 8 practice · 2 wrap-up)",
+    objectives: [
+      "Staff can explain which came first: the session, then the child signed into it",
+      "Staff know sessions are normally set up ahead of time by the program assistant, and when to create one themselves",
+      "Staff can sign a child in and out, and know what an open record costs them",
+      "Staff can read hours and Pathways billing correctly and export the month",
+    ],
+    stepNotes: {
+      "Sessions come first": "Say it as a rule, not a preference: no session, no sign-in. Loose records are the thing that goes wrong when this is skipped.",
+      "Usually the program assistant's job": "Be explicit here — this is the ask this module answers. Sessions are entered ahead of time by the program assistant, in batches that match the program timetable. Desk staff open one; they don't create one unless it is genuinely missing.",
+      "Setting a session up": "Stop on capacity and repeat that it is the whole room, not one program's share. Then demo a cancelled session being marked rather than deleted.",
+      "Reading the calendar": "Point at the two colours: teal sessions, program-coloured standalone records. Ask which one they would click first on a busy morning.",
+      "Inside a session": "Open the seeded demo session so they see children against capacity, total hours and the Pathways billing line before anyone signs a child in.",
+      "Signing a child in": "Demo one live: child, parent or guardian, date, check-in, program. Show the calculated-hours line appearing as soon as both times exist.",
+      "Signing a child out": "The habit that matters: check-out the moment the parent arrives. Ask the room what happens to a record with no check-out and let them answer.",
+      "Hours and billing": "Fifteen-minute rounding and $20/child/hour for Pathways only. Caution about marking Billed or Paid — that is finance's step.",
+      "End of month": "Show the month filter and the export, and name the two checks before exporting: every check-out present, every Pathways status right.",
+      "Who does what": "Close by naming the three roles: program assistant (sessions), childcare staff (sign in and out), coordinator (weekly billing check and the month-end export).",
+    },
+    practiceNotes: {
+      "childminding-session": "Auto-checked. Confirm they set a capacity — a session with no capacity can't be supervised safely.",
+      "childminding-signin": "Auto-checked. Check they picked the right program; it decides whether the child bills.",
+      "childminding-signout": "Self-marked. Ask what the calculated hours came to and why.",
+      "childminding-billing": "Self-marked. Ask them to read the Billing column out loud.",
+      "childminding-export": "Self-marked. Make sure the popup block didn't stop the PDF.",
+    },
+    tips: [
+      "Run this in Test Mode: the seeded demo session and the two demo records give the tour something to point at without touching a real child's file.",
+      "If a session is running the morning of the training, use that one — the room recognises it instantly.",
+      "Pair with the Central Registration module when front-desk staff also take the program registration that creates the childcare need.",
+    ],
+  },
   empoweru: {
     duration: "About 40 minutes (5 intro · 22 tour · 10 practice · 3 wrap-up)",
     objectives: [

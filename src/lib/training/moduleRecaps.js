@@ -890,6 +890,46 @@ export const MODULE_RECAPS = {
       },
     ],
   },
+  childminding: {
+    kicker: "What we've learned",
+    title: "A session first, then a child at a time.",
+    body: "Childminding runs while a parent or guardian is in a program, and it has two halves that must not be confused. Sessions are the containers: a date, a start and end time, a location and a capacity in children, set up ahead of time — normally by the program assistant, matching the program timetable — so nobody at the desk has to invent one first thing in the morning. Inside a session each child is signed in as one intake record: the child, the parent or guardian, the date, the check-in time and the program the parent is attending. At pickup the check-out time is added, hours calculate and round up to the next fifteen minutes, and the billing amount follows the program. Pathways is the billable one at twenty dollars a child per hour; ELL and other programs are recorded but not charged. Keep the check-outs current, because a record without one is a child with no hours and a bill nobody can send.",
+    audioUrl: "https://media.base44.com/files/public/6a249282cb496579542673b7/0327c5f8b_speech.mp3",
+    takeaways: [
+      "A session holds the date, times, location and capacity — and a child cannot be signed in without one.",
+      "Sessions are normally created ahead of time by the program assistant, not improvised at drop-off.",
+      "Capacity is the whole room across every program, not one program's share of it.",
+      "Each visit is one intake record: child, parent or guardian, date, check-in, check-out and program.",
+      "Hours come from the times and round up to the next fifteen minutes; Pathways bills $20/child/hour.",
+      "Export the month from Records, after checking no record is missing its check-out.",
+    ],
+    quiz: [
+      {
+        question: "It is 8:55 am and there is no session for today. What comes first?",
+        options: ["Sign the child in as an individual record and fix it later", "Create the session, then sign children into it", "Send the parent home", "Add the child's hours after lunch"],
+        answer: 1,
+        explain: "A session is the container children are signed into, so it has to exist first — usually the program assistant has already set it up ahead of time.",
+      },
+      {
+        question: "Who normally creates sessions, and when?",
+        options: ["Childcare staff, at drop-off", "The program assistant, ahead of time against the program timetable", "Finance, at month end", "The parent, on the registration form"],
+        answer: 1,
+        explain: "Sessions are set up in advance by the program assistant; whoever runs the room opens an existing one.",
+      },
+      {
+        question: "A child is picked up at 11:20 after a 9:05 sign-in. What does the record show?",
+        options: ["2 hours, as typed", "2.5 hours — rounded up to the next fifteen minutes", "3 hours", "Nothing until finance edits it"],
+        answer: 1,
+        explain: "Hours are calculated from the times and rounded up to the next fifteen-minute increment.",
+      },
+      {
+        question: "Which children are billed for childminding?",
+        options: ["All of them at $20/hour", "Pathways children at $20/child/hour; ELL and other programs are not charged", "Only ELL children", "None — childminding is always free"],
+        answer: 1,
+        explain: "Pathways is the billable program; other programs are recorded for reporting only.",
+      },
+    ],
+  },
   empoweru: {
     kicker: "What we've learned",
     title: "A cohort is a class, and a seat is a promise.",

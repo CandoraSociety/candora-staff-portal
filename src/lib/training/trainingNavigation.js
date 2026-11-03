@@ -1,7 +1,7 @@
 export const TRAINING_NAV_GROUPS = [
   { title: "Getting started", keys: ["welcome", "dashboard", "dashboard_widgets"] },
   { title: "Time & Money", keys: ["staffadmin", "staffadmin_money", "staffadmin_supervisor"] },
-  { title: "Program portals", keys: ["pathways", "pathways_journey", "pathways_journey_part2", "pathways_assessment", "pathways_service_nav", "pathways_workshops", "joblab", "central_database_basics", "central_database_advanced", "ell", "frn", "phac", "empoweru", "centralreg", "reception"] },
+  { title: "Program portals", keys: ["pathways", "pathways_journey", "pathways_journey_part2", "pathways_assessment", "pathways_service_nav", "pathways_workshops", "joblab", "central_database_basics", "central_database_advanced", "ell", "frn", "phac", "empoweru", "childminding", "centralreg", "reception"] },
   { title: "Tools", keys: ["filemanager", "filemanager_advanced"] },
 ];
 
@@ -26,6 +26,7 @@ export const TRAINING_MODULE_SERIES = {
   frn: "family",
   phac: "family",
   empoweru: "empoweru",
+  childminding: "childminding",
   centralreg: "centralreg",
   reception: "reception",
   filemanager: "filemanager",
@@ -43,6 +44,7 @@ export const TRAINING_SERIES_TITLES = {
   ell: "ELL",
   family: "Family Programs",
   empoweru: "EmpowerU",
+  childminding: "Childminding",
   centralreg: "Central Registration",
   reception: "Reception",
   filemanager: "File Manager",
@@ -264,6 +266,22 @@ const SECTION_STARTS = {
     "Inside a family's file": "Families",
     "Progress notes": "Families",
     "Linking to the Central Database": "How it connects",
+    "Time to practice": "Practice",
+  },
+  childminding: {
+    "Welcome to the Childminding portal": "Overview",
+    "Childcare while a parent is in a program": "Overview",
+    "Sessions come first": "Sessions",
+    "Usually the program assistant's job": "Sessions",
+    "Setting a session up": "Sessions",
+    "Reading the calendar": "The schedule",
+    "Inside a session": "The schedule",
+    "Signing a child in": "Signing children in and out",
+    "Signing a child out": "Signing children in and out",
+    "Hours and billing": "Hours and billing",
+    "Records with and without a session": "Records",
+    "End of month": "Records",
+    "Who does what": "How it connects",
     "Time to practice": "Practice",
   },
   empoweru: {

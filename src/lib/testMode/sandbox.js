@@ -146,6 +146,14 @@ function demoData() {
     EmpowerUDocument: [
       { title: 'Demo ID copy', doc_type: 'ID copy', category: 'participant', participant_name: 'Priya Practice', cohort_name: 'EmpowerU Test Cohort', file_name: 'demo-id-copy.pdf', notes: 'Demo document (Test Mode)' },
     ],
+    ChildmindingSession: [
+      { title: 'Demo Morning Childminding', date: D(0), start_time: '09:00', end_time: '11:30', location: 'Playroom', capacity: 8, status: 'scheduled', notes: 'Demo session (Test Mode)' },
+      { title: 'Demo Afternoon Childminding', date: D(3), start_time: '13:00', end_time: '15:00', location: 'Playroom', capacity: 10, status: 'completed' },
+    ],
+    ChildmindingRecord: [
+      { child_first_name: 'Sammy', parent_first_name: 'Riley', parent_last_name: 'Rehearsal', parent_name: 'Riley Rehearsal', date: D(0), check_in_time: '09:05', check_out_time: '11:20', hours: 2.5, program: 'pathways', billing_amount: 50, billing_status: 'unbilled', notes: 'Demo childminding record (Test Mode)' },
+      { child_first_name: 'Noa', parent_first_name: 'Lena', parent_last_name: 'Learner', parent_name: 'Lena Learner', date: D(3), check_in_time: '13:00', check_out_time: '14:40', hours: 1.75, program: 'ell', billing_amount: 0, billing_status: 'n/a', notes: 'Demo childminding record (Test Mode)' },
+    ],
     ELLLearner: [
       { first_name: 'Lena', last_name: 'Learner', phone: '780-555-0401', email: 'lena@example.ca', clb_level: 'clb_4', enrollment_status: 'active', intake_date: D(45), waitlist_status: 'waiting' },
       { first_name: 'Omar', last_name: 'Observer', phone: '780-555-0402', email: 'omar@example.ca', clb_level: 'not_assessed', enrollment_status: 'waitlisted', waitlist_date: D(10), waitlist_status: 'waiting' },
