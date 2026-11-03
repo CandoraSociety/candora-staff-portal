@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from "@/components/ui/dialog";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
+import { listEllLearners } from "@/lib/ellLists";
 
 const CLB_LEVELS = ["not_assessed", "clb_1", "clb_2", "clb_3", "clb_4", "clb_5", "clb_6", "clb_7", "clb_8", "clb_9", "clb_10", "clb_11", "clb_12"];
 
@@ -165,7 +166,7 @@ export default function ELLAssessments() {
 
   const { data: learners } = useQuery({
     queryKey: ["ellLearners"],
-    queryFn: () => base44.entities.ELLLearner.list(),
+    queryFn: listEllLearners,
   });
 
   const filtered = assessments?.filter((a) => {

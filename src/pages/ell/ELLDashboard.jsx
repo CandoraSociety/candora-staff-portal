@@ -6,21 +6,22 @@ import { Users, BookOpen, UserCog, ClipboardCheck, TrendingUp } from "lucide-rea
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import ProgramReferralsPanel from "@/components/referrals/ProgramReferralsPanel";
+import { listEllClasses, listEllInstructors, listEllLearners } from "@/lib/ellLists";
 
 export default function ELLDashboard() {
   const { data: learners } = useQuery({
     queryKey: ["ellLearners"],
-    queryFn: () => base44.entities.ELLLearner.list(),
+    queryFn: listEllLearners,
   });
 
   const { data: classes } = useQuery({
     queryKey: ["ellClasses"],
-    queryFn: () => base44.entities.ELLClass.list(),
+    queryFn: listEllClasses,
   });
 
   const { data: instructors } = useQuery({
     queryKey: ["ellInstructors"],
-    queryFn: () => base44.entities.ELLInstructor.list(),
+    queryFn: listEllInstructors,
   });
 
   const { data: assessments } = useQuery({

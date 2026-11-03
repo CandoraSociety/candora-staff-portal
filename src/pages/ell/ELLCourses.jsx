@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import CourseLessonPlansDialog from '@/components/ell/CourseLessonPlansDialog';
 import { ROOM_OPTIONS } from '@/lib/centralRegConstants';
+import { listEllClasses, listEllLearners } from '@/lib/ellLists';
 
 const DAY_ORDER = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 const DAY_LABELS = { monday: 'Mon', tuesday: 'Tue', wednesday: 'Wed', thursday: 'Thu', friday: 'Fri', saturday: 'Sat', sunday: 'Sun' };
@@ -138,8 +139,8 @@ function CourseProfileCard({ cls, enrolled, onManagePlans }) {
 
 export default function ELLCourses() {
   const [plansCourse, setPlansCourse] = useState(null);
-  const classesQ = useQuery({ queryKey: ['ell-courses-classes'], queryFn: () => base44.entities.ELLClass.list() });
-  const learnersQ = useQuery({ queryKey: ['ell-courses-learners'], queryFn: () => base44.entities.ELLLearner.list() });
+  const classesQ = useQuery({ queryKey: ['ell-courses-classes'], queryFn: listEllClasses });
+  const learnersQ = useQuery({ queryKey: ['ell-courses-learners'], queryFn: listEllLearners });
 
   const classes = (classesQ.data || []).filter(c => c.status !== 'cancelled');
   const sorted = [...classes].sort((a, b) =>

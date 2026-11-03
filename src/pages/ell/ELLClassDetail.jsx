@@ -13,6 +13,7 @@ import AttendanceTab from '@/components/ell/classdetail/AttendanceTab';
 import NotesTab from '@/components/ell/classdetail/NotesTab';
 import LessonPlansTab from '@/components/ell/classdetail/LessonPlansTab';
 import ClassDateCalendar from '@/components/ell/classdetail/ClassDateCalendar';
+import { listEllLearners } from '@/lib/ellLists';
 
 const parseLocalDate = (str) => {
   if (!str) return null;
@@ -38,7 +39,7 @@ export default function ELLClassDetail() {
   }, []);
 
   const classQ = useQuery({ queryKey: ['ellClass', id], queryFn: () => base44.entities.ELLClass.get(id) });
-  const learnersQ = useQuery({ queryKey: ['ellLearners'], queryFn: () => base44.entities.ELLLearner.list() });
+  const learnersQ = useQuery({ queryKey: ['ellLearners'], queryFn: listEllLearners });
 
   const cls = classQ.data;
   const courseQ = useQuery({
