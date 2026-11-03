@@ -85,15 +85,15 @@ export const FRN_PHAC_MODULES = [
       },
       {
         title: "Sessions — the dates a program meets",
-        body: "New Session sets one date: the program, the date and times, the room, the facilitator, and how it repeats — none, weekly, biweekly or monthly, with an end date. Sessions carry their program by name, so renaming a program carries forward to the sessions already scheduled instead of orphaning them.",
+        body: "New Session sets one date: the program, the date and times, the room, the facilitator, and how it repeats — none, weekly, biweekly or monthly, with an end date. Facilitator is picked from staff or from anyone already added as an eligible facilitator; the + beside it adds a contractor, volunteer or guest speaker who is not in the directory, so their name still lands on the session. Sessions carry their program by name, so renaming a program carries forward to the sessions already scheduled instead of orphaning them.",
         path: "/frn/sessions",
         target: { text: "New Session" }
       },
       {
         title: "Marking attendance",
-        body: "Open a session's attendance and mark each enrolled participant present, absent, late or excused for that date, with a note where it needs explaining. Attendance is stored per participant per date, which is why retrospective guessing never works: mark the session on the day, then it feeds the participant's attendance history without anyone re-entering it.",
+        body: "Each session card carries an Attendance button, and the count beside it is how many were marked in for the most recent date. Open it and mark each enrolled participant present, absent, late or excused for that date, with a note where it needs explaining. Attendance is stored per participant per date, which is why retrospective guessing never works: mark the session on the day, then it feeds the participant's attendance history without anyone re-entering it.",
         path: "/frn/sessions",
-        target: { text: "Scheduled" }
+        target: { text: "Attendance" }
       },
       {
         title: "One person, one file, across programs",
@@ -174,7 +174,7 @@ export const FRN_PHAC_MODULES = [
       },
       {
         title: "Programs — what a family can walk into",
-        body: "Each card is a program a family can attend, with its category, status, age range and schedule, and a count of enrolled families, upcoming sessions and attached documents. Search by name or description and filter by category or status; a paused program drops out of the choices elsewhere, which is how you stop staff from scheduling sessions for something that isn't running.",
+        body: "Each card is a program a family can attend, with its category, status, age range, schedule days and times, its sessions and how many documents are attached. Search by name or description and filter by category or status; a paused program drops out of the choices elsewhere, which is how you stop staff from scheduling sessions for something that isn't running.",
         path: "/phac/programs",
         target: { text: "Add Program" }
       },
@@ -186,14 +186,14 @@ export const FRN_PHAC_MODULES = [
       },
       {
         title: "Opening a program card",
-        body: "Click a card for the working view: the program's details, the families attending it, its upcoming sessions and its documents. Add Session from here pre-selects the program, and Edit returns you to the form. This is where you look when a facilitator asks who is coming and how many to expect.",
+        body: "Click a card for the working view: the program's details, its facilitator, the families attending it, its upcoming sessions and its documents. Documents on the card opens the program's files, so handouts and curriculum travel with the program instead of being emailed around. Add Session from here pre-selects the program, and Edit returns you to the form. This is where you look when a facilitator asks who is coming and how many to expect.",
         path: "/phac/programs"
       },
       {
         title: "Sessions — the actual dates",
-        body: "New Session sets a real date for a program: program, session date, start and end time, room and facilitator, plus the headcount fields. RM, ARC, Echo Valley, the classrooms or Virtual — the room matters because two programs cannot book the same space at the same time, and the calendar checks it as you choose.",
+        body: "Add Session sets a real date for a program: program, session date, start and end time, room and facilitator, plus the headcount fields. Facilitator is picked from staff or from anyone added as an eligible facilitator, and the + beside it adds a contractor, volunteer or guest speaker who is not in the directory. RM, ARC, Echo Valley, the classrooms or Virtual — the room matters because two programs cannot book the same space at the same time, and the calendar checks it as you choose.",
         path: "/phac/sessions",
-        target: { text: "New Session" }
+        target: { text: "Add Session" }
       },
       {
         title: "Repeating a session properly",
@@ -203,9 +203,9 @@ export const FRN_PHAC_MODULES = [
       },
       {
         title: "Attendance — family by family",
-        body: "Open a session's attendance and mark each family present, absent, late or excused for that date, with a note where it needs explaining. Separately, the session carries adults, children and total attendees, which is the headcount a funder asks for. Mark it on the day: attendance recorded weeks later is a reconstruction, not a record.",
+        body: "Each session card carries an Attendance button, with a count of how many were marked in. Open it and mark each family present, absent, late or excused for that date, with a note where it needs explaining. Separately, the session carries adults, children and total attendees, which is the headcount a funder asks for. Mark it on the day: attendance recorded weeks later is a reconstruction, not a record.",
         path: "/phac/sessions",
-        target: { text: "Scheduled" }
+        target: { text: "Attendance" }
       },
       {
         title: "Families — one record per child",
