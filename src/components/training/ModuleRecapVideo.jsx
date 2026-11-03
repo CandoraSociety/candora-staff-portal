@@ -6,8 +6,9 @@ import { STAFF_RECAP_SCENES } from '@/lib/training/recapVideos/staffRecaps';
 import { PATHWAYS_RECAP_SCENES } from '@/lib/training/recapVideos/pathwaysRecaps';
 import { DATABASE_RECAP_SCENES } from '@/lib/training/recapVideos/databaseRecaps';
 import { RECEPTION_RECAP_SCENES } from '@/lib/training/recapVideos/receptionRecaps';
+import { FAMILY_PROGRAMS_RECAP_SCENES } from '@/lib/training/recapVideos/familyProgramsRecaps';
 
-const SCENES = { ...STAFF_RECAP_SCENES, ...PATHWAYS_RECAP_SCENES, ...DATABASE_RECAP_SCENES, ...RECEPTION_RECAP_SCENES };
+const SCENES = { ...STAFF_RECAP_SCENES, ...PATHWAYS_RECAP_SCENES, ...DATABASE_RECAP_SCENES, ...RECEPTION_RECAP_SCENES, ...FAMILY_PROGRAMS_RECAP_SCENES };
 
 // The points ARE the video: each scene has its own matching narration.
 // There is no paragraph player or supplementary takeaway panel below it.

@@ -164,15 +164,27 @@ function demoData() {
       { first_name: 'Fay', last_name: 'Fake', phone: '780-555-0601', email: 'fay@example.ca', preferred_language: 'English' },
       { first_name: 'Nico', last_name: 'Notional', phone: '780-555-0602', email: 'nico@example.ca', preferred_language: 'Arabic' },
     ],
+    FRNProgram: [
+      { name: 'Connect Parent Group (Demo)', category: 'parenting', status: 'active', coordinator_name: 'Demo Coordinator', capacity: 10, schedule_description: 'Tuesdays 1:00–3:00 pm' },
+      { name: 'Wellness Compass (Demo)', category: 'wellness', status: 'active', coordinator_name: 'Demo Coordinator', capacity: 12, schedule_description: 'Thursdays 10:00 am–12:00 pm' },
+    ],
+    FRNReferral: [
+      { participant_name: 'Fay Fake', program: 'connect_parent_group', program_name: 'Connect Parent Group (Demo)', referral_source: 'internal', referral_date: D(9), status: 'pending', referral_reason: 'Demo referral — parenting support' },
+      { participant_name: 'Nico Notional', program: 'wellness_compass', program_name: 'Wellness Compass (Demo)', referral_source: 'external_partner', referral_date: D(4), status: 'assessment_scheduled', referral_reason: 'Demo referral — wellness program' },
+    ],
     FRNSession: [
-      { name: 'FRN Demo Session', date: D(7), location: 'Small Classroom', status: 'scheduled' },
+      { name: 'FRN Demo Session', date: D(7), location: 'Small Classroom', status: 'scheduled', program_name: 'Connect Parent Group (Demo)', session_date: D(-3), room: 'small_classroom' },
     ],
     PHACParticipant: [
       { child_first_name: 'Pat', child_last_name: 'Prototype', parent_guardian_name: 'Parent Prototype', parent_guardian_phone: '780-555-0701', parent_guardian_email: 'parent@example.ca', status: 'registered', first_visit_date: D(14) },
       { child_first_name: 'Kit', child_last_name: 'Kindling', parent_guardian_name: 'Guardian Kindling', parent_guardian_phone: '780-555-0702', parent_guardian_email: 'guardian@example.ca', status: 'waitlisted' },
     ],
+    PHACProgram: [
+      { name: 'Toddler Play Time (Demo)', category: 'play_based', status: 'active', capacity: 12, target_age_min_months: 12, target_age_max_months: 36, schedule_days: ['monday', 'wednesday'], start_time: '09:30', end_time: '11:00', room: 'arc' },
+      { name: 'Baby & Me (Demo)', category: 'early_learning', status: 'active', capacity: 10, target_age_min_months: 0, target_age_max_months: 18, schedule_days: ['tuesday'], start_time: '10:00', end_time: '11:30', room: 'large_classroom' },
+    ],
     PHACSession: [
-      { name: 'PHAC Demo Session', date: D(6), location: 'ARC', status: 'scheduled' },
+      { name: 'PHAC Demo Session', date: D(6), location: 'ARC', status: 'scheduled', program_name: 'Toddler Play Time (Demo)', session_date: D(-2), room: 'arc' },
     ],
     DigiLitParticipant: [
       { first_name: 'Dev', last_name: 'Device', phone: '780-555-0801', email: 'dev@example.ca', registration_date: D(20), status: 'started', skill_level_start: 'beginner', skill_level_current: 'beginner' },

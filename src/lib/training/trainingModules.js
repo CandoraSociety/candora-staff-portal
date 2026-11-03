@@ -25,11 +25,13 @@ import { RECEPTION_MODULES } from "@/lib/training/modules/receptionModules";
 import { CENTRAL_DATABASE_MODULES } from "@/lib/training/modules/centralDatabaseModules";
 import { MINI_MODULES } from "@/lib/training/modules/miniModules";
 import { JOBLAB_MODULES } from "@/lib/training/modules/jobLabModules";
+import { FRN_PHAC_MODULES } from "@/lib/training/modules/frnPhacModules";
 
 export const TRAINING_MODULES = [
   // Welcome & app tour leads the catalog — every staff member starts here.
   ...WELCOME_MODULES,
   ...CENTRAL_DATABASE_MODULES,
+  ...FRN_PHAC_MODULES,
   {
     key: "dashboard",
     title: "Main User Page",
@@ -1194,6 +1196,8 @@ export const TRAINING_MODULE_ACCESS = {
   central_database_basics: "rc",
   central_database_advanced: "rc",
   ell: "ell",
+  frn: "frn",
+  phac: "phac",
   centralreg: "central-registration",
   reception: "reception",
   filemanager: "filemanager",

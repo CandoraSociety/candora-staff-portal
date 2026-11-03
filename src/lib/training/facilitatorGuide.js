@@ -396,6 +396,66 @@ export const FACILITATOR_GUIDE = {
       "Have a messy batch ready so the sorting queue demo has real work in it.",
     ],
   },
+  frn: {
+    duration: "About 45 minutes (5 intro · 25 tour · 10 practice · 5 wrap-up)",
+    objectives: [
+      "Staff can tell a participant record from a referral, and know which one holds what",
+      "Staff can log a referral and move its status honestly as the work happens",
+      "Staff can schedule a session for a program and mark attendance on the day",
+      "Staff know a participant is linked to the Central Database rather than re-created",
+    ],
+    stepNotes: {
+      "The dashboard in four counts": "Say plainly that the two left-hand numbers are the ones that matter: pending referrals and assessments due are work waiting on a person, not statistics. Ask the room who owns the intake meeting.",
+      "Programs are the groups themselves": "The key distinction to teach: a program is a group that runs, a session is a date it meets. Staff new to FRN conflate them constantly.",
+      "Setting a program up properly": "Point at the program key and say out loud what it means for a program added later: it files under the general key and staff match by name. That is the reason naming discipline matters here.",
+      "Participants — one record per person": "This is the duplicate-prevention slide. Make them search before adding, every time — a second participant record splits goals, notes and attendance across two files.",
+      "Status is the promise you made": "Have someone read the eight statuses out loud, then ask what a referral sitting at pending for three weeks means. The answer you want: nobody opened it.",
+      "Marking attendance": "Make the point about marking attendance the day of the session. Reconstruction weeks later is the most common reason attendance data can't be defended.",
+      "One person, one file, across programs": "Tie FRN back to the Central Database module: FRN keeps the program detail, the database keeps the person. Referrals in both directions are how programs find out about each other.",
+    },
+    practiceNotes: {
+      "frn-participant": "Auto-checked. Watch that they don't create a second 'Fay Fake' — the demo participant is already there and can be edited instead.",
+      "frn-referral": "Auto-checked. Check they picked a referral source rather than leaving it at the default.",
+      "frn-status": "Self-marked. Ask where the referral status now shows on the dashboard.",
+      "frn-assessment": "Auto-checked. The date is the part people skip.",
+      "frn-session": "Auto-checked on the session. Attendance is the part to walk round on.",
+    },
+    tips: [
+      "Run this in the FRN portal itself, not the main page — the tour spots real cards and staff should see their own programs.",
+      "Use whatever program the team is actually running this term as the example; the generic demo cards are only a stand-in.",
+      "If the group works mostly from the Central Database, pair this with the Central Database modules rather than teaching FRN in isolation.",
+    ],
+  },
+  phac: {
+    duration: "About 40 minutes (5 intro · 22 tour · 10 practice · 3 wrap-up)",
+    objectives: [
+      "Staff can set up a program with its age range, schedule, capacity and season",
+      "Staff can schedule a repeated session with a room and the right headcount fields",
+      "Staff mark attendance for families on the day, and know where it then appears",
+      "Staff write a progress note with an honest rating and real next steps",
+    ],
+    stepNotes: {
+      "Drop-in work, measured in families": "Set the tone: nothing here waits on an approval. The numbers on this dashboard are output, not a queue.",
+      "The season, and referrals in": "Expect the summer-break question. Programs pause July and August; sessions resume in September. The referrals panel still needs working in the meantime.",
+      "Setting up a PHAC program": "Age range in months trips people up — 36 months is three years. Walk one example through out loud.",
+      "Repeating a session properly": "The win of this slide is time saved: one session with a repeat pattern instead of retyping Tuesdays. Emphasise setting it once at the start of term.",
+      "Attendance — family by family": "Mark attendance on the day. Ask what a total-attendees number with no attendance marks behind it is worth — it is a headcount nobody can break down.",
+      "Progress notes": "Read one bad note and one good one if you have them. What makes it useful is the next steps: a colleague should be able to act without phoning you.",
+      "Linking to the Central Database": "Same lesson as FRN: match before creating. A child with two records has half their history in each place.",
+    },
+    practiceNotes: {
+      "phac-family": "Auto-checked. Check they put a guardian name in, not just the child.",
+      "phac-program": "Auto-checked. The age range and capacity are the fields to check.",
+      "phac-session": "Auto-checked. Room and repeat pattern are what staff usually leave blank.",
+      "phac-attendance": "Self-marked. Ask what the adults and children counts were for that session.",
+      "phac-note": "Auto-checked. Make them write actual next steps, not 'none'.",
+    },
+    tips: [
+      "Bring a real program handout so the documents part of the tour has something tangible attached to it.",
+      "Run the session scheduling slide twice for anyone who runs more than one program — the room check is where conflicts show up.",
+      "Keep the progress-note discussion short but specific: one rating, one next step, per family they would write up this week.",
+    ],
+  },
 };
 
 export const getFacilitatorGuide = (moduleKey) => FACILITATOR_GUIDE[moduleKey] || null;

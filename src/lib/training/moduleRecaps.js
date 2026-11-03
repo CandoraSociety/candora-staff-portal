@@ -810,6 +810,86 @@ export const MODULE_RECAPS = {
       },
     ],
   },
+  frn: {
+    kicker: "What we've learned",
+    title: "A referral is a promise, and a session is the proof.",
+    body: "Bringing the FRN portal together. A participant record holds the person and a referral holds the request into a program, so one person stays one file however many groups they attend. Programs carry the coordinator, capacity, schedule and documents; sessions carry the date, room, facilitator and who actually attended. Assessments record the starting picture, progress notes and goals live on the participant's own file, and when part of the work belongs to another Candora program you refer the person onward from that file. Referrals into FRN arrive on the FRN dashboard, which is why the status has to move.",
+    audioUrl: "https://media.base44.com/files/public/6a249282cb496579542673b7/a8c4baeb9_speech.mp3",
+    takeaways: [
+      "A participant holds the person; a referral holds the request — program, source, date and status.",
+      "Match against the Candora Central Database before creating a participant, so one person stays one record.",
+      "Programs carry the coordinator, capacity, schedule and their documents.",
+      "Sessions are the dates a program meets, and attendance is marked per participant per date.",
+      "Assessments, goals and progress notes live on the participant's file, not in an email.",
+      "Refer onward from the file — the receiving program sees it on their own dashboard.",
+    ],
+    quiz: [
+      {
+        question: "A family has been referred to Connect Parent Group. Where does the request itself live?",
+        options: ["As a note on the participant record", "In a referral carrying the program, source, referrer and status", "In the program's description", "In an email to the facilitator"],
+        answer: 1,
+        explain: "The referral is the request; the participant is the person. Keeping them separate is what lets someone be referred to two programs without duplicating the person.",
+      },
+      {
+        question: "What does the participant record hold, as opposed to a referral?",
+        options: ["Only attendance", "The person and everything about them across programs", "The program's capacity", "The session schedule"],
+        answer: 1,
+        explain: "One participant, one record. Every referral, goal, note and attendance mark hangs off it.",
+      },
+      {
+        question: "You mark a session's attendance. Where does it show up next?",
+        options: ["Only on that session", "On each participant's attendance history", "Nowhere until the session is completed", "On the program card as a document"],
+        answer: 1,
+        explain: "Attendance is stored per participant per date, which is why marking it on the day is worth the two minutes.",
+      },
+      {
+        question: "A program is renamed after sessions were already scheduled. What happens to those sessions?",
+        options: ["They are orphaned", "They carry forward, because each session holds its program by name", "They must all be rescheduled", "They are deleted"],
+        answer: 1,
+        explain: "Sessions and referrals hold the program name, so renaming carries forward instead of breaking the link.",
+      },
+    ],
+  },
+  phac: {
+    kicker: "What we've learned",
+    title: "Drop-in work still leaves a record.",
+    body: "Bringing PHAC together. It is drop-in work: families register rather than waiting on an approval, and every program states its age range, category, schedule and capacity across a September to June season. Sessions are the record of a real date — time, room, repeat pattern and attendance marked family by family, with the adults, children and total headcount alongside. The family file is what you return to: child and guardian details, emergency contact, every session attended, and the progress notes that say what you saw and what happens next.",
+    audioUrl: "https://media.base44.com/files/public/6a249282cb496579542673b7/fa38d505c_speech.mp3",
+    takeaways: [
+      "PHAC is drop-in: families register, and there is no referral to approve.",
+      "Every program states its age range, category, schedule and capacity — and pauses July and August.",
+      "Sessions carry the date, room, facilitator and a repeat pattern instead of being retyped weekly.",
+      "Attendance is marked per family per date, with adults, children and total attendees recorded.",
+      "Progress notes hold the observation, a rating and the next steps for whoever picks the family up next.",
+      "Link the Central Database record, or the child appears twice with half their history in each place.",
+    ],
+    quiz: [
+      {
+        question: "A parent asks whether PHAC has room for their two-year-old. What answers that first?",
+        options: ["The referrals list", "The program's age range, capacity and status on its card", "The progress notes", "The Central Database"],
+        answer: 1,
+        explain: "Age range, capacity and status decide whether a family can walk into a program — that is what the program card is for.",
+      },
+      {
+        question: "Sessions run every Tuesday from September to June. How do you set that up?",
+        options: ["Create each Tuesday by hand", "Create one session and set Repeats to weekly with a Repeat Until date", "Write it in the program's description", "Mark attendance weekly"],
+        answer: 1,
+        explain: "One session with a repeat pattern creates the run, so anyone planning around it sees the dates.",
+      },
+      {
+        question: "A child attended three sessions. Where is that visible?",
+        options: ["On the program card", "In the family's attendance history", "Only in that session's notes", "In the Central Database program strip"],
+        answer: 1,
+        explain: "Each attendance mark lands on the family's file, which is how engagement is shown rather than claimed.",
+      },
+      {
+        question: "You notice a caregiver making real progress. What is the right record?",
+        options: ["A note in your own notebook", "A progress note with the observation, a rating and next steps", "An email to a colleague", "Set the family's status to inactive"],
+        answer: 1,
+        explain: "The progress note is the shared record: what you saw, what it means, and what happens next.",
+      },
+    ],
+  },
 };
 
 export const getModuleRecap = (key) => MODULE_RECAPS[key] || null;

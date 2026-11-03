@@ -52,7 +52,7 @@ export const FRN_PHAC_MODULES = [
         title: "Participants — one record per person",
         body: "Participants is the roster of people, separate from their referrals. Search by name, email or phone to find someone before adding them again: two participant records for one person splits their goals, notes and attendance across two files. Every program that person is referred to hangs off this one record.",
         path: "/frn/participants",
-        target: { text: "Search participants..." }
+        target: { text: "Participants" }
       },
       {
         title: "Inside a participant's file",
@@ -211,7 +211,7 @@ export const FRN_PHAC_MODULES = [
         title: "Families — one record per child",
         body: "Families holds one record per child with their guardian details and registration status: registered, waitlisted or inactive. Search by child or parent name before adding anyone — a second record splits that child's attendance and progress notes across two files, and neither will show the whole story.",
         path: "/phac/participants",
-        target: { text: "Search by child or parent name..." }
+        target: { text: "Families" }
       },
       {
         title: "Inside a family's file",

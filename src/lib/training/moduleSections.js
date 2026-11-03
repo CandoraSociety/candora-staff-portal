@@ -7,6 +7,7 @@ export const TRAINING_MODULE_SECTIONS = [
   { key: "pathways", title: "Pathways", moduleKeys: ["pathways", "pathways_journey", "pathways_journey_part2", "pathways_assessment", "pathways_service_nav", "pathways_workshops", "joblab"] },
   { key: "rc", title: "Central Database", moduleKeys: ["central_database_basics", "central_database_advanced"] },
   { key: "ell", title: "ELL", moduleKeys: ["ell"] },
+  { key: "family", title: "Family Programs", moduleKeys: ["frn", "phac"] },
   { key: "centralreg", title: "Central Registration", moduleKeys: ["centralreg"] },
   { key: "reception", title: "Reception", moduleKeys: ["reception"] },
   { key: "filemanager", title: "File Manager", moduleKeys: ["filemanager", "filemanager_advanced"] },

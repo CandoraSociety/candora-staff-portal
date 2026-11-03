@@ -1,6 +1,7 @@
 import { RECEPTION_INTRO_SCENES } from '@/lib/training/receptionIntroScenes';
 import { CENTRAL_DATABASE_INTRO_SCENES } from '@/lib/training/centralDatabaseIntroScenes';
 import { JOBLAB_INTRO_SCENES } from '@/lib/training/jobLabIntroScenes';
+import { FRN_PHAC_INTRO_SCENES } from '@/lib/training/frnPhacIntroScenes';
 
 // Candora's original uploaded organization logo, not the Staff Portal mark.
 export const PORTAL_INTRO_LOGO = 'https://base44.app/api/apps/6a249282cb496579542673b7/files/mp/public/6a249282cb496579542673b7/8d587672d_Candoracirclelogo_noanniversary.png';
@@ -351,6 +352,8 @@ const INTRO_SCENES_BY_MODULE = {
   ...RECEPTION_INTRO_SCENES,
   ...CENTRAL_DATABASE_INTRO_SCENES,
   joblab: JOBLAB_INTRO_SCENES,
+  frn: FRN_PHAC_INTRO_SCENES.frn,
+  phac: FRN_PHAC_INTRO_SCENES.phac,
 };
 
 export function getModuleIntroScenes(moduleKey) {
