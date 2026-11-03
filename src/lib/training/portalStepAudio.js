@@ -181,7 +181,8 @@ export const STEP_AUDIO = {
   centralreg: [
     null,
     'https://media.base44.com/files/public/6a249282cb496579542673b7/4d1750fd7_speech.mp3',
-    'https://media.base44.com/files/public/6a249282cb496579542673b7/a55a7493b_speech.mp3',
+    // Slide 3: "Where the programs come from" — river narrator, not intro scene 3.
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/37406343f_speech.mp3',
     'https://media.base44.com/files/public/6a249282cb496579542673b7/7f4415282_speech.mp3',
     'https://media.base44.com/files/public/6a249282cb496579542673b7/52304f75c_speech.mp3',
     'https://media.base44.com/files/public/6a249282cb496579542673b7/68c7a00a0_speech.mp3',
