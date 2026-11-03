@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
 import { Plus, Trash2, ArrowLeft, ChevronUp, ChevronDown, Lock, X, Lightbulb, Pencil, MapPin, Package } from "lucide-react";
@@ -42,6 +42,12 @@ export default function BoardAgendaBuilder() {
   const [meetingList, setMeetingList] = useState([]);
   const [minutesEdit, setMinutesEdit] = useState(null);
   const [showPackage, setShowPackage] = useState(false);
+  const formRef = useRef(null);
+
+  // The item form sits above the sections, so bring it into view when it opens
+  useEffect(() => {
+    if (formSection) formRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+  }, [formSection, editingItem]);
 
   useEffect(() => {
     (async () => {
@@ -302,10 +308,10 @@ export default function BoardAgendaBuilder() {
 
       {/* Add item form */}
       {formSection && (
-        <form onSubmit={handleSave} className="bg-card border border-border rounded-xl p-5 mb-6">
+        <form ref={formRef} onSubmit={handleSave} className="bg-card border border-border rounded-xl p-5 mb-6">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold">
-              {editingItem ? "Edit Item" : `Add to ${SECTIONS.find((s) => s.key === formSection)?.label}`}
+              {editingItem ? `Edit Item — ${SECTIONS.find((s) => s.key === formSection)?.label}` : `Add to ${SECTIONS.find((s) => s.key === formSection)?.label}`}
             </h3>
             <button type="button" onClick={closeForm} className="text-muted-foreground hover:text-foreground"><X size={16} /></button>
           </div>
@@ -372,7 +378,7 @@ export default function BoardAgendaBuilder() {
                           {item.duration_minutes > 0 && <span>{item.duration_minutes} min</span>}
                         </div>
                       </div>
-                      <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition">
+                      <div className="flex items-center gap-2 transition opacity-100 sm:opacity-0 sm:group-hover:opacity-100">
                         <button onClick={() => openEdit(item)} className="text-muted-foreground hover:text-foreground" title="Edit item"><Pencil size={14} /></button>
                         <button onClick={() => handleDelete(item.id)} className="text-muted-foreground hover:text-destructive" title="Delete item"><Trash2 size={14} /></button>
                       </div>
