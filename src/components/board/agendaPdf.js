@@ -31,7 +31,7 @@ function getLogoDataUrl() {
 /**
  * Builds the board agenda PDF in the same document format as "Save / Print
  * Agenda" — centred logo and meeting heading, underlined section headings, then
- * numbered items with presenter, notes and time allocation. Agenda items only:
+ * numbered items with presenter and notes (no time allocations). Agenda items only:
  * nothing else is ever added to this document.
  */
 export async function buildAgendaPdf({ meeting, items }) {
@@ -99,8 +99,7 @@ export async function buildAgendaPdf({ meeting, items }) {
 
   // ── Sections ──
   const numW = 20;
-  const durW = 60;
-  const titleW = contentW - numW - durW;
+  const titleW = contentW - numW;
 
   AGENDA_SECTIONS.filter(({ key }) => sorted.some((i) => sectionOf(i) === key)).forEach(({ key, label }) => {
     // keep a section heading with at least one row
@@ -152,12 +151,6 @@ export async function buildAgendaPdf({ meeting, items }) {
           doc.setTextColor(180, 83, 9);
           doc.text("(In Camera)", M + numW + lastWidth + 5, ty);
           doc.setFontSize(10.5);
-        }
-        if (item.duration_minutes) {
-          doc.setFont("helvetica", "normal");
-          doc.setFontSize(10);
-          doc.setTextColor(...MUTED);
-          doc.text(`${item.duration_minutes} min`, pageW - M, ty, { align: "right" });
         }
         ty += 13;
 
