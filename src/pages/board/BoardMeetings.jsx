@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import BoardNewMeetingModal from "@/components/board/BoardNewMeetingModal";
 import UploadMeetingDocDialog from "@/components/board/UploadMeetingDocDialog";
 import EditMeetingPackageDialog from "@/components/board/EditMeetingPackageDialog";
+import MeetingPackageDialog from "@/components/board/MeetingPackageDialog";
 import ConfirmDialog from "@/components/training/ConfirmDialog";
 
 const statusColors = {
@@ -91,6 +92,8 @@ export default function BoardMeetings() {
   const [uploadFor, setUploadFor] = useState(null);
   const [editPkg, setEditPkg] = useState(null);
   const [deletePkg, setDeletePkg] = useState(null);
+  const [packageFor, setPackageFor] = useState(null); // { meeting, items } while the package dialog is open
+  const [openingPackageId, setOpeningPackageId] = useState(null);
 
   const load = async () => {
     const [data, docs, corporateDocs] = await Promise.all([
@@ -113,6 +116,18 @@ export default function BoardMeetings() {
 
   const docsFor = (meetingId, type) => meetingDocs.filter(d => d.meeting_id === meetingId && d.document_type === type);
   const packagesFor = (meetingId) => packages.filter(p => p.meeting_id === meetingId);
+
+  // Build a package straight from the meeting card — its agenda is loaded first
+  const openPackageDialog = async (meeting) => {
+    setOpeningPackageId(meeting.id);
+    try {
+      const agendaItems = await base44.entities.AgendaItem.filter({ meeting_id: meeting.id });
+      const items = [...agendaItems].sort((a, b) => (a.order_index ?? 0) - (b.order_index ?? 0));
+      setPackageFor({ meeting, items });
+    } finally {
+      setOpeningPackageId(null);
+    }
+  };
 
   const handleDeletePackage = async () => {
     if (!deletePkg) return;
@@ -177,6 +192,16 @@ export default function BoardMeetings() {
                         <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
                           <Link to={`/board/meetings/${meeting.id}/agenda`} className="text-xs border border-border px-3 py-1.5 rounded-lg hover:bg-muted transition text-foreground">Agenda</Link>
                           <Link to={`/board/meetings/${meeting.id}/minutes`} className="text-xs border border-border px-3 py-1.5 rounded-lg hover:bg-muted transition text-foreground">Minutes</Link>
+                          <button
+                            onClick={() => openPackageDialog(meeting)}
+                            disabled={openingPackageId === meeting.id}
+                            className="flex items-center gap-1 text-xs border border-border px-3 py-1.5 rounded-lg hover:bg-muted transition text-foreground disabled:opacity-60"
+                          >
+                            {openingPackageId === meeting.id
+                              ? <span className="w-3 h-3 border-2 border-border border-t-primary rounded-full animate-spin" />
+                              : <Package size={13} />}
+                            Create Package
+                          </button>
                           <button onClick={() => setUploadFor({ meeting, documentType: "minutes" })} className="flex items-center gap-1 text-xs border border-border px-3 py-1.5 rounded-lg hover:bg-muted transition text-foreground"><Upload size={13} /> Upload Minutes</button>
                           <button onClick={() => setUploadFor({ meeting, documentType: "financial_report" })} className="flex items-center gap-1 text-xs border border-border px-3 py-1.5 rounded-lg hover:bg-muted transition text-foreground"><DollarSign size={13} /> Upload Financials</button>
                           <button onClick={() => handleDelete(meeting.id)} className="text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition"><Trash2 size={15} /></button>
@@ -208,6 +233,14 @@ export default function BoardMeetings() {
         <BoardNewMeetingModal
           onClose={() => setShowNew(false)}
           onSaved={(m) => { setMeetings(prev => [m, ...prev]); setShowNew(false); }}
+        />
+      )}
+      {packageFor && (
+        <MeetingPackageDialog
+          meeting={packageFor.meeting}
+          items={packageFor.items}
+          onClose={() => setPackageFor(null)}
+          onCreated={load}
         />
       )}
       {editPkg && meetings.some(m => m.id === editPkg.meeting_id) && (

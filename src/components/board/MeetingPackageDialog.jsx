@@ -16,7 +16,7 @@ const isPdfUrl = (url) => /\.pdf($|\?)/i.test(String(url || ""));
  * any documents attached to this meeting, then compiles everything with the
  * agenda into a single PDF saved to the Board Documents library.
  */
-export default function MeetingPackageDialog({ meeting, items, onClose }) {
+export default function MeetingPackageDialog({ meeting, items, onClose, onCreated }) {
   const [parts, setParts] = useState(null); // null = still gathering
   const [generating, setGenerating] = useState(false);
   const [resultUrl, setResultUrl] = useState(null);
@@ -113,6 +113,7 @@ export default function MeetingPackageDialog({ meeting, items, onClose }) {
         ],
       });
       setResultUrl(file_url);
+      onCreated?.();
     } catch (err) {
       toast.error("Could not create the meeting package", { description: err?.message || "Unknown error" });
     } finally {
