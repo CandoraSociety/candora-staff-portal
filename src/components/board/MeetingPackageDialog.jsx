@@ -6,16 +6,12 @@ import { CheckCircle2, Package, X } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { buildPackageBasePdf } from "@/components/board/meetingPackagePdf";
 import { buildMeetingPackageZip } from "@/components/board/meetingPackageZip";
-import { appendPdfFromUrl } from "@/components/board/appendPdfPages";
 import { gatherPackageCandidates } from "@/lib/boardPackageCandidates";
 
-const isPdfUrl = (url) => /\.pdf($|\?)/i.test(String(url || ""));
-
 /**
- * "Create Meeting Package" — gathers the previous meeting's finalized minutes,
- * the latest financial report, the Executive Director's exported report, and
- * any documents attached to this meeting, then compiles everything with the
- * agenda into a single PDF saved to the Board Documents library.
+ * "Create Meeting Package" — zips up every document on the meeting card: the
+ * agenda as its own PDF, plus the previous meeting's minutes and each attached
+ * document, each one kept as its own file inside the zip.
  */
 export default function MeetingPackageDialog({ meeting, items, onClose, onCreated }) {
   const [parts, setParts] = useState(null); // null = still gathering
@@ -49,46 +45,22 @@ export default function MeetingPackageDialog({ meeting, items, onClose, onCreate
     setGenerating(true);
     try {
       const agendaPart = selected.find((p) => p.id === "agenda");
-      const minutesPart = selected.find((p) => p.id === "prev_minutes");
-      let minutes = null;
-      let minutesPdfUrl = null;
-      const files = [];
-      if (minutesPart) {
-        if (isPdfUrl(minutesPart.fileUrl)) {
-          minutesPdfUrl = minutesPart.fileUrl;
-          files.push({ label: `Minutes - ${minutesPart.sub}`, fileUrl: minutesPart.fileUrl });
-        } else {
-          try {
-            const res = await fetch(minutesPart.fileUrl);
-            if (!res.ok) throw new Error("not readable");
-            minutes = { label: minutesPart.sub, html: await res.text() };
-          } catch {
-            toast.error("The previous meeting's minutes couldn't be read — the package was created without them.");
-          }
-        }
-      }
-      selected
-        .filter((p) => p.id !== "agenda" && p.id !== "prev_minutes")
-        .forEach((p) => files.push({ label: p.label, fileUrl: p.fileUrl }));
+      // Every other selected document goes into the zip untouched, in its own
+      // file — the minutes stay minutes, financials stay a spreadsheet.
+      const files = selected
+        .filter((p) => p.id !== "agenda")
+        .map((p) => ({ label: p.label, fileUrl: p.fileUrl }));
 
-      const basePdf = await buildPackageBasePdf({
-        meeting,
-        contents: selected.map((p) => p.label),
-        agendaItems: agendaPart ? items : null,
-        minutes,
-      });
-
-      // The agenda (plus the minutes) is the one generated PDF; every other
-      // document is bundled untouched, so a zip keeps Word and Excel files intact.
-      let baseBytes = basePdf.output("arraybuffer");
-      if (minutesPdfUrl) {
-        try {
-          baseBytes = await appendPdfFromUrl(baseBytes, minutesPdfUrl);
-        } catch {
-          toast.error("The minutes couldn't be added into the agenda document — they are still in the package as their own file.");
-        }
-      }
-      const basePdfName = minutes || minutesPdfUrl ? "Agenda & Minutes" : "Agenda";
+      const agendaPdf = agendaPart
+        ? await buildPackageBasePdf({
+            meeting,
+            contents: selected.map((p) => p.label),
+            agendaItems: items,
+            minutes: null,
+          })
+        : null;
+      const baseBytes = agendaPdf ? agendaPdf.output("arraybuffer") : null;
+      const basePdfName = "Agenda";
       const { blob, skipped, included } = await buildMeetingPackageZip({
         basePdfBuffer: baseBytes,
         basePdfName,
@@ -104,9 +76,11 @@ export default function MeetingPackageDialog({ meeting, items, onClose, onCreate
       // The generated agenda PDF is also kept on its own, so the meeting card can
       // link to it directly instead of forcing a download of the whole zip.
       const agendaFileName = `Candora-${basePdfName.replace(" & ", "-and-")}_${dateTag}.pdf`;
-      const agendaUpload = await base44.integrations.Core.UploadPublicFile({
-        file: new File([baseBytes], agendaFileName, { type: "application/pdf" }),
-      });
+      const agendaUpload = baseBytes
+        ? await base44.integrations.Core.UploadPublicFile({
+            file: new File([baseBytes], agendaFileName, { type: "application/pdf" }),
+          })
+        : null;
 
       const fileName = `Candora-Meeting-Package_${dateTag}.zip`;
       const { file_url } = await base44.integrations.Core.UploadPublicFile({ file: new File([blob], fileName, { type: "application/zip" }) });
@@ -116,9 +90,9 @@ export default function MeetingPackageDialog({ meeting, items, onClose, onCreate
         meeting_id: meeting.id,
         file_url,
         file_name: fileName,
-        description: "Board meeting package zip — agenda plus the attached board documents (minutes, financials, reports)",
+        description: "Board meeting package zip — the agenda plus every document on the meeting card, each as its own file",
         package_files: [
-          { label: basePdfName, file_name: agendaFileName, file_url: agendaUpload.file_url },
+          ...(agendaUpload ? [{ label: basePdfName, file_name: agendaFileName, file_url: agendaUpload.file_url }] : []),
           ...included,
         ],
       });
