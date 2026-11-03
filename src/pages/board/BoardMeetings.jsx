@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Plus, Calendar, Clock, MapPin, Trash2, Upload, FileText, DollarSign, Package, Pencil, ExternalLink } from "lucide-react";
+import { Plus, Calendar, Clock, MapPin, Trash2, Upload, FileText, DollarSign, Package, Pencil, ExternalLink, X, FilePlus2 } from "lucide-react";
 import { format } from "date-fns";
 import { parseDateSmart } from "@/lib/dateUtils";
 import { toast } from "sonner";
 import BoardNewMeetingModal from "@/components/board/BoardNewMeetingModal";
 import UploadMeetingDocDialog from "@/components/board/UploadMeetingDocDialog";
+import AddMeetingDocumentDialog from "@/components/board/AddMeetingDocumentDialog";
 import EditMeetingPackageDialog from "@/components/board/EditMeetingPackageDialog";
 import MeetingPackageDialog from "@/components/board/MeetingPackageDialog";
 import ConfirmDialog from "@/components/training/ConfirmDialog";
@@ -19,28 +20,40 @@ const statusColors = {
 };
 
 // Paperwork attached to a meeting, shown under its details with a link to open
-function AttachedDocs({ label, docs }) {
+// and, when the document lives on this meeting, a button to take it off
+function AttachedDocs({ label, docs, onDelete }) {
   if (!docs.length) return null;
   return (
     <div className="flex items-center gap-2 mt-2 text-xs flex-wrap">
       <span className="flex items-center gap-1 text-green-700 font-medium"><FileText size={12} /> {label}</span>
       {docs.map(d => (
-        d.file_url ? (
-          <a
-            key={d.id}
-            href={d.file_url}
-            target="_blank"
-            rel="noreferrer"
-            title={d.file_name || d.title}
-            className="inline-flex items-center gap-1.5 max-w-[260px] rounded-md border border-border bg-card px-2 py-1 font-medium text-foreground hover:bg-muted hover:border-primary/40 transition cursor-pointer"
-          >
-            <FileText size={11} className="shrink-0 text-muted-foreground" />
-            <span className="truncate">{d.title}</span>
-            <ExternalLink size={11} className="shrink-0 text-muted-foreground" />
-          </a>
-        ) : (
-          <span key={d.id} className="text-muted-foreground truncate max-w-[220px]">{d.title}</span>
-        )
+        <span key={d.id} className="inline-flex items-center gap-1.5 max-w-[290px] rounded-md border border-border bg-card px-2 py-1">
+          {d.file_url ? (
+            <a
+              href={d.file_url}
+              target="_blank"
+              rel="noreferrer"
+              title={d.file_name || d.title}
+              className="inline-flex items-center gap-1.5 min-w-0 font-medium text-foreground hover:underline"
+            >
+              <FileText size={11} className="shrink-0 text-muted-foreground" />
+              <span className="truncate">{d.title}</span>
+              <ExternalLink size={11} className="shrink-0 text-muted-foreground" />
+            </a>
+          ) : (
+            <span className="truncate text-muted-foreground">{d.title}</span>
+          )}
+          {onDelete && (
+            <button
+              type="button"
+              onClick={() => onDelete(d)}
+              title="Remove this document from the meeting"
+              className="shrink-0 text-muted-foreground hover:text-destructive transition"
+            >
+              <X size={12} />
+            </button>
+          )}
+        </span>
       ))}
     </div>
   );
@@ -106,20 +119,21 @@ export default function BoardMeetings() {
   const [meetingDocs, setMeetingDocs] = useState([]);
   const [packages, setPackages] = useState([]);
   const [uploadFor, setUploadFor] = useState(null);
+  const [addDocFor, setAddDocFor] = useState(null);
+  const [deleteDoc, setDeleteDoc] = useState(null);
   const [editPkg, setEditPkg] = useState(null);
   const [deletePkg, setDeletePkg] = useState(null);
   const [packageFor, setPackageFor] = useState(null); // { meeting, items } while the package dialog is open
   const [openingPackageId, setOpeningPackageId] = useState(null);
 
   const load = async () => {
-    const [data, docs, corporateDocs] = await Promise.all([
+    const [data, docs] = await Promise.all([
       base44.entities.Meeting.list("-meeting_date"),
-      base44.entities.BoardDocument.filter({ document_type: { $in: ["agenda", "minutes", "financial_report", "ed_report"] } }),
-      base44.entities.BoardDocument.filter({ document_type: "corporate_doc" }),
+      base44.entities.BoardDocument.filter({ meeting_id: { $exists: true } }),
     ]);
     setMeetings(data);
     setMeetingDocs(docs);
-    setPackages(corporateDocs.filter((d) => (d.package_files || []).length > 0));
+    setPackages(docs.filter((d) => (d.package_files || []).length > 0));
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
@@ -131,6 +145,24 @@ export default function BoardMeetings() {
   };
 
   const docsFor = (meetingId, type) => meetingDocs.filter(d => d.meeting_id === meetingId && d.document_type === type);
+
+  // Documents on the card that aren't minutes, financials, ED report or agenda
+  // (and not a meeting package, which the card lists separately)
+  const otherDocsFor = (meetingId) =>
+    meetingDocs.filter(
+      d =>
+        d.meeting_id === meetingId &&
+        !["agenda", "minutes", "financial_report", "ed_report"].includes(d.document_type) &&
+        !(d.package_files || []).length
+    );
+
+  const handleDeleteDoc = async () => {
+    if (!deleteDoc) return;
+    await base44.entities.BoardDocument.delete(deleteDoc.id);
+    setMeetingDocs(prev => prev.filter(d => d.id !== deleteDoc.id));
+    setDeleteDoc(null);
+    toast.success("Document removed from the meeting");
+  };
 
   // The most recent earlier meeting that has finalized minutes — those minutes
   // ride along on this meeting's card automatically, ready to approve.
@@ -212,14 +244,15 @@ export default function BoardMeetings() {
                             <span className="flex items-center gap-1"><Clock size={13} />{format(new Date(meeting.meeting_date), "h:mm a")}</span>
                             {meeting.location && <span className="flex items-center gap-1"><MapPin size={13} />{meeting.location}</span>}
                           </div>
-                          <AttachedDocs label="Agenda attached" docs={docsFor(meeting.id, "agenda")} />
-                          <AttachedDocs label="Minutes attached" docs={docsFor(meeting.id, "minutes")} />
+                          <AttachedDocs label="Agenda attached" docs={docsFor(meeting.id, "agenda")} onDelete={setDeleteDoc} />
+                          <AttachedDocs label="Minutes attached" docs={docsFor(meeting.id, "minutes")} onDelete={setDeleteDoc} />
                           {(() => {
                             const prev = prevMinutesFor(meeting);
                             return prev ? <AttachedDocs label="Last meeting's minutes" docs={[prev]} /> : null;
                           })()}
-                          <AttachedDocs label="Financials attached" docs={docsFor(meeting.id, "financial_report")} />
-                          <AttachedDocs label="ED report attached" docs={docsFor(meeting.id, "ed_report")} />
+                          <AttachedDocs label="Financials attached" docs={docsFor(meeting.id, "financial_report")} onDelete={setDeleteDoc} />
+                          <AttachedDocs label="ED report attached" docs={docsFor(meeting.id, "ed_report")} onDelete={setDeleteDoc} />
+                          <AttachedDocs label="Documents attached" docs={otherDocsFor(meeting.id)} onDelete={setDeleteDoc} />
                           <PackageAttachments
                             packages={packagesFor(meeting.id)}
                             onEdit={setEditPkg}
@@ -229,6 +262,7 @@ export default function BoardMeetings() {
                         <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
                           <Link to={`/board/meetings/${meeting.id}/agenda`} className="text-xs border border-border px-3 py-1.5 rounded-lg hover:bg-muted transition text-foreground">Agenda</Link>
                           <Link to={`/board/meetings/${meeting.id}/minutes`} className="text-xs border border-border px-3 py-1.5 rounded-lg hover:bg-muted transition text-foreground">Minutes</Link>
+                          <button onClick={() => setAddDocFor(meeting)} className="flex items-center gap-1 text-xs border border-border px-3 py-1.5 rounded-lg hover:bg-muted transition text-foreground"><FilePlus2 size={13} /> Add Document</button>
                           <button
                             onClick={() => openPackageDialog(meeting)}
                             disabled={openingPackageId === meeting.id}
@@ -266,6 +300,26 @@ export default function BoardMeetings() {
           onUploaded={(doc) => { setMeetingDocs(prev => [doc, ...prev]); setUploadFor(null); }}
         />
       )}
+      {addDocFor && (
+        <AddMeetingDocumentDialog
+          meeting={addDocFor}
+          onClose={() => setAddDocFor(null)}
+          onAdded={(doc) => {
+            setMeetingDocs(prev => [doc, ...prev]);
+            setAddDocFor(null);
+            toast.success("Document added to the meeting");
+          }}
+        />
+      )}
+      <ConfirmDialog
+        open={!!deleteDoc}
+        onOpenChange={(open) => { if (!open) setDeleteDoc(null); }}
+        title="Remove this document?"
+        description={deleteDoc ? `"${deleteDoc.title}" is taken off this meeting card. The file stays in the Board Documents library.` : ""}
+        confirmLabel="Remove"
+        destructive
+        onConfirm={handleDeleteDoc}
+      />
       {showNew && (
         <BoardNewMeetingModal
           onClose={() => setShowNew(false)}
