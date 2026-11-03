@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { useToast } from "@/components/ui/use-toast";
 import { useEllRosters, LearnerRosterTable } from "@/components/ell/ELLLearnerRosterTabs";
 import LearnerFormDialog from "@/components/ell/LearnerFormDialog";
+import { ellLearnersQuery } from "@/lib/ellLists";
 
 const statusColors = {
   prospective: "bg-muted text-muted-foreground",
@@ -63,10 +64,7 @@ export default function ELLLearners() {
   const [editLearner, setEditLearner] = useState(null);
   const [deleteLearner, setDeleteLearner] = useState(null);
 
-  const { data: learners, isLoading } = useQuery({
-    queryKey: ["ellLearners"],
-    queryFn: () => base44.entities.ELLLearner.list("-created_date"),
-  });
+  const { data: learners, isLoading } = useQuery(ellLearnersQuery);
 
   const filtered = learners?.filter((l) => {
     const fullName = `${l.first_name} ${l.last_name}`.toLowerCase();

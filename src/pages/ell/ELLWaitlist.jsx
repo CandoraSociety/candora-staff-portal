@@ -9,6 +9,7 @@ import ELLWaitlistCard from '@/components/ell/ELLWaitlistCard';
 import ELLWaitlistUpdateDialog from '@/components/ell/ELLWaitlistUpdateDialog';
 import { ELL_WAITLIST_STATUS_OPTIONS, ELL_CLB_LABELS } from '@/lib/ellConstants';
 import { useCrossWaitlistIndex, findOtherWaitlists } from '@/lib/waitlistCrossRef';
+import { asList } from '@/lib/ellLists';
 
 // ELL waitlist — mirrors the EmpowerU waitlist: everyone waiting for a spot,
 // ordered oldest first with an alphabetical toggle, light contact tracking with
@@ -21,10 +22,14 @@ export default function ELLWaitlist() {
   const [expandedId, setExpandedId] = useState(null);
   const queryClient = useQueryClient();
 
-  const { data: learners = [], isLoading } = useQuery({ queryKey: ['ellLearners'], queryFn: () => base44.entities.ELLLearner.filter({ enrollment_status: 'waitlisted' }, { limit: 500 }) });
+  const { data: learners = [], isLoading } = useQuery({
+    queryKey: ['ellLearners', 'waitlisted'],
+    queryFn: () => base44.entities.ELLLearner.filter({ enrollment_status: 'waitlisted' }, { limit: 500 }),
+    select: asList,
+  });
   const { data: wlIndex = [] } = useCrossWaitlistIndex();
 
-  const waitlisted = (learners.items || learners || []).map((l) => ({
+  const waitlisted = learners.map((l) => ({
     id: l.id,
     first_name: l.first_name,
     last_name: l.last_name,

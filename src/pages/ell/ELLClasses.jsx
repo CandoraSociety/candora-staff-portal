@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { ROOM_OPTIONS } from "@/lib/centralRegConstants";
-import { listEllClasses, listEllInstructors, listEllLearners } from "@/lib/ellLists";
+import { listEllClasses, listEllInstructors, ellLearnersQuery } from "@/lib/ellLists";
 import { BookOpen, Plus, Search, Pencil, Trash2, Clock } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -279,10 +279,7 @@ export default function ELLClasses() {
     queryFn: listEllInstructors,
   });
 
-  const { data: learners } = useQuery({
-    queryKey: ["ellLearners"],
-    queryFn: listEllLearners,
-  });
+  const { data: learners } = useQuery(ellLearnersQuery);
 
   const getEnrolledCount = (classId) => (learners || []).filter((l) => l.assigned_class_id === classId).length;
 
