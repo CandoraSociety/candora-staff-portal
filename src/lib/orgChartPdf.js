@@ -1,6 +1,6 @@
 import { jsPDF } from "jspdf";
 import { format } from "date-fns";
-import { layoutTieredPages, drawTieredPage } from "@/lib/orgChartPdfTiers";
+import { layoutTieredChart, drawTieredChart } from "@/lib/orgChartPdfTiers";
 
 // Candora palette — matches the board and agenda documents
 const NAVY = [30, 47, 77];
@@ -18,7 +18,7 @@ const PAGE_H = 792;
 const MARGIN = 36;
 const HEADER_H = 74;
 const FOOTER_H = 40;
-const TOP = HEADER_H + 30;
+const TOP = HEADER_H + 22;
 
 let logoPromise = null;
 function getLogoDataUrl() {
@@ -81,7 +81,7 @@ function drawHeader(doc, label, count) {
   );
 }
 
-function drawFooter(doc, count, page, pageCount) {
+function drawFooter(doc, count) {
   const y = PAGE_H - FOOTER_H + 8;
   doc.setDrawColor(...BORDER);
   doc.setLineWidth(0.6);
@@ -90,36 +90,31 @@ function drawFooter(doc, count, page, pageCount) {
   doc.setFont("helvetica", "normal");
   doc.setFontSize(7.5);
   doc.setTextColor(...MUTED);
-  doc.text("Inactive positions and practicum / skilled volunteer placements are excluded from this chart.", MARGIN, y + 14);
-  doc.text(`${count} positions · Page ${page} of ${pageCount}`, PAGE_W - MARGIN, y + 14, { align: "right" });
+  doc.text("Inactive positions and placements excluded. Each card names its direct manager; advisory relationships omitted.", MARGIN, y + 14);
+  doc.text(`${count} position${count === 1 ? "" : "s"} shown`, PAGE_W - MARGIN, y + 14, { align: "right" });
 }
 
 /**
- * Exports named seniority tiers as card bands. Direct reporting is identified
- * explicitly on each card, so no connector can cross a card or another line.
- * Full rows move to the next page; inactive positions and placements stay out.
+ * Exports named seniority tiers as card bands on a single page. Rows are
+ * left-aligned, and the layout scales down just enough for every active
+ * position to fit on that one page. Direct reporting is identified explicitly
+ * on each card, so no connector can cross a card or another line.
  */
 export async function generateOrgChartPdf({ positions, label, showNames = true }) {
   const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: [PAGE_W, PAGE_H] });
   doc.__candoraLogo = await getLogoDataUrl();
-  const { pages, total } = layoutTieredPages(doc, positions, {
-    showNames, margin: MARGIN, top: TOP, bottom: PAGE_H - FOOTER_H - 12,
+  const layout = layoutTieredChart(doc, positions, {
+    showNames, margin: MARGIN, pageWidth: PAGE_W, top: TOP, bottom: PAGE_H - FOOTER_H - 12,
   });
-  pages.forEach((bands, index) => {
-    if (index > 0) doc.addPage();
-    drawHeader(doc, label, total);
-    doc.setFont("helvetica", "normal");
-    doc.setFontSize(8);
-    doc.setTextColor(...MUTED);
-    doc.text("Tiered chart · Each card identifies its direct manager by position code and title. Advisory relationships are omitted.", MARGIN, HEADER_H + 17);
-    drawTieredPage(doc, bands, { margin: MARGIN, palette: PALETTE });
-    if (total === 0) {
-      doc.setFont("helvetica", "italic");
-      doc.setFontSize(11);
-      doc.text("No active positions on this chart.", MARGIN, TOP + 10);
-    }
-    drawFooter(doc, total, index + 1, pages.length);
-  });
+  drawHeader(doc, label, layout.total);
+  doc.setFont("helvetica", "normal");
+  drawTieredChart(doc, layout, { margin: MARGIN, palette: PALETTE });
+  if (layout.total === 0) {
+    doc.setFont("helvetica", "italic");
+    doc.setFontSize(11);
+    doc.text("No active positions on this chart.", MARGIN, TOP + 10);
+  }
+  drawFooter(doc, layout.total);
   const fileTag = String(label || "chart").replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") || "chart";
   const fileName = `Candora-Org-Chart_${fileTag}.pdf`;
   doc.save(fileName);
