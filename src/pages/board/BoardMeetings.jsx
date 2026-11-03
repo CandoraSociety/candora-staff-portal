@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Plus, Calendar, Clock, MapPin, Trash2, Upload, FileText, DollarSign, Package, Pencil } from "lucide-react";
+import { Plus, Calendar, Clock, MapPin, Trash2, Upload, FileText, DollarSign, Package, Pencil, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import BoardNewMeetingModal from "@/components/board/BoardNewMeetingModal";
@@ -24,7 +24,22 @@ function AttachedDocs({ label, docs }) {
     <div className="flex items-center gap-2 mt-2 text-xs flex-wrap">
       <span className="flex items-center gap-1 text-green-700 font-medium"><FileText size={12} /> {label}</span>
       {docs.map(d => (
-        <a key={d.id} href={d.file_url} target="_blank" rel="noreferrer" className="text-muted-foreground hover:text-foreground underline truncate max-w-[220px]">{d.title}</a>
+        d.file_url ? (
+          <a
+            key={d.id}
+            href={d.file_url}
+            target="_blank"
+            rel="noreferrer"
+            title={d.file_name || d.title}
+            className="inline-flex items-center gap-1.5 max-w-[260px] rounded-md border border-border bg-card px-2 py-1 font-medium text-foreground hover:bg-muted hover:border-primary/40 transition cursor-pointer"
+          >
+            <FileText size={11} className="shrink-0 text-muted-foreground" />
+            <span className="truncate">{d.title}</span>
+            <ExternalLink size={11} className="shrink-0 text-muted-foreground" />
+          </a>
+        ) : (
+          <span key={d.id} className="text-muted-foreground truncate max-w-[220px]">{d.title}</span>
+        )
       ))}
     </div>
   );
