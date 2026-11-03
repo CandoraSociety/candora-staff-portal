@@ -506,6 +506,24 @@ export const MODULE_RECAPS = {
         answer: 1,
         explain: "Registrations need a date to belong to. Create Session adds one, and Register becomes available again.",
       },
+      {
+        question: "Once someone is enrolled, whose job is their attendance and progress?",
+        options: ["Central Registration", "The program's own portal", "The Volunteer Manager", "Finance"],
+        answer: 1,
+        explain: "Central Registration keeps the registration; the program's portal takes over once the person is in.",
+      },
+      {
+        question: "If a program is set to register instantly, where does a QR sign-up go?",
+        options: ["Straight into the program with no review", "Still into Registration Requests, already approved", "Nowhere until the person calls", "Straight to the waitlist"],
+        answer: 1,
+        explain: "The request still lands in Registration Requests — it just arrives already approved instead of waiting on you.",
+      },
+      {
+        question: "Who gets offered a seat first when one opens?",
+        options: ["The most recent sign-up", "Position one on the waitlist", "Whoever calls that morning", "Whoever a counsellor chooses"],
+        answer: 1,
+        explain: "Positions are offered in order and contact attempts are recorded, so nobody is quietly skipped.",
+      },
     ],
   },
 

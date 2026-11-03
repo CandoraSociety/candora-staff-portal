@@ -245,15 +245,27 @@ const INTRO_SCENES_BY_MODULE = {
     },
     {
       kicker: 'Central Registration',
+      title: 'One front door, many programs.',
+      body: "Central Registration is one front door for every Candora program. All registrations start here, in the same format, so nothing depends on who answered the phone. This portal keeps the shared record: who registered, for which program, and whether they are enrolled, waiting or declined. The program's own portal takes over once someone is in: attendance in English Language Learning, cohort work in EmpowerU, a client file in Pathways.",
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/ea7b5d326_speech.mp3',
+    },
+    {
+      kicker: 'Central Registration',
       title: 'Programs, waitlists and requests.',
       body: "You'll manage program capacity, approve or decline registrations, offer waitlisted seats in fair order, and review sign-ups from QR self-registration.",
       audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/a1191caa1_speech.mp3',
     },
     {
       kicker: 'Central Registration',
+      title: 'Seats are counted, not guessed.',
+      body: "Seats are counted, not guessed. Every program area carries a maximum number of places, and the filled count against it decides what happens next. While there is room, a registration goes straight in. Once the area is full, the same button adds the person to the waitlist with a position, so seats can be offered in order and nobody is quietly skipped.",
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/3d2a12678_speech.mp3',
+    },
+    {
+      kicker: 'Central Registration',
       title: "What you'll practice.",
-      body: "You'll register a demo participant, review a self-registration request, and check a full program's waitlist order.",
-      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/cb872b578_speech.mp3',
+      body: "In this module you will register a demo participant, create a session for a program, approve a self-registration request, offer a waitlisted seat, process a volunteer application and set a program area's capacity. Everything you touch is practice data, and each task is checked as you finish it.",
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/0e6406d46_speech.mp3',
     },
   ],
   pathways_assessment: [

@@ -1138,6 +1138,10 @@ export const TRAINING_MODULES = [
         path: "/central-registration"
       },
       {
+        title: "One front door, many portals",
+        body: "Central Registration is the shared front door: every program's registrations, capacity and waitlists pass through here. The program's own portal takes over once someone is enrolled, keeping that person's attendance, assessments and progress. Approving a registration is the hand-off between the two, and it can create the participant record in the program's portal automatically."
+      },
+      {
         title: "Programs & Registration",
         body: "Every program and its sessions, with capacity controls, live here.",
         target: { selector: 'a[href="/central-registration/programs"]' },
@@ -1162,8 +1166,20 @@ export const TRAINING_MODULES = [
         path: "/central-registration/requests"
       },
       {
+        title: "Self-registration links and settings",
+        body: "The QR button next to a program opens its public sign-up link and settings. Copy the link for an email, print the QR code for a classroom or a poster, and decide whether scanned requests need your approval or register the person straight away. Whatever you choose, scanned sign-ups arrive in Registration Requests, never lost in someone's inbox.",
+        target: { selector: 'a[href="/central-registration/programs"]' },
+        path: "/central-registration/programs"
+      },
+      {
         title: "Waitlists",
         body: "When a program is full, registrations land on the waitlist — with their position so you can offer seats in a fair order.",
+        target: { selector: 'a[href="/central-registration/waitlists"]' },
+        path: "/central-registration/waitlists"
+      },
+      {
+        title: "Offering a seat fairly",
+        body: "When a seat opens, work the waitlist from the top. The position number is the promise we make to people, so offers go in order, each contact attempt is recorded, and the next person is only called when someone declines or cannot be reached. Promoting a waitlisted person moves their details into the registration, so nothing is retyped.",
         target: { selector: 'a[href="/central-registration/waitlists"]' },
         path: "/central-registration/waitlists"
       },
@@ -1223,6 +1239,22 @@ export const TRAINING_MODULES = [
         body: "Change the maximum number of places for one program area, and see the filled count beside it.",
         hint: "Open Program Registration, use the capacity control on one of the areas, and set a maximum.",
         path: "/central-registration/programs",
+        verify: { kind: "self" }
+      },
+      {
+        id: "cr-session",
+        title: "Create a session for a program",
+        body: "Add a dated session to a program so it can take registrations, then find it on the calendar.",
+        hint: "Open Program Registration, use Create Session on a program with a date and time, then check the Calendar page.",
+        path: "/central-registration/programs",
+        verify: { kind: "self" }
+      },
+      {
+        id: "cr-seat",
+        title: "Offer a seat from the waitlist",
+        body: "Open a full program's waitlist and work the first position — offer the seat, or record why it can't be offered yet.",
+        hint: "Open Waitlists, pick a program and use the offer/contact action on the person in position one.",
+        path: "/central-registration/waitlists",
         verify: { kind: "self" }
       }
     ]

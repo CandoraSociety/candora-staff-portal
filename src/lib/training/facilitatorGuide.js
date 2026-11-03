@@ -281,10 +281,12 @@ export const FACILITATOR_GUIDE = {
   },
 
   centralreg: {
-    duration: "About 45 minutes (5 intro · 22 tour · 13 practice · 5 wrap-up)",
+    duration: "About 55 minutes (8 intro · 27 tour · 15 practice · 5 wrap-up)",
     objectives: [
       "Staff can register a participant into any program from one place",
+      "Staff can say what Central Registration holds and what the program's own portal holds afterwards",
       "Staff can read an area's filled count against its maximum and know when a registration becomes a waitlist place",
+      "Staff can create a session so a program can take registrations",
       "Staff can approve, waitlist or decline QR self-registration requests",
       "Staff can process volunteer applications and know the decision updates the Volunteer Manager",
       "Staff can read a waitlist's position order and offer seats fairly",
@@ -292,6 +294,9 @@ export const FACILITATOR_GUIDE = {
     stepNotes: {
       "Welcome to Central Registration": "One framing sentence: this portal registers people into ANY Candora program from one place, so rosters and waitlists stay consistent across programs.",
       "The dashboard": "The cross-program overview: pending approvals, waitlist totals, volunteer applications, and the program-area counts. Start here each shift.",
+      "One front door, many portals": "Draw the line for them: registration, capacity, waitlist position and volunteer applications live here; attendance, assessments and progress live in the program's own portal. Approval is the hand-off — that single sentence prevents most 'where do I enter this?' questions.",
+      "Self-registration links and settings": "Open the QR button live. Show the copyable link, the printable code, and the per-program choice between 'requests need approval' and 'register instantly'. Stress that scanned sign-ups still land in Registration Requests — the inbox is the same regardless of the setting.",
+      "Offering a seat fairly": "The fairness slide. Position one gets the call first, every contact attempt is recorded, and the next person is only called when someone declines or can't be reached. Promoting pulls their details into the registration so nothing is retyped.",
       "Programs & Registration": "Every program, its sessions and capacity controls live here. Capacity is what moves registrations onto the waitlist automatically.",
       "Capacity and sessions": "This is the slide to slow down on. Point at the filled-against-maximum figure on one area, then register with the room available, then fill the area and show the button turn into Add to Waitlist. Mention Create Session — a program with no sessions scheduled cannot take registrations — and the QR button, which is where a program's public sign-up link is set up. Kids Gift Shop is registered from this page too, with its time slots.",
       "All Registrations": "Statuses matter: pending approval, enrolled, waitlisted. Approving a registration can automatically create the participant record in that program's own portal — that's the magic sentence.",
@@ -299,7 +304,7 @@ export const FACILITATOR_GUIDE = {
       "Waitlists": "Full program = registrations land on the waitlist with a position. Positions are the fairness mechanism: seats get offered in order.",
       "Volunteer Registration": "Public volunteer applications land here. Approve, Waitlist or Decline each one — and say clearly that this is the same Volunteer record the Volunteer Manager uses, so nothing has to be entered twice. Promote brings a waitlisted volunteer back into the review queue.",
       "Calendar": "Sessions by day and room — the answer screen for 'what's running when?'. Switch sources on and off to answer 'is that room free?'.",
-      "Time to practice": "Hands-on: register a demo participant, work a self-registration request, find a waitlist position order, and process one volunteer application.",
+      "Time to practice": "Hands-on: register a demo participant, create a session, work a self-registration request, offer a waitlisted seat, process one volunteer application, and set an area's capacity.",
     },
     practiceNotes: {
       "cr-register": "Auto-checked. Have them pick a program they actually work with, and say whether it went in as a seat or a waitlist place.",
@@ -307,6 +312,8 @@ export const FACILITATOR_GUIDE = {
       "cr-waitlist": "Ask them to explain the position order back to you — fairness rule sticks when said aloud.",
       "cr-volunteer": "Self-marked. Ask which record changed — the Volunteer Manager should be their answer.",
       "cr-capacity": "Self-marked. Point out the override code is for staff exceptions only, not for squeezing in one more person quietly.",
+      "cr-session": "Self-marked. The check is that they find the new session on the calendar afterwards — the date is what makes registrations possible.",
+      "cr-seat": "Self-marked. Watch that they work position one and record the contact attempt, rather than skipping ahead to someone they know.",
     },
     tips: [
       "Have a QR code handy (or on screen) so people connect the Requests screen to the physical poster.",
