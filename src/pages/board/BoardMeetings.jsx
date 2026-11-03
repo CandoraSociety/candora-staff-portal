@@ -113,7 +113,7 @@ export default function BoardMeetings() {
   const load = async () => {
     const [data, docs, corporateDocs] = await Promise.all([
       base44.entities.Meeting.list("-meeting_date"),
-      base44.entities.BoardDocument.filter({ document_type: { $in: ["agenda", "minutes", "financial_report"] } }),
+      base44.entities.BoardDocument.filter({ document_type: { $in: ["agenda", "minutes", "financial_report", "ed_report"] } }),
       base44.entities.BoardDocument.filter({ document_type: "corporate_doc" }),
     ]);
     setMeetings(data);
@@ -199,6 +199,7 @@ export default function BoardMeetings() {
                           <AttachedDocs label="Agenda attached" docs={docsFor(meeting.id, "agenda")} />
                           <AttachedDocs label="Minutes attached" docs={docsFor(meeting.id, "minutes")} />
                           <AttachedDocs label="Financials attached" docs={docsFor(meeting.id, "financial_report")} />
+                          <AttachedDocs label="ED report attached" docs={docsFor(meeting.id, "ed_report")} />
                           <PackageAttachments
                             packages={packagesFor(meeting.id)}
                             onEdit={setEditPkg}

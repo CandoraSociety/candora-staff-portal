@@ -28,6 +28,23 @@ function toMonthInput(date) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
 }
 
+// The board meeting a monthly report belongs to — the meeting in that month,
+// or the one nearest to it when the month has none scheduled.
+async function findMeetingForReport(reportMonth) {
+  const reportDate = parseDateSmart(reportMonth) || new Date();
+  const meetings = (await base44.entities.Meeting.list("-meeting_date")).filter(
+    (m) => m.status !== "cancelled" && parseDateSmart(m.meeting_date)
+  );
+  const sameMonth = meetings.find((m) => {
+    const d = parseDateSmart(m.meeting_date);
+    return d.getMonth() === reportDate.getMonth() && d.getFullYear() === reportDate.getFullYear();
+  });
+  if (sameMonth) return sameMonth;
+  return meetings
+    .map((m) => ({ m, gap: Math.abs(parseDateSmart(m.meeting_date).getTime() - reportDate.getTime()) }))
+    .sort((a, b) => a.gap - b.gap)[0]?.m || null;
+}
+
 export default function EDBoardReport() {
   const qc = useQueryClient();
   const { toast } = useToast();
@@ -152,16 +169,27 @@ export default function EDBoardReport() {
       const file = new File([pdfBlob], fileName, { type: "application/pdf" });
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
 
-      // Create a BoardDocument so the board can view it in the Board Portal
-      const boardDoc = await base44.entities.BoardDocument.create({
+      // File it against the board meeting this report belongs to, so it shows on
+      // that meeting's card in the Board Portal.
+      const meetingForReport = await findMeetingForReport(selectedReport.report_month);
+      const docData = {
         title: selectedReport.title,
         document_type: "ed_report",
+        meeting_id: meetingForReport?.id || "",
         file_url,
         file_name: fileName,
         description: `Monthly Board Report${monthStr ? " — " + monthStr : ""}`,
         is_public_to_board: true,
         tags: ["monthly-report"],
-      });
+      };
+
+      // Re-import refreshes the same board document instead of adding a copy
+      const existingDoc = selectedReport.board_document_id
+        ? await base44.entities.BoardDocument.get(selectedReport.board_document_id).catch(() => null)
+        : null;
+      const boardDoc = existingDoc
+        ? await base44.entities.BoardDocument.update(existingDoc.id, docData)
+        : await base44.entities.BoardDocument.create(docData);
 
       // Mark the report as imported
       await base44.entities.EDBoardReport.update(selectedReportId, {
@@ -173,7 +201,12 @@ export default function EDBoardReport() {
       });
 
       qc.invalidateQueries(["ed-board-reports"]);
-      toast({ title: "Imported to Board Portal", description: "The board can now view this report in Board Documents." });
+      toast({
+        title: "Imported to Board Portal",
+        description: meetingForReport
+          ? `Attached to the "${meetingForReport.title}" meeting card.`
+          : "The board can now view this report in Board Documents.",
+      });
     } catch (err) {
       toast({ title: "Failed to generate report", description: err?.message || "Unknown error", variant: "destructive" });
     }
