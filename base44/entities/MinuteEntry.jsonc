@@ -74,6 +74,15 @@
     },
     "order_index": {
       "type": "number"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "manual",
+        "fillable"
+      ],
+      "default": "manual",
+      "description": "Where the entry came from \u2014 typed in the Minutes Taker (manual) or saved from the fillable minutes form (fillable). The fillable form only ever replaces its own entries."
     }
   },
   "required": [

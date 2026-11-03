@@ -118,7 +118,7 @@ function EntryBlock({ entry, types, fixedType, voterNames, onPatch, onRemove, mi
   );
 }
 
-export default function MinutesFillableOverlay({ meeting, orgName, items, members, onClose, canPersist = true }) {
+export default function MinutesFillableOverlay({ meeting, orgName, items, members, onClose }) {
   const org = orgName || "Candora Society of Edmonton";
   const active = (members || []).filter((m) => m.status !== "inactive");
   const voting = active.filter((m) => m.is_voting !== false);
@@ -269,26 +269,93 @@ export default function MinutesFillableOverlay({ meeting, orgName, items, member
     );
   };
 
+  const votingPresentCount = voting.filter((m) => present.includes(m.full_name)).length;
+
+  // Everything filled in so far, in the shape the save function expects.
+  // Filled entries are pushed into the meeting's minutes as they are typed, so
+  // they appear in the Board Portal even if the final PDF is never generated.
+  const buildPayload = (includeDocument) => {
+    const filled = (v) => String(v ?? "").trim() !== "";
+    const usable = [];
+    sections.forEach((s) => s.items.forEach((i) => (entries[i.id] || []).forEach((e) => {
+      if (!e.type) return;
+      if (!filled(e.content) && !filled(e.motion_verbiage) && !filled(e.moved_by) && !filled(e.action_assigned_to)) return;
+      usable.push({ ...e, containerId: i.id, itemTitle: i.title || "" });
+    })));
+    const voteNum = (v) => {
+      if (v === "All present") return votingPresentCount || undefined;
+      return /^\d+$/.test(String(v ?? "")) ? Number(v) : undefined;
+    };
+    const orderCounts = {};
+    const minute_entries = usable
+      .filter((e) => e.type !== "in_camera")
+      .map((e) => {
+        const idx = orderCounts[e.containerId] || 0;
+        orderCounts[e.containerId] = idx + 1;
+        return {
+          agenda_item_id: e.containerId,
+          entry_type: e.type,
+          content: e.content || "",
+          motion_verbiage: e.motion_verbiage || "",
+          moved_by: e.moved_by || "",
+          seconded_by: e.seconded_by || "",
+          motion_result: (e.motion_result || "").toLowerCase(),
+          votes_in_favour: voteNum(e.votes_in_favour),
+          votes_opposed: voteNum(e.votes_opposed),
+          votes_abstained: voteNum(e.votes_abstained),
+          action_assigned_to: e.action_assigned_to || "",
+          action_due_date: e.action_due_date || undefined,
+          order_index: idx,
+        };
+      });
+    const payload = {
+      meeting_id: meeting?.id,
+      attendance: { present_names: present, guest_names: guests },
+      new_items: newItems.map((n) => ({ temp_id: n.id, title: n.title, section: n.sectionKey })),
+      minute_entries,
+    };
+    if (includeDocument) {
+      const fileName = `${meeting.title || "Board Meeting"} - Minutes.html`;
+      payload.document = {
+        title: `${meeting.title || "Board Meeting"} — Minutes`,
+        file_name: fileName,
+        html: buildFinalMinutesHtml({
+          meeting, org, sections, members: active, present, guests, recorder, chair, entries,
+          data: { callTime, callNotes, adjournBy, adjournTime, nextDate, nextNotes, additionalNotes, agendaApproved },
+        }),
+      };
+    }
+    return { payload, usable };
+  };
+
+  // Keep the portal in step while the form is being filled in
+  const autosaveTimer = useRef(null);
+  useEffect(() => {
+    if (!meeting?.id) return;
+    const anyEntry = Object.values(entries).some((list) =>
+      (list || []).some((e) => e.type && (e.content || e.motion_verbiage || e.moved_by || e.action_assigned_to))
+    );
+    if (!anyEntry && present.length === 0 && guests.length === 0) return;
+    clearTimeout(autosaveTimer.current);
+    autosaveTimer.current = setTimeout(() => {
+      base44.functions.invoke("saveFillableMinutes", buildPayload(false).payload).catch(() => {});
+    }, 2500);
+    return () => clearTimeout(autosaveTimer.current);
+  }, [entries, present, guests, newItems]);
+
   const handleFinalize = async () => {
-    if (!canPersist || !meeting?.id) { setShowFinal(true); return; }
+    if (!meeting?.id) { setShowFinal(true); return; }
     setFinalizing(true);
     try {
-      // Gather entries in agenda order so motion numbering is chronological
-      const itemById = {};
-      sections.forEach((s) => s.items.forEach((i) => { itemById[i.id] = i; }));
-      const ordered = [];
-      sections.forEach((s) => s.items.forEach((i) => (entries[i.id] || []).forEach((e) => ordered.push({ ...e, containerId: i.id }))));
-      const motions = ordered.filter((e) => e.type === "motion");
-      const inCamera = ordered.filter((e) => e.type === "in_camera");
-      // Replace previously saved records for this meeting
-      await base44.entities.BoardMotion.deleteMany({ meeting_id: meeting.id });
-      await base44.entities.InCameraNote.deleteMany({ meeting_id: meeting.id });
-      // Running 4-digit count across all motions — carried over meeting to meeting, year to year
+      const { payload, usable } = buildPayload(true);
+
+      // Motions get a running 4-digit number across meetings, carried year to year.
+      // Read it before the saved motions for this meeting are replaced.
       const top = await base44.entities.BoardMotion.list("-seq", 1);
       let seq = top?.[0]?.seq || 0;
       const monthTag = format(parseDateSmart(meeting.meeting_date), "yyyy-MM");
       const idByEntry = {};
-      const motionRecords = motions.map((e) => {
+      payload.motions = usable.filter((e) => e.type === "motion").map((e) => {
         seq += 1;
         const motionId = `M-${monthTag}-${String(seq).padStart(4, "0")}`;
         idByEntry[e.id] = motionId;
@@ -298,7 +365,7 @@ export default function MinutesFillableOverlay({ meeting, orgName, items, member
           meeting_id: meeting.id,
           meeting_date: meeting.meeting_date,
           meeting_title: meeting.title || "",
-          agenda_item_title: itemById[e.containerId]?.title || "",
+          agenda_item_title: e.itemTitle,
           motion_verbiage: e.motion_verbiage || "",
           moved_by: e.moved_by || "",
           seconded_by: e.seconded_by || "",
@@ -309,31 +376,18 @@ export default function MinutesFillableOverlay({ meeting, orgName, items, member
           content: e.content || "",
         };
       });
-      if (motionRecords.length) await base44.entities.BoardMotion.bulkCreate(motionRecords);
-      const inCameraRecords = inCamera.map((e) => ({
+      payload.in_camera = usable.filter((e) => e.type === "in_camera").map((e) => ({
         meeting_id: meeting.id,
         meeting_date: meeting.meeting_date,
         meeting_title: meeting.title || "",
-        agenda_item_title: itemById[e.containerId]?.title || "",
+        agenda_item_title: e.itemTitle,
         content: [e.motion_verbiage, e.content].filter(Boolean).join("\n") || "(no text recorded)",
       }));
-      if (inCameraRecords.length) await base44.entities.InCameraNote.bulkCreate(inCameraRecords);
-      // Store the finalized minutes in the Board Portal's Documents library (Minutes section)
-      const html = buildFinalMinutesHtml({
-        meeting, org, sections, members: active, present, guests, recorder, chair, entries,
-        data: { callTime, callNotes, adjournBy, adjournTime, nextDate, nextNotes, additionalNotes, agendaApproved },
-      });
-      const fileName = `${meeting.title || "Board Meeting"} - Minutes.html`;
-      const storedFile = new File([html], fileName, { type: "text/html" });
-      const { file_url } = await base44.integrations.Core.UploadPublicFile({ file: storedFile });
-      const docTitle = `${meeting.title || "Board Meeting"} — Minutes`;
-      const existing = await base44.entities.BoardDocument.filter({ meeting_id: meeting.id, document_type: "minutes" });
-      if (existing.length) {
-        await base44.entities.BoardDocument.update(existing[0].id, { file_url, file_name: fileName, title: docTitle });
-      } else {
-        await base44.entities.BoardDocument.create({ title: docTitle, document_type: "minutes", meeting_id: meeting.id, file_url, file_name: fileName, description: "Finalized board minutes" });
-      }
-      toast.success("Final minutes saved to the Board Portal documents");
+
+      clearTimeout(autosaveTimer.current);
+      const res = await base44.functions.invoke("saveFillableMinutes", payload);
+      if (res.data?.error) throw new Error(res.data.error);
+      toast.success("Minutes saved to the Board Portal", { description: "They now show under this meeting's minutes and documents." });
       // Stamp the generated motion IDs onto the local entries so the final document shows them
       if (Object.keys(idByEntry).length) {
         setEntries((prev) => {
@@ -346,7 +400,7 @@ export default function MinutesFillableOverlay({ meeting, orgName, items, member
       }
       setShowFinal(true);
     } catch (err) {
-      toast.error("Could not prepare the final minutes", { description: err?.message || "Unknown error" });
+      toast.error("Could not save the minutes", { description: err?.message || "Unknown error" });
     } finally {
       setFinalizing(false);
     }
@@ -380,7 +434,7 @@ export default function MinutesFillableOverlay({ meeting, orgName, items, member
           <button type="button" onClick={copyLink} title="Copy a direct link to this fillable minutes form" className="flex items-center gap-1.5 bg-white/10 border border-white/30 text-white px-3 py-1.5 rounded-md text-sm hover:bg-white/20">
             <Link2 size={14} /> Copy link
           </button>
-          <span className="text-xs text-slate-200">Fill in the fields, then generate the final PDF.</span>
+          <span className="text-xs text-slate-200">Fill in the fields — they save to the Board Portal automatically.</span>
           <button type="button" onClick={onClose} className="ml-auto flex items-center gap-1 text-sm text-slate-300 hover:text-white">
             <X size={14} /> Close
           </button>
