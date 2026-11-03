@@ -13,23 +13,7 @@ import OrgTreeLayout from "@/components/orgchart/OrgTreeLayout";
 import TeamsView from "@/components/orgchart/TeamsView";
 import SheetNotesDialog from "@/components/orgchart/SheetNotesDialog";
 import SheetNotesPanel from "@/components/orgchart/SheetNotesPanel";
-
-
-// PDF export: use browser print on the chart area
-function printSheet(name) {
-  const el = document.getElementById("org-chart-print-area");
-  if (!el) return;
-  const win = window.open("", "_blank");
-  win.document.write(`<html><head><title>${name}</title><style>
-    body { font-family: sans-serif; }
-    * { box-sizing: border-box; }
-    @media print { body { margin: 0; } }
-  </style></head><body>${el.innerHTML}</body></html>`);
-  win.document.close();
-  win.focus();
-  win.print();
-  win.close();
-}
+import { generateOrgChartPdf } from "@/lib/orgChartPdf";
 
 export default function EDOrgChart() {
   const { user } = useAuth();
@@ -192,15 +176,16 @@ export default function EDOrgChart() {
   const inactivePositions = currentSheetPositions.filter(p => p.is_inactive);
 
   // ---- PDF export ----
-  const handleExportPDF = () => {
-    const tabName = activeTab === 0 ? "Original" : (currentScenario?.name || "Scenario");
-    printSheet(tabName);
+  // A clean chart document for one version, labelled with the sheet's name
+  // (e.g. "Oct 7"), laid out tier by tier with inactive positions left out.
+  const handleExportSheet = async (sheet) => {
+    await generateOrgChartPdf({ positions: sheet.positions, label: sheet.name, showNames });
   };
 
-  const handleExportAll = () => {
-    allSheets.forEach((sheet, i) => {
-      setTimeout(() => printSheet(sheet.name), i * 800);
-    });
+  const handleExportAll = async () => {
+    for (const sheet of allSheets) {
+      await generateOrgChartPdf({ positions: sheet.positions, label: sheet.name, showNames });
+    }
   };
 
   return (
@@ -290,10 +275,18 @@ export default function EDOrgChart() {
               <DropdownMenuLabel>Save as PDF</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <div className="px-2 py-1 space-y-1">
-                <Button size="sm" variant="outline" className="w-full" onClick={handleExportPDF}>
-                  Current sheet
-                </Button>
-                <Button size="sm" variant="outline" className="w-full" onClick={handleExportAll}>
+                {allSheets.map(sheet => (
+                  <Button
+                    key={sheet.id}
+                    size="sm"
+                    variant="outline"
+                    className="w-full justify-start"
+                    onClick={() => handleExportSheet(sheet)}
+                  >
+                    {sheet.name}
+                  </Button>
+                ))}
+                <Button size="sm" variant="outline" className="w-full justify-start" onClick={handleExportAll}>
                   All sheets
                 </Button>
               </div>
