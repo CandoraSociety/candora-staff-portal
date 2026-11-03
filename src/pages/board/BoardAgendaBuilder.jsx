@@ -35,7 +35,7 @@ export default function BoardAgendaBuilder() {
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [formSection, setFormSection] = useState(null);
-  const [form, setForm] = useState({ title: "", item_type: "new_business", presenter: "", duration_minutes: 5, description: "", is_in_camera: false });
+  const [form, setForm] = useState({ title: "", item_type: "new_business", section: "", presenter: "", duration_minutes: 5, description: "", is_in_camera: false });
   const [saving, setSaving] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [locationDraft, setLocationDraft] = useState(null);
@@ -92,7 +92,7 @@ export default function BoardAgendaBuilder() {
   const openForm = (sectionKey) => {
     setEditingItem(null);
     setFormSection(sectionKey);
-    setForm({ title: "", item_type: SECTION_ITEM_TYPE[sectionKey] || "other", presenter: "", duration_minutes: 5, description: "", is_in_camera: false });
+    setForm({ title: "", item_type: SECTION_ITEM_TYPE[sectionKey] || "other", section: sectionKey, presenter: "", duration_minutes: 5, description: "", is_in_camera: false });
   };
 
   const openEdit = (item) => {
@@ -101,6 +101,7 @@ export default function BoardAgendaBuilder() {
     setForm({
       title: item.title || "",
       item_type: item.item_type || "other",
+      section: sectionOf(item),
       presenter: item.presenter || "",
       duration_minutes: item.duration_minutes ?? 5,
       description: item.description || "",
@@ -119,6 +120,7 @@ export default function BoardAgendaBuilder() {
     if (editingItem) {
       const saved = await base44.entities.AgendaItem.update(editingItem.id, {
         ...form,
+        section: form.section || sectionOf(editingItem),
         duration_minutes: Number(form.duration_minutes),
       });
       setItems((prev) => prev.map((i) => (i.id === editingItem.id ? { ...i, ...saved } : i)));
@@ -318,6 +320,17 @@ export default function BoardAgendaBuilder() {
           <div className="grid sm:grid-cols-2 gap-4">
             <div><label className="text-sm font-medium mb-1.5 block">Title *</label><input required value={form.title} onChange={e => setForm({...form, title: e.target.value})} className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" /></div>
             <div><label className="text-sm font-medium mb-1.5 block">Presenter</label><input value={form.presenter} onChange={e => setForm({...form, presenter: e.target.value})} className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" /></div>
+            {editingItem && (
+              <div>
+                <label className="text-sm font-medium mb-1.5 block">Section</label>
+                <Select value={form.section} onValueChange={(v) => setForm({ ...form, section: v })}>
+                  <SelectTrigger className="w-full text-sm bg-background"><SelectValue placeholder="Choose a section…" /></SelectTrigger>
+                  <SelectContent>
+                    {SECTIONS.map((s) => <SelectItem key={s.key} value={s.key}>{s.label}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
             <div><label className="text-sm font-medium mb-1.5 block">Duration (min)</label><input type="number" value={form.duration_minutes} onChange={e => setForm({...form, duration_minutes: e.target.value})} className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring" min="0" /></div>
             <div><label className="text-sm font-medium mb-1.5 block">In Camera (confidential)</label><label className="flex items-center gap-2 text-sm cursor-pointer mt-2"><input type="checkbox" checked={form.is_in_camera} onChange={e => setForm({...form, is_in_camera: e.target.checked})} className="w-4 h-4" /> Confidential item</label></div>
             <div className="sm:col-span-2"><label className="text-sm font-medium mb-1.5 block">Notes / Description</label><textarea value={form.description} onChange={e => setForm({...form, description: e.target.value})} rows={2} className="w-full border border-input rounded-lg px-3 py-2 text-sm bg-background focus:outline-none focus:ring-2 focus:ring-ring resize-none" /></div>
