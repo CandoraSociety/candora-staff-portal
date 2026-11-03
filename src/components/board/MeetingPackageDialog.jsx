@@ -6,6 +6,7 @@ import { CheckCircle2, Package, X } from "lucide-react";
 import { base44 } from "@/api/base44Client";
 import { buildPackageBasePdf } from "@/components/board/meetingPackagePdf";
 import { buildMeetingPackageZip } from "@/components/board/meetingPackageZip";
+import { appendPdfFromUrl } from "@/components/board/appendPdfPages";
 import { gatherPackageCandidates } from "@/lib/boardPackageCandidates";
 
 const isPdfUrl = (url) => /\.pdf($|\?)/i.test(String(url || ""));
@@ -50,9 +51,11 @@ export default function MeetingPackageDialog({ meeting, items, onClose, onCreate
       const agendaPart = selected.find((p) => p.id === "agenda");
       const minutesPart = selected.find((p) => p.id === "prev_minutes");
       let minutes = null;
+      let minutesPdfUrl = null;
       const files = [];
       if (minutesPart) {
         if (isPdfUrl(minutesPart.fileUrl)) {
+          minutesPdfUrl = minutesPart.fileUrl;
           files.push({ label: `Minutes - ${minutesPart.sub}`, fileUrl: minutesPart.fileUrl });
         } else {
           try {
@@ -75,10 +78,17 @@ export default function MeetingPackageDialog({ meeting, items, onClose, onCreate
         minutes,
       });
 
-      // The agenda (plus any HTML minutes) is the one generated PDF; every other
+      // The agenda (plus the minutes) is the one generated PDF; every other
       // document is bundled untouched, so a zip keeps Word and Excel files intact.
-      const baseBytes = basePdf.output("arraybuffer");
-      const basePdfName = minutes ? "Agenda & Minutes" : "Agenda";
+      let baseBytes = basePdf.output("arraybuffer");
+      if (minutesPdfUrl) {
+        try {
+          baseBytes = await appendPdfFromUrl(baseBytes, minutesPdfUrl);
+        } catch {
+          toast.error("The minutes couldn't be added into the agenda document — they are still in the package as their own file.");
+        }
+      }
+      const basePdfName = minutes || minutesPdfUrl ? "Agenda & Minutes" : "Agenda";
       const { blob, skipped, included } = await buildMeetingPackageZip({
         basePdfBuffer: baseBytes,
         basePdfName,
