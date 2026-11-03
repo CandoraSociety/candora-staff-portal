@@ -11,7 +11,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { FRN_PROGRAMS } from '@/lib/frnConstants';
 
 const EMPTY = {
-  participant_id: '', participant_name: '', program: '', referral_source: 'internal',
+  participant_id: '', participant_name: '', program: '', program_name: '', referral_source: 'internal',
   referring_organization: '', referring_person_name: '', referring_person_email: '',
   referring_person_phone: '', referral_date: '', referral_reason: '', notes: '',
 };
@@ -27,6 +27,15 @@ export default function ReferralFormDialog({ open, onOpenChange, onSaved }) {
     enabled: open,
   });
 
+  const { data: programs = [] } = useQuery({
+    queryKey: ['frn-programs'],
+    queryFn: () => base44.entities.FRNProgram.list('name', 200),
+    enabled: open,
+  });
+  const programOptions = programs.length
+    ? programs.map(p => ({ name: p.name, key: p.legacy_key || 'other' }))
+    : FRN_PROGRAMS.map(p => ({ name: p.label, key: p.value }));
+
   useEffect(() => {
     if (open) {
       setForm({ ...EMPTY, referral_date: new Date().toISOString().split('T')[0] });
@@ -41,8 +50,14 @@ export default function ReferralFormDialog({ open, onOpenChange, onSaved }) {
     update('participant_name', p ? `${p.first_name} ${p.last_name}` : '');
   };
 
+  const handleProgramChange = (name) => {
+    const option = programOptions.find(p => p.name === name);
+    update('program_name', name);
+    update('program', option?.key || 'other');
+  };
+
   const handleSave = async () => {
-    if (!form.participant_id || !form.program || !form.referral_date) {
+    if (!form.participant_id || !form.program_name || !form.referral_date) {
       toast({ title: 'Participant, program, and referral date are required', variant: 'destructive' });
       return;
     }
@@ -78,11 +93,11 @@ export default function ReferralFormDialog({ open, onOpenChange, onSaved }) {
           </div>
           <div className="space-y-1.5">
             <Label>Program *</Label>
-            <Select value={form.program} onValueChange={(v) => update('program', v)}>
+            <Select value={form.program_name || ''} onValueChange={handleProgramChange}>
               <SelectTrigger><SelectValue placeholder="Select program..." /></SelectTrigger>
               <SelectContent>
-                {FRN_PROGRAMS.map(p => (
-                  <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>
+                {programOptions.map(p => (
+                  <SelectItem key={p.name} value={p.name}>{p.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>

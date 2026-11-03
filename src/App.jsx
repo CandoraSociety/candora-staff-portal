@@ -288,6 +288,8 @@ import FRNLayout from '@/components/frn/FRNLayout';
 import FRNDashboard from '@/pages/frn/FRNDashboard';
 import FRNParticipants from '@/pages/frn/FRNParticipants';
 import FRNIntake from '@/pages/frn/FRNIntake';
+import FRNPrograms from '@/pages/frn/FRNPrograms';
+import FRNParticipantDetail from '@/pages/frn/FRNParticipantDetail';
 import FRNAssessments from '@/pages/frn/FRNAssessments';
 import FRNSessions from '@/pages/frn/FRNSessions';
 
@@ -709,6 +711,8 @@ const AuthenticatedApp = () => {
         <Route element={<FRNLayout />}>
           <Route path="/frn" element={<FRNDashboard />} />
           <Route path="/frn/participants" element={<FRNParticipants />} />
+          <Route path="/frn/programs" element={<FRNPrograms />} />
+          <Route path="/frn/participants/:id" element={<FRNParticipantDetail />} />
           <Route path="/frn/intake" element={<FRNIntake />} />
           <Route path="/frn/assessments" element={<FRNAssessments />} />
           <Route path="/frn/sessions" element={<FRNSessions />} />

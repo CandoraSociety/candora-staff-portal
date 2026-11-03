@@ -1,0 +1,100 @@
+{
+  "name": "FRNFacilitator",
+  "type": "object",
+  "description": "Someone eligible to facilitate FRN or PHAC sessions \u2014 staff, contractors, volunteers or guest speakers added from the session form when they are not already in the staff directory.",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Full name as it should appear on the session"
+    },
+    "email": {
+      "type": "string"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "facilitator",
+        "co_facilitator",
+        "volunteer",
+        "guest_speaker",
+        "other"
+      ],
+      "default": "facilitator",
+      "description": "What kind of facilitator this person is"
+    },
+    "programs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "frn",
+          "phac"
+        ]
+      },
+      "description": "Family Programs this person can be scheduled for"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this person still shows in the facilitator picker"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

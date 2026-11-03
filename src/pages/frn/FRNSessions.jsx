@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Plus, Calendar, Clock, MapPin, Repeat, User, Pencil } from 'lucide-react';
+import { Plus, Calendar, Clock, MapPin, Repeat, User, Pencil, ClipboardCheck } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import StatusBadge from '@/components/rc/StatusBadge';
 import SessionDialog from '@/components/frn/SessionDialog';
+import AttendanceDialog from '@/components/frn/AttendanceDialog';
 import { ROOM_LABELS } from '@/lib/centralRegConstants';
 import { FRN_TARGETED_PROGRAM_NAMES, FRN_SESSION_STATUS_OPTIONS } from '@/lib/frnConstants';
 
@@ -17,9 +18,12 @@ export default function FRNSessions() {
   const [programFilter, setProgramFilter] = useState('all');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [attendanceSession, setAttendanceSession] = useState(null);
 
   const { data: sessions = [], isLoading } = useQuery({ queryKey: ['frn-sessions'], queryFn: () => base44.entities.FRNSession.list('-session_date', 500) });
+  const { data: programs = [] } = useQuery({ queryKey: ['frn-programs'], queryFn: () => base44.entities.FRNProgram.list('name', 200) });
 
+  const programNames = programs.length ? programs.map(p => p.name) : FRN_TARGETED_PROGRAM_NAMES;
   const filtered = sessions.filter(s => programFilter === 'all' || s.program_name === programFilter);
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: ['frn-sessions'] });
@@ -39,7 +43,7 @@ export default function FRNSessions() {
           <SelectTrigger className="w-full sm:w-64"><SelectValue placeholder="All programs" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All programs</SelectItem>
-            {FRN_TARGETED_PROGRAM_NAMES.map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
+            {programNames.map(n => <SelectItem key={n} value={n}>{n}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
@@ -63,7 +67,15 @@ export default function FRNSessions() {
                   {s.recurrence_pattern && s.recurrence_pattern !== 'none' && <p className="flex items-center gap-1.5"><Repeat className="h-3 w-3" /> Repeats {s.recurrence_pattern}{s.recurrence_end_date ? ` until ${fmtDate(s.recurrence_end_date)}` : ''}</p>}
                   {s.facilitator_name && <p className="flex items-center gap-1.5"><User className="h-3 w-3" /> {s.facilitator_name}</p>}
                 </div>
-                <div className="flex items-center mt-3 pt-2 border-t border-border/50">
+                <div className="flex items-center gap-1 mt-3 pt-2 border-t border-border/50">
+                  <Button size="sm" variant="outline" onClick={() => setAttendanceSession(s)}>
+                    <ClipboardCheck className="h-3.5 w-3.5 mr-1.5" /> Attendance
+                    {(s.attendance || []).length > 0 && (() => {
+                      const lastDate = [...new Set((s.attendance || []).map(a => a.date))].sort().pop();
+                      const inCount = (s.attendance || []).filter(a => a.date === lastDate && (a.status === 'present' || a.status === 'late')).length;
+                      return <span className="ml-1.5 text-xs text-muted-foreground">{inCount} in</span>;
+                    })()}
+                  </Button>
                   <Button size="sm" variant="ghost" className="ml-auto" onClick={() => { setEditing(s); setDialogOpen(true); }}><Pencil className="h-3.5 w-3.5 mr-1.5" /> Edit</Button>
                 </div>
               </CardContent></Card>
@@ -77,6 +89,14 @@ export default function FRNSessions() {
         session={editing}
         onSaved={() => { setDialogOpen(false); invalidate(); }}
       />
+      {attendanceSession && (
+        <AttendanceDialog
+          open={!!attendanceSession}
+          onOpenChange={(v) => { if (!v) setAttendanceSession(null); }}
+          session={attendanceSession}
+          onSaved={() => { invalidate(); setAttendanceSession(null); }}
+        />
+      )}
     </div>
   );
 }

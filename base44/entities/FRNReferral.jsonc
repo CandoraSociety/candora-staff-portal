@@ -21,6 +21,10 @@
       ],
       "description": "Targeted FRN program"
     },
+    "program_name": {
+      "type": "string",
+      "description": "Program name exactly as listed on the FRN Programs page \u2014 used for programs added by staff, which fall back to the 'other' program value"
+    },
     "referral_source": {
       "type": "string",
       "enum": [

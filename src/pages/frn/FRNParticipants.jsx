@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Plus, Search, Pencil, Phone, Mail, Calendar } from 'lucide-react';
+import { Plus, Search, Pencil, Phone, Mail, Calendar, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import ParticipantFormDialog from '@/components/frn/ParticipantFormDialog';
 
 export default function FRNParticipants() {
+  const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
@@ -51,7 +53,7 @@ export default function FRNParticipants() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {filtered.map(p => (
-            <Card key={p.id} className="hover:shadow-md transition-shadow">
+            <Card key={p.id} className="hover:shadow-md hover:border-primary/50 transition-shadow cursor-pointer" onClick={() => navigate(`/frn/participants/${p.id}`)}>
               <CardContent className="p-4">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex items-center gap-3">
@@ -67,13 +69,17 @@ export default function FRNParticipants() {
                       )}
                     </div>
                   </div>
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(p)}>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); handleEdit(p); }}>
                     <Pencil className="h-3.5 w-3.5" />
                   </Button>
                 </div>
                 <div className="space-y-1">
                   {p.phone && <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Phone className="h-3 w-3" /> {p.phone}</p>}
                   {p.email && <p className="text-xs text-muted-foreground flex items-center gap-1.5"><Mail className="h-3 w-3" /> {p.email}</p>}
+                </div>
+                <div className="flex items-center justify-between mt-3 pt-2 border-t border-border/50">
+                  <span className="text-xs text-muted-foreground">{(p.goals || []).length > 0 ? `${(p.goals || []).length} goals` : 'No goals yet'}</span>
+                  <span className="text-xs text-primary flex items-center gap-0.5">Progress, goals &amp; notes <ChevronRight className="h-3 w-3" /></span>
                 </div>
               </CardContent>
             </Card>

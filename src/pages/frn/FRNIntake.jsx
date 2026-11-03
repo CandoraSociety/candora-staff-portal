@@ -8,7 +8,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ReferralFormDialog from '@/components/frn/ReferralFormDialog';
 import StatusBadge from '@/components/frn/StatusBadge';
-import { FRN_PROGRAMS, PROGRAM_LABELS, REFERRAL_STATUS_OPTIONS, REFERRAL_SOURCE_LABELS } from '@/lib/frnConstants';
+import { referralProgramName } from '@/lib/frnPrograms';
+import { FRN_PROGRAMS, REFERRAL_STATUS_OPTIONS, REFERRAL_SOURCE_LABELS } from '@/lib/frnConstants';
 
 export default function FRNIntake() {
   const [search, setSearch] = useState('');
@@ -22,11 +23,17 @@ export default function FRNIntake() {
     queryFn: () => base44.entities.FRNReferral.list('-referral_date', 200),
   });
 
+  const { data: frnPrograms = [] } = useQuery({
+    queryKey: ['frn-programs'],
+    queryFn: () => base44.entities.FRNProgram.list('name', 200),
+  });
+  const programOptions = frnPrograms.length ? frnPrograms.map(p => p.name) : FRN_PROGRAMS.filter(p => p.value !== 'other').map(p => p.label);
+
   const filtered = referrals.filter(r => {
     const matchSearch = (r.participant_name || '').toLowerCase().includes(search.toLowerCase()) ||
                         (r.referring_person_name || '').toLowerCase().includes(search.toLowerCase());
     const matchStatus = statusFilter === 'all' || r.status === statusFilter;
-    const matchProgram = programFilter === 'all' || r.program === programFilter;
+    const matchProgram = programFilter === 'all' || referralProgramName(r) === programFilter;
     return matchSearch && matchStatus && matchProgram;
   });
 
@@ -51,7 +58,7 @@ export default function FRNIntake() {
           <SelectTrigger className="w-full sm:w-48"><SelectValue placeholder="All programs" /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All programs</SelectItem>
-            {FRN_PROGRAMS.map(p => <SelectItem key={p.value} value={p.value}>{p.label}</SelectItem>)}
+            {programOptions.map(name => <SelectItem key={name} value={name}>{name}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
@@ -80,7 +87,7 @@ export default function FRNIntake() {
                     <StatusBadge status={r.status} />
                   </div>
                   <div className="flex flex-wrap gap-x-4 gap-y-0.5 text-xs text-muted-foreground">
-                    <span>{PROGRAM_LABELS[r.program] || r.program}</span>
+                    <span>{referralProgramName(r) || r.program}</span>
                     <span>{REFERRAL_SOURCE_LABELS[r.referral_source]}</span>
                     {r.referring_organization && <span>{r.referring_organization}</span>}
                     {r.referral_date && <span>{new Date(r.referral_date).toLocaleDateString()}</span>}

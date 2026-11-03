@@ -5,7 +5,8 @@ import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
 import { Users, ClipboardList, CheckSquare, UserCheck, ArrowRight } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { FRN_PROGRAMS, PROGRAM_LABELS, STATUS_LABELS, STATUS_COLORS } from '@/lib/frnConstants';
+import { PROGRAM_LABELS, STATUS_LABELS, STATUS_COLORS } from '@/lib/frnConstants';
+import { referralIsInProgram, referralProgramName } from '@/lib/frnPrograms';
 import StatusBadge from '@/components/frn/StatusBadge';
 
 export default function FRNDashboard() {
@@ -21,6 +22,10 @@ export default function FRNDashboard() {
     queryKey: ['frn-assessments'],
     queryFn: () => base44.entities.FRNAssessment.list('-created_date', 100),
   });
+  const { data: programs = [] } = useQuery({
+    queryKey: ['frn-programs'],
+    queryFn: () => base44.entities.FRNProgram.list('name', 200),
+  });
 
   const pendingReferrals = referrals.filter(r => ['pending', 'assessment_scheduled'].includes(r.status));
   const assessmentsDue = referrals.filter(r => r.status === 'assessment_scheduled');
@@ -33,8 +38,8 @@ export default function FRNDashboard() {
     { label: 'Active Enrollments', value: activeEnrollments.length, icon: UserCheck, path: '/frn/intake', color: '#22c55e' },
   ];
 
-  const programBreakdown = FRN_PROGRAMS.filter(p => p.value !== 'other').map(program => {
-    const pr = referrals.filter(r => r.program === program.value);
+  const programBreakdown = programs.map(program => {
+    const pr = referrals.filter(r => referralIsInProgram(r, program));
     return {
       ...program,
       total: pr.length,
@@ -74,23 +79,32 @@ export default function FRNDashboard() {
       </div>
 
       <Card>
-        <CardHeader><CardTitle className="text-base">Program Enrollment Overview</CardTitle></CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between">
+          <CardTitle className="text-base">Program Enrollment Overview</CardTitle>
+          <Link to="/frn/programs" className="text-xs text-primary flex items-center gap-1 hover:underline">
+            Manage programs <ArrowRight className="h-3 w-3" />
+          </Link>
+        </CardHeader>
         <CardContent>
-          <div className="space-y-3">
-            {programBreakdown.map(p => (
-              <div key={p.value} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                <div>
-                  <p className="font-medium text-sm text-foreground">{p.label}</p>
-                  <p className="text-xs text-muted-foreground">{p.description}</p>
-                </div>
-                <div className="flex gap-4 text-sm">
-                  <div className="text-center"><p className="font-bold text-foreground">{p.inIntake}</p><p className="text-xs text-muted-foreground">In Intake</p></div>
-                  <div className="text-center"><p className="font-bold text-foreground">{p.enrolled}</p><p className="text-xs text-muted-foreground">Enrolled</p></div>
-                  <div className="text-center"><p className="font-bold text-foreground">{p.completed}</p><p className="text-xs text-muted-foreground">Completed</p></div>
-                </div>
-              </div>
-            ))}
-          </div>
+          {programBreakdown.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-6">No programs yet — add the first one on the Programs page.</p>
+          ) : (
+            <div className="space-y-3">
+              {programBreakdown.map(p => (
+                <Link key={p.id} to="/frn/programs" className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                  <div>
+                    <p className="font-medium text-sm text-foreground">{p.name}</p>
+                    <p className="text-xs text-muted-foreground">{p.description || '—'}</p>
+                  </div>
+                  <div className="flex gap-4 text-sm">
+                    <div className="text-center"><p className="font-bold text-foreground">{p.inIntake}</p><p className="text-xs text-muted-foreground">In Intake</p></div>
+                    <div className="text-center"><p className="font-bold text-foreground">{p.enrolled}</p><p className="text-xs text-muted-foreground">Enrolled</p></div>
+                    <div className="text-center"><p className="font-bold text-foreground">{p.completed}</p><p className="text-xs text-muted-foreground">Completed</p></div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </CardContent>
       </Card>
 
@@ -110,7 +124,7 @@ export default function FRNDashboard() {
                 <div key={r.id} className="flex items-center justify-between p-2 rounded-md hover:bg-muted/50">
                   <div>
                     <p className="text-sm font-medium text-foreground">{r.participant_name}</p>
-                    <p className="text-xs text-muted-foreground">{PROGRAM_LABELS[r.program] || r.program}</p>
+                    <p className="text-xs text-muted-foreground">{referralProgramName(r) || PROGRAM_LABELS[r.program]}</p>
                   </div>
                   <StatusBadge status={r.status} />
                 </div>

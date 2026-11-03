@@ -49,11 +49,41 @@
     },
     "emergency_contact_phone": {
       "type": "string",
-      "description": "Emergency contact phone"
+      "description": "Emergency contact phone number"
     },
     "linked_rc_client_id": {
       "type": "string",
       "description": "Central Database (RCClient) record this participant is linked to \u2014 set when staff pick an existing client file at registration; the central DB sync uses it instead of auto-matching"
+    },
+    "goals": {
+      "type": "array",
+      "description": "Goals set with the participant, tracked on their file",
+      "items": {
+        "type": "object",
+        "properties": {
+          "goal": {
+            "type": "string",
+            "description": "What the participant is working towards"
+          },
+          "target_date": {
+            "type": "string",
+            "format": "date"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "not_started",
+              "in_progress",
+              "achieved",
+              "on_hold"
+            ],
+            "default": "not_started"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      }
     },
     "notes": {
       "type": "string",

@@ -1,0 +1,122 @@
+{
+  "name": "FRNProgressNote",
+  "type": "object",
+  "description": "A progress, evaluation or contact note recorded against an FRN participant \u2014 the running record staff use to monitor how someone is doing in a program.",
+  "properties": {
+    "participant_id": {
+      "type": "string",
+      "description": "FRN participant this note belongs to"
+    },
+    "participant_name": {
+      "type": "string",
+      "description": "Participant name (denormalized so lists read without a lookup)"
+    },
+    "program_name": {
+      "type": "string",
+      "description": "Program the note was recorded against"
+    },
+    "note_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of the observation, contact or evaluation"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "progress",
+        "evaluation",
+        "goal_update",
+        "contact",
+        "general"
+      ],
+      "default": "progress",
+      "description": "What kind of note this is"
+    },
+    "progress_rating": {
+      "type": "string",
+      "enum": [
+        "excellent",
+        "good",
+        "steady",
+        "needs_support",
+        "at_risk"
+      ],
+      "description": "Overall read on the participant at this point"
+    },
+    "summary": {
+      "type": "string",
+      "description": "What happened, what was observed, what it means"
+    },
+    "next_steps": {
+      "type": "string",
+      "description": "Follow-up actions for the next contact"
+    },
+    "recorded_by_name": {
+      "type": "string",
+      "description": "Staff member who wrote the note"
+    }
+  },
+  "required": [
+    "participant_id",
+    "note_date",
+    "summary"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,0 +1,127 @@
+{
+  "name": "FRNProgram",
+  "type": "object",
+  "description": "A targeted Family Resource Network program. Programs are created and edited on the FRN Programs page; referrals, sessions and assessments point at them by name.",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Program name as staff refer to it, e.g. Connect Parent Group"
+    },
+    "legacy_key": {
+      "type": "string",
+      "enum": [
+        "connect_parent_group",
+        "nobodys_perfect",
+        "neurodivergent_coffee_group",
+        "wellness_compass",
+        "other"
+      ],
+      "default": "other",
+      "description": "Which referral program value this program writes to when someone is referred in"
+    },
+    "description": {
+      "type": "string",
+      "description": "What the program is and who it is for"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "parenting",
+        "wellness",
+        "social_support",
+        "family_support",
+        "other"
+      ],
+      "default": "parenting",
+      "description": "Program category"
+    },
+    "eligibility": {
+      "type": "string",
+      "description": "Who can attend \u2014 age range, residency, referral requirements"
+    },
+    "coordinator_name": {
+      "type": "string",
+      "description": "Staff member who coordinates the program"
+    },
+    "coordinator_email": {
+      "type": "string"
+    },
+    "schedule_description": {
+      "type": "string",
+      "description": "Human-readable schedule, e.g. Tuesdays 1:00\u20133:00 pm"
+    },
+    "location": {
+      "type": "string"
+    },
+    "capacity": {
+      "type": "number",
+      "description": "Maximum participants per intake"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "paused",
+        "completed"
+      ],
+      "default": "active",
+      "description": "Whether the program is currently running"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Internal notes about the program"
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
