@@ -3,11 +3,10 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Check, Hourglass, UserPlus } from 'lucide-react';
+import { Hourglass, UserPlus } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import UniversalRegistrationDialog from '@/components/centralreg/UniversalRegistrationDialog';
-import ELLWaitlistCard from '@/components/ell/ELLWaitlistCard';
-import WaitlistEntryCard from '@/components/empoweru/WaitlistEntryCard';
+import ProgramWaitlistGroup from '@/components/centralreg/ProgramWaitlistGroup';
 import { REG_AREA_LABELS } from '@/lib/centralRegConstants';
 import { ELL_CLB_LABELS } from '@/lib/ellConstants';
 
@@ -57,7 +56,9 @@ export default function ProgramRegistrationDialog({ open, onOpenChange, area, pr
           country_of_origin: l.country_of_origin,
           first_language: l.first_language,
           other_languages: l.other_languages,
+          clb_level: l.clb_level,
           clb_label: ELL_CLB_LABELS[l.clb_level] || null,
+          interested_course_id: l.interested_course_id,
           interested_course_name: l.interested_course_name,
           date_added: l.waitlist_date || l.intake_date || l.created_date,
           intake_date: l.intake_date,
@@ -97,8 +98,23 @@ export default function ProgramRegistrationDialog({ open, onOpenChange, area, pr
             participant,
           };
         });
-    return [...rows].sort((a, b) => new Date(a.date_added || 0) - new Date(b.date_added || 0));
+    return [...rows]
+      .sort((a, b) => new Date(a.date_added || 0) - new Date(b.date_added || 0))
+      .map((row, index) => ({ ...row, position: index + 1 }));
   }, [isEll, ellWaiters, empowerWaiters, participants]);
+
+  // ELL offers seats level-first: learners who asked for this exact class, or
+  // whose CLB level matches it, are listed above everyone else waiting.
+  const programLevel = isEll && program?.clb_level && program.clb_level !== 'mixed' ? program.clb_level : null;
+  const levelLabel = programLevel ? ELL_CLB_LABELS[programLevel] : null;
+  const wantsThisClass = (learner) =>
+    !!(program?.id && learner.interested_course_id === program.id) ||
+    !!(program?.name && learner.interested_course_name === program.name) ||
+    !!(programLevel && learner.clb_level === programLevel);
+  const matchedWaiters = isEll ? waitlist.filter(wantsThisClass) : [];
+  const otherWaiters = isEll ? waitlist.filter((learner) => !wantsThisClass(learner)) : waitlist;
+
+  const toggleExpanded = (id) => setExpandedId(expandedId === id ? null : id);
 
   const refresh = () => {
     queryClient.invalidateQueries({ queryKey: ['cr-ell-waitlist'] });
@@ -172,38 +188,40 @@ export default function ProgramRegistrationDialog({ open, onOpenChange, area, pr
               <p className="text-sm font-medium text-foreground flex items-center gap-2 mb-2">
                 <Hourglass className="h-4 w-4 text-muted-foreground" /> On the waitlist ({waitlist.length})
               </p>
-              {waitlist.length === 0 ? (
-                <p className="text-sm text-muted-foreground py-4 text-center">Nobody is waiting right now.</p>
-              ) : (
-                <div className="space-y-3">
-                  {waitlist.map((entry, index) => (
-                    <div key={entry.id} className="space-y-1.5">
-                      {isEll ? (
-                        <ELLWaitlistCard
-                          entry={entry}
-                          shaded={index % 2 === 1}
-                          position={index + 1}
-                          expanded={expandedId === entry.id}
-                          onToggle={() => setExpandedId(expandedId === entry.id ? null : entry.id)}
-                        />
-                      ) : (
-                        <WaitlistEntryCard
-                          entry={entry}
-                          shaded={index % 2 === 1}
-                          position={index + 1}
-                          expanded={expandedId === entry.id}
-                          onToggle={() => setExpandedId(expandedId === entry.id ? null : entry.id)}
-                        />
-                      )}
-                      <div className="flex justify-end">
-                        <Button size="sm" variant="outline" disabled={seatingId === entry.id} onClick={() => giveSeat(entry)}>
-                          <Check className="h-3.5 w-3.5" />
-                          {seatingId === entry.id ? 'Adding…' : isEll ? 'Add to this class' : 'Register for this cohort'}
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+              {isEll ? (
+                <div className="space-y-5">
+                  <ProgramWaitlistGroup
+                    isEll
+                    title={`Asked for this class${levelLabel ? ` or ${levelLabel}` : ''} (${matchedWaiters.length})`}
+                    hint="Learners who named this class on their waitlist entry, or whose assessed CLB level matches it — offer these seats first."
+                    entries={matchedWaiters}
+                    emptyText="No waitlisted learner has asked for this class or level yet."
+                    expandedId={expandedId}
+                    onToggle={toggleExpanded}
+                    seatingId={seatingId}
+                    onGiveSeat={giveSeat}
+                  />
+                  <ProgramWaitlistGroup
+                    isEll
+                    title={`Everyone else on the ELL waitlist (${otherWaiters.length})`}
+                    hint="Longest wait first — offer these seats only once the level-matched learners above have been called."
+                    entries={otherWaiters}
+                    emptyText="Nobody else is waiting for English classes."
+                    expandedId={expandedId}
+                    onToggle={toggleExpanded}
+                    seatingId={seatingId}
+                    onGiveSeat={giveSeat}
+                  />
                 </div>
+              ) : (
+                <ProgramWaitlistGroup
+                  entries={otherWaiters}
+                  emptyText="Nobody is waiting right now."
+                  expandedId={expandedId}
+                  onToggle={toggleExpanded}
+                  seatingId={seatingId}
+                  onGiveSeat={giveSeat}
+                />
               )}
             </div>
           </div>

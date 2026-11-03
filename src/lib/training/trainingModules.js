@@ -1085,7 +1085,7 @@ export const TRAINING_MODULES = [
       },
       {
         title: "Waitlists and offering seats",
-        body: "A full area sends registrations to the waitlist with a position, and that position is the promise we make to people. When a seat opens, work from position one: record each contact attempt as it happens, and only move on to the next person when someone declines or cannot be reached. Promoting a waitlisted person carries their details into the registration, so nothing has to be retyped.",
+        body: "A full area sends registrations to the waitlist with a position, and that position is the promise we make to people. When a seat opens, work from position one: record each contact attempt as it happens, and only move on to the next person when someone declines or cannot be reached. Registering from a waitlist is where ELL and EmpowerU work differently from the other areas. Open Register on an ELL class and the waitlist is split in two: learners who asked for that class, or whose CLB level matches it, come first, then everyone else waiting — so a level-matched person is offered the seat before someone who never asked for it. EmpowerU splits the same way against its cohort waitlist. Adding someone carries their existing record into the class or cohort, so nothing has to be retyped.",
         target: { selector: 'a[href="/central-registration/waitlists"]' },
         path: "/central-registration/waitlists"
       },

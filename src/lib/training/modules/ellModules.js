@@ -102,7 +102,7 @@ export const ELL_MODULES = [
       },
       {
         title: "Where ELL meets Central Registration",
-        body: "ELL programs and classes also appear in Central Registration, where the front desk registers people into them from one place — and approving that registration can create the learner record here. So when a learner arrives already registered, check this roster before adding them again. One person, one learner record.",
+        body: "ELL programs and classes also appear in Central Registration, where the front desk registers people into them from one place — and approving that registration can create the learner record here. When a seat is offered from the ELL waitlist, the registration window shows two lists: the learners who asked for this class, or whose CLB level matches it, sit on top, and everyone else on the ELL waitlist sits below. Seat the matched learners first, then work down the rest by longest wait. Adding someone moves their existing record into the class, so nothing is retyped — and when a learner arrives already registered, check this roster before adding them again. One person, one learner record.",
         path: "/ell"
       },
       {
