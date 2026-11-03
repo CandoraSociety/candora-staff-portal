@@ -2,9 +2,20 @@ import { format } from "date-fns";
 import { parseDateSmart } from "@/lib/dateUtils";
 import { base44 } from "@/api/base44Client";
 
-// The document types a meeting card lists under its details
-const CARD_DOC_TYPES = ["minutes", "financial_report", "ed_report"];
-const CARD_DOC_LABELS = { minutes: "minutes", financial_report: "financials", ed_report: "ED report" };
+// Friendly names for the document types a meeting card can hold. Any uploaded
+// document is offered in the package, whatever its type.
+const DOC_LABELS = {
+  minutes: "minutes",
+  financial_report: "financials",
+  ed_report: "ED report",
+  committee_report: "committee report",
+  policy: "policy",
+  bylaw: "bylaw",
+  strategic_plan: "strategic plan",
+  training: "training",
+  corporate_doc: "corporate document",
+  other: "document",
+};
 
 /**
  * Documents a meeting package can include — exactly what the meeting card shows:
@@ -44,14 +55,16 @@ export async function gatherPackageCandidates(meeting) {
       checked: !!prevMinutesDoc,
       fileUrl: prevMinutesDoc?.file_url || null,
     },
-    // Only the paperwork the meeting card actually displays for this meeting
+    // Every file uploaded to the meeting card, whatever its type. Only the
+    // agenda is left out (it is generated as its own candidate) and packages
+    // themselves, so a package never nests inside another.
     ...meetingDocs
-      .filter((d) => CARD_DOC_TYPES.includes(d.document_type) && d.file_url)
+      .filter((d) => d.file_url && d.document_type !== "agenda" && !(d.package_files || []).length)
       .filter((d, i, all) => all.findIndex((x) => x.file_url === d.file_url) === i)
       .map((d) => ({
         id: `doc-${d.id}`,
         label: d.title,
-        sub: CARD_DOC_LABELS[d.document_type],
+        sub: DOC_LABELS[d.document_type] || "document",
         available: true,
         checked: true,
         fileUrl: d.file_url,
