@@ -35,6 +35,26 @@
     "description": {
       "type": "string"
     },
+    "package_files": {
+      "type": "array",
+      "description": "Documents bundled into this meeting package zip (agenda, minutes, financials, reports) \u2014 each entry links to that document on its own so it can be opened without unzipping",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "description": "Name shown on the meeting card"
+          },
+          "file_name": {
+            "type": "string",
+            "description": "File name inside the zip"
+          },
+          "file_url": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "is_public_to_board": {
       "type": "boolean",
       "default": true

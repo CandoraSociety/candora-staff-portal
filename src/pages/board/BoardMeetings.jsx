@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { base44 } from "@/api/base44Client";
-import { Plus, Calendar, Clock, MapPin, Trash2, Upload, FileText, DollarSign } from "lucide-react";
+import { Plus, Calendar, Clock, MapPin, Trash2, Upload, FileText, DollarSign, Package } from "lucide-react";
 import { format } from "date-fns";
 import BoardNewMeetingModal from "@/components/board/BoardNewMeetingModal";
 import UploadMeetingDocDialog from "@/components/board/UploadMeetingDocDialog";
@@ -26,20 +26,58 @@ function AttachedDocs({ label, docs }) {
   );
 }
 
+// A meeting package built in the Agenda Builder — the zip itself plus a direct
+// link to every document inside it, so either can be opened without unzipping
+function PackageAttachments({ packages }) {
+  if (!packages.length) return null;
+  return (
+    <div className="mt-2 space-y-1.5">
+      {packages.map((pkg) => (
+        <div key={pkg.id} className="rounded-lg border border-border bg-muted/40 px-3 py-2">
+          <a href={pkg.file_url} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-xs font-medium text-foreground hover:underline">
+            <Package size={13} className="shrink-0" />
+            <span className="truncate max-w-[260px]">{pkg.file_name || "Meeting Package.zip"}</span>
+            <span className="font-normal text-muted-foreground">download zip</span>
+          </a>
+          {(pkg.package_files || []).length > 0 && (
+            <div className="flex items-center gap-x-3 gap-y-1 flex-wrap mt-1.5">
+              {(pkg.package_files || []).map((f) => (
+                <a
+                  key={f.file_url}
+                  href={f.file_url}
+                  target="_blank"
+                  rel="noreferrer"
+                  title={f.file_name || f.label}
+                  className="text-xs text-muted-foreground hover:text-foreground underline truncate max-w-[220px]"
+                >
+                  {f.label}
+                </a>
+              ))}
+            </div>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function BoardMeetings() {
   const [meetings, setMeetings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showNew, setShowNew] = useState(false);
   const [meetingDocs, setMeetingDocs] = useState([]);
+  const [packages, setPackages] = useState([]);
   const [uploadFor, setUploadFor] = useState(null);
 
   const load = async () => {
-    const [data, docs] = await Promise.all([
+    const [data, docs, corporateDocs] = await Promise.all([
       base44.entities.Meeting.list("-meeting_date"),
       base44.entities.BoardDocument.filter({ document_type: { $in: ["minutes", "financial_report"] } }),
+      base44.entities.BoardDocument.filter({ document_type: "corporate_doc" }),
     ]);
     setMeetings(data);
     setMeetingDocs(docs);
+    setPackages(corporateDocs.filter((d) => (d.package_files || []).length > 0));
     setLoading(false);
   };
   useEffect(() => { load(); }, []);
@@ -51,6 +89,7 @@ export default function BoardMeetings() {
   };
 
   const docsFor = (meetingId, type) => meetingDocs.filter(d => d.meeting_id === meetingId && d.document_type === type);
+  const packagesFor = (meetingId) => packages.filter(p => p.meeting_id === meetingId);
 
   const grouped = meetings.reduce((acc, m) => {
     const s = m.status || "upcoming";
@@ -98,6 +137,7 @@ export default function BoardMeetings() {
                           </div>
                           <AttachedDocs label="Minutes attached" docs={docsFor(meeting.id, "minutes")} />
                           <AttachedDocs label="Financials attached" docs={docsFor(meeting.id, "financial_report")} />
+                          <PackageAttachments packages={packagesFor(meeting.id)} />
                         </div>
                         <div className="flex items-center gap-2 shrink-0 flex-wrap justify-end">
                           <Link to={`/board/meetings/${meeting.id}/agenda`} className="text-xs border border-border px-3 py-1.5 rounded-lg hover:bg-muted transition text-foreground">Agenda</Link>

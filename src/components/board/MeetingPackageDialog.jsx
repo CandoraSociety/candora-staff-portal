@@ -149,9 +149,11 @@ export default function MeetingPackageDialog({ meeting, items, onClose }) {
 
       // The agenda (plus any HTML minutes) is the one generated PDF; every other
       // document is bundled untouched, so a zip keeps Word and Excel files intact.
-      const { blob, skipped } = await buildMeetingPackageZip({
-        basePdfBuffer: basePdf.output("arraybuffer"),
-        basePdfName: minutes ? "Agenda & Minutes" : "Agenda",
+      const baseBytes = basePdf.output("arraybuffer");
+      const basePdfName = minutes ? "Agenda & Minutes" : "Agenda";
+      const { blob, skipped, included } = await buildMeetingPackageZip({
+        basePdfBuffer: baseBytes,
+        basePdfName,
         files,
       });
       if (skipped.length > 0) {
@@ -160,7 +162,15 @@ export default function MeetingPackageDialog({ meeting, items, onClose }) {
         });
       }
 
-      const fileName = `Candora-Meeting-Package_${format(parseDateSmart(meeting.meeting_date), "MMM-d-yyyy")}.zip`;
+      const dateTag = format(parseDateSmart(meeting.meeting_date), "MMM-d-yyyy");
+      // The generated agenda PDF is also kept on its own, so the meeting card can
+      // link to it directly instead of forcing a download of the whole zip.
+      const agendaFileName = `Candora-${basePdfName.replace(" & ", "-and-")}_${dateTag}.pdf`;
+      const agendaUpload = await base44.integrations.Core.UploadPublicFile({
+        file: new File([baseBytes], agendaFileName, { type: "application/pdf" }),
+      });
+
+      const fileName = `Candora-Meeting-Package_${dateTag}.zip`;
       const { file_url } = await base44.integrations.Core.UploadPublicFile({ file: new File([blob], fileName, { type: "application/zip" }) });
       await base44.entities.BoardDocument.create({
         title: `${meeting.title || "Board Meeting"} — Meeting Package`,
@@ -169,6 +179,10 @@ export default function MeetingPackageDialog({ meeting, items, onClose }) {
         file_url,
         file_name: fileName,
         description: "Board meeting package zip — agenda plus the attached board documents (minutes, financials, reports)",
+        package_files: [
+          { label: basePdfName, file_name: agendaFileName, file_url: agendaUpload.file_url },
+          ...included,
+        ],
       });
       setResultUrl(file_url);
     } catch (err) {
