@@ -82,15 +82,19 @@ export default function WaitlistEntryCard({ entry, position, expanded, onToggle,
             )}
           </div>
           <div className="flex items-center gap-1.5 flex-shrink-0">
-            <span onClick={(e) => e.stopPropagation()}>
-              <Button size="sm" variant="ghost" onClick={onEdit}><Pencil className="h-3.5 w-3.5" /> Update</Button>
-            </span>
-            <span onClick={(e) => e.stopPropagation()}>
-              <Button size="sm" variant="outline" onClick={onCopyLink} disabled={!entry.first_name || !entry.cohort_id} className={cn(copied && 'text-success border-success')}>
-                {copied ? <Check className="h-3.5 w-3.5" /> : <Link2 className="h-3.5 w-3.5" />}
-                {copied ? 'Copied' : 'Copy Registration Link'}
-              </Button>
-            </span>
+            {onEdit && (
+              <span onClick={(e) => e.stopPropagation()}>
+                <Button size="sm" variant="ghost" onClick={onEdit}><Pencil className="h-3.5 w-3.5" /> Update</Button>
+              </span>
+            )}
+            {onCopyLink && (
+              <span onClick={(e) => e.stopPropagation()}>
+                <Button size="sm" variant="outline" onClick={onCopyLink} disabled={!entry.first_name || !entry.cohort_id} className={cn(copied && 'text-success border-success')}>
+                  {copied ? <Check className="h-3.5 w-3.5" /> : <Link2 className="h-3.5 w-3.5" />}
+                  {copied ? 'Copied' : 'Copy Registration Link'}
+                </Button>
+              </span>
+            )}
             <ChevronDown className={cn('h-4 w-4 text-muted-foreground transition-transform', expanded && 'rotate-180')} />
           </div>
         </div>

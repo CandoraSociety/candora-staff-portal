@@ -24,7 +24,7 @@ const EMPTY = { first_name: '', last_name: '', phone: '', email: '', notes: '', 
 //  volunteer → Volunteer (pending application)
 // When the program/area is at its maximum, the person is waitlisted instead —
 // unless the override code is entered, which registers them fully.
-export default function UniversalRegistrationDialog({ open, onOpenChange, area, program, forceWaitlist = false, onSaved }) {
+export default function UniversalRegistrationDialog({ open, onOpenChange, area, program, forceWaitlist = false, autoWaitlist = false, onSaved }) {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState(EMPTY);
@@ -37,8 +37,10 @@ export default function UniversalRegistrationDialog({ open, onOpenChange, area, 
     if (open) { setForm({ ...EMPTY }); setOverrideCode(''); setLinkedClient(null); }
   }, [open]);
 
-  // A full program/area still allows a confirmed registration with the override code.
-  const forced = forceWaitlist && overrideCode.trim() !== REGISTRATION_OVERRIDE_CODE;
+  // A full program/area — or a program with people already waiting — still allows
+  // a confirmed registration with the override code.
+  const waitlistOnly = forceWaitlist || autoWaitlist;
+  const forced = waitlistOnly && overrideCode.trim() !== REGISTRATION_OVERRIDE_CODE;
 
   const update = (f, v) => setForm(p => ({ ...p, [f]: v }));
   const programLabel = program?.name || (area ? REG_AREA_LABELS[area] : '');
@@ -63,7 +65,7 @@ export default function UniversalRegistrationDialog({ open, onOpenChange, area, 
         await base44.entities.EmpowerURegistration.create({
           participant_id: participant.id, participant_name: name, cohort_id: program.id, cohort_name: program.name,
           registration_date: today(), status: isFull ? 'waitlisted' : 'registered',
-          ...(isFull ? { waitlist_position: waitlistedCount + 1 } : {}),
+          ...(isFull ? { waitlist_position: waitlistedCount + 1, waitlist_status: 'waiting' } : {}),
           intake_notes: form.notes,
         });
       } else if (area === 'phac') {
@@ -82,6 +84,7 @@ export default function UniversalRegistrationDialog({ open, onOpenChange, area, 
           intake_date: today(), enrollment_status: waitlisting ? 'waitlisted' : 'prospective',
           notes: [program?.name && program.name !== 'ELL Program' ? `Registered for: ${program.name}` : '', form.notes].filter(Boolean).join('\n'),
           waitlist_date: waitlisting ? today() : null,
+          waitlist_status: waitlisting ? 'waiting' : null,
           interested_course_id: program?.id || null,
           interested_course_name: program?.name && program.name !== 'ELL Program' ? program.name : null,
         });
@@ -147,7 +150,7 @@ export default function UniversalRegistrationDialog({ open, onOpenChange, area, 
               <Select value={form.volunteer_type || 'community'} onValueChange={(v) => update('volunteer_type', v)}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{VOLUNTEER_TYPE_OPTIONS.map(t => <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>)}</SelectContent></Select>
             </div>
           )}
-          {forceWaitlist && (
+          {waitlistOnly && (
             <div className="space-y-1.5 col-span-2">
               <Label>Override code (optional)</Label>
               <Input value={overrideCode} onChange={(e) => setOverrideCode(e.target.value)} placeholder="Enter code to register anyway" />
@@ -156,7 +159,13 @@ export default function UniversalRegistrationDialog({ open, onOpenChange, area, 
           )}
           {(area === 'ell' || area === 'volunteer' || forced) && (
             <div className="col-span-2 space-y-1">
-              {forced && <p className="text-xs text-amber-600">Registration is full, but you can still add to the waitlist</p>}
+              {forced && (
+                <p className="text-xs text-amber-600">
+                  {forceWaitlist
+                    ? 'Registration is full, but you can still add to the waitlist'
+                    : 'People are already waiting for this program — this registration is added to the waitlist'}
+                </p>
+              )}
               <div className="flex items-center space-x-2">
                 <Checkbox id="cr-waitlist" checked={forced ? true : !!form.waitlist} disabled={forced} onCheckedChange={(v) => update('waitlist', v === true)} />
                 <Label htmlFor="cr-waitlist" className="cursor-pointer">Add to the waitlist (no spot available yet)</Label>

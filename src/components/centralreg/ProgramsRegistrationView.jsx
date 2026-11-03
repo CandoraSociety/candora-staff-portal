@@ -12,7 +12,7 @@ import KidsGiftShopRegistrationDialog from '@/components/centralreg/KidsGiftShop
 import AreaCapacityControl from '@/components/centralreg/AreaCapacityControl';
 import { REG_AREA_LABELS, REG_AREA_PATHS } from '@/lib/centralRegConstants';
 import ELLLearnerRosterTabs from '@/components/ell/ELLLearnerRosterTabs';
-import EmpowerURegistrationDialog from '@/components/empoweru/RegistrationDialog';
+import ProgramRegistrationDialog from '@/components/centralreg/ProgramRegistrationDialog';
 
 function AreaSection({ title, color, portalPath, capacityControl, children }) {
   return (
@@ -83,7 +83,7 @@ export default function ProgramsRegistrationView() {
   const [sessionDialog, setSessionDialog] = useState(null); // { area, program }
   const [selfRegDialog, setSelfRegDialog] = useState(null); // { area, program }
   const [giftShopOpen, setGiftShopOpen] = useState(false);
-  const [empowerRegDialog, setEmpowerRegDialog] = useState(null); // cohort being registered into via the EmpowerU participant registration form
+  const [programRegDialog, setProgramRegDialog] = useState(null); // { area, program } — waitlist-aware registration for ELL and EmpowerU
 
   const { data: communityPrograms = [], isLoading } = useQuery({ queryKey: ['cr-community-programs'], queryFn: () => base44.entities.CommunityProgram.list() });
   const { data: cohorts = [] } = useQuery({ queryKey: ['cr-empower-cohorts'], queryFn: () => base44.entities.EmpowerUCohort.list() });
@@ -123,6 +123,9 @@ export default function ProgramsRegistrationView() {
   const ellPrograms = ellClasses
     .filter(c => c.status !== 'cancelled' && !c.course_id)
     .sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  const ellWaitlistCount = (Array.isArray(ellLearners) ? ellLearners : ellLearners?.items || [])
+    .filter(l => l.enrollment_status === 'waitlisted').length;
+
   const ellClassMeta = (cls) => {
     const clb = { clb_1: 'CLB 1', clb_2: 'CLB 2', clb_3: 'CLB 3', clb_4: 'CLB 4', clb_5: 'CLB 5', clb_6: 'CLB 6', mixed: 'Mixed levels' }[cls.clb_level];
     const days = { monday: 'Mon', tuesday: 'Tue', wednesday: 'Wed', thursday: 'Thu', friday: 'Fri' };
@@ -192,12 +195,12 @@ export default function ProgramsRegistrationView() {
                       key={cls.id}
                       title={cls.name}
                       subtitle={cls.description}
-                      meta={ellClassMeta(cls)}
+                      meta={[ellClassMeta(cls), ellWaitlistCount ? `${ellWaitlistCount} on waitlist` : ''].filter(Boolean).join(' · ')}
                       isFull={isAreaFull('ell')}
                       noSessions={cls.status !== 'active'}
                       sessionLabel="Class"
                       onCreateSession={() => setSessionDialog({ area: 'ell', program: cls })}
-                      onRegister={() => openDialog('ell', cls)}
+                      onRegister={() => setProgramRegDialog({ area: 'ell', program: cls })}
                       onSelfReg={() => setSelfRegDialog({ area: 'ell', program: cls })}
                     />
                   ))}
@@ -223,7 +226,7 @@ export default function ProgramsRegistrationView() {
                     </div>
                   )}
                   {openCohorts.map(c => (
-                    <ProgramCard key={c.id} title={c.name} subtitle={c.delivery_mode === 'virtual' ? 'Virtual' : c.location || c.delivery_mode} meta={`${cohortMeta(c)}${c.registration_deadline ? ` · Register by ${c.registration_deadline}` : ''}`} isFull={isAreaFull('empoweru')} onRegister={() => setEmpowerRegDialog(c)} onSelfReg={() => setSelfRegDialog({ area: 'empoweru', program: c })} />
+                    <ProgramCard key={c.id} title={c.name} subtitle={c.delivery_mode === 'virtual' ? 'Virtual' : c.location || c.delivery_mode} meta={`${cohortMeta(c)}${c.registration_deadline ? ` · Register by ${c.registration_deadline}` : ''}`} isFull={isAreaFull('empoweru')} onRegister={() => setProgramRegDialog({ area: 'empoweru', program: c })} onSelfReg={() => setSelfRegDialog({ area: 'empoweru', program: c })} />
                   ))}
                 </div>
               </AreaSection>
@@ -304,11 +307,12 @@ export default function ProgramsRegistrationView() {
       <SelfRegSettingsDialog open={!!selfRegDialog} onOpenChange={(o) => !o && setSelfRegDialog(null)} area={selfRegDialog?.area} program={selfRegDialog?.program} />
       <CreateSessionDialog open={!!sessionDialog} onOpenChange={(o) => !o && setSessionDialog(null)} area={sessionDialog?.area} program={sessionDialog?.program} onSaved={() => { setSessionDialog(null); queryClient.invalidateQueries(); }} />
       <KidsGiftShopRegistrationDialog open={giftShopOpen} onOpenChange={setGiftShopOpen} forceWaitlist={isAreaFull('kids_gift_shop')} onSaved={onGiftShopSaved} />
-      <EmpowerURegistrationDialog
-        open={!!empowerRegDialog}
-        onOpenChange={(o) => !o && setEmpowerRegDialog(null)}
-        registration={empowerRegDialog ? { cohort_id: empowerRegDialog.id, cohort_name: empowerRegDialog.name, registration_date: new Date().toISOString().split('T')[0], status: 'registered', preferred_delivery_mode: 'no_preference', waitlist_position: 0 } : null}
-        onSaved={() => { setEmpowerRegDialog(null); queryClient.invalidateQueries(); }}
+      <ProgramRegistrationDialog
+        open={!!programRegDialog}
+        onOpenChange={(o) => !o && setProgramRegDialog(null)}
+        area={programRegDialog?.area}
+        program={programRegDialog?.program}
+        onSaved={() => queryClient.invalidateQueries()}
       />
     </div>
   );

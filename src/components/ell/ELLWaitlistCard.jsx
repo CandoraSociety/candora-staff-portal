@@ -73,9 +73,11 @@ export default function ELLWaitlistCard({ entry, position, expanded, onToggle, o
             )}
           </div>
           <div className="flex items-center gap-1.5 flex-shrink-0">
-            <span onClick={(e) => e.stopPropagation()}>
-              <Button size="sm" variant="ghost" onClick={onEdit}><Pencil className="h-3.5 w-3.5" /> Update</Button>
-            </span>
+            {onEdit && (
+              <span onClick={(e) => e.stopPropagation()}>
+                <Button size="sm" variant="ghost" onClick={onEdit}><Pencil className="h-3.5 w-3.5" /> Update</Button>
+              </span>
+            )}
             <ChevronDown className={cn('h-4 w-4 text-muted-foreground transition-transform', expanded && 'rotate-180')} />
           </div>
         </div>
