@@ -1,20 +1,33 @@
 {
   "name": "ProgramReferral",
   "type": "object",
+  "description": "A referral of a person into one of Candora's internal programs. Shows on the receiving program's portal and in Central Registration.",
   "properties": {
     "client_id": {
       "type": "string",
       "description": "Pathways client file this referral came from"
     },
+    "rc_client_id": {
+      "type": "string",
+      "description": "Candora Central Database (RCClient) record this referral came from \u2014 set when referred from the central client file or from another program portal"
+    },
     "client_name": {
       "type": "string",
       "description": "Client's full name (denormalized for the receiving program's dashboard)"
+    },
+    "client_phone": {
+      "type": "string"
+    },
+    "client_email": {
+      "type": "string"
     },
     "program": {
       "type": "string",
       "enum": [
         "ell",
         "empoweru",
+        "frn",
+        "phac",
         "digital_literacy",
         "family_programs",
         "childcare_program",
@@ -22,6 +35,10 @@
         "other_internal"
       ],
       "description": "Receiving Candora program \u2014 decides which portal dashboard shows this referral"
+    },
+    "source_label": {
+      "type": "string",
+      "description": "Where the referral was made from, e.g. Candora Central Database, FRN, PHAC, EmpowerU, ELL"
     },
     "referred_by_name": {
       "type": "string",

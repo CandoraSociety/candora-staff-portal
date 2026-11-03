@@ -9,6 +9,7 @@ import StatusBadge from '@/components/frn/StatusBadge';
 import ParticipantFormDialog from '@/components/frn/ParticipantFormDialog';
 import ParticipantGoals from '@/components/frn/ParticipantGoals';
 import ProgressNoteDialog from '@/components/frn/ProgressNoteDialog';
+import ReferralToProgramDialog from '@/components/referrals/ReferralToProgramDialog';
 import { PROGRAM_LABELS } from '@/lib/frnConstants';
 import { referralProgramName } from '@/lib/frnPrograms';
 
@@ -41,6 +42,7 @@ export default function FRNParticipantDetail() {
   const { id } = useParams();
   const queryClient = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
+  const [programRefOpen, setProgramRefOpen] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
   const [editingNote, setEditingNote] = useState(null);
 
@@ -136,6 +138,7 @@ export default function FRNParticipantDetail() {
           </div>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => setProgramRefOpen(true)}>Refer to a program</Button>
           <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}><Pencil className="h-3.5 w-3.5" /> Edit Profile</Button>
           <Button size="sm" onClick={() => { setEditingNote(null); setNoteOpen(true); }}><Plus className="h-3.5 w-3.5" /> Add Note</Button>
         </div>
@@ -257,6 +260,12 @@ export default function FRNParticipantDetail() {
         participant={participant}
         programs={programs}
         onSaved={savedNote}
+      />
+      <ReferralToProgramDialog
+        open={programRefOpen}
+        onOpenChange={setProgramRefOpen}
+        person={{ name: `${participant.first_name} ${participant.last_name}`, rcClientId: participant.linked_rc_client_id, phone: participant.phone, email: participant.email }}
+        sourceLabel="FRN"
       />
     </div>
   );

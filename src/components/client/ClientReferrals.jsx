@@ -7,15 +7,7 @@ import { Save } from 'lucide-react';
 import { toast } from 'sonner';
 import { base44 } from '@/api/base44Client';
 
-const INTERNAL_REFERRAL_OPTIONS = [
-  { value: 'ell',                 label: 'ELL (English Language Learning)' },
-  { value: 'empoweru',            label: 'EmpowerU' },
-  { value: 'digital_literacy',    label: 'Digital Literacy' },
-  { value: 'family_programs',     label: 'Family Programs' },
-  { value: 'childcare_program',   label: 'Childcare Program' },
-  { value: 'settlement_services', label: 'Settlement Services' },
-  { value: 'other_internal',      label: 'Other (Internal)' },
-];
+import { PROGRAM_REFERRAL_OPTIONS as INTERNAL_REFERRAL_OPTIONS } from '@/lib/programReferralConstants';
 
 const EXTERNAL_REFERRAL_OPTIONS = [
   { value: 'christcity_lighthouse', label: 'Christcity Lighthouse – Counselling' },

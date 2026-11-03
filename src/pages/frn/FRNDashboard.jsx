@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PROGRAM_LABELS, STATUS_LABELS, STATUS_COLORS } from '@/lib/frnConstants';
 import { referralIsInProgram, referralProgramName } from '@/lib/frnPrograms';
 import StatusBadge from '@/components/frn/StatusBadge';
+import ProgramReferralsPanel from '@/components/referrals/ProgramReferralsPanel';
 
 export default function FRNDashboard() {
   const { data: participants = [] } = useQuery({
@@ -77,6 +78,8 @@ export default function FRNDashboard() {
           );
         })}
       </div>
+
+      <ProgramReferralsPanel program="frn" title="Referrals from other programs" description="People referred into FRN from the Central Database or another program portal." />
 
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">

@@ -1,13 +1,18 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
+import { PROGRAM_REFERRAL_LABELS } from '@/lib/programReferralConstants';
 
-export default function ProgramReferralRow({ referral, busy, onUpdate }) {
+export default function ProgramReferralRow({ referral, busy, onUpdate, showProgram }) {
+  const programLabel = PROGRAM_REFERRAL_LABELS[referral.program] || referral.program;
   return (
     <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 p-2 rounded-md hover:bg-muted/50">
       <div className="min-w-0">
         <p className="text-sm font-medium text-foreground truncate">{referral.client_name}</p>
+        {showProgram && (
+          <p className="text-xs font-medium text-violet-700">{programLabel}</p>
+        )}
         <p className="text-xs text-muted-foreground">
-          {referral.referred_by_name || 'Pathways'}
+          {referral.source_label ? `From ${referral.source_label}` : (referral.referred_by_name || 'Pathways')}
           {referral.referral_date ? ` · ${new Date(referral.referral_date + 'T00:00:00').toLocaleDateString()}` : ''}
           {referral.status === 'contacted' ? ' · Contacted' : ''}
         </p>

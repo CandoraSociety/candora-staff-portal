@@ -5,17 +5,18 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { toast } from 'sonner';
 import ProgramReferralRow from '@/components/referrals/ProgramReferralRow';
 
-export default function ProgramReferralsPanel({ program }) {
+// Open internal program referrals. With `program` it shows one receiving
+// portal's referrals; without it, every open referral (Central Registration).
+export default function ProgramReferralsPanel({ program, title, description }) {
   const queryClient = useQueryClient();
   const [busyId, setBusyId] = useState(null);
 
   const { data: referrals = [] } = useQuery({
-    queryKey: ['program-referrals', program],
+    queryKey: ['program-referrals', program || 'all'],
     queryFn: async () => {
-      const page = await base44.entities.ProgramReferral.filter(
-        { program, status: { $in: ['new', 'contacted'] } },
-        { sort: '-referral_date', limit: 50 }
-      );
+      const query = { status: { $in: ['new', 'contacted'] } };
+      if (program) query.program = program;
+      const page = await base44.entities.ProgramReferral.filter(query, { sort: '-referral_date', limit: 50 });
       return page.items;
     },
   });
@@ -29,7 +30,7 @@ export default function ProgramReferralsPanel({ program }) {
         handled_by_name: me?.full_name || me?.email || '',
         handled_date: new Date().toISOString().split('T')[0],
       });
-      queryClient.invalidateQueries({ queryKey: ['program-referrals', program] });
+      queryClient.invalidateQueries({ queryKey: ['program-referrals', program || 'all'] });
       toast.success(status === 'completed' ? 'Referral marked complete' : 'Referral marked contacted');
     } catch {
       toast.error('Could not update the referral');
@@ -41,7 +42,10 @@ export default function ProgramReferralsPanel({ program }) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between">
-        <CardTitle className="text-base">Referrals from Pathways</CardTitle>
+        <div>
+          <CardTitle className="text-base">{title || 'Referrals from other programs'}</CardTitle>
+          {description && <p className="text-xs text-muted-foreground mt-1">{description}</p>}
+        </div>
         <span className="text-xs text-muted-foreground">{referrals.length} open</span>
       </CardHeader>
       <CardContent>
@@ -55,6 +59,7 @@ export default function ProgramReferralsPanel({ program }) {
                 referral={referral}
                 busy={busyId === referral.id}
                 onUpdate={handleUpdate}
+                showProgram={!program}
               />
             ))}
           </div>

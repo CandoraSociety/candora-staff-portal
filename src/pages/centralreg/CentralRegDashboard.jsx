@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import StatusBadge from '@/components/rc/StatusBadge';
 import { REG_STATUS_OPTIONS } from '@/lib/receptionConstants';
 import { REG_AREA_OPTIONS, REG_AREA_LABELS, REG_AREA_PATHS } from '@/lib/centralRegConstants';
+import ProgramReferralsPanel from '@/components/referrals/ProgramReferralsPanel';
 
 export default function CentralRegDashboard() {
   const queryClient = useQueryClient();
@@ -87,6 +88,11 @@ export default function CentralRegDashboard() {
               </CardContent>
             </Card>
           )}
+
+          <ProgramReferralsPanel
+            title="Internal Program Referrals"
+            description="Everyone referred into an internal program from the Central Database or another portal, and where they were sent."
+          />
 
           <div>
             <p className="font-medium text-sm text-foreground mb-3">Registrations by Program Area</p>

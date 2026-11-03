@@ -9,6 +9,7 @@ import StatusBadge from '@/components/phac/StatusBadge';
 import ParticipantFormDialog from '@/components/phac/ParticipantFormDialog';
 import ProgressNoteDialog, { NOTE_CATEGORY_OPTIONS, NOTE_RATING_OPTIONS } from '@/components/phac/ProgressNoteDialog';
 import { PARTICIPANT_STATUS_OPTIONS } from '@/lib/phacConstants';
+import ReferralToProgramDialog from '@/components/referrals/ReferralToProgramDialog';
 
 const ATTENDANCE_STYLES = {
   present: 'bg-success/10 text-success',
@@ -41,6 +42,7 @@ export default function PHACFamilyDetail() {
   const { id } = useParams();
   const queryClient = useQueryClient();
   const [editOpen, setEditOpen] = useState(false);
+  const [programRefOpen, setProgramRefOpen] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
   const [editingNote, setEditingNote] = useState(null);
 
@@ -126,6 +128,7 @@ export default function PHACFamilyDetail() {
           </div>
         </div>
         <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => setProgramRefOpen(true)}>Refer to a program</Button>
           <Button variant="outline" size="sm" onClick={() => setEditOpen(true)}><Pencil className="h-3.5 w-3.5" /> Edit Family</Button>
           <Button size="sm" onClick={() => { setEditingNote(null); setNoteOpen(true); }}><Plus className="h-3.5 w-3.5" /> Add Note</Button>
         </div>
@@ -225,6 +228,12 @@ export default function PHACFamilyDetail() {
         participant={family}
         programs={programsQ.data || []}
         onSaved={savedNote}
+      />
+      <ReferralToProgramDialog
+        open={programRefOpen}
+        onOpenChange={setProgramRefOpen}
+        person={{ name: `${family.child_first_name} ${family.child_last_name}`, rcClientId: family.linked_rc_client_id, phone: family.parent_guardian_phone, email: family.parent_guardian_email }}
+        sourceLabel="PHAC"
       />
     </div>
   );

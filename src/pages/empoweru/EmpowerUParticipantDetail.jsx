@@ -12,6 +12,7 @@ import StatusBadge from '@/components/rc/StatusBadge';
 import ParticipantFormCore from '@/components/empoweru/ParticipantFormCore';
 import ServiceLogDialog from '@/components/empoweru/ServiceLogDialog';
 import AccountSetupDialog from '@/components/empoweru/AccountSetupDialog';
+import ReferralToProgramDialog from '@/components/referrals/ReferralToProgramDialog';
 import { REGISTRATION_STATUS_OPTIONS, ACCOUNT_SETUP_STATUS_OPTIONS, SERVICE_TYPE_LABELS } from '@/lib/empoweruConstants';
 import { formatDate, parseDateSmart } from '@/lib/dateUtils';
 
@@ -22,6 +23,7 @@ export default function EmpowerUParticipantDetail() {
   const [editOpen, setEditOpen] = useState(false);
   const [editForm, setEditForm] = useState(null);
   const [serviceOpen, setServiceOpen] = useState(false);
+  const [programRefOpen, setProgramRefOpen] = useState(false);
   const [editingSetup, setEditingSetup] = useState(null);
 
   const { data: participant } = useQuery({ queryKey: ['empoweru-participant', id], queryFn: () => base44.entities.EmpowerUParticipant.get(id) });
@@ -46,7 +48,10 @@ export default function EmpowerUParticipantDetail() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <Link to="/empoweru/participants"><Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4" /> Back</Button></Link>
-        <Button variant="outline" size="sm" onClick={openEdit}><Pencil className="h-4 w-4" /> Edit</Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setProgramRefOpen(true)}>Refer to a program</Button>
+          <Button variant="outline" size="sm" onClick={openEdit}><Pencil className="h-4 w-4" /> Edit</Button>
+        </div>
       </div>
 
       <Card>
@@ -115,6 +120,12 @@ export default function EmpowerUParticipantDetail() {
 
       <ServiceLogDialog open={serviceOpen} onOpenChange={setServiceOpen} participantId={id} participantName={fullName} onSaved={() => { setServiceOpen(false); invalidateAll(); }} />
       <AccountSetupDialog open={!!editingSetup} onOpenChange={(o) => !o && setEditingSetup(null)} record={editingSetup} onSaved={() => { setEditingSetup(null); invalidateAll(); }} />
+      <ReferralToProgramDialog
+        open={programRefOpen}
+        onOpenChange={setProgramRefOpen}
+        person={{ name: fullName, rcClientId: participant.linked_rc_client_id, phone: participant.phone, email: participant.email }}
+        sourceLabel="EmpowerU"
+      />
     </div>
   );
 }

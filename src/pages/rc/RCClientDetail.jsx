@@ -19,6 +19,7 @@ import AppointmentDialog from '@/components/rc/AppointmentDialog';
 import ClientActionButtons from '@/components/rc/ClientActionButtons';
 import { useCrossWaitlistIndex, findOtherWaitlists } from '@/lib/waitlistCrossRef';
 import ExternalReferralDialog from '@/components/rc/ExternalReferralDialog';
+import ReferralToProgramDialog from '@/components/referrals/ReferralToProgramDialog';
 import { buildDefaultStages } from '@/components/rc/intensive/caseConstants';
 import { CASE_STATUS_OPTIONS, FUNDER_CATEGORIES, SERVICE_TYPE_LABELS, APPOINTMENT_STATUS_OPTIONS, REFERRAL_STATUS_OPTIONS, REFERRAL_DIRECTION_LABELS, IS_PHAC } from '@/lib/rcConstants';
 const STREAM_LABELS = {
@@ -60,6 +61,7 @@ export default function RCClientDetail() {
   const [referralOpen, setReferralOpen] = useState(false);
   const [apptOpen, setApptOpen] = useState(false);
   const [extRefOpen, setExtRefOpen] = useState(false);
+  const [programRefOpen, setProgramRefOpen] = useState(false);
   const [noteOpen, setNoteOpen] = useState(false);
   const [actionBusy, setActionBusy] = useState(false);
   const { data: wlIndex = [] } = useCrossWaitlistIndex();
@@ -146,7 +148,10 @@ export default function RCClientDetail() {
           <Link to="/rc/clients"><Button variant="ghost" size="sm"><ArrowLeft className="h-4 w-4" /> Back</Button></Link>
           {client.service_category === 'intensive_services' && <Link to={`/rc/case-management?client=${client.id}`}><Button variant="outline" size="sm"><ClipboardList className="h-4 w-4" /> Case Management</Button></Link>}
         </div>
-        <Button variant="outline" size="sm" onClick={openEdit}><Pencil className="h-4 w-4" /> Edit</Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setProgramRefOpen(true)}><Route className="h-4 w-4" /> Refer to a program</Button>
+          <Button variant="outline" size="sm" onClick={openEdit}><Pencil className="h-4 w-4" /> Edit</Button>
+        </div>
       </div>
 
       <Card>
@@ -311,6 +316,12 @@ export default function RCClientDetail() {
       <AppointmentDialog open={apptOpen} onOpenChange={setApptOpen} clientId={id} clientName={`${client.first_name} ${client.last_name}`} clientEmail={client.email} onSaved={() => { setApptOpen(false); invalidateAll(); }} />
       <ReferralDialog open={referralOpen} onOpenChange={setReferralOpen} clientId={id} clientName={`${client.first_name} ${client.last_name}`} onSaved={() => { setReferralOpen(false); invalidateAll(); }} />
       <ExternalReferralDialog open={extRefOpen} onOpenChange={setExtRefOpen} clientId={id} clientName={`${client.first_name} ${client.last_name}`} onSaved={() => { setExtRefOpen(false); invalidateAll(); }} />
+      <ReferralToProgramDialog
+        open={programRefOpen}
+        onOpenChange={setProgramRefOpen}
+        person={{ name: `${client.first_name} ${client.last_name}`, rcClientId: client.id, phone: client.phone, email: client.email }}
+        sourceLabel="Candora Central Database"
+      />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Users, Plus, Search, Pencil, Trash2 } from "lucide-react";
+import { Users, Plus, Search, Pencil, Trash2, Send } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogT
 import { useToast } from "@/components/ui/use-toast";
 import { useEllRosters, LearnerRosterTable } from "@/components/ell/ELLLearnerRosterTabs";
 import LearnerFormDialog from "@/components/ell/LearnerFormDialog";
+import ReferralToProgramDialog from "@/components/referrals/ReferralToProgramDialog";
 import { ellLearnersQuery } from "@/lib/ellLists";
 
 const statusColors = {
@@ -63,6 +64,7 @@ export default function ELLLearners() {
   const [showForm, setShowForm] = useState(false);
   const [editLearner, setEditLearner] = useState(null);
   const [deleteLearner, setDeleteLearner] = useState(null);
+  const [referLearner, setReferLearner] = useState(null);
 
   const { data: learners, isLoading } = useQuery(ellLearnersQuery);
 
@@ -150,6 +152,9 @@ export default function ELLLearners() {
                         <Badge className={statusColors[learner.enrollment_status] || "bg-muted text-muted-foreground"}>
                           {learner.enrollment_status}
                         </Badge>
+                        <Button size="icon" variant="ghost" title="Refer to another program" onClick={(e) => { e.stopPropagation(); setReferLearner(learner); }}>
+                          <Send className="h-4 w-4" />
+                        </Button>
                         <Button size="icon" variant="ghost" onClick={(e) => { e.stopPropagation(); setEditLearner(learner); setShowForm(true); }}>
                           <Pencil className="h-4 w-4" />
                         </Button>
@@ -176,6 +181,14 @@ export default function ELLLearners() {
 
       {showForm && <LearnerFormDialog learner={editLearner} onClose={() => { setShowForm(false); setEditLearner(null); }} />}
       {deleteLearner && <DeleteConfirmDialog learner={deleteLearner} onClose={() => setDeleteLearner(null)} />}
+      {referLearner && (
+        <ReferralToProgramDialog
+          open={!!referLearner}
+          onOpenChange={(v) => !v && setReferLearner(null)}
+          person={{ name: `${referLearner.first_name} ${referLearner.last_name}`, rcClientId: referLearner.linked_rc_client_id, phone: referLearner.phone, email: referLearner.email }}
+          sourceLabel="ELL"
+        />
+      )}
     </div>
   );
 }
