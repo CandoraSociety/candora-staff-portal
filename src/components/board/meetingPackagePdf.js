@@ -1,7 +1,6 @@
 import { jsPDF } from "jspdf";
 import { format } from "date-fns";
 import { parseDateSmart } from "@/lib/dateUtils";
-import { PDFDocument } from "pdf-lib";
 import { AGENDA_SECTIONS, sectionOf } from "@/components/board/agendaDocumentHtml";
 
 // Candora brand — same logo and palette used on the ED board report and agendas
@@ -262,23 +261,4 @@ export function buildPackageBasePdf({ meeting, org, contents, agendaItems, minut
 
     return doc;
   })();
-}
-
-// Merges PDF buffers (ArrayBuffers) into one document, in order.
-// Returns { bytes, skipped } — buffers that couldn't be read are skipped, not fatal.
-export async function mergePdfParts(buffers) {
-  const out = await PDFDocument.create();
-  let skipped = 0;
-  for (const buf of buffers) {
-    if (!buf) continue;
-    try {
-      const src = await PDFDocument.load(buf, { ignoreEncryption: true });
-      const pages = await out.copyPages(src, src.getPageIndices());
-      pages.forEach((p) => out.addPage(p));
-    } catch {
-      skipped += 1;
-    }
-  }
-  const bytes = await out.save();
-  return { bytes, skipped };
 }

@@ -4,7 +4,8 @@ import { parseDateSmart } from "@/lib/dateUtils";
 import { toast } from "sonner";
 import { CheckCircle2, Package, X } from "lucide-react";
 import { base44 } from "@/api/base44Client";
-import { buildPackageBasePdf, mergePdfParts } from "@/components/board/meetingPackagePdf";
+import { buildPackageBasePdf } from "@/components/board/meetingPackagePdf";
+import { buildMeetingPackageZip } from "@/components/board/meetingPackageZip";
 
 const isPdfUrl = (url) => /\.pdf($|\?)/i.test(String(url || ""));
 
@@ -121,10 +122,10 @@ export default function MeetingPackageDialog({ meeting, items, onClose }) {
       const agendaPart = selected.find((p) => p.id === "agenda");
       const minutesPart = selected.find((p) => p.id === "prev_minutes");
       let minutes = null;
-      const external = [];
+      const files = [];
       if (minutesPart) {
         if (isPdfUrl(minutesPart.fileUrl)) {
-          external.push({ label: minutesPart.label, fileUrl: minutesPart.fileUrl });
+          files.push({ label: `Minutes - ${minutesPart.sub}`, fileUrl: minutesPart.fileUrl });
         } else {
           try {
             const res = await fetch(minutesPart.fileUrl);
@@ -137,7 +138,7 @@ export default function MeetingPackageDialog({ meeting, items, onClose }) {
       }
       selected
         .filter((p) => p.id !== "agenda" && p.id !== "prev_minutes")
-        .forEach((p) => external.push({ label: p.label, fileUrl: p.fileUrl }));
+        .forEach((p) => files.push({ label: p.label, fileUrl: p.fileUrl }));
 
       const basePdf = await buildPackageBasePdf({
         meeting,
@@ -145,28 +146,29 @@ export default function MeetingPackageDialog({ meeting, items, onClose }) {
         agendaItems: agendaPart ? items : null,
         minutes,
       });
-      const buffers = [basePdf.output("arraybuffer")];
-      for (const p of external) {
-        try {
-          const res = await fetch(p.fileUrl);
-          if (!res.ok) throw new Error("could not load the file");
-          buffers.push(await res.arrayBuffer());
-        } catch (e) {
-          toast.error(`${p.label} couldn't be included`, { description: e?.message || "Unknown error" });
-        }
-      }
-      const { bytes, skipped } = await mergePdfParts(buffers);
-      if (skipped > 0) toast.warning(`${skipped} document${skipped === 1 ? "" : "s"} could not be merged into the PDF.`);
 
-      const fileName = `Candora-Meeting-Package_${format(parseDateSmart(meeting.meeting_date), "MMM-d-yyyy")}.pdf`;
-      const { file_url } = await base44.integrations.Core.UploadPublicFile({ file: new File([bytes], fileName, { type: "application/pdf" }) });
+      // The agenda (plus any HTML minutes) is the one generated PDF; every other
+      // document is bundled untouched, so a zip keeps Word and Excel files intact.
+      const { blob, skipped } = await buildMeetingPackageZip({
+        basePdfBuffer: basePdf.output("arraybuffer"),
+        basePdfName: minutes ? "Agenda & Minutes" : "Agenda",
+        files,
+      });
+      if (skipped.length > 0) {
+        toast.warning(`${skipped.length} document${skipped.length === 1 ? "" : "s"} couldn't be added to the package.`, {
+          description: skipped.join(", "),
+        });
+      }
+
+      const fileName = `Candora-Meeting-Package_${format(parseDateSmart(meeting.meeting_date), "MMM-d-yyyy")}.zip`;
+      const { file_url } = await base44.integrations.Core.UploadPublicFile({ file: new File([blob], fileName, { type: "application/zip" }) });
       await base44.entities.BoardDocument.create({
         title: `${meeting.title || "Board Meeting"} — Meeting Package`,
         document_type: "corporate_doc",
         meeting_id: meeting.id,
         file_url,
         file_name: fileName,
-        description: "Compiled board meeting package (agenda, previous minutes, financials, reports)",
+        description: "Board meeting package zip — agenda plus the attached board documents (minutes, financials, reports)",
       });
       setResultUrl(file_url);
     } catch (err) {
@@ -194,7 +196,7 @@ export default function MeetingPackageDialog({ meeting, items, onClose }) {
               <CheckCircle2 size={20} className="text-success mt-0.5 shrink-0" />
               <div>
                 <p className="text-sm font-medium">Package created.</p>
-                <p className="text-xs text-muted-foreground mt-0.5">It's saved in the Board Portal's Documents library under Corporate Docs.</p>
+                <p className="text-xs text-muted-foreground mt-0.5">It's a zip file saved in the Board Portal's Documents library under Corporate Docs — unzip it to find the agenda and each document as its own file.</p>
               </div>
             </div>
             <div className="flex gap-3 mt-5">
@@ -209,7 +211,7 @@ export default function MeetingPackageDialog({ meeting, items, onClose }) {
           </div>
         ) : (
           <>
-            <p className="text-sm text-muted-foreground mt-3">Everything below is compiled into one PDF — uncheck anything you don't want included.</p>
+            <p className="text-sm text-muted-foreground mt-3">Everything below is bundled into one zip file — each document stays in its own format. Uncheck anything you don't want included.</p>
             <div className="mt-4 space-y-1.5 max-h-[46vh] overflow-auto pr-1">
               {parts.map((p) => (
                 <label key={p.id} className={`flex items-start gap-3 border border-border rounded-lg px-3 py-2.5 ${p.available ? "cursor-pointer hover:bg-muted/50" : "opacity-60"}`}>
