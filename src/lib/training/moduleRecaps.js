@@ -890,6 +890,46 @@ export const MODULE_RECAPS = {
       },
     ],
   },
+  empoweru: {
+    kicker: "What we've learned",
+    title: "A cohort is a class, and a seat is a promise.",
+    body: "Bringing the EmpowerU portal together. Cohorts are the classes: dates, delivery mode, location, facilitator and capacity, two or three a year. People arrive either through the cohort's registration link, where staff approve or reject the application, or as a referral, and each one becomes a registration — registered, waitlisted or enrolled — hanging off a cohort. While they wait, the waitlist tracks the contact. Once enrolled, Account Setup follows them through to an ATB savings account, and Program Documents holds the paperwork against the person. Funder Reports is a view of the official workbook, not the place the work happens, so do the work in the portal and let the tracker follow.",
+    audioUrl: "https://media.base44.com/files/public/6a249282cb496579542673b7/067d022c4_speech.mp3",
+    takeaways: [
+      "A cohort holds the dates, delivery mode, location, facilitator and capacity — two or three run each year.",
+      "Registrations hang off a cohort: registered, waitlisted, enrolled, withdrawn, completed or declined.",
+      "Applications arrive through the cohort's link and staff approve or reject them; approving creates the person.",
+      "The waitlist is contact work — a contact state, the last contact and the next follow-up date.",
+      "Account Setup is the ATB pipeline, advanced step by step as it actually happens.",
+      "Funder Reports shows the official workbook; the portal stays the place the work is done.",
+    ],
+    quiz: [
+      {
+        question: "Two people ask how many seats are left in a cohort. Where does that answer come from?",
+        options: ["The funder workbook", "The cohort's capacity against its enrolled registrations", "The waitlist status chips", "The participant's service log"],
+        answer: 1,
+        explain: "Capacity belongs to the cohort, and the enrolled registrations against it are what staff read off the card.",
+      },
+      {
+        question: "Someone fills out the registration link. What has actually happened to their seat?",
+        options: ["They are enrolled immediately", "An application is awaiting approval on the cohort's page", "They are added to the waitlist automatically", "Nothing at all"],
+        answer: 1,
+        explain: "The form creates an application; staff approve it, which creates the participant and the registration.",
+      },
+      {
+        question: "A participant is waiting for a seat. What does the waitlist actually track?",
+        options: ["Their attendance", "Their contact state, last contact and follow-up date", "Their savings balance", "Their documents"],
+        answer: 1,
+        explain: "The waitlist is contact work — who was reached, how and when the next follow-up is due.",
+      },
+      {
+        question: "Where does the ATB savings account step belong?",
+        options: ["In the program description", "In Account Setup, advanced as each step happens", "In the funder workbook only", "In a document upload"],
+        answer: 1,
+        explain: "Account Setup is the pipeline that shows where each enrolled participant is in opening their account.",
+      },
+    ],
+  },
 };
 
 export const getModuleRecap = (key) => MODULE_RECAPS[key] || null;

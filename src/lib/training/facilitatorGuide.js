@@ -456,6 +456,38 @@ export const FACILITATOR_GUIDE = {
       "Keep the progress-note discussion short but specific: one rating, one next step, per family they would write up this week.",
     ],
   },
+  empoweru: {
+    duration: "About 40 minutes (5 intro · 22 tour · 10 practice · 3 wrap-up)",
+    objectives: [
+      "Staff can tell a cohort (the class) from a registration (the person's seat in it)",
+      "Staff can create a cohort and know which fields decide whether it can be registered into",
+      "Staff can approve an application and work the waitlist as contact work, not a holding pen",
+      "Staff know where Account Setup sits and why it is advanced step by step",
+    ],
+    stepNotes: {
+      "Four numbers that tell you where the program stands": "Point out that Acct Setup Done is a fraction, not a count. That fraction is the quiet work: nobody phones to ask about it, so it stalls unless someone watches it.",
+      "Cohorts and account setups, side by side": "Ask the room what the amber banner means before clicking it. The answer you want: overdue follow-ups or three-plus contact attempts on account setups.",
+      "Cohorts are the classes, not the people": "This distinction carries the whole module. Have someone say out loud what a cohort is and what a registration is before moving on.",
+      "Setting a cohort up properly": "Stop on Registration Open. A cohort that exists but is not open for registration is the most common 'the link doesn't work' call.",
+      "Applications arrive through the link": "Show the copy and preview on the registration link, then approve the seeded demo application live. Make clear approving is what creates the participant.",
+      "The waitlist is contact work": "Name the contact states out loud. The point is that someone reading the list can tell when the last contact was and when the next one is due.",
+      "Account Setup — the ATB account": "Demo Log Contact and one advance. Staff who only ever advance the status lose the contact history that explains the gaps.",
+      "Funder Reports — the official workbook": "Say plainly that this is a view. Nobody should be editing the tracker to fix the portal — fix the portal record.",
+      "One person, one file, across the whole organization": "Same lesson as every other portal: match the Central Database before creating a participant. Remind them Central Registration can also create registrations here.",
+    },
+    practiceNotes: {
+      "empoweru-cohort": "Auto-checked. Check they set both dates and a capacity, not just a name.",
+      "empoweru-registration": "Auto-checked. Watch that they add the registration from inside a cohort, not a stray record.",
+      "empoweru-waitlist": "Self-marked. Ask what follow-up date they set and why.",
+      "empoweru-account": "Self-marked. Ask which status the participant reached.",
+      "empoweru-document": "Auto-checked. A participant should be chosen, not left as a general document.",
+    },
+    tips: [
+      "Run this in the EmpowerU portal with Test Mode on — the seeded cohort, waitlist entry and account setup give the tour something to point at.",
+      "If a cohort is starting soon, use that one instead of the demo cohort; the room recognises its own class faster.",
+      "Pair with the Central Registration module if front-desk staff are the ones taking EmpowerU registrations.",
+    ],
+  },
 };
 
 export const getFacilitatorGuide = (moduleKey) => FACILITATOR_GUIDE[moduleKey] || null;

@@ -138,7 +138,13 @@ function demoData() {
       { cohort_name: 'EmpowerU Test Cohort', status: 'pending', application_date: D(1), first_name: 'New', last_name: 'Applicant', phone: '780-555-0310', email: 'new.applicant@example.ca', consent_agreed: true },
     ],
     EmpowerUAccountSetup: [
-      { participant_name: 'Priya Practice', cohort_name: 'EmpowerU Test Cohort', status: 'appointment_scheduled', savings_amount: 300 },
+      { participant_name: 'Priya Practice', cohort_name: 'EmpowerU Test Cohort', status: 'appointment_scheduled', savings_amount: 300, follow_up_attempts: 1, next_action_date: D(-2) },
+    ],
+    EmpowerUServiceLog: [
+      { participant_name: 'Priya Practice', cohort_name: 'EmpowerU Test Cohort', service_date: D(12), service_type: 'follow_up', summary: 'Demo follow-up call (Test Mode)', follow_up_needed: true },
+    ],
+    EmpowerUDocument: [
+      { title: 'Demo ID copy', doc_type: 'ID copy', category: 'participant', participant_name: 'Priya Practice', cohort_name: 'EmpowerU Test Cohort', file_name: 'demo-id-copy.pdf', notes: 'Demo document (Test Mode)' },
     ],
     ELLLearner: [
       { first_name: 'Lena', last_name: 'Learner', phone: '780-555-0401', email: 'lena@example.ca', clb_level: 'clb_4', enrollment_status: 'active', intake_date: D(45), waitlist_status: 'waiting' },

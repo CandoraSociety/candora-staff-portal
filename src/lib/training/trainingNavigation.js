@@ -1,7 +1,7 @@
 export const TRAINING_NAV_GROUPS = [
   { title: "Getting started", keys: ["welcome", "dashboard", "dashboard_widgets"] },
   { title: "Time & Money", keys: ["staffadmin", "staffadmin_money", "staffadmin_supervisor"] },
-  { title: "Program portals", keys: ["pathways", "pathways_journey", "pathways_journey_part2", "pathways_assessment", "pathways_service_nav", "pathways_workshops", "joblab", "central_database_basics", "central_database_advanced", "ell", "frn", "phac", "centralreg", "reception"] },
+  { title: "Program portals", keys: ["pathways", "pathways_journey", "pathways_journey_part2", "pathways_assessment", "pathways_service_nav", "pathways_workshops", "joblab", "central_database_basics", "central_database_advanced", "ell", "frn", "phac", "empoweru", "centralreg", "reception"] },
   { title: "Tools", keys: ["filemanager", "filemanager_advanced"] },
 ];
 
@@ -25,6 +25,7 @@ export const TRAINING_MODULE_SERIES = {
   central_database_advanced: "rc",
   frn: "family",
   phac: "family",
+  empoweru: "empoweru",
   centralreg: "centralreg",
   reception: "reception",
   filemanager: "filemanager",
@@ -41,6 +42,7 @@ export const TRAINING_SERIES_TITLES = {
   rc: "Central Database",
   ell: "ELL",
   family: "Family Programs",
+  empoweru: "EmpowerU",
   centralreg: "Central Registration",
   reception: "Reception",
   filemanager: "File Manager",
@@ -262,6 +264,23 @@ const SECTION_STARTS = {
     "Inside a family's file": "Families",
     "Progress notes": "Families",
     "Linking to the Central Database": "How it connects",
+    "Time to practice": "Practice",
+  },
+  empoweru: {
+    "Welcome to the EmpowerU portal": "Overview",
+    "Four numbers that tell you where the program stands": "Overview",
+    "Cohorts and account setups, side by side": "Overview",
+    "Cohorts are the classes, not the people": "Cohorts",
+    "Setting a cohort up properly": "Cohorts",
+    "Inside a cohort": "Cohorts",
+    "Applications arrive through the link": "Applications & seats",
+    "Participants — one record per person": "Participants",
+    "Inside a participant's file": "Participants",
+    "The waitlist is contact work": "Waitlist",
+    "Account Setup — the ATB account": "Account setup",
+    "Program Documents": "Documents & funder reports",
+    "Funder Reports — the official workbook": "Documents & funder reports",
+    "One person, one file, across the whole organization": "How it connects",
     "Time to practice": "Practice",
   },
   filemanager_advanced: {

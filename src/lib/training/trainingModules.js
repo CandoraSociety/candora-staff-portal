@@ -26,12 +26,14 @@ import { CENTRAL_DATABASE_MODULES } from "@/lib/training/modules/centralDatabase
 import { MINI_MODULES } from "@/lib/training/modules/miniModules";
 import { JOBLAB_MODULES } from "@/lib/training/modules/jobLabModules";
 import { FRN_PHAC_MODULES } from "@/lib/training/modules/frnPhacModules";
+import { EMPOWERU_MODULES } from "@/lib/training/modules/empoweruModules";
 
 export const TRAINING_MODULES = [
   // Welcome & app tour leads the catalog — every staff member starts here.
   ...WELCOME_MODULES,
   ...CENTRAL_DATABASE_MODULES,
   ...FRN_PHAC_MODULES,
+  ...EMPOWERU_MODULES,
   {
     key: "dashboard",
     title: "Main User Page",
@@ -1198,6 +1200,7 @@ export const TRAINING_MODULE_ACCESS = {
   ell: "ell",
   frn: "frn",
   phac: "phac",
+  empoweru: "empoweru",
   centralreg: "central-registration",
   reception: "reception",
   filemanager: "filemanager",
@@ -1228,6 +1231,7 @@ export const moduleForPath = (pathname) => {
     ["/rc", "central_database_basics"],
     ["/ell", "ell"],
     ["/central-registration", "centralreg"],
+    ["/empoweru", "empoweru"],
     ["/reception", "reception"],
     ["/filemanager", "filemanager"],
   ];
