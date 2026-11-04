@@ -370,6 +370,46 @@ export const MODULE_RECAPS = {
     ],
   },
 
+  reception_simple: {
+    kicker: "What we've learned",
+    title: "A smaller desk, the same records.",
+    body: "That comes down to four cards. Appointments is someone who called ahead, so book it, then check them in on the row when they arrive. Drop-Ins is someone standing in front of you, so sign them in and check them out when they leave. Program Registration writes the same records Central Registration uses, waitlists included, so there is no second list. Resource Finder answers what our own programs cannot, and you hand the contact details over before the person leaves. Everything here is still the front desk portal: same appointments, same client file, same urgent alert. Simple mode only removes the parts of the screen you were not using on an ordinary shift, and the switch in the header takes you back to the full portal whenever a task needs Client Visit, the Staff Directory or the alert list.",
+    audioUrl: "https://media.base44.com/files/public/6a249282cb496579542673b7/b1dde1ce5_speech.mp3",
+    takeaways: [
+      "Simple mode is a view setting on your own account — a supervisor keeps the full dashboard.",
+      "Four cards, one question each: Appointments, Drop-Ins, Program Registration, Resource Finder.",
+      "Check In on arrival and Check Out when they leave — that is what the counts read.",
+      "Registrations write the same records Central Registration uses; full sessions go to the waitlist.",
+      "Urgent Alert stays on the home page in simple mode, one press away.",
+      "Nothing is a copy: every save lands on the client file in the central client database.",
+    ],
+    quiz: [
+      {
+        question: "A person walks in without an appointment. Which card handles them?",
+        options: ["Appointments", "Drop-Ins", "Program Registration", "Resource Finder"],
+        answer: 1,
+        explain: "A walk-in is recorded as a drop-in — signed in on arrival and checked out when they leave.",
+      },
+      {
+        question: "Someone calls to book a visit with a staff member next week. What do you record?",
+        options: ["A drop-in", "A visitor appointment with the date, time, staff member and purpose", "A program registration", "An urgent alert"],
+        answer: 1,
+        explain: "New Visitor Appointment captures the visitor, the time, who they are seeing and why — that purpose is what the staff member reads.",
+      },
+      {
+        question: "You turn Simple mode on. What changes for your supervisor?",
+        options: ["Nothing — it only changes your own view", "Their dashboard becomes simple too", "They lose access to the Reception portal", "They get a notification"],
+        answer: 0,
+        explain: "The switch saves to your own account, so the team's view is untouched.",
+      },
+      {
+        question: "Where does Simple mode leave the Urgent Alert button?",
+        options: ["Only in the full portal", "On the Reception home page, top right", "Inside the Resource Finder", "Under Program Registration"],
+        answer: 1,
+        explain: "It stays one press away on the simple home page — it should never take three clicks to find.",
+      },
+    ],
+  },
   reception: {
     kicker: "What we've learned",
     title: "The desk, in three moves.",

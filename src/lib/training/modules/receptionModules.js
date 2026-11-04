@@ -10,7 +10,7 @@ export const RECEPTION_MODULES = [
     key: "reception",
     title: "Reception (Front Desk)",
     shortTitle: "Reception",
-    blurb: "The front desk end to end: appointments, drop-ins, client visits, program registration, the staff directory and resource finder, urgent alerts — and how simple mode trims it to three cards.",
+    blurb: "The front desk end to end: appointments, drop-ins, client visits, program registration, the staff directory and resource finder, urgent alerts — and how simple mode trims it to four cards.",
     path: "/reception",
     steps: [
       {
@@ -92,7 +92,7 @@ export const RECEPTION_MODULES = [
       },
       {
         title: "Simple mode for the front desk",
-        body: "If the full portal feels like too much on a busy shift, turn Simple mode on with the switch in the Reception header. The dashboard becomes three big cards — Appointments, Drop-Ins and Program Registration — and the top menu shrinks to those same three, with nothing to read through first. It only changes your own view, so a supervisor can keep the full dashboard while the desk uses the simple one. Flip the switch off whenever you need more.",
+        body: "If the full portal feels like too much on a busy shift, turn Simple mode on with the switch in the Reception header. The dashboard becomes four big cards — Appointments, Drop-Ins, Program Registration and Resource Finder — and the top menu shrinks to match, with nothing to read through first. It only changes your own view, so a supervisor can keep the full dashboard while the desk uses the simple one. There is a separate training module for Simple mode if you want that layout walked through on its own.",
         path: "/reception",
         target: { selector: '[data-tour="reception-simple-mode"]' }
       },

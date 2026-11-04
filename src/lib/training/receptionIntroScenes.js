@@ -24,8 +24,8 @@ export const RECEPTION_INTRO_SCENES = {
     {
       kicker: 'Simple mode',
       title: "Turn it down when it's busy.",
-      body: 'If the full portal is too much on a busy shift, Simple mode trims your view to three cards and three tabs: Appointments, Drop-Ins and Program Registration. It only changes your own screen, so a supervisor keeps the full dashboard.',
-      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/f8af06905_speech.mp3',
+      body: 'If the full portal is too much on a busy shift, Simple mode trims your view to four cards and four tabs: Appointments, Drop-Ins, Program Registration and Resource Finder. It only changes your own screen, so a supervisor keeps the full dashboard.',
+      audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/5893acebd_speech.mp3',
     },
     {
       kicker: 'Safety',

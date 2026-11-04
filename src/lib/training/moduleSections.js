@@ -9,7 +9,7 @@ export const TRAINING_MODULE_SECTIONS = [
   { key: "ell", title: "ELL", moduleKeys: ["ell"] },
   { key: "family", title: "Family Programs", moduleKeys: ["frn", "phac"] },
   { key: "centralreg", title: "Central Registration", moduleKeys: ["centralreg"] },
-  { key: "reception", title: "Reception", moduleKeys: ["reception"] },
+  { key: "reception", title: "Reception", moduleKeys: ["reception", "reception_simple"] },
   { key: "rworker", title: "Resource Worker", moduleKeys: ["rworker"] },
   { key: "filemanager", title: "File Manager", moduleKeys: ["filemanager", "filemanager_advanced"] },
   // Short single-tool trainings — a category of their own, not part of a portal series.

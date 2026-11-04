@@ -25,12 +25,12 @@ export const RECEPTION_RECAP_SCENES = {
     },
     {
       title: 'Look after the front desk itself',
-      audioUrl: audio('b53caf43b'),
+      audioUrl: audio('91d18bef9'),
       points: [
         'Staff Directory: click-to-call answers who this person needs to see.',
         'Resource Finder: describe the situation in plain words to find outside supports.',
         'Urgent alerts: email the right managers and staff immediately.',
-        'Simple mode: three cards and three tabs — Appointments, Drop-Ins, Program Registration.',
+        'Simple mode: four cards and four tabs — Appointments, Drop-Ins, Program Registration, Resource Finder.',
       ],
     },
   ],

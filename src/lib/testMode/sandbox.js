@@ -568,7 +568,7 @@ const coreProxy = new Proxy(coreSim, {
 // member can open any portal and exercise it on demo data.
 const MODULE_IDS = [
   'pathways', 'grants', 'finance', 'rc', 'ell', 'empoweru', 'phac', 'frn',
-  'digilit', 'community', 'centralreg', 'childminding', 'rworker', 'winterwonderland',
+  'digilit', 'community', 'centralreg', 'childminding', 'rworker', 'reception_simple', 'winterwonderland',
   'lms', 'reception', 'board', 'nexushr', 'volunteermgr', 'marketing',
   'eventsmgr', 'reporting', 'food', 'filemanager', 'outlook', 'archives',
   'presentations',

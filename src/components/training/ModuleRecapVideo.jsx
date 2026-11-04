@@ -10,8 +10,9 @@ import { FAMILY_PROGRAMS_RECAP_SCENES } from '@/lib/training/recapVideos/familyP
 import { EMPOWERU_RECAP_SCENES } from '@/lib/training/recapVideos/empoweruRecaps';
 import { CHILDMINDING_RECAP_SCENES } from '@/lib/training/recapVideos/childmindingRecaps';
 import { RWORKER_RECAP_SCENES } from '@/lib/training/recapVideos/rworkerRecaps';
+import { RECEPTION_SIMPLE_RECAP_SCENES } from '@/lib/training/recapVideos/receptionSimpleRecaps';
 
-const SCENES = { ...STAFF_RECAP_SCENES, ...PATHWAYS_RECAP_SCENES, ...DATABASE_RECAP_SCENES, ...RECEPTION_RECAP_SCENES, ...FAMILY_PROGRAMS_RECAP_SCENES, ...EMPOWERU_RECAP_SCENES, ...CHILDMINDING_RECAP_SCENES, ...RWORKER_RECAP_SCENES };
+const SCENES = { ...STAFF_RECAP_SCENES, ...PATHWAYS_RECAP_SCENES, ...DATABASE_RECAP_SCENES, ...RECEPTION_RECAP_SCENES, ...FAMILY_PROGRAMS_RECAP_SCENES, ...EMPOWERU_RECAP_SCENES, ...CHILDMINDING_RECAP_SCENES, ...RWORKER_RECAP_SCENES, ...RECEPTION_SIMPLE_RECAP_SCENES };
 
 // The points ARE the video: each scene has its own matching narration.
 // There is no paragraph player or supplementary takeaway panel below it.

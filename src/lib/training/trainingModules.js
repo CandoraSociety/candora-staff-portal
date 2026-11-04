@@ -22,6 +22,7 @@ import { ELL_MODULES } from "@/lib/training/modules/ellModules";
 import { FILE_MANAGER_ADVANCED_MODULES } from "@/lib/training/modules/fileManagerAdvancedModules";
 import { WELCOME_MODULES } from "@/lib/training/modules/welcomeModules";
 import { RECEPTION_MODULES } from "@/lib/training/modules/receptionModules";
+import { RECEPTION_SIMPLE_MODULES } from "@/lib/training/modules/receptionSimpleModules";
 import { CENTRAL_DATABASE_MODULES } from "@/lib/training/modules/centralDatabaseModules";
 import { MINI_MODULES } from "@/lib/training/modules/miniModules";
 import { JOBLAB_MODULES } from "@/lib/training/modules/jobLabModules";
@@ -1178,6 +1179,7 @@ export const TRAINING_MODULES = [
     ]
   },
   ...RECEPTION_MODULES,
+  ...RECEPTION_SIMPLE_MODULES,
   ...FILE_MANAGER_MODULES,
   ...FILE_MANAGER_ADVANCED_MODULES,
   // Short single-tool trainings, surfaced in a portal's "Mini-Modules" category.
@@ -1209,6 +1211,7 @@ export const TRAINING_MODULE_ACCESS = {
   rworker: "rworker",
   centralreg: "central-registration",
   reception: "reception",
+  reception_simple: "reception",
   filemanager: "filemanager",
   filemanager_advanced: "filemanager",
   pathways_resources: "pathways",

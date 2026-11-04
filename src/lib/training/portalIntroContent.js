@@ -5,6 +5,7 @@ import { FRN_PHAC_INTRO_SCENES } from '@/lib/training/frnPhacIntroScenes';
 import { EMPOWERU_INTRO_SCENES } from '@/lib/training/empoweruIntroScenes';
 import { CHILDMINDING_INTRO_SCENES } from '@/lib/training/childmindingIntroScenes';
 import { RWORKER_INTRO_SCENES } from '@/lib/training/rworkerIntroScenes';
+import { RECEPTION_SIMPLE_INTRO_SCENES } from '@/lib/training/receptionSimpleIntroScenes';
 
 // Candora's original uploaded organization logo, not the Staff Portal mark.
 export const PORTAL_INTRO_LOGO = 'https://base44.app/api/apps/6a249282cb496579542673b7/files/mp/public/6a249282cb496579542673b7/8d587672d_Candoracirclelogo_noanniversary.png';
@@ -360,6 +361,7 @@ const INTRO_SCENES_BY_MODULE = {
   empoweru: EMPOWERU_INTRO_SCENES,
   childminding: CHILDMINDING_INTRO_SCENES,
   rworker: RWORKER_INTRO_SCENES,
+  reception_simple: RECEPTION_SIMPLE_INTRO_SCENES,
 };
 
 export function getModuleIntroScenes(moduleKey) {

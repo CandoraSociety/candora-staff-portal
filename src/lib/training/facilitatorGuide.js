@@ -456,6 +456,37 @@ export const FACILITATOR_GUIDE = {
       "Keep the progress-note discussion short but specific: one rating, one next step, per family they would write up this week.",
     ],
   },
+  reception_simple: {
+    duration: "About 20 minutes (4 intro · 10 tour · 5 practice · 1 wrap-up)",
+    objectives: [
+      "Staff can turn Simple mode on and off and know it is their own view, not the team's",
+      "Staff can pick the right card for the question in front of them",
+      "Staff can book a visitor appointment and check them in on arrival",
+      "Staff can sign a walk-in in and back out of the drop-in list",
+      "Staff can use Resource Finder when the answer sits outside Candora",
+      "Staff know what simple mode hides, and that the records underneath are the same ones",
+    ],
+    stepNotes: {
+      "Turn Simple mode on": "Get the room to flip the switch before anything else. If they stay in the full portal the rest of the tour will not match what they see, and the lesson loses its point.",
+      "Four cards, no reading": "Ask the room for four situations and have them name the card out loud before you move on. That is the whole skill of this screen.",
+      "The urgent button stays put": "Say plainly that simple mode never hides this. If anything, busy shifts are when it matters most.",
+      "The moment that matters: Check In": "Do one live check-in together. The mistake to name is booking a second appointment instead of editing the row.",
+      "Drop-Ins — in and back out": "Demonstrate checking someone out as well as in — a drop-in left open skews the checked-in count for the rest of the shift.",
+      "Resource Finder — the fourth card": "Run one real query from the room. It is the card people forget exists and then use constantly.",
+      "What simple mode leaves out": "Land the point that nothing was taken away: Client Visit, the Staff Directory and the Urgent Alerts list are one switch away.",
+    },
+    practiceNotes: {
+      "rs-simple": "Self-marked. Ask which card they would reach for in a queue of five people.",
+      "rs-appt": "Auto-checked. Confirm they used Check In on the row, not a second booking.",
+      "rs-dropin": "Auto-checked. Check the arrival time and who they were here to see are filled in.",
+      "rs-resource": "Self-marked. Ask them to read back the contact details they would hand over, and to whom.",
+    },
+    tips: [
+      "Run this module after the full Reception module, or on its own for staff who only ever work the simple layout — it stands up alone.",
+      "Keep it short and hands-on. This is a shift-time training, not a classroom one.",
+      "If the desk is trialling simple mode, do this module in the first hour of a quiet shift, then leave them in simple mode for the week.",
+    ],
+  },
   rworker: {
     duration: "About 30 minutes (5 intro · 15 tour · 8 practice · 2 wrap-up)",
     objectives: [

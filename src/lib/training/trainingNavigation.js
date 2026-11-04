@@ -1,7 +1,7 @@
 export const TRAINING_NAV_GROUPS = [
   { title: "Getting started", keys: ["welcome", "dashboard", "dashboard_widgets"] },
   { title: "Time & Money", keys: ["staffadmin", "staffadmin_money", "staffadmin_supervisor"] },
-  { title: "Program portals", keys: ["pathways", "pathways_journey", "pathways_journey_part2", "pathways_assessment", "pathways_service_nav", "pathways_workshops", "joblab", "central_database_basics", "central_database_advanced", "ell", "frn", "phac", "empoweru", "childminding", "rworker", "centralreg", "reception"] },
+  { title: "Program portals", keys: ["pathways", "pathways_journey", "pathways_journey_part2", "pathways_assessment", "pathways_service_nav", "pathways_workshops", "joblab", "central_database_basics", "central_database_advanced", "ell", "frn", "phac", "empoweru", "childminding", "rworker", "centralreg", "reception", "reception_simple"] },
   { title: "Tools", keys: ["filemanager", "filemanager_advanced"] },
 ];
 
@@ -28,6 +28,7 @@ export const TRAINING_MODULE_SERIES = {
   empoweru: "empoweru",
   childminding: "childminding",
   rworker: "rworker",
+  reception_simple: "reception",
   centralreg: "centralreg",
   reception: "reception",
   filemanager: "filemanager",
@@ -47,6 +48,7 @@ export const TRAINING_SERIES_TITLES = {
   empoweru: "EmpowerU",
   childminding: "Childminding",
   rworker: "Resource Worker",
+  reception_simple: "Simple Mode",
   centralreg: "Central Registration",
   reception: "Reception",
   filemanager: "File Manager",
@@ -268,6 +270,19 @@ const SECTION_STARTS = {
     "Inside a family's file": "Families",
     "Progress notes": "Families",
     "Linking to the Central Database": "How it connects",
+    "Time to practice": "Practice",
+  },
+  reception_simple: {
+    "One portal, turned down": "Overview",
+    "Turn Simple mode on": "Overview",
+    "Four cards, no reading": "The four cards",
+    "The urgent button stays put": "The four cards",
+    "Appointments — booking the visitor": "Appointments",
+    "The moment that matters: Check In": "Appointments",
+    "Drop-Ins — in and back out": "Drop-Ins",
+    "Program Registration, same records": "Program registration",
+    "Resource Finder — the fourth card": "Resource finder",
+    "What simple mode leaves out": "How it connects",
     "Time to practice": "Practice",
   },
   rworker: {
