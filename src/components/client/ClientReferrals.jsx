@@ -42,8 +42,12 @@ export default function ClientReferrals({ client, onSave }) {
         const me = await base44.auth.me();
         await base44.entities.ProgramReferral.bulkCreate(newInternal.map(program => ({
           client_id: client.id,
+          rc_client_id: client.linked_rc_client_id || undefined,
           client_name: `${client.first_name} ${client.last_name}`,
+          client_phone: client.phone || undefined,
+          client_email: client.email || undefined,
           program,
+          source_label: 'Pathways',
           referred_by_name: me?.full_name || '',
           referred_by_email: me?.email || '',
           referral_date: new Date().toISOString().split('T')[0],

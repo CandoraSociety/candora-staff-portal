@@ -17,6 +17,19 @@ export const PROGRAM_REFERRAL_LABELS = Object.fromEntries(
   PROGRAM_REFERRAL_OPTIONS.map((o) => [o.value, o.label])
 );
 
+// Which program value a portal's referrals come from — used so a portal never
+// offers to refer someone into itself.
+export const SOURCE_LABEL_PROGRAMS = {
+  ELL: 'ell',
+  EmpowerU: 'empoweru',
+  FRN: 'frn',
+  PHAC: 'phac',
+  'Digital Literacy': 'digital_literacy',
+  'Community Programs': 'family_programs',
+  Childminding: 'childcare_program',
+  'Resource Centre': 'settlement_services',
+};
+
 // Where the receiving program's own portal lives.
 export const PROGRAM_REFERRAL_PATHS = {
   ell: '/ell',

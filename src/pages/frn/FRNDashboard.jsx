@@ -9,6 +9,7 @@ import { PROGRAM_LABELS, STATUS_LABELS, STATUS_COLORS } from '@/lib/frnConstants
 import { referralIsInProgram, referralProgramName } from '@/lib/frnPrograms';
 import StatusBadge from '@/components/frn/StatusBadge';
 import ProgramReferralsPanel from '@/components/referrals/ProgramReferralsPanel';
+import NewReferralAlert from '@/components/referrals/NewReferralAlert';
 
 export default function FRNDashboard() {
   const { data: participants = [] } = useQuery({
@@ -78,6 +79,8 @@ export default function FRNDashboard() {
           );
         })}
       </div>
+
+      <NewReferralAlert program="frn" />
 
       <ProgramReferralsPanel program="frn" title="Referrals from other programs" description="People referred into FRN from the Central Database or another program portal." />
 

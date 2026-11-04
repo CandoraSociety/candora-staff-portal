@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -21,6 +21,12 @@ export default function ProgramReferralsPanel({ program, title, description }) {
     },
   });
 
+  // A referral made in another portal lands here without a refresh.
+  useEffect(() => base44.entities.ProgramReferral.subscribe(() => {
+    queryClient.invalidateQueries({ queryKey: ['program-referrals'] });
+    queryClient.invalidateQueries({ queryKey: ['new-program-referrals'] });
+  }), [queryClient]);
+
   const handleUpdate = async (referral, status) => {
     setBusyId(referral.id);
     try {
@@ -31,6 +37,7 @@ export default function ProgramReferralsPanel({ program, title, description }) {
         handled_date: new Date().toISOString().split('T')[0],
       });
       queryClient.invalidateQueries({ queryKey: ['program-referrals', program || 'all'] });
+      queryClient.invalidateQueries({ queryKey: ['new-program-referrals'] });
       toast.success(status === 'completed' ? 'Referral marked complete' : 'Referral marked contacted');
     } catch {
       toast.error('Could not update the referral');

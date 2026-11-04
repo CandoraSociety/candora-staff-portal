@@ -1,6 +1,8 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { PROGRAM_REFERRAL_LABELS } from '@/lib/programReferralConstants';
+import { ArrowRight } from 'lucide-react';
+import { PROGRAM_REFERRAL_LABELS, PROGRAM_REFERRAL_PATHS } from '@/lib/programReferralConstants';
 
 export default function ProgramReferralRow({ referral, busy, onUpdate, showProgram }) {
   const programLabel = PROGRAM_REFERRAL_LABELS[referral.program] || referral.program;
@@ -19,6 +21,12 @@ export default function ProgramReferralRow({ referral, busy, onUpdate, showProgr
         {referral.notes && <p className="text-xs text-muted-foreground mt-1">{referral.notes}</p>}
       </div>
       <div className="flex items-center gap-2 shrink-0">
+        <Link to={PROGRAM_REFERRAL_PATHS[referral.program] || '/central-registration'}>
+          <Button variant="ghost" size="sm">
+            Open
+            <ArrowRight className="h-3.5 w-3.5" />
+          </Button>
+        </Link>
         {referral.status === 'new' && (
           <Button variant="outline" size="sm" disabled={busy} onClick={() => onUpdate(referral, 'contacted')}>
             Contacted

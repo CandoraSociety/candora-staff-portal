@@ -10,6 +10,7 @@ import StatusBadge from '@/components/rc/StatusBadge';
 import { REG_STATUS_OPTIONS } from '@/lib/receptionConstants';
 import { REG_AREA_OPTIONS, REG_AREA_LABELS, REG_AREA_PATHS } from '@/lib/centralRegConstants';
 import ProgramReferralsPanel from '@/components/referrals/ProgramReferralsPanel';
+import NewReferralAlert from '@/components/referrals/NewReferralAlert';
 
 export default function CentralRegDashboard() {
   const queryClient = useQueryClient();
@@ -88,6 +89,8 @@ export default function CentralRegDashboard() {
               </CardContent>
             </Card>
           )}
+
+          <NewReferralAlert />
 
           <ProgramReferralsPanel
             title="Internal Program Referrals"

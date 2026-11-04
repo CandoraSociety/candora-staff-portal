@@ -6,7 +6,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { toast } from 'sonner';
-import { PROGRAM_REFERRAL_OPTIONS } from '@/lib/programReferralConstants';
+import { PROGRAM_REFERRAL_OPTIONS, SOURCE_LABEL_PROGRAMS } from '@/lib/programReferralConstants';
 
 // Refers a person into one or more Candora internal programs. The referral
 // shows up on the receiving portal's dashboard and in Central Registration.
@@ -22,6 +22,10 @@ export default function ReferralToProgramDialog({ open, onOpenChange, person, so
   const toggle = (value) => {
     setSelected((prev) => (prev.includes(value) ? prev.filter((v) => v !== value) : [...prev, value]));
   };
+
+  // A portal never refers someone into itself.
+  const ownProgram = SOURCE_LABEL_PROGRAMS[sourceLabel];
+  const options = PROGRAM_REFERRAL_OPTIONS.filter((opt) => opt.value !== ownProgram);
 
   const handleSave = async () => {
     if (selected.length === 0) { toast.error('Choose at least one program to refer to'); return; }
@@ -69,7 +73,7 @@ export default function ReferralToProgramDialog({ open, onOpenChange, person, so
           <div>
             <Label className="mb-2 block">Receiving program(s)</Label>
             <div className="grid gap-2 max-h-56 overflow-y-auto pr-1">
-              {PROGRAM_REFERRAL_OPTIONS.map((opt) => (
+              {options.map((opt) => (
                 <div key={opt.value} className="flex items-center gap-3">
                   <Checkbox
                     id={`ref-${opt.value}`}

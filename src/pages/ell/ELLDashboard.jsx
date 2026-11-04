@@ -6,6 +6,7 @@ import { Users, BookOpen, UserCog, ClipboardCheck, TrendingUp } from "lucide-rea
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Link } from "react-router-dom";
 import ProgramReferralsPanel from "@/components/referrals/ProgramReferralsPanel";
+import NewReferralAlert from "@/components/referrals/NewReferralAlert";
 import { listEllClasses, listEllInstructors, ellLearnersQuery } from "@/lib/ellLists";
 
 export default function ELLDashboard() {
@@ -161,6 +162,8 @@ export default function ELLDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      <NewReferralAlert program="ell" />
 
       <ProgramReferralsPanel program="ell" />
 

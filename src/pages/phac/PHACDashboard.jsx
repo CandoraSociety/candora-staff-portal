@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import StatusBadge from '@/components/phac/StatusBadge';
 import { PROGRAM_STATUS_OPTIONS, SESSION_STATUS_OPTIONS, WEEKDAY_LABELS, formatAgeRange, isOffSeason } from '@/lib/phacConstants';
 import ProgramReferralsPanel from '@/components/referrals/ProgramReferralsPanel';
+import NewReferralAlert from '@/components/referrals/NewReferralAlert';
 
 export default function PHACDashboard() {
   const { data: programs = [] } = useQuery({
@@ -82,6 +83,8 @@ export default function PHACDashboard() {
           );
         })}
       </div>
+
+      <NewReferralAlert program="phac" />
 
       <ProgramReferralsPanel program="phac" title="Referrals from other programs" description="Families referred into PHAC from the Central Database or another program portal." />
 
