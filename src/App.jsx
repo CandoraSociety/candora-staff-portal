@@ -381,6 +381,8 @@ import LMSPrograms from '@/pages/lms/Programs';
 
 // Reception Portal
 import ReceptionLayout from '@/components/reception/ReceptionLayout';
+import ReceptionPortalGuard from '@/components/reception/ReceptionPortalGuard';
+import ReceptionPortalLayout from '@/components/reception/ReceptionPortalLayout';
 
 // Finance Portal
 import FinanceLayout from '@/components/finance/FinanceLayout';
@@ -415,6 +417,7 @@ const AuthenticatedApp = () => {
   const { isLoadingAuth, isLoadingPublicSettings, authError, navigateToLogin } = useAuth();
   const location = typeof window !== 'undefined' ? window.location.pathname : '/';
   const isPublicRoute = ['/login', '/register', '/forgot-password', '/reset-password', '/volunteer-portal', '/staff-portal', '/pathways-intake', '/self-register'].includes(location)
+    || location.startsWith('/reception-portal')
     || location.startsWith('/catering-portal')
     || location.startsWith('/employer-portal')
     || location.startsWith('/fillable-minutes')
@@ -459,6 +462,21 @@ const AuthenticatedApp = () => {
 
       {/* Fillable minutes — public link, no login required */}
       <Route path="/fillable-minutes/:id" element={<FillableMinutesPublic />} />
+
+      {/* External Reception portal — the same front desk, signed in by name and
+          the desk PIN, with no staff account attached */}
+      <Route element={<ReceptionPortalGuard />}>
+        <Route element={<ReceptionPortalLayout />}>
+          <Route path="/reception-portal" element={<ReceptionDashboard />} />
+          <Route path="/reception-portal/appointments" element={<ReceptionAppointments />} />
+          <Route path="/reception-portal/dropins" element={<ReceptionDropIns />} />
+          <Route path="/reception-portal/client-visit" element={<ReceptionClientVisit />} />
+          <Route path="/reception-portal/staff" element={<ReceptionStaffDirectory />} />
+          <Route path="/reception-portal/registration" element={<ReceptionProgramRegistration />} />
+          <Route path="/reception-portal/resources" element={<ReceptionResourceFinder />} />
+          <Route path="/reception-portal/urgent" element={<ReceptionUrgentAlerts />} />
+        </Route>
+      </Route>
 
       {/* Job Lab — separate external portal with its own participant session.
           Reachable from the staff portal, but it never uses staff auth or data. */}

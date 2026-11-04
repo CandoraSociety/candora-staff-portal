@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, CalendarDays, UserSearch, Users, ClipboardList, Search, Siren, Menu, X, ArrowLeft, DoorOpen } from 'lucide-react';
+import { LayoutDashboard, CalendarDays, UserSearch, Users, ClipboardList, Search, Siren, Menu, X, ArrowLeft, DoorOpen, ExternalLink } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useOrgSettings } from '@/lib/useOrgSettings';
 import EAFloatingWidget from '@/components/ed/EAFloatingWidget';
@@ -50,6 +50,15 @@ export default function ReceptionLayout() {
             ); })}
           </nav>
           <div className="flex items-center gap-4">
+            <a
+              href="/reception-portal"
+              target="_blank"
+              rel="noreferrer"
+              className="hidden md:flex items-center gap-1.5 text-xs text-sidebar-foreground/60 hover:text-sidebar-foreground"
+              title="Open the external front desk portal in a new tab"
+            >
+              <ExternalLink className="h-3.5 w-3.5" /> External portal
+            </a>
             <div data-tour="reception-simple-mode" className="hidden sm:block">
               <SimpleModeToggle simpleMode={simpleMode} onChange={setSimpleMode} onDark />
             </div>

@@ -15,6 +15,7 @@ import { generateTestClientName } from '@/lib/rcTestClients';
 import GrabAndGoDialog from '@/components/reception/clientvisit/GrabAndGoDialog';
 import CaseworkVisitDialog from '@/components/reception/clientvisit/CaseworkVisitDialog';
 import { todayStr, clientFullName } from '@/lib/rcClientVisits';
+import { isReceptionPortalRoute } from '@/lib/receptionPortalSession';
 
 const EMPTY_FORM = {
   first_name: '', last_name: '', date_of_birth: '', phone: '', email: '', address: '', city: '', postal_code: '',
@@ -33,6 +34,8 @@ const EMPTY_FORM = {
 export default function ClientVisitFlow({ includeGrabAndGo = true }) {
   const { toast } = useToast();
   const navigate = useNavigate();
+  // The external Reception portal has no access to the staff-only client profiles.
+  const inPortal = isReceptionPortalRoute();
   const queryClient = useQueryClient();
 
   const [selected, setSelected] = useState(null);
@@ -186,7 +189,11 @@ export default function ClientVisitFlow({ includeGrabAndGo = true }) {
         <>
           <Card>
             <CardContent className="p-4 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-3 cursor-pointer group" onClick={() => navigate(`/rc/clients/${selected.id}`)} title="Open client profile">
+              <div
+                className={`flex items-center gap-3 ${inPortal ? '' : 'cursor-pointer group'}`}
+                onClick={inPortal ? undefined : () => navigate(`/rc/clients/${selected.id}`)}
+                title={inPortal ? undefined : 'Open client profile'}
+              >
                 <div className="h-10 w-10 rounded-full bg-primary/15 flex items-center justify-center"><UserSearch className="h-5 w-5 text-primary" /></div>
                 <div>
                   <p className="font-medium text-foreground group-hover:text-primary group-hover:underline">{clientFullName(selected)}</p>

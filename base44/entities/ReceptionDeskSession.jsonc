@@ -1,0 +1,52 @@
+{
+  "name": "ReceptionDeskSession",
+  "type": "object",
+  "description": "A sign-in to the external Reception portal \u2014 records which person was at the front desk and when, without tying them to a staff user account.",
+  "properties": {
+    "operator_name": {
+      "type": "string",
+      "description": "Name the person entered at the kiosk sign-in"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the session was started"
+    },
+    "portal": {
+      "type": "string",
+      "default": "reception_external",
+      "description": "Which portal the session was started from"
+    }
+  },
+  "required": [
+    "operator_name",
+    "started_at"
+  ],
+  "rls": {
+    "create": {},
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

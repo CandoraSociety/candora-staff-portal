@@ -7,11 +7,11 @@ import { Card, CardContent } from '@/components/ui/card';
 import StatusBadge from '@/components/rc/StatusBadge';
 import UrgentAlertDialog from '@/components/reception/UrgentAlertDialog';
 import { URGENCY_OPTIONS, URGENCY_LABELS, RECIPIENT_TYPE_LABELS } from '@/lib/receptionConstants';
-import { useAuth } from '@/lib/AuthContext';
+import { useReceptionOperator } from '@/lib/useReceptionOperator';
 
 export default function ReceptionUrgentAlerts() {
   const [dialogOpen, setDialogOpen] = useState(false);
-  const { user } = useAuth();
+  const user = useReceptionOperator();
 
   const { data: alerts = [], isLoading } = useQuery({ queryKey: ['urgent-alerts'], queryFn: () => base44.entities.UrgentAlert.list('-sent_date', 100) });
 
