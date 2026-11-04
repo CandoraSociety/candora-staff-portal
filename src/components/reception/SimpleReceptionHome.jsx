@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { CalendarDays, DoorOpen, ClipboardList, Siren, ArrowRight, Search } from 'lucide-react';
+import { CalendarDays, DoorOpen, ShoppingBasket, Siren, ArrowRight, Search } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import UrgentAlertDialog from '@/components/reception/UrgentAlertDialog';
@@ -25,11 +25,11 @@ const CARDS = [
     tone: 'bg-green-50 text-green-600',
   },
   {
-    slug: '/registration',
-    label: 'Program Registration',
-    help: 'Register someone for a program',
-    icon: ClipboardList,
-    tone: 'bg-purple-50 text-purple-600',
+    slug: '/client-visit?type=grab_and_go',
+    label: 'Grab and Go Resources',
+    help: 'Bus tickets, food and supplies for someone at the desk',
+    icon: ShoppingBasket,
+    tone: 'bg-orange-50 text-orange-600',
   },
   {
     slug: '/resources',

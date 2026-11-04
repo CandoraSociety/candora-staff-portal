@@ -4,16 +4,16 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { UserSearch, UserPlus, ShoppingBasket, HandHelping, CalendarCheck, Pencil, RotateCcw, FlaskConical } from 'lucide-react';
+import { UserSearch, Pencil, RotateCcw, ArrowRight } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import ClientFormCore from '@/components/rc/ClientFormCore';
 import { SERVICE_CATEGORY_OPTIONS } from '@/components/rc/ClientFormCore';
 import { generateTestClientName } from '@/lib/rcTestClients';
 import GrabAndGoDialog from '@/components/reception/clientvisit/GrabAndGoDialog';
 import CaseworkVisitDialog from '@/components/reception/clientvisit/CaseworkVisitDialog';
+import VisitTypeCards, { VISIT_TYPES } from '@/components/reception/clientvisit/VisitTypeCards';
+import ClientLookupCard from '@/components/reception/clientvisit/ClientLookupCard';
 import { todayStr, clientFullName } from '@/lib/rcClientVisits';
 import { isReceptionPortalRoute } from '@/lib/receptionPortalSession';
 
@@ -31,6 +31,9 @@ const EMPTY_FORM = {
 // Shared Client Visit flow — used by the Reception portal (all three visit types)
 // and the Central Database portal (drop-in casework + scheduled visits only,
 // via includeGrabAndGo={false}).
+//
+// Front-desk order: pick what is happening at the desk, then name the client at
+// it. Only once the client is known does the visit form open.
 export default function ClientVisitFlow({ includeGrabAndGo = true }) {
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -38,12 +41,18 @@ export default function ClientVisitFlow({ includeGrabAndGo = true }) {
   const inPortal = isReceptionPortalRoute();
   const queryClient = useQueryClient();
 
+  // A card elsewhere in Reception can deep-link straight into one visit type.
+  const requestedType = new URLSearchParams(window.location.search).get('type');
+  const [action, setAction] = useState(() => (
+    VISIT_TYPES.some(t => t.key === requestedType && (includeGrabAndGo || t.key !== 'grab_and_go'))
+      ? requestedType
+      : null
+  ));
   const [selected, setSelected] = useState(null);
   const [showCreate, setShowCreate] = useState(false);
   const [createForm, setCreateForm] = useState({ ...EMPTY_FORM });
   const [saving, setSaving] = useState(false);
-  const [grabGoOpen, setGrabGoOpen] = useState(false);
-  const [caseworkMode, setCaseworkMode] = useState(null); // 'drop_in_casework' | 'scheduled'
+  const [dialogOpen, setDialogOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [editForm, setEditForm] = useState({});
   const [creatingTest, setCreatingTest] = useState(false);
@@ -57,8 +66,33 @@ export default function ClientVisitFlow({ includeGrabAndGo = true }) {
     [clients]
   );
 
+  const activeType = VISIT_TYPES.find(t => t.key === action) || null;
+
   const updateCreate = (field, value) => setCreateForm(prev => ({ ...prev, [field]: value }));
   const updateEdit = (field, value) => setEditForm(prev => ({ ...prev, [field]: value }));
+
+  // Back to the three cards — a finished visit starts the desk over.
+  const backToStart = () => {
+    setDialogOpen(false);
+    setSelected(null);
+    setAction(null);
+    setShowCreate(false);
+    setCreateForm({ ...EMPTY_FORM });
+  };
+
+  const chooseType = (key) => {
+    setSelected(null);
+    setShowCreate(false);
+    setDialogOpen(false);
+    setAction(key);
+  };
+
+  const pickClient = (client) => {
+    if (!client) return;
+    setSelected(client);
+    setShowCreate(false);
+    setDialogOpen(true);
+  };
 
   const refreshClient = async () => {
     queryClient.invalidateQueries({ queryKey: ['reception-visit-clients'] });
@@ -70,16 +104,20 @@ export default function ClientVisitFlow({ includeGrabAndGo = true }) {
     }
   };
 
+  const finishVisit = () => {
+    refreshClient();
+    backToStart();
+  };
+
   const handleCreate = async () => {
     if (!createForm.first_name || !createForm.last_name) { toast({ title: 'First and last name are required', variant: 'destructive' }); return; }
     setSaving(true);
     try {
       const created = await base44.entities.RCClient.create({ ...createForm, case_status: 'intake', intake_date: todayStr() });
       toast({ title: 'Client profile created', description: clientFullName(created) });
-      setSelected(created);
       setCreateForm({ ...EMPTY_FORM });
-      setShowCreate(false);
       queryClient.invalidateQueries({ queryKey: ['reception-visit-clients'] });
+      pickClient(created);
     } catch (err) {
       toast({ title: 'Error creating client profile', description: err.message, variant: 'destructive' });
     } finally {
@@ -93,8 +131,8 @@ export default function ClientVisitFlow({ includeGrabAndGo = true }) {
       const name = generateTestClientName();
       const created = await base44.entities.RCClient.create({ ...name, case_status: 'intake', intake_date: todayStr() });
       toast({ title: 'Test client created', description: clientFullName(created) });
-      setSelected(created);
       queryClient.invalidateQueries({ queryKey: ['reception-visit-clients'] });
+      pickClient(created);
     } catch (err) {
       toast({ title: 'Error creating test client', description: err.message, variant: 'destructive' });
     } finally {
@@ -123,58 +161,49 @@ export default function ClientVisitFlow({ includeGrabAndGo = true }) {
     }
   };
 
-  const OPTIONS = [
-    ...(includeGrabAndGo ? [{
-      key: 'grab_and_go', label: 'Grab and Go Resources',
-      description: 'Bus tickets, emergency food, supplies and other quick resources',
-      icon: ShoppingBasket, action: () => setGrabGoOpen(true),
-    }] : []),
-    { key: 'drop_in_casework', label: 'Drop-In Casework', description: 'Complete intake information and route the visit to the assigned caseworker', icon: HandHelping, action: () => setCaseworkMode('drop_in_casework') },
-    { key: 'scheduled', label: 'Scheduled Visit', description: 'Casework visit auto-assigned from the client\'s appointment schedule', icon: CalendarCheck, action: () => setCaseworkMode('scheduled') },
-  ];
-
   return (
     <div className="space-y-4 max-w-3xl mx-auto">
-      <div>
-        <h1 className="text-2xl font-heading font-bold text-foreground">Client Visit</h1>
-        <p className="text-muted-foreground text-sm mt-1">
-          {includeGrabAndGo
-            ? 'Select a client, then log a grab-and-go resource, drop-in casework or scheduled visit'
-            : 'Select a client, then log a drop-in casework or scheduled visit'}
-        </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h1 className="text-2xl font-heading font-bold text-foreground">Client Visit</h1>
+          <p className="text-muted-foreground text-sm mt-1">
+            {!activeType && (includeGrabAndGo
+              ? 'Start with what the visitor needs — grab-and-go resources, drop-in casework or a scheduled visit'
+              : 'Start with the visit type — drop-in casework or a scheduled visit')}
+            {activeType && !selected && `${activeType.label} — now find the client`}
+            {activeType && selected && activeType.label}
+          </p>
+        </div>
+        {activeType && (
+          <Button variant="ghost" size="sm" onClick={backToStart}>
+            <RotateCcw className="h-3.5 w-3.5" /> Start over
+          </Button>
+        )}
       </div>
 
-      {!selected && !showCreate && (
-        <Card>
-          <CardContent className="p-5 space-y-4">
-            <div className="space-y-1.5">
-              <Label>Client search</Label>
-              <Select onValueChange={(id) => setSelected(clients.find(c => c.id === id))}>
-                <SelectTrigger><SelectValue placeholder={isLoading ? 'Loading clients...' : 'Select a client from the database...'} /></SelectTrigger>
-                <SelectContent>
-                  {sortedClients.map(c => (
-                    <SelectItem key={c.id} value={c.id}>
-                      {clientFullName(c)}{c.phone ? ` · ${c.phone}` : ''}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="flex items-center gap-2 pt-1">
-              <p className="text-xs text-muted-foreground flex-1">Client doesn't have an existing profile?</p>
-              <Button variant="outline" size="sm" onClick={handleCreateTestClient} disabled={creatingTest}><FlaskConical className="h-4 w-4" /> {creatingTest ? 'Creating...' : 'Create Test Client'}</Button>
-              <Button variant="outline" size="sm" onClick={() => setShowCreate(true)}><UserPlus className="h-4 w-4" /> Create Client Profile</Button>
-            </div>
-          </CardContent>
-        </Card>
+      {/* Step 1 — what is happening at the desk */}
+      {!activeType && <VisitTypeCards onSelect={chooseType} includeGrabAndGo={includeGrabAndGo} />}
+
+      {/* Step 2 — who is at the desk */}
+      {activeType && !selected && !showCreate && (
+        <ClientLookupCard
+          clients={sortedClients}
+          isLoading={isLoading}
+          creatingTest={creatingTest}
+          onSelect={pickClient}
+          onCreateProfile={() => setShowCreate(true)}
+          onCreateTestClient={handleCreateTestClient}
+        />
       )}
 
-      {showCreate && !selected && (
+      {activeType && !selected && showCreate && (
         <Card>
           <CardContent className="p-5">
             <div className="flex items-center justify-between mb-3">
               <p className="font-heading font-bold text-foreground">New Client Profile</p>
-              <Button variant="ghost" size="sm" onClick={() => { setShowCreate(false); setCreateForm({ ...EMPTY_FORM }); }}><RotateCcw className="h-4 w-4" /> Back to search</Button>
+              <Button variant="ghost" size="sm" onClick={() => { setShowCreate(false); setCreateForm({ ...EMPTY_FORM }); }}>
+                <RotateCcw className="h-4 w-4" /> Back to search
+              </Button>
             </div>
             <ClientFormCore form={createForm} update={updateCreate} clients={sortedClients} compact />
             <div className="flex justify-end gap-2 mt-4">
@@ -185,52 +214,51 @@ export default function ClientVisitFlow({ includeGrabAndGo = true }) {
         </Card>
       )}
 
-      {selected && (
-        <>
-          <Card>
-            <CardContent className="p-4 flex flex-wrap items-center justify-between gap-3">
-              <div
-                className={`flex items-center gap-3 ${inPortal ? '' : 'cursor-pointer group'}`}
-                onClick={inPortal ? undefined : () => navigate(`/rc/clients/${selected.id}`)}
-                title={inPortal ? undefined : 'Open client profile'}
-              >
-                <div className="h-10 w-10 rounded-full bg-primary/15 flex items-center justify-center"><UserSearch className="h-5 w-5 text-primary" /></div>
-                <div>
-                  <p className="font-medium text-foreground group-hover:text-primary group-hover:underline">{clientFullName(selected)}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {[selected.phone, selected.email, selected.city].filter(Boolean).join(' · ') || 'No contact info'}
-                    {selected.service_category ? ` · ${SERVICE_CATEGORY_OPTIONS.find(o => o.value === selected.service_category)?.label || selected.service_category}` : ''}
-                    {selected.assigned_worker ? ` · Worker: ${selected.assigned_worker}` : ''}
-                  </p>
-                </div>
+      {/* Step 3 — the named client, visit type already chosen */}
+      {activeType && selected && (
+        <Card>
+          <CardContent className="p-4 flex flex-wrap items-center justify-between gap-3">
+            <div
+              className={`flex items-center gap-3 ${inPortal ? '' : 'cursor-pointer group'}`}
+              onClick={inPortal ? undefined : () => navigate(`/rc/clients/${selected.id}`)}
+              title={inPortal ? undefined : 'Open client profile'}
+            >
+              <div className="h-10 w-10 rounded-full bg-primary/15 flex items-center justify-center"><UserSearch className="h-5 w-5 text-primary" /></div>
+              <div>
+                <p className="font-medium text-foreground group-hover:text-primary group-hover:underline">{clientFullName(selected)}</p>
+                <p className="text-xs text-muted-foreground">
+                  {[selected.phone, selected.email, selected.city].filter(Boolean).join(' · ') || 'No contact info'}
+                  {selected.service_category ? ` · ${SERVICE_CATEGORY_OPTIONS.find(o => o.value === selected.service_category)?.label || selected.service_category}` : ''}
+                  {selected.assigned_worker ? ` · Worker: ${selected.assigned_worker}` : ''}
+                </p>
               </div>
-              <div className="flex gap-2">
-                <Button variant="outline" size="sm" onClick={openEdit}><Pencil className="h-3.5 w-3.5" /> Edit Client Info</Button>
-                <Button variant="ghost" size="sm" onClick={() => setSelected(null)}><RotateCcw className="h-3.5 w-3.5" /> Change client</Button>
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {OPTIONS.map(opt => { const Icon = opt.icon; return (
-              <button key={opt.key} onClick={opt.action} className="text-left">
-                <Card className="h-full hover:shadow-md transition-shadow hover:border-primary/40">
-                  <CardContent className="p-4">
-                    <Icon className="h-6 w-6 text-primary mb-2" />
-                    <p className="text-sm font-medium text-foreground">{opt.label}</p>
-                    <p className="text-xs text-muted-foreground mt-1">{opt.description}</p>
-                  </CardContent>
-                </Card>
-              </button>
-            ); })}
-          </div>
-        </>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={openEdit}><Pencil className="h-3.5 w-3.5" /> Edit Client Info</Button>
+              <Button variant="ghost" size="sm" onClick={() => setSelected(null)}><RotateCcw className="h-3.5 w-3.5" /> Change client</Button>
+              <Button size="sm" onClick={() => setDialogOpen(true)}>
+                {activeType.key === 'grab_and_go' ? 'Log resources' : 'Complete visit'} <ArrowRight className="h-3.5 w-3.5" />
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {includeGrabAndGo && (
-        <GrabAndGoDialog open={grabGoOpen} onOpenChange={setGrabGoOpen} client={selected} onSaved={refreshClient} />
+        <GrabAndGoDialog
+          open={dialogOpen && action === 'grab_and_go'}
+          onOpenChange={setDialogOpen}
+          client={selected}
+          onSaved={finishVisit}
+        />
       )}
-      <CaseworkVisitDialog open={!!caseworkMode} onOpenChange={(o) => !o && setCaseworkMode(null)} client={selected} mode={caseworkMode} onSaved={refreshClient} />
+      <CaseworkVisitDialog
+        open={dialogOpen && (action === 'drop_in_casework' || action === 'scheduled')}
+        onOpenChange={setDialogOpen}
+        client={selected}
+        mode={action}
+        onSaved={finishVisit}
+      />
 
       <Dialog open={editOpen} onOpenChange={setEditOpen}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -238,7 +266,7 @@ export default function ClientVisitFlow({ includeGrabAndGo = true }) {
           <ClientFormCore form={editForm} update={updateEdit} clients={sortedClients} />
           <div className="flex justify-end gap-2 mt-4">
             <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
-            <Button onClick={handleEditSave} disabled={saving}>{saving ? 'Saving...' : 'Save'}</Button>
+            <Button onClick={handleEditSave} disabled={saving}>Save</Button>
           </div>
         </DialogContent>
       </Dialog>
