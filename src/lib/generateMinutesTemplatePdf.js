@@ -52,19 +52,18 @@ export async function generateMinutesTemplatePdf(meeting, orgName, agendaItems, 
 
   const ensureSpace = (h) => { if (y - h < 60) newPage(); };
 
-  // Red 9pt text inside every text field (box is placed on the page first,
-  // then styled — styling before placement breaks the field's appearance)
-  const redTextAppearance = (field, widget, fnt) => ({ backgroundColor: FIELD_BG, borderColor: LINE, borderWidth: 1, textColor: RED });
-
+  // Red 9pt text inside every text field. The red DA entry must be set BEFORE the
+  // appearance is generated, so the drawn (and flattened) text carries the value —
+  // generating the appearance first leaves an empty one and the completed minutes
+  // print with every field blank.
   const textField = (name, x, fy, w, h, multiline = false, value = "") => {
     const f = form.createTextField(name);
     f.addToPage(page, { x, y: fy, width: w, height: h, borderWidth: 1, borderColor: LINE, backgroundColor: FIELD_BG });
     if (multiline) f.enableMultiline();
     if (value) f.setText(String(value));
     f.setFontSize(9);
-    f.updateAppearances(font, redTextAppearance);
-    // Text typed later in a PDF reader renders red at the same 9pt size
     f.acroField.dict.set(PDFName.of("DA"), PDFString.of(`${RED.red.toFixed(6)} ${RED.green.toFixed(6)} ${RED.blue.toFixed(6)} rg /Helv 9 Tf`));
+    f.updateAppearances(font);
   };
 
   const dropdownField = (name, x, fy, w, h, options, value, changeJs) => {
