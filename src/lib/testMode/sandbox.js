@@ -50,6 +50,20 @@ const now = () => new Date().toISOString();
 const mkId = (entity) => `test_${entity.toLowerCase().replace(/[^a-z0-9]/g, '')}_${++idCounter}`;
 const D = (daysAgo = 0) => new Date(Date.now() - daysAgo * 86400000).toISOString().slice(0, 10);
 
+// Every module is allowed in Test Mode so any staff member can open any portal
+// and exercise it on demo data.
+const MODULE_IDS = [
+  'pathways', 'grants', 'finance', 'rc', 'ell', 'empoweru', 'phac', 'frn',
+  'digilit', 'community', 'centralreg', 'childminding', 'rworker', 'reception_simple', 'winterwonderland',
+  'lms', 'reception', 'board', 'nexushr', 'volunteermgr', 'marketing',
+  'eventsmgr', 'reporting', 'food', 'filemanager', 'outlook', 'archives',
+  'presentations',
+];
+
+// Live portal cards are keyed by these module ids — include them so the Portal
+// tab shows the same set of cards in Test Mode instead of an empty grid.
+const DEMO_MODULE_IDS = [...new Set([...MODULE_IDS, 'central-registration', 'winter-wonderland', 'joblab', 'ed'])];
+
 // Minimal demo data — a couple of fake records per portal so screens aren't
 // blank. Anything not listed here starts empty and is created in-memory as
 // you use Test Mode.
@@ -60,8 +74,23 @@ function demoData() {
       { title: 'Staff lunch on Friday', content: 'Demo announcement for Test Mode.', category: 'event', priority: 'low', is_active: true, publish_date: D(2) },
     ],
     OrgSettings: [
-      { org_name: 'Candora (Test Mode)', welcome_message: 'Welcome to Test Mode — simulated data only', primary_color: '#f5c116', secondary_color: '#0f1f6b', logos: [] },
+      { org_name: 'Candora (Test Mode)', welcome_message: 'Welcome to Test Mode — simulated data only', primary_color: '#f5c116', secondary_color: '#0f1f6b', logos: [],
+        // Every tier can reach every portal while testing, so the Portal tab and
+        // sidebar show the full set of tools.
+        tier_portal_access: Object.fromEntries(
+          ['executive_director', 'manager', 'team_lead', 'frontline_staff', 'board', 'extended'].map((t) => [t, DEMO_MODULE_IDS])
+        ) },
     ],
+    // Permissions are what the Portal tab, sidebar and portal guards read — so
+    // Test Mode grants every module to the tester individually as well as by tier.
+    AccessPermission: DEMO_MODULE_IDS.map((m) => ({
+      target_type: 'module',
+      target_id: m,
+      scope_type: 'individual',
+      scope_value: DEMO_EMAIL,
+      permission: 'allow',
+      is_active: true,
+    })),
     MemoryNote: [
       { title: 'Test Mode active', content: 'Everything you see is simulated demo data.', category: 'reminder', priority: 'low', is_completed: false },
     ],
@@ -276,12 +305,37 @@ function demoData() {
     PersonalOrganizer: [
       { title: 'Demo organizer task', category: 'task', is_completed: false, due_date: D(-1) },
     ],
+    // Mirrors the live Portal tab so testing looks like the real thing.
     PortalCard: [
-      { name: 'Pathways', description: 'Case management', is_enabled: true, order_index: 1, url: '/pathways', icon: 'Briefcase' },
-      { name: 'Grants', description: 'Grant & proposal manager', is_enabled: true, order_index: 2, url: '/grants', icon: 'FileText' },
-      { name: 'Resource Centre', description: 'Central client database', is_enabled: true, order_index: 3, url: '/rc', icon: 'Users' },
-      { name: 'Finance', description: 'Finance portal', is_enabled: true, order_index: 4, url: '/finance', icon: 'BarChart2' },
-      { name: 'E-Signature', description: 'Sign documents digitally', is_enabled: true, order_index: 5, url: '/e-signature', icon: 'FileText' },
+      { name: 'Candora Archives', description: 'Organization history and records', url: '/archives', icon: 'Archive', category: 'administration', sort_order: 90, is_enabled: true },
+      { name: 'Candora Board', description: 'Meetings, minutes and board documents', url: '/board', icon: 'Gavel', category: 'administration', sort_order: 90, is_enabled: true },
+      { name: 'Community Programs', description: 'Community programs and participants', url: '/community', icon: 'Heart', category: 'operations', sort_order: 62, is_enabled: true },
+      { name: 'Digital Literacy', description: 'Digital literacy program', url: '/digilit', icon: 'Monitor', category: 'operations', sort_order: 61, is_enabled: true },
+      { name: 'Childminding', description: 'Childminding records and sessions', url: '/childminding', icon: 'Baby', category: 'operations', sort_order: 60, is_enabled: true },
+      { name: 'Reception', description: 'Front desk portal', url: '/reception', icon: 'ConciergeBell', category: 'operations', sort_order: 59, is_enabled: true },
+      { name: 'EmpowerU', description: 'Cohorts, participants and waitlist', url: '/empoweru', icon: 'PiggyBank', category: 'operations', sort_order: 58, is_enabled: true },
+      { name: 'Candora Central Database', description: 'Central client database', url: '/rc', icon: 'LifeBuoy', category: 'operations', sort_order: 57, is_enabled: true },
+      { name: 'Resource Worker Portal', description: 'Simplified case management', url: '/rworker', icon: 'LifeBuoy', category: 'operations', sort_order: 56, is_enabled: true },
+      { name: 'PHAC Programs', description: 'Parent-child drop-in programs', url: '/phac', icon: 'Baby', category: 'operations', sort_order: 56, is_enabled: true },
+      { name: 'FRN Programs', description: 'Family resource network programs', url: '/frn', icon: 'Users', category: 'operations', sort_order: 55, is_enabled: true },
+      { name: 'ELL Program Manager', description: 'English language learning', url: '/ell', icon: 'GraduationCap', category: 'operations', sort_order: 50, is_enabled: true },
+      { name: 'Grant / Proposal Manager', description: 'Grants, funding and proposals', url: '/grants', icon: 'BookOpen', category: 'operations', sort_order: 50, is_enabled: true },
+      { name: 'Reports Portal', description: 'Internal and funder reporting', url: '/reporting', icon: 'FileText', category: 'operations', sort_order: 45, is_enabled: true },
+      { name: 'Marketing & Fundraising', description: 'Marketing, donors and media', url: '/marketing', icon: 'Megaphone', category: 'operations', sort_order: 40, is_enabled: true },
+      { name: 'Food Services', description: 'Menu, orders and inventory', url: '/food', icon: 'UtensilsCrossed', category: 'operations', sort_order: 35, is_enabled: true },
+      { name: 'Pathways CM', description: 'Case management', url: '/pathways', icon: 'Compass', category: 'hr', sort_order: 30, is_enabled: true },
+      { name: 'Volunteer Manager', description: 'Volunteers, events and hours', url: '/volunteermgr', icon: 'Heart', category: 'hr', sort_order: 20, is_enabled: true },
+      { name: 'Winter Wonderland Festival', description: 'Festival components and schedule', url: '/winter-wonderland', icon: 'Snowflake', category: 'operations', sort_order: 15, is_enabled: true },
+      { name: 'Finance Portal', description: 'Payroll, invoices and budgets', url: '/finance', icon: 'Wallet', category: 'finance', sort_order: 10, is_enabled: true },
+      { name: 'Outlook', description: 'Email and calendar', url: '/outlook', icon: 'Mail', category: 'communications', sort_order: 5, is_enabled: true },
+      { name: 'Job Lab', description: 'Employment centre portal', url: '/joblab', icon: 'Briefcase', category: 'operations', sort_order: 5, is_enabled: true },
+      { name: 'Admin Console', description: 'Manage portal cards and widgets', url: '/admin/cards', icon: 'Settings', category: 'administration', sort_order: 1, is_enabled: true },
+      { name: 'File Manager', description: 'Files, folders and collections', url: '/filemanager', icon: 'FolderOpen', category: 'operations', sort_order: 1, is_enabled: true },
+      { name: 'HR Management', description: 'Employees, reviews and documents', url: '/nexushr', icon: 'Users', category: 'hr', sort_order: 1, is_enabled: true },
+      { name: 'Executive Director Portal', description: 'Tasks, KPIs and board reporting', url: '/ed', icon: 'Crown', category: 'administration', sort_order: 0, is_enabled: true },
+      { name: 'Events/Projects/Programs Manager', description: 'Events, projects and programs', url: '/eventsmgr', icon: 'Calendar', category: 'operations', sort_order: 0, is_enabled: true },
+      { name: 'Learning Management System', description: 'Training modules and programs', url: '/lms', icon: 'GraduationCap', category: 'administration', sort_order: 0, is_enabled: true },
+      { name: 'Central Registration', description: 'Registrations, waitlists and calendar', url: '/central-registration', icon: 'ClipboardCheck', category: 'operations', sort_order: 0, is_enabled: true },
     ],
   };
   // Merge in the richer priority-portal seeds (Pathways, Central Database,
@@ -564,16 +618,6 @@ const coreProxy = new Proxy(coreSim, {
 });
 
 // ── Simulated backend functions ────────────────────────────────────────────
-// Every module gets an individual allow permission in Test Mode so any staff
-// member can open any portal and exercise it on demo data.
-const MODULE_IDS = [
-  'pathways', 'grants', 'finance', 'rc', 'ell', 'empoweru', 'phac', 'frn',
-  'digilit', 'community', 'centralreg', 'childminding', 'rworker', 'reception_simple', 'winterwonderland',
-  'lms', 'reception', 'board', 'nexushr', 'volunteermgr', 'marketing',
-  'eventsmgr', 'reporting', 'food', 'filemanager', 'outlook', 'archives',
-  'presentations',
-];
-
 async function invokeSim(name) {
   if (name === 'getMyPermissions') {
     let email = '';
