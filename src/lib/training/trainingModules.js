@@ -28,6 +28,7 @@ import { JOBLAB_MODULES } from "@/lib/training/modules/jobLabModules";
 import { FRN_PHAC_MODULES } from "@/lib/training/modules/frnPhacModules";
 import { EMPOWERU_MODULES } from "@/lib/training/modules/empoweruModules";
 import { CHILDMINDING_MODULES } from "@/lib/training/modules/childmindingModules";
+import { RWORKER_MODULES } from "@/lib/training/modules/rworkerModules";
 
 export const TRAINING_MODULES = [
   // Welcome & app tour leads the catalog — every staff member starts here.
@@ -36,6 +37,7 @@ export const TRAINING_MODULES = [
   ...FRN_PHAC_MODULES,
   ...EMPOWERU_MODULES,
   ...CHILDMINDING_MODULES,
+  ...RWORKER_MODULES,
   {
     key: "dashboard",
     title: "Main User Page",
@@ -1204,6 +1206,7 @@ export const TRAINING_MODULE_ACCESS = {
   phac: "phac",
   empoweru: "empoweru",
   childminding: "childminding",
+  rworker: "rworker",
   centralreg: "central-registration",
   reception: "reception",
   filemanager: "filemanager",
@@ -1236,6 +1239,7 @@ export const moduleForPath = (pathname) => {
     ["/central-registration", "centralreg"],
     ["/empoweru", "empoweru"],
     ["/childminding", "childminding"],
+    ["/rworker", "rworker"],
     ["/reception", "reception"],
     ["/filemanager", "filemanager"],
   ];

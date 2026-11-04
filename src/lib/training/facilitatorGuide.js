@@ -456,6 +456,42 @@ export const FACILITATOR_GUIDE = {
       "Keep the progress-note discussion short but specific: one rating, one next step, per family they would write up this week.",
     ],
   },
+  rworker: {
+    duration: "About 30 minutes (5 intro · 15 tour · 8 practice · 2 wrap-up)",
+    objectives: [
+      "Staff can say out loud that this portal and the Central Database are one record, not two",
+      "Staff can find their own caseload and widen to the three categories when they need to",
+      "Staff can open a file, read the notes and history, and edit the record itself",
+      "Staff can log a service, book an appointment and make a referral from the same file",
+      "Staff know which visit types this portal offers, and where an intensive case file actually lives",
+    ],
+    stepNotes: {
+      "One database, two doors": "This is the slide to slow down on. Say the sentence plainly: nothing here is a copy. The scope difference — every client versus your caseload — is what stops people being nervous about using the smaller portal.",
+      "Your two moves": "Point at the two cards and name the working day: a file, or a person at the desk. Everything else on this portal hangs off those two moves.",
+      "The counts underneath": "Warn them the counts only read their own work. Ask what they would do if My Active Clients looked wrong — answer: open the card, not the total.",
+      "My Clients comes first": "Have them find their own name in the list before moving on. If a trainee has no clients in Test Mode, that is the moment to explain the assigned_worker field.",
+      "Four tabs, three kinds of file": "Flat, quick slide. The useful question is which tab a given client would be in, so ask two names and let the room answer.",
+      "The row tells you enough": "Demonstrate answering a phone call from the row alone: name, worker, visits, status. Then say when you still open the file — notes and safety alerts never show in the list.",
+      "Opening a file": "Read the notes and safety alerts out loud on the demo file. Make the point that the next worker's warning is the reason the section exists.",
+      "Edit Client writes to the shared record": "Demo a phone number correction, then open the same client in the Central Database so they see it change. That demonstration does more than any explanation.",
+      "Log a visit or a service": "Show one weak note and one useful note. The test is whether a supervisor could answer a funder question without phoning the worker.",
+      "Scheduling and referrals": "Name the three referral directions and where each one lands. Emphasise that 'I told someone' is not a referral.",
+      "The visit flow without the reception extras": "State the difference once: no Grab and Go here. Then walk the drop-in casework form, because that is the one they will use most.",
+      "Resource Finder": "Run one live query from the room — a real need someone has heard this week. It is the slide people remember.",
+      "Intensive cases stay in the Central Database": "Be clear this is not a limitation to work around: the case plan is a bigger tool, and the banner on the file is the door to it.",
+    },
+    practiceNotes: {
+      "rw-client": "Self-marked. Ask them to name one thing from the notes they would need to know before a first meeting.",
+      "rw-service": "Auto-checked. Check the service type and the notes — a blank note is the habit to break.",
+      "rw-appointment": "Auto-checked. Confirm the purpose is filled in, not just the time.",
+      "rw-visit": "Auto-checked. Make sure they picked Drop-In Casework, not Scheduled Visit, for a walk-in.",
+    },
+    tips: [
+      "This module is short on purpose — run it in the same session as the Central Database basics module, in that order, so the 'same record' point lands twice.",
+      "If the group already works the Central Database daily, skip the overview slides and start at My Clients; the value for them is the workflow differences.",
+      "Finish with the resource finder and one real situation from the room. It is the part staff go back to on their own.",
+    ],
+  },
   childminding: {
     duration: "About 30 minutes (5 intro · 15 tour · 8 practice · 2 wrap-up)",
     objectives: [

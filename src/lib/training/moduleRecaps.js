@@ -890,6 +890,46 @@ export const MODULE_RECAPS = {
       },
     ],
   },
+  rworker: {
+    kicker: "What we've learned",
+    title: "A smaller door, the same record.",
+    body: "Bringing the Resource Worker portal together. It is a smaller door into the same central client database, and that is the whole point: you see your caseload and the actions you take on it, not every record in the organization. Case Management opens on My Clients, with intensive services, general clients and caregiver capacity for children under six beside it, and each row carries the worker, the visit count and the case status. Opening a file gives you the person, the notes the next worker must see, and the service history, appointments and referrals underneath. Edit Client writes straight to the shared record, Log Visit / Service records what happened, Schedule books the next conversation, and Referral sends the need on to a program or an outside agency. Client Visit runs the same drop-in and scheduled flow the front desk uses, without Grab and Go. Resource Finder answers what our own programs cannot. And an intensive case still lives in the Central Database — the banner on the file takes you there, while the day-to-day history stays on the client record.",
+    audioUrl: "https://media.base44.com/files/public/6a249282cb496579542673b7/f808ee8b6_speech.mp3",
+    takeaways: [
+      "This portal edits the same client records as the Central Database — there is no copy and no sync to wait for.",
+      "Case Management opens on My Clients; intensive services, general clients and caregiver capacity sit beside it.",
+      "Edit Client saves to the shared record, so corrections show everywhere at once.",
+      "Log Visit / Service is the history supervisors, caseworkers and funders read — write it specifically.",
+      "Appointments and referrals are recorded against the file, not remembered in a message.",
+      "Client Visit offers drop-in casework and scheduled visits; Grab and Go stays at the front desk.",
+    ],
+    quiz: [
+      {
+        question: "You correct a client's phone number in this portal. Where is that change visible?",
+        options: ["Only in the Resource Worker portal", "On the shared client record, so the Central Database shows it immediately", "Only after the nightly sync", "In the client's service history"],
+        answer: 1,
+        explain: "Both portals read and write the same record — saving in Edit Client updates the client itself.",
+      },
+      {
+        question: "Which tab opens first in Case Management, and what does it show?",
+        options: ["Intensive Services, showing every family in the organization", "My Clients, showing the open files assigned to you", "General Clients, showing all drop-ins", "Caregiver Capacity, showing every child under six"],
+        answer: 1,
+        explain: "Case Management opens on your own caseload; the categories beside it widen the view when you need to look further.",
+      },
+      {
+        question: "A client walks in with no appointment. Which do you record?",
+        options: ["Grab and Go Resources", "Drop-In Casework", "Scheduled Visit", "An intensive case note"],
+        answer: 1,
+        explain: "This portal's visit flow offers Drop-In Casework and Scheduled Visit; Grab and Go belongs to the front desk.",
+      },
+      {
+        question: "Where does an intensive case plan live?",
+        options: ["In the Resource Worker portal, under Case Management", "In the Central Database portal, opened from the client's case banner", "In the service log", "In the resource finder"],
+        answer: 1,
+        explain: "The plan, stages and tasks are a bigger file than this portal holds — the case banner takes you to it, while the history stays on the client record.",
+      },
+    ],
+  },
   childminding: {
     kicker: "What we've learned",
     title: "A session first, then a child at a time.",

@@ -102,7 +102,7 @@ function demoData() {
       { client_id: 'demo-pw-casey', client_name: 'Casey Sample', business_name: 'Riverside Logistics', location: 'Edmonton', position_type: 'Warehouse', expected_hours_per_week: 20, hourly_rate: 15, start_date: D(10), anticipated_completion_date: D(-21), status: 'in_progress', assigned_worker: 'test.user@candora.ca', assigned_worker_name: 'Terry Tester' },
     ],
     RCClient: [
-      { first_name: 'Riley', last_name: 'Rehearsal', phone: '780-555-0201', email: 'riley@example.ca', status: 'active', notes: 'Demo client for Test Mode' },
+      { id: 'demo-rc-riley', first_name: 'Riley', last_name: 'Rehearsal', phone: '780-555-0201', email: 'riley@example.ca', status: 'active', case_status: 'active', service_category: 'general', assigned_worker: 'Terry Tester', assigned_worker_name: 'Terry Tester', notes: 'Demo client for Test Mode' },
       { first_name: 'Morgan', last_name: 'Mock', phone: '780-555-0202', email: 'morgan@example.ca', status: 'active', notes: 'Demo client for Test Mode' },
     ],
     RCServiceLog: [
@@ -568,7 +568,7 @@ const coreProxy = new Proxy(coreSim, {
 // member can open any portal and exercise it on demo data.
 const MODULE_IDS = [
   'pathways', 'grants', 'finance', 'rc', 'ell', 'empoweru', 'phac', 'frn',
-  'digilit', 'community', 'centralreg', 'childminding', 'winterwonderland',
+  'digilit', 'community', 'centralreg', 'childminding', 'rworker', 'winterwonderland',
   'lms', 'reception', 'board', 'nexushr', 'volunteermgr', 'marketing',
   'eventsmgr', 'reporting', 'food', 'filemanager', 'outlook', 'archives',
   'presentations',
