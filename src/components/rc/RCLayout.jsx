@@ -5,6 +5,7 @@ import { LayoutDashboard, Database, UserPlus, ArrowLeftRight, ClipboardList, Cal
 import { cn } from '@/lib/utils';
 import { useOrgSettings } from '@/lib/useOrgSettings';
 import EAFloatingWidget from '@/components/ed/EAFloatingWidget';
+import RcAssistantWidget from '@/components/rc/RcAssistantWidget';
 
 const NAV_ITEMS = [
   { path: '/rc', label: 'Dashboard', icon: LayoutDashboard },
@@ -85,6 +86,7 @@ export default function RCLayout() {
         <Outlet />
       </main>
       <EAFloatingWidget />
+      <RcAssistantWidget portal="rc" />
     </div>
   );
 }

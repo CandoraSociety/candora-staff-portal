@@ -6,6 +6,7 @@ import { useOrgSettings } from '@/lib/useOrgSettings';
 import { Button } from '@/components/ui/button';
 import RWorkerNotifications from '@/components/rworker/RWorkerNotifications';
 import AppointmentDialog from '@/components/rc/AppointmentDialog';
+import RcAssistantWidget from '@/components/rc/RcAssistantWidget';
 
 const NAV_ITEMS = [
   { path: '/rworker', label: 'Dashboard', icon: LayoutDashboard },
@@ -110,6 +111,7 @@ export default function RWorkerLayout() {
       </main>
 
       <AppointmentDialog open={apptOpen} onOpenChange={setApptOpen} onSaved={() => setApptOpen(false)} />
+      <RcAssistantWidget portal="rworker" />
     </div>
   );
 }
