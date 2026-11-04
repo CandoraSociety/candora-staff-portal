@@ -6,7 +6,7 @@ import { useOrgSettings } from '@/lib/useOrgSettings';
 import { Button } from '@/components/ui/button';
 import RWorkerNotifications from '@/components/rworker/RWorkerNotifications';
 import AppointmentDialog from '@/components/rc/AppointmentDialog';
-import RcAssistantWidget from '@/components/rc/RcAssistantWidget';
+import RcAssistantHeaderButton from '@/components/rc/RcAssistantHeaderButton';
 
 const NAV_ITEMS = [
   { path: '/rworker', label: 'Dashboard', icon: LayoutDashboard },
@@ -71,6 +71,7 @@ export default function RWorkerLayout() {
           </nav>
 
           <div className="flex items-center gap-1.5 shrink-0">
+            <RcAssistantHeaderButton portal="rworker" />
             <Button size="sm" className="gap-1.5 hidden sm:flex" onClick={() => setApptOpen(true)}>
               <CalendarPlus className="h-4 w-4" /> Schedule Appointment
             </Button>
@@ -111,7 +112,6 @@ export default function RWorkerLayout() {
       </main>
 
       <AppointmentDialog open={apptOpen} onOpenChange={setApptOpen} onSaved={() => setApptOpen(false)} />
-      <RcAssistantWidget portal="rworker" />
     </div>
   );
 }

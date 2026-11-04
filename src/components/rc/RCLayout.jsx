@@ -5,7 +5,7 @@ import { LayoutDashboard, Database, UserPlus, ArrowLeftRight, ClipboardList, Cal
 import { cn } from '@/lib/utils';
 import { useOrgSettings } from '@/lib/useOrgSettings';
 import EAFloatingWidget from '@/components/ed/EAFloatingWidget';
-import RcAssistantWidget from '@/components/rc/RcAssistantWidget';
+import RcAssistantHeaderButton from '@/components/rc/RcAssistantHeaderButton';
 
 const NAV_ITEMS = [
   { path: '/rc', label: 'Dashboard', icon: LayoutDashboard },
@@ -61,9 +61,12 @@ export default function RCLayout() {
               );
             })}
           </nav>
-          <button className="lg:hidden text-sidebar-foreground" onClick={() => setMobileOpen(!mobileOpen)}>
-            {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
+          <div className="flex items-center gap-1.5">
+            <RcAssistantHeaderButton portal="rc" />
+            <button className="lg:hidden text-sidebar-foreground" onClick={() => setMobileOpen(!mobileOpen)}>
+              {mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+            </button>
+          </div>
         </div>
         {mobileOpen && (
           <nav className="lg:hidden flex flex-col p-2 border-t border-sidebar-border">
@@ -86,7 +89,6 @@ export default function RCLayout() {
         <Outlet />
       </main>
       <EAFloatingWidget />
-      <RcAssistantWidget portal="rc" />
     </div>
   );
 }
