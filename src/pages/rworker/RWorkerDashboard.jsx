@@ -58,32 +58,40 @@ export default function RWorkerDashboard() {
         <p className="text-muted-foreground text-sm mt-1">{format(new Date(), 'EEEE, MMMM d, yyyy')}</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Link to="/rworker/case-management">
-          <Card className="h-full hover:shadow-md hover:border-primary/40 transition-all cursor-pointer">
-            <CardContent className="p-6 flex items-center gap-4">
-              <div className="h-14 w-14 rounded-xl bg-sky-100 flex items-center justify-center shrink-0">
-                <ClipboardList className="h-7 w-7 text-sky-600" />
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 lg:gap-6">
+        <Link to="/rworker/case-management" className="block group">
+          <Card className="h-full border-sky-200 bg-gradient-to-br from-sky-50 via-card to-card shadow-sm hover:shadow-xl hover:border-sky-400 hover:-translate-y-0.5 transition-all cursor-pointer">
+            <CardContent className="p-6 lg:p-8">
+              <div className="flex items-start justify-between mb-5">
+                <div className="h-16 w-16 lg:h-20 lg:w-20 rounded-2xl bg-sky-600 flex items-center justify-center shrink-0 shadow-lg shadow-sky-600/25">
+                  <ClipboardList className="h-8 w-8 lg:h-10 lg:w-10 text-white" />
+                </div>
+                <ArrowRight className="h-6 w-6 text-sky-600 transition-transform group-hover:translate-x-1" />
               </div>
-              <div className="flex-1">
-                <p className="text-lg font-heading font-bold text-foreground">Case Management</p>
-                <p className="text-sm text-muted-foreground">Intensive services, general clients, and caregiver capacity files.</p>
+              <p className="text-xl lg:text-2xl font-heading font-bold text-foreground">Case Management</p>
+              <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">Intensive services, general clients, and caregiver capacity files.</p>
+              <div className="mt-5 flex items-baseline gap-2">
+                <span className="text-3xl font-bold text-sky-700">{myClients.length}</span>
+                <span className="text-xs font-medium uppercase tracking-wide text-sky-700/70">active clients</span>
               </div>
-              <ArrowRight className="h-5 w-5 text-muted-foreground" />
             </CardContent>
           </Card>
         </Link>
-        <Link to="/rworker/client-visit">
-          <Card className="h-full hover:shadow-md hover:border-primary/40 transition-all cursor-pointer">
-            <CardContent className="p-6 flex items-center gap-4">
-              <div className="h-14 w-14 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0">
-                <UserPlus className="h-7 w-7 text-emerald-600" />
+        <Link to="/rworker/client-visit" className="block group">
+          <Card className="h-full border-emerald-200 bg-gradient-to-br from-emerald-50 via-card to-card shadow-sm hover:shadow-xl hover:border-emerald-400 hover:-translate-y-0.5 transition-all cursor-pointer">
+            <CardContent className="p-6 lg:p-8">
+              <div className="flex items-start justify-between mb-5">
+                <div className="h-16 w-16 lg:h-20 lg:w-20 rounded-2xl bg-emerald-600 flex items-center justify-center shrink-0 shadow-lg shadow-emerald-600/25">
+                  <UserPlus className="h-8 w-8 lg:h-10 lg:w-10 text-white" />
+                </div>
+                <ArrowRight className="h-6 w-6 text-emerald-600 transition-transform group-hover:translate-x-1" />
               </div>
-              <div className="flex-1">
-                <p className="text-lg font-heading font-bold text-foreground">Client Visit</p>
-                <p className="text-sm text-muted-foreground">Start a drop-in or scheduled visit and record the service.</p>
+              <p className="text-xl lg:text-2xl font-heading font-bold text-foreground">Client Visit</p>
+              <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">Start a drop-in or scheduled visit and record the service.</p>
+              <div className="mt-5 flex items-baseline gap-2">
+                <span className="text-3xl font-bold text-emerald-700">{myVisits.length}</span>
+                <span className="text-xs font-medium uppercase tracking-wide text-emerald-700/70">pending visits</span>
               </div>
-              <ArrowRight className="h-5 w-5 text-muted-foreground" />
             </CardContent>
           </Card>
         </Link>
