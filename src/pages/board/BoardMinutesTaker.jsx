@@ -139,8 +139,9 @@ export default function BoardMinutesTaker() {
   const handleDownloadPdf = async (inCameraOnly, completed = false) => {
     setDownloadingPdf(true);
     try {
-      if (!inCameraOnly && !completed) {
-        // Fillable minutes — an interactive in-app view that mirrors the Minutes Taker form.
+      if (!inCameraOnly) {
+        // Fillable and completed minutes both go through the in-app form, whose
+        // "Generate Final PDF" produces the standard branded minutes layout.
         // Opened inside the app (not a popup) because popup documents get their scripts blocked.
         setShowFillable(true);
         return;
