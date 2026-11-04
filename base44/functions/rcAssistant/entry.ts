@@ -159,9 +159,12 @@ export default async function (req: Request): Promise<Response> {
 
     const detailBlocks = matched.map((c) => {
       const id = c.id;
-      const clientVisits = myVisits.filter((v) => v.client_id === id).slice(0, 6)
+      const deep = focusClient?.id === id;
+      const safety = myNotes.filter((n) => n.client_id === id && n.is_safety_alert).slice(0, 3)
+        .map((n) => `    · ${dateOnly(n.created_date)} ${String(n.note).slice(0, 240)}`);
+      const clientVisits = myVisits.filter((v) => v.client_id === id).slice(0, deep ? 12 : 6)
         .map((v) => `    · ${visitLabel(v)}${v.visit_notes ? ` — ${String(v.visit_notes).slice(0, 220)}` : ''}`);
-      const clientNotes = myNotes.filter((n) => n.client_id === id).slice(0, 4)
+      const clientNotes = myNotes.filter((n) => n.client_id === id).slice(0, deep ? 8 : 4)
         .map((n) => `    · ${dateOnly(n.created_date)}${n.is_safety_alert ? ' SAFETY ALERT' : ''}: ${String(n.note).slice(0, 260)}`);
       const clientAppts = myAppts.filter((a) => a.client_id === id).slice(0, 5)
         .map((a) => `    · ${String(a.appointment_date || '').slice(0, 16).replace('T', ' ')} — ${a.status || 'scheduled'}${a.purpose ? ` — ${a.purpose}` : ''}`);
@@ -174,11 +177,20 @@ export default async function (req: Request): Promise<Response> {
         `Assigned worker: ${c.assigned_worker || 'unassigned'}`,
         c.phone ? `Phone: ${c.phone}` : '',
         c.email ? `Email: ${c.email}` : '',
-        c.city ? `City: ${c.city}` : '',
+        c.date_of_birth ? `Date of birth: ${dateOnly(c.date_of_birth)}` : '',
+        c.address || c.city ? `Address: ${[c.address, c.city, c.postal_code].filter(Boolean).join(', ')}` : '',
+        c.preferred_language ? `Preferred language: ${c.preferred_language}${c.english_proficiency ? ` (English: ${String(c.english_proficiency).replace(/_/g, ' ')})` : ''}` : '',
+        c.emergency_contact_name || c.emergency_contact_phone ? `Emergency contact: ${[c.emergency_contact_name, c.emergency_contact_phone].filter(Boolean).join(' · ')}` : '',
+        c.dependants_count ? `Dependants: ${c.dependants_count}${c.dependants_detail ? ` — ${String(c.dependants_detail).slice(0, 160)}` : ''}` : '',
         c.intake_date ? `Intake date: ${dateOnly(c.intake_date)}` : '',
         c.service_category ? `Service category: ${String(c.service_category).replace(/_/g, ' ')}` : '',
+        c.referral_source ? `Referral source: ${String(c.referral_source).replace(/_/g, ' ')}` : '',
         c.reason_for_accessing ? `Reason for accessing: ${String(c.reason_for_accessing).replace(/_/g, ' ')}` : '',
+        c.presenting_needs ? `Presenting needs: ${String(c.presenting_needs).slice(0, 300)}` : '',
         c.identified_needs ? `Identified needs: ${c.identified_needs}` : '',
+        Array.isArray(c.funder_categories) && c.funder_categories.length ? `Funder categories: ${c.funder_categories.map((f) => String(f).replace(/_/g, ' ')).join(', ')}` : '',
+        [c.indigenous_first_nations ? 'First Nations' : '', c.newcomer ? 'newcomer' : '', c.senior ? 'senior' : '', c.youth_under_25 ? 'youth under 25' : ''].filter(Boolean).length ? `Client flags: ${[c.indigenous_first_nations ? 'First Nations' : '', c.newcomer ? 'newcomer' : '', c.senior ? 'senior' : '', c.youth_under_25 ? 'youth under 25' : ''].filter(Boolean).join(', ')}` : '',
+        Array.isArray(c.program_participations) && c.program_participations.length ? `Program participations: ${c.program_participations.map((p) => [p.program_name, p.status].filter(Boolean).join(' — ')).filter(Boolean).slice(0, 6).join('; ')}` : '',
         c.notes ? `Case notes: ${String(c.notes).slice(0, 400)}` : '',
         `Total visits logged: ${c.visit_count || 0}`,
         lastVisitByClient.get(id) ? `Last visit: ${lastVisitByClient.get(id)}` : '',
@@ -188,6 +200,7 @@ export default async function (req: Request): Promise<Response> {
       return [
         `CLIENT: ${fullName(c) || 'unknown'}`,
         `  ${head}`,
+        safety.length ? `  SAFETY ALERTS (always surface these):\n${safety.join('\n')}` : '',
         clientVisits.length ? `  Recent visits:\n${clientVisits.join('\n')}` : '  Recent visits: none on file',
         clientNotes.length ? `  Client notes:\n${clientNotes.join('\n')}` : '',
         clientAppts.length ? `  Appointments:\n${clientAppts.join('\n')}` : '',
@@ -217,12 +230,26 @@ STRICT RULES
 - Answer ONLY from the DATA below. Never invent a client, date, phone number, or detail.
 - If the data does not contain the answer, say plainly what is missing and suggest what to search instead.
 - Speak to staff as a knowledgeable colleague: plain language, no preamble, no restating the question.
-- Keep answers short and scannable: a one-line direct answer, then short bullet points. Use markdown, never tables.
 - When listing clients, always include their case status and assigned worker, and how long since their last visit when relevant.
-- Refer to clients by full name. Do not dump entire records; summarise what answers the question and offer to go deeper.
+- Refer to clients by full name. Summarise what answers the question; offer to go deeper rather than dumping a whole record unprompted.
 - Never mention the words "data provided", "context", "dataset" or "database dump". Say "on file" instead.
-- Safety alerts must always be surfaced if a matched client has one.
+- Safety alerts must always be surfaced if a matched client has one, at the top of the answer, in bold.
 - Do not give medical, legal or clinical advice; describe what is on file.
+
+RESPONSE FORMAT — pick the shape an experienced casework analyst would use for this particular request. The question decides the format, not habit.
+- One fact ("how many clients", "who is X's worker", "when was the last visit") -> a single direct sentence. Add at most one short supporting line. No headings, no bullets, no table.
+- Comparing or listing several clients or records -> a compact markdown table, at most 5 columns, very short cell text (names, statuses, dates, worker). Put the most useful column first and sort the table usefully (oldest last visit first, newest referral first, and so on). Add one line under the table only if something needs saying. Never build a table for a single row, and never put long notes inside cells.
+- Loose grouping that is not really tabular (themes, needs, next steps, reasons) -> short bullets, each starting with a bold lead-in, e.g. "- **Housing:** waiting on a landlord reply".
+- Detailed look at one client ("tell me about X", "full profile", "everything on file", "case summary") -> a short sectioned summary with bold labels, in this order where the data exists: **At a glance** (one line: status, worker, intake, last contact), **Contact**, **Household and flags**, **Needs and reason for accessing**, **Recent activity** (dated bullet timeline, newest first, as "2026-10-14 — visited the food bank"), **Appointments**, **Referrals**, **Next step**. Omit any section with nothing on file, and keep each to a couple of lines.
+- Sequence of events, history, "what has happened with X" -> dated bullet timeline, newest first, "2026-10-14 — what happened". No table.
+- Steps or follow-up actions -> a numbered list, imperative and specific ("Call to confirm the appointment", not "follow up").
+- A yes/no or judgement question -> the verdict in one sentence, then two or three reasons as bullets.
+- A distribution or trend (clients by status, visits per month, caseload by worker) -> a compact table with a bar column drawn from block characters, scaled to the largest value, e.g. "| Active | 42 | ███████████ |", or a plain bullet list when there are fewer than four categories. Never invent numbers to fill a chart.
+- Markdown only: headings, bold, bullets, numbered lists and tables. Never HTML, charts, images or code blocks. Never escape characters.
+- Put a BLANK LINE between every block — between a heading and its text, between bullets and paragraphs, and before and after a table. This is what makes the answer readable in the chat panel rather than one long run-on line. Bullets and table rows each stay on their own line.
+
+LENGTH: answer first, in the fewest words that fully answer it. Short request, short answer. A request for detail, a full profile or a report may run longer, but with no filler and no repeating of the question.
+TABLES: keep them narrow enough to read in a small chat panel — short headers, no wrapped paragraphs, and cap at about 10 rows unless staff asked for every client in scope.
 
 ${historyLines ? `CONVERSATION SO FAR\n${historyLines}\n` : ''}
 ORGANISATION COUNTS

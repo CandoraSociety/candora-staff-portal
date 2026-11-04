@@ -27,7 +27,7 @@ export default function RcAssistantHeaderButton({ portal = 'rc' }) {
         <>
           <div className="fixed inset-0 z-[9997]" onClick={() => setOpen(false)} />
           <div
-            className="absolute right-0 top-full mt-2 z-[9998] w-[calc(100vw-2rem)] sm:w-[400px] max-w-[400px] rounded-2xl overflow-hidden shadow-2xl border border-border bg-card flex flex-col"
+            className="absolute right-0 top-full mt-2 z-[9998] w-[calc(100vw-2rem)] sm:w-[460px] max-w-[460px] rounded-2xl overflow-hidden shadow-2xl border border-border bg-card flex flex-col"
             style={{ height: 'min(560px, calc(100vh - 8rem))' }}
           >
             <div className="flex items-center justify-between gap-2 px-3 py-2.5 bg-sidebar text-sidebar-foreground">

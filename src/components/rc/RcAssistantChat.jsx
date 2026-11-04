@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { Sparkles, Send, Loader2, Eraser, ArrowRight } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
@@ -22,15 +23,32 @@ const SUGGESTIONS = {
   ],
 };
 
+// Answers arrive as markdown — plain sentences, bullets, timelines or tables —
+// so the chat has to render all of those shapes cleanly in a narrow panel.
 const markdownComponents = {
   p: (props) => <p className="mb-2 last:mb-0 leading-relaxed" {...props} />,
   ul: (props) => <ul className="mb-2 list-disc pl-4 space-y-1" {...props} />,
   ol: (props) => <ol className="mb-2 list-decimal pl-4 space-y-1" {...props} />,
   li: (props) => <li className="leading-relaxed" {...props} />,
   strong: (props) => <strong className="font-semibold" {...props} />,
-  h1: (props) => <p className="font-semibold mb-1" {...props} />,
-  h2: (props) => <p className="font-semibold mb-1" {...props} />,
-  h3: (props) => <p className="font-semibold mb-1" {...props} />,
+  em: (props) => <em className="italic" {...props} />,
+  h1: (props) => <p className="font-semibold mb-1 mt-3 first:mt-0" {...props} />,
+  h2: (props) => <p className="font-semibold mb-1 mt-3 first:mt-0" {...props} />,
+  h3: (props) => <p className="font-semibold mb-1 mt-3 first:mt-0" {...props} />,
+  hr: () => <hr className="my-2 border-border/70" />,
+  blockquote: (props) => (
+    <blockquote className="mb-2 border-l-2 border-destructive/60 pl-2 text-destructive" {...props} />
+  ),
+  table: (props) => (
+    <div className="mb-2 -mx-1 overflow-x-auto">
+      <table className="w-full border-collapse text-xs" {...props} />
+    </div>
+  ),
+  thead: (props) => <thead className="bg-background/70" {...props} />,
+  th: (props) => (
+    <th className="border border-border/70 px-2 py-1 text-left font-semibold align-top" {...props} />
+  ),
+  td: (props) => <td className="border border-border/70 px-2 py-1 align-top" {...props} />,
 };
 
 export default function RcAssistantChat({ portal = 'rc', focusClientId = null, onClose }) {
@@ -130,7 +148,7 @@ export default function RcAssistantChat({ portal = 'rc', focusClientId = null, o
           <div key={i} className={cn('flex', m.role === 'user' ? 'justify-end' : 'justify-start')}>
             <div
               className={cn(
-                'rounded-xl px-3 py-2 text-sm max-w-[92%]',
+                'rounded-xl px-3 py-2 text-sm max-w-[92%] min-w-0',
                 m.role === 'user'
                   ? 'bg-accent text-accent-foreground'
                   : m.error
@@ -143,7 +161,9 @@ export default function RcAssistantChat({ portal = 'rc', focusClientId = null, o
               ) : (
                 <>
                   <div className="[&>*:last-child]:mb-0">
-                    <ReactMarkdown components={markdownComponents}>{m.content}</ReactMarkdown>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
+                      {m.content}
+                    </ReactMarkdown>
                   </div>
                   {m.related?.length > 0 && (
                     <div className="mt-2 pt-2 border-t border-border/60 space-y-1">
