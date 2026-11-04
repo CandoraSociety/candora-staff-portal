@@ -284,8 +284,8 @@ export const STEP_AUDIO = {
   ],
   reception_simple: [
     'https://media.base44.com/files/public/6a249282cb496579542673b7/3e87d99e3_speech.mp3',
-    null,
     'https://media.base44.com/files/public/6a249282cb496579542673b7/135c3655d_speech.mp3',
+    null,
     'https://media.base44.com/files/public/6a249282cb496579542673b7/df7880f90_speech.mp3',
     'https://media.base44.com/files/public/6a249282cb496579542673b7/8d3649be0_speech.mp3',
     'https://media.base44.com/files/public/6a249282cb496579542673b7/d22e053e7_speech.mp3',

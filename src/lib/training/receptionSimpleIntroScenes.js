@@ -1,7 +1,6 @@
 // Intro "video" scenes for the Reception Simple Mode training module.
 // Narration is static generated audio — each scene stays until it ends.
-export const RECEPTION_SIMPLE_INTRO_SCENES = {
-  reception_simple: [
+export const RECEPTION_SIMPLE_INTRO_SCENES = [
     {
       kicker: 'Simple mode',
       title: 'A smaller front desk, on purpose.',
@@ -32,5 +31,4 @@ export const RECEPTION_SIMPLE_INTRO_SCENES = {
       body: "Turning the switch on and working from the cards, booking and checking in a visitor, signing a walk-in in and back out, and finding an outside resource. Training runs on demo data, so nothing here is real.",
       audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/95787dd13_speech.mp3',
     },
-  ],
-};
+];
