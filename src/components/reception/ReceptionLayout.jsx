@@ -54,10 +54,11 @@ export default function ReceptionLayout() {
               href="/reception-portal"
               target="_blank"
               rel="noreferrer"
-              className="hidden md:flex items-center gap-1.5 text-xs text-sidebar-foreground/60 hover:text-sidebar-foreground"
+              className="flex items-center gap-1.5 rounded-md bg-sidebar-primary px-3 py-2 text-xs font-semibold text-sidebar-primary-foreground hover:bg-sidebar-primary/90 transition-colors"
               title="Open the external front desk portal in a new tab"
             >
-              <ExternalLink className="h-3.5 w-3.5" /> External portal
+              <ExternalLink className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">External Portal</span>
             </a>
             <div data-tour="reception-simple-mode" className="hidden sm:block">
               <SimpleModeToggle simpleMode={simpleMode} onChange={setSimpleMode} onDark />
