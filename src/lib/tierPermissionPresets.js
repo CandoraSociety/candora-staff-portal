@@ -53,6 +53,7 @@ export const PORTAL_MODULES = [
   { id: 'ell',              label: 'English Language Learning',      route: '/ell' },
   { id: 'empoweru',         label: 'EmpowerU',                        route: '/empoweru' },
   { id: 'rc',               label: 'Candora Central Database',        route: '/rc' },
+  { id: 'rworker',          label: 'Resource Worker Portal',          route: '/rworker' },
   { id: 'central-registration', label: 'Central Registration',        route: '/central-registration' },
   { id: 'childminding',     label: 'Childminding',                   route: '/childminding' },
   { id: 'reception',        label: 'Reception',                      route: '/reception' },

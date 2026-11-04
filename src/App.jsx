@@ -301,6 +301,13 @@ import PHACSessions from '@/pages/phac/PHACSessions';
 import PHACParticipants from '@/pages/phac/PHACParticipants';
 import PHACFamilyDetail from '@/pages/phac/PHACFamilyDetail';
 
+// Resource Worker Portal (simplified view of the Central Database)
+import RWorkerLayout from '@/components/rworker/RWorkerLayout';
+import RWorkerDashboard from '@/pages/rworker/RWorkerDashboard';
+import RWorkerCaseManagement from '@/pages/rworker/RWorkerCaseManagement';
+import RWorkerClientProfile from '@/pages/rworker/RWorkerClientProfile';
+import RWorkerClientVisit from '@/pages/rworker/RWorkerClientVisit';
+
 // Resource Centre Portal
 import RCLayout from '@/components/rc/RCLayout';
 import RCDashboard from '@/pages/rc/RCDashboard';
@@ -726,6 +733,14 @@ const AuthenticatedApp = () => {
           <Route path="/phac/sessions" element={<PHACSessions />} />
           <Route path="/phac/participants" element={<PHACParticipants />} />
           <Route path="/phac/participants/:id" element={<PHACFamilyDetail />} />
+        </Route>
+
+        {/* Resource Worker Portal - simplified Central Database view */}
+        <Route element={<RWorkerLayout />}>
+          <Route path="/rworker" element={<RWorkerDashboard />} />
+          <Route path="/rworker/case-management" element={<RWorkerCaseManagement />} />
+          <Route path="/rworker/clients/:id" element={<RWorkerClientProfile />} />
+          <Route path="/rworker/client-visit" element={<RWorkerClientVisit />} />
         </Route>
 
         {/* Resource Centre Portal - standalone layout */}
