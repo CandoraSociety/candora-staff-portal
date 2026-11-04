@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, ClipboardList, UserPlus, Menu, X, CalendarPlus, ArrowLeft } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, UserPlus, Search, Menu, X, CalendarPlus, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useOrgSettings } from '@/lib/useOrgSettings';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ const NAV_ITEMS = [
   { path: '/rworker', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/rworker/case-management', label: 'Case Management', icon: ClipboardList },
   { path: '/rworker/client-visit', label: 'Client Visit', icon: UserPlus },
+  { path: '/rworker/resources', label: 'Resource Finder', icon: Search },
 ];
 
 // Simple Resource Worker portal — one ribbon across the top, a notification bell,

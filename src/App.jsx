@@ -741,6 +741,7 @@ const AuthenticatedApp = () => {
           <Route path="/rworker/case-management" element={<RWorkerCaseManagement />} />
           <Route path="/rworker/clients/:id" element={<RWorkerClientProfile />} />
           <Route path="/rworker/client-visit" element={<RWorkerClientVisit />} />
+          <Route path="/rworker/resources" element={<ReceptionResourceFinder />} />
         </Route>
 
         {/* Resource Centre Portal - standalone layout */}
