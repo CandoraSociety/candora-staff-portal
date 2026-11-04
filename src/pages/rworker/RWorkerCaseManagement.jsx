@@ -10,6 +10,8 @@ import StatusBadge from '@/components/rc/StatusBadge';
 import { CASE_STATUS_OPTIONS } from '@/lib/rcConstants';
 import { useAuth } from '@/lib/AuthContext';
 
+const MINE_TAB = { value: 'mine', label: 'My Clients' };
+
 const CATEGORIES = [
   { value: 'intensive_services', label: 'Intensive Services' },
   { value: 'general', label: 'General Clients' },
@@ -20,9 +22,8 @@ const CATEGORIES = [
 // same way as the central database but kept to a single readable list.
 export default function RWorkerCaseManagement() {
   const { user } = useAuth();
-  const [category, setCategory] = useState('general');
+  const [category, setCategory] = useState(MINE_TAB.value);
   const [search, setSearch] = useState('');
-  const [mineOnly, setMineOnly] = useState(false);
 
   const myName = (user?.full_name || '').toLowerCase();
   const myEmail = (user?.email || '').toLowerCase();
@@ -45,8 +46,14 @@ export default function RWorkerCaseManagement() {
     [clients]
   );
 
-  const filtered = (byCategory[category] || [])
-    .filter((c) => !mineOnly || isMine(c.assigned_worker))
+  const myClients = useMemo(
+    () => clients.filter((c) => isMine(c.assigned_worker)),
+    [clients, myName, myEmail]
+  );
+
+  const pool = category === MINE_TAB.value ? myClients : (byCategory[category] || []);
+
+  const filtered = pool
     .filter((c) => {
       if (!search) return true;
       const q = search.toLowerCase();
@@ -65,6 +72,9 @@ export default function RWorkerCaseManagement() {
 
       <Tabs value={category} onValueChange={setCategory}>
         <TabsList className="flex-wrap h-auto">
+          <TabsTrigger value={MINE_TAB.value}>
+            {MINE_TAB.label} ({myClients.length})
+          </TabsTrigger>
           {CATEGORIES.map((c) => (
             <TabsTrigger key={c.value} value={c.value}>
               {c.label} ({byCategory[c.value]?.length || 0})
@@ -73,22 +83,18 @@ export default function RWorkerCaseManagement() {
         </TabsList>
       </Tabs>
 
-      <div className="flex flex-col sm:flex-row gap-3 sm:items-center">
-        <div className="relative w-full sm:max-w-sm">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input placeholder="Search clients..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
-        </div>
-        <label className="flex items-center gap-2 text-sm text-muted-foreground">
-          <input type="checkbox" checked={mineOnly} onChange={(e) => setMineOnly(e.target.checked)} />
-          Only clients assigned to me
-        </label>
+      <div className="relative w-full sm:max-w-sm">
+        <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+        <Input placeholder="Search clients..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" />
       </div>
 
       <Card>
         <CardContent className="p-0 divide-y divide-border/60">
           {isLoading && <p className="text-sm text-muted-foreground text-center py-8">Loading...</p>}
           {!isLoading && filtered.length === 0 && (
-            <p className="text-sm text-muted-foreground text-center py-8">No clients in this category</p>
+            <p className="text-sm text-muted-foreground text-center py-8">
+              {category === MINE_TAB.value ? 'No client files are assigned to you yet' : 'No clients in this category'}
+            </p>
           )}
           {filtered.map((client) => (
             <Link key={client.id} to={`/rworker/clients/${client.id}`} className="flex items-center gap-3 px-4 py-3 hover:bg-muted/50">

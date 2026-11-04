@@ -2,10 +2,13 @@ import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { ArrowLeft, Phone, Mail, MapPin, CalendarPlus, Route, Plus, ClipboardList, ChevronDown } from 'lucide-react';
+import { ArrowLeft, Phone, Mail, MapPin, CalendarPlus, Route, Plus, ClipboardList, ChevronDown, Pencil } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import ClientFormCore from '@/components/rc/ClientFormCore';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
@@ -29,6 +32,8 @@ export default function RWorkerClientProfile() {
   const [extRefOpen, setExtRefOpen] = useState(false);
   const [programRefOpen, setProgramRefOpen] = useState(false);
   const [serviceOpen, setServiceOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [editForm, setEditForm] = useState({});
 
   const { data: client, isLoading } = useQuery({ queryKey: ['rc-client', id], queryFn: () => base44.entities.RCClient.get(id) });
   const { data: serviceLogs = [] } = useQuery({ queryKey: ['rc-service-logs', id], queryFn: () => base44.entities.RCServiceLog.filter({ client_id: id }) });
@@ -44,6 +49,19 @@ export default function RWorkerClientProfile() {
     queryClient.invalidateQueries({ queryKey: ['rc-client', id] });
   };
   const invalidateNotes = () => queryClient.invalidateQueries({ queryKey: ['rc-client-notes', id] });
+
+  const openEdit = () => { setEditForm({ ...client }); setEditOpen(true); };
+  const updateField = (field, value) => setEditForm((prev) => ({ ...prev, [field]: value }));
+
+  // Saving writes straight to the shared client record, so the change shows in
+  // the Central Database immediately (and vice versa).
+  const handleSaveEdit = async () => {
+    await base44.entities.RCClient.update(id, editForm);
+    queryClient.invalidateQueries({ queryKey: ['rc-client', id] });
+    queryClient.invalidateQueries({ queryKey: ['rw-clients'] });
+    setEditOpen(false);
+    toast.success('Client updated');
+  };
 
   if (isLoading) return <div className="text-center py-8 text-muted-foreground">Loading...</div>;
   if (!client) return <div className="text-center py-8"><p className="text-muted-foreground">Client not found</p><Link to="/rworker/case-management"><Button variant="outline" className="mt-4">Back to Case Management</Button></Link></div>;
@@ -72,6 +90,7 @@ export default function RWorkerClientProfile() {
               <DropdownMenuItem onClick={() => setRefOpen(true)}>Record incoming referral</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+          <Button variant="outline" size="sm" onClick={openEdit}><Pencil className="h-4 w-4" /> Edit Client</Button>
           <Button size="sm" onClick={() => setApptOpen(true)}><CalendarPlus className="h-4 w-4" /> Schedule Appointment</Button>
         </div>
       </div>
@@ -204,6 +223,17 @@ export default function RWorkerClientProfile() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={editOpen} onOpenChange={setEditOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader><DialogTitle>Edit Client</DialogTitle></DialogHeader>
+          <ClientFormCore form={editForm} update={updateField} />
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={() => setEditOpen(false)}>Cancel</Button>
+            <Button onClick={handleSaveEdit}>Save</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <AppointmentDialog open={apptOpen} onOpenChange={setApptOpen} clientId={id} clientName={clientName} clientEmail={client.email} onSaved={() => { setApptOpen(false); invalidate(); }} />
       <ServiceLogDialog open={serviceOpen} onOpenChange={setServiceOpen} clientId={id} clientName={clientName} onSaved={() => { setServiceOpen(false); invalidate(); }} />
