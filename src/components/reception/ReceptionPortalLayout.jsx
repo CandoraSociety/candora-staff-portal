@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, CalendarDays, DoorOpen, UserSearch, Users, ClipboardList,
-  Search, Siren, Menu, X, LogOut,
+  Search, Siren, Menu, X, LogOut, ShoppingBasket,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useOrgSettings } from '@/lib/useOrgSettings';
@@ -26,7 +26,7 @@ const SIMPLE_NAV = [
   { path: '/reception-portal', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/reception-portal/appointments', label: 'Appointments', icon: CalendarDays },
   { path: '/reception-portal/dropins', label: 'Drop-Ins', icon: DoorOpen },
-  { path: '/reception-portal/registration', label: 'Program Registration', icon: ClipboardList },
+  { path: '/reception-portal/client-visit', search: '?type=grab_and_go', label: 'Grab and Go Resources', icon: ShoppingBasket },
 ];
 
 export default function ReceptionPortalLayout() {
@@ -74,7 +74,7 @@ export default function ReceptionPortalLayout() {
               return (
                 <Link
                   key={item.path}
-                  to={item.path}
+                  to={`${item.path}${item.search || ''}`}
                   className={cn(
                     'flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors',
                     isActive(item.path)
@@ -118,7 +118,7 @@ export default function ReceptionPortalLayout() {
               return (
                 <Link
                   key={item.path}
-                  to={item.path}
+                  to={`${item.path}${item.search || ''}`}
                   onClick={() => setMobileOpen(false)}
                   className={cn(
                     'flex items-center gap-2 px-3 py-2.5 rounded-md text-sm font-medium',

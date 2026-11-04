@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, CalendarDays, UserSearch, Users, ClipboardList, Search, Siren, Menu, X, ArrowLeft, DoorOpen, ExternalLink } from 'lucide-react';
+import { LayoutDashboard, CalendarDays, UserSearch, Users, ClipboardList, Search, Siren, Menu, X, ArrowLeft, DoorOpen, ExternalLink, ShoppingBasket } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useOrgSettings } from '@/lib/useOrgSettings';
 import EAFloatingWidget from '@/components/ed/EAFloatingWidget';
@@ -17,12 +17,12 @@ const NAV_ITEMS = [
   { path: '/reception/urgent', label: 'Urgent Alerts', icon: Siren },
 ];
 
-// Simple mode keeps only the three moves a receptionist needs.
+// Simple mode keeps only the moves a receptionist needs.
 const SIMPLE_NAV_ITEMS = [
   { path: '/reception', label: 'Dashboard', icon: LayoutDashboard },
   { path: '/reception/appointments', label: 'Appointments', icon: CalendarDays },
   { path: '/reception/dropins', label: 'Drop-Ins', icon: DoorOpen },
-  { path: '/reception/registration', label: 'Program Registration', icon: ClipboardList },
+  { path: '/reception/client-visit', search: '?type=grab_and_go', label: 'Grab and Go Resources', icon: ShoppingBasket },
 ];
 
 export default function ReceptionLayout() {
@@ -46,7 +46,7 @@ export default function ReceptionLayout() {
           </div>
           <nav className="hidden lg:flex items-center gap-1">
             {navItems.map(item => { const Icon = item.icon; return (
-              <Link key={item.path} to={item.path} className={cn('flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors', isActive(item.path) ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground')}><Icon className="h-4 w-4" />{item.label}</Link>
+              <Link key={item.path} to={`${item.path}${item.search || ''}`} className={cn('flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors', isActive(item.path) ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground')}><Icon className="h-4 w-4" />{item.label}</Link>
             ); })}
           </nav>
           <div className="flex items-center gap-4">
@@ -67,7 +67,7 @@ export default function ReceptionLayout() {
           </div>
         </div>
         {mobileOpen && <nav className="lg:hidden flex flex-col p-2 border-t border-sidebar-border">{navItems.map(item => { const Icon = item.icon; return (
-          <Link key={item.path} to={item.path} onClick={() => setMobileOpen(false)} className={cn('flex items-center gap-2 px-3 py-2.5 rounded-md text-sm font-medium', isActive(item.path) ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50')}><Icon className="h-4 w-4" />{item.label}</Link>
+          <Link key={item.path} to={`${item.path}${item.search || ''}`} onClick={() => setMobileOpen(false)} className={cn('flex items-center gap-2 px-3 py-2.5 rounded-md text-sm font-medium', isActive(item.path) ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50')}><Icon className="h-4 w-4" />{item.label}</Link>
         ); })}</nav>}
       </header>
       <main className="p-4 lg:p-6 max-w-7xl mx-auto"><Outlet /></main>
