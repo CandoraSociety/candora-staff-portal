@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { CalendarDays, DoorOpen, ClipboardList, Siren, ArrowRight } from 'lucide-react';
+import { CalendarDays, DoorOpen, ClipboardList, Siren, ArrowRight, Search } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import UrgentAlertDialog from '@/components/reception/UrgentAlertDialog';
 import { useAuth } from '@/lib/AuthContext';
 
-// Simple mode front desk — nothing but the three moves a receptionist needs,
+// Simple mode front desk — nothing but the moves a receptionist needs,
 // each one a big tappable card. No lists, counts or calendars on this page.
 const CARDS = [
   {
@@ -30,6 +30,13 @@ const CARDS = [
     icon: ClipboardList,
     tone: 'bg-purple-50 text-purple-600',
   },
+  {
+    path: '/reception/resources',
+    label: 'Resource Finder',
+    help: 'Find help, services and programs for someone',
+    icon: Search,
+    tone: 'bg-amber-50 text-amber-600',
+  },
 ];
 
 export default function SimpleReceptionHome() {
@@ -50,7 +57,7 @@ export default function SimpleReceptionHome() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
         {CARDS.map((card) => {
           const Icon = card.icon;
           return (
