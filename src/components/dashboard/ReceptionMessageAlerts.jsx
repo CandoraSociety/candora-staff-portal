@@ -1,7 +1,8 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import moment from 'moment';
+import moment from 'moment-timezone';
+import { AB_TIME_ZONE } from '@/lib/abTime';
 import { MessageSquare, X } from 'lucide-react';
 
 // Messages the front desk left for this staff member — someone came to see
@@ -44,7 +45,7 @@ export default function ReceptionMessageAlerts({ user }) {
               <p className="text-sm text-foreground whitespace-pre-line mt-1">{n.message}</p>
               <p className="text-xs text-muted-foreground mt-2">
                 {n.from_name ? `${n.from_name} at the front desk · ` : ''}
-                {n.created_date ? moment(n.created_date).format('ddd, MMM D · h:mm a') : ''}
+                {n.created_date ? moment.utc(n.created_date).tz(AB_TIME_ZONE).format('ddd, MMM D · h:mm a [ABT]') : ''}
               </p>
             </div>
             <div className="ml-auto">
