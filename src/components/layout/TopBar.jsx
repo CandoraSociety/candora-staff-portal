@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Bell, Search, Menu, Settings, LogOut } from 'lucide-react';
+import { Search, Menu, Settings, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +12,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import LogoutConfirmationDialog from '@/components/auth/LogoutConfirmationDialog';
 import { displayName, displayInitials } from '@/lib/userDisplayName';
 import { TestModeSwitch } from '@/components/shared/TestModeControls';
+import NewMailBell from '@/components/layout/NewMailBell';
 
 export default function TopBar({ user, sidebarCollapsed, onToggleMobile, className }) {
   const initials = displayInitials(user);
@@ -38,9 +39,7 @@ export default function TopBar({ user, sidebarCollapsed, onToggleMobile, classNa
 
       <div className="flex items-center gap-3">
         <TestModeSwitch className="mr-1" />
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="w-5 h-5 text-muted-foreground" />
-        </Button>
+        <NewMailBell />
 
         <DropdownMenu open={open} onOpenChange={setOpen}>
           <DropdownMenuTrigger asChild>

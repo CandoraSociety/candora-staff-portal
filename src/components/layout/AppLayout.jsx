@@ -11,6 +11,7 @@ import NDAGate from '@/components/onboarding/NDAGate';
 import OnboardingWizard from '@/components/onboarding/OnboardingWizard';
 import OnboardingBanner from '@/components/onboarding/OnboardingBanner';
 import { useOnboarding } from '@/lib/useOnboarding';
+import { NewMailProvider } from '@/lib/newMailAlerts';
 
 
 export default function AppLayout() {
@@ -77,6 +78,7 @@ export default function AppLayout() {
   }
 
   return (
+    <NewMailProvider userId={user?.id}>
     <div className="min-h-screen bg-background">
       {/* Mobile overlay */}
       {mobileOpen && (
@@ -125,5 +127,6 @@ export default function AppLayout() {
         />
       )}
     </div>
+    </NewMailProvider>
   );
 }
