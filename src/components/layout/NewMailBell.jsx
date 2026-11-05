@@ -1,6 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Mail } from 'lucide-react';
+import { Mail, Volume2, VolumeX } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger,
@@ -13,7 +13,7 @@ const timeLabel = (iso) => {
 };
 
 export default function NewMailBell() {
-  const { newMessages, clear } = useNewMail();
+  const { newMessages, clear, muted, toggleMuted } = useNewMail();
   const navigate = useNavigate();
   const count = newMessages.length;
 
@@ -55,6 +55,10 @@ export default function NewMailBell() {
         )}
         <DropdownMenuSeparator />
         <DropdownMenuItem onClick={() => navigate('/outlook')}>Open Outlook</DropdownMenuItem>
+        <DropdownMenuItem onClick={toggleMuted}>
+          {muted ? <VolumeX className="w-4 h-4 mr-2" /> : <Volume2 className="w-4 h-4 mr-2" />}
+          {muted ? 'Turn alert sound on' : 'Turn alert sound off'}
+        </DropdownMenuItem>
         {count > 0 && <DropdownMenuItem onClick={clear}>Dismiss alerts</DropdownMenuItem>}
       </DropdownMenuContent>
     </DropdownMenu>

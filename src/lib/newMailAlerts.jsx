@@ -2,12 +2,19 @@ import React, { createContext, useContext, useEffect, useRef, useState } from 'r
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { base44 } from '@/api/base44Client';
+import { playMailChime, primeNotificationSound } from '@/lib/notificationSound';
 
 // How often we ask Outlook for the latest messages while the portal is open.
-const POLL_MS = 120000;
+const POLL_MS = 60000;
 const MAX_TOASTS = 3;
+const SOUND_KEY = 'newmail_sound_muted';
 
-const NewMailContext = createContext({ newMessages: [], clear: () => {} });
+const NewMailContext = createContext({
+  newMessages: [],
+  clear: () => {},
+  muted: false,
+  toggleMuted: () => {},
+});
 
 export const useNewMail = () => useContext(NewMailContext);
 
@@ -20,9 +27,35 @@ const senderOf = (message) =>
 
 export function NewMailProvider({ userId, children }) {
   const [newMessages, setNewMessages] = useState([]);
+  const [muted, setMuted] = useState(() => localStorage.getItem(SOUND_KEY) === 'true');
   const lastCheckRef = useRef(null);
   const busyRef = useRef(false);
+  const mutedRef = useRef(muted);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    mutedRef.current = muted;
+  }, [muted]);
+
+  // Sound can only start after the person interacts with the page.
+  useEffect(() => {
+    const prime = () => primeNotificationSound();
+    window.addEventListener('pointerdown', prime, { once: true });
+    window.addEventListener('keydown', prime, { once: true });
+    return () => {
+      window.removeEventListener('pointerdown', prime);
+      window.removeEventListener('keydown', prime);
+    };
+  }, []);
+
+  const toggleMuted = () => {
+    setMuted((prev) => {
+      const next = !prev;
+      localStorage.setItem(SOUND_KEY, String(next));
+      if (!next) playMailChime();
+      return next;
+    });
+  };
 
   const announce = (messages) => {
     const openInbox = () => navigate('/outlook');
@@ -41,6 +74,8 @@ export function NewMailProvider({ userId, children }) {
         action: { label: 'Open inbox', onClick: openInbox },
       });
     }
+
+    if (!mutedRef.current) playMailChime();
   };
 
   useEffect(() => {
@@ -97,7 +132,9 @@ export function NewMailProvider({ userId, children }) {
   }, [userId]);
 
   return (
-    <NewMailContext.Provider value={{ newMessages, clear: () => setNewMessages([]) }}>
+    <NewMailContext.Provider
+      value={{ newMessages, clear: () => setNewMessages([]), muted, toggleMuted }}
+    >
       {children}
     </NewMailContext.Provider>
   );
