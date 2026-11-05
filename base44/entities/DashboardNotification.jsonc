@@ -17,10 +17,15 @@
         "cc_receipts_paid",
         "ed_briefing",
         "training_material",
+        "reception_message",
         "other"
       ],
       "default": "other",
-      "description": "Type of notification (reimbursement marked paid, MasterCard receipt submission processed, scheduled ED briefing, training handout shared by a facilitator, other)"
+      "description": "Type of notification (reimbursement marked paid, MasterCard receipt submission processed, scheduled ED briefing, training handout shared by a facilitator, a message left at the front desk, other)"
+    },
+    "from_name": {
+      "type": "string",
+      "description": "Who left the message \u2014 the receptionist's name for a front-desk message"
     },
     "related_form_id": {
       "type": "string",

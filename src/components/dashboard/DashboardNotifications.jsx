@@ -4,6 +4,7 @@ import SupervisorTimesheetAlerts from '@/components/timesheets/SupervisorTimeshe
 import SupervisorReimbursementAlerts from '@/components/reimbursements/SupervisorReimbursementAlerts';
 import SupervisorVacationAlerts from '@/components/timeoff/SupervisorVacationAlerts';
 import PaidReimbursementAlerts from '@/components/dashboard/PaidReimbursementAlerts';
+import ReceptionMessageAlerts from '@/components/dashboard/ReceptionMessageAlerts';
 import TrainingMaterialAlerts from '@/components/dashboard/TrainingMaterialAlerts';
 import EdBriefingAlerts from '@/components/dashboard/EdBriefingAlerts';
 import FinanceFileApprovalWidget from '@/components/ed/FinanceFileApprovalWidget';
@@ -28,6 +29,7 @@ export default function DashboardNotifications({ user }) {
       <SupervisorReimbursementAlerts user={user} />
       <SupervisorVacationAlerts user={user} />
       <PaidReimbursementAlerts user={user} />
+      <ReceptionMessageAlerts user={user} />
       <TrainingMaterialAlerts user={user} />
       <EdBriefingAlerts user={user} />
       {user?.email?.toLowerCase() === 'graham.currie@candorasociety.com' && (

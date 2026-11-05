@@ -9,6 +9,7 @@ import { useOrgSettings } from '@/lib/useOrgSettings';
 import SimpleModeToggle from '@/components/shared/SimpleModeToggle';
 import { useSimpleMode } from '@/lib/useSimpleMode';
 import { endReceptionPortalSession, getReceptionPortalSession } from '@/lib/receptionPortalSession';
+import LeaveMessageButton from '@/components/reception/LeaveMessageButton';
 
 // The external Reception portal mirrors the internal one but keeps its own
 // paths, offers no way back into the staff app, and shows who is at the desk.
@@ -90,6 +91,7 @@ export default function ReceptionPortalLayout() {
           </nav>
 
           <div className="flex items-center gap-3">
+            <LeaveMessageButton fromName={operatorName} onDark />
             <div className="hidden sm:block">
               <SimpleModeToggle simpleMode={simpleMode} onChange={setSimpleMode} onDark />
             </div>

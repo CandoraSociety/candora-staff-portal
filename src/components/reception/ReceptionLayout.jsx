@@ -6,6 +6,8 @@ import { useOrgSettings } from '@/lib/useOrgSettings';
 import EAFloatingWidget from '@/components/ed/EAFloatingWidget';
 import SimpleModeToggle from '@/components/shared/SimpleModeToggle';
 import { useSimpleMode } from '@/lib/useSimpleMode';
+import { useAuth } from '@/lib/AuthContext';
+import LeaveMessageButton from '@/components/reception/LeaveMessageButton';
 
 const NAV_ITEMS = [
   { path: '/reception', label: 'Dashboard', icon: LayoutDashboard },
@@ -30,6 +32,7 @@ export default function ReceptionLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { logoUrl, orgName } = useOrgSettings();
   const { simpleMode, setSimpleMode } = useSimpleMode();
+  const { user } = useAuth();
 
   const navItems = simpleMode ? SIMPLE_NAV_ITEMS : NAV_ITEMS;
 
@@ -50,6 +53,7 @@ export default function ReceptionLayout() {
             ); })}
           </nav>
           <div className="flex items-center gap-4">
+            <LeaveMessageButton fromName={user?.full_name} onDark />
             <a
               href="/reception-portal"
               target="_blank"
