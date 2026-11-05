@@ -1,0 +1,103 @@
+{
+  "name": "DonationCampaign",
+  "type": "object",
+  "description": "A fundraising appeal or campaign the donor portal tracks gifts against \u2014 e.g. Winter Warmth Appeal. Gifts point at it by id, so progress updates automatically as donations are recorded.",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Campaign name as donors see it"
+    },
+    "description": {
+      "type": "string",
+      "description": "What the campaign raises money for"
+    },
+    "campaign_type": {
+      "type": "string",
+      "enum": [
+        "appeal",
+        "event",
+        "grant_match",
+        "capital",
+        "general",
+        "other"
+      ],
+      "default": "appeal"
+    },
+    "goal_amount": {
+      "type": "number",
+      "description": "Amount the campaign is trying to raise"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether the campaign still accepts gifts"
+    },
+    "owner_name": {
+      "type": "string",
+      "description": "Staff member running the campaign"
+    },
+    "notes": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

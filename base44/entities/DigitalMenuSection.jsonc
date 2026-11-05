@@ -1,0 +1,86 @@
+{
+  "name": "DigitalMenuSection",
+  "type": "object",
+  "description": "A heading on the cafe's digital menu board \u2014 e.g. Espresso, Sandwiches, Today's Soup. Sections control what appears on the screen in the cafe and in what order.",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Heading shown on the digital menu, e.g. Espresso Bar"
+    },
+    "area": {
+      "type": "string",
+      "enum": [
+        "cafe_candeur",
+        "auntie_bevs",
+        "community_lunch",
+        "catering"
+      ],
+      "default": "cafe_candeur",
+      "description": "Which food operation's screen this section belongs to"
+    },
+    "description": {
+      "type": "string",
+      "description": "Optional line shown under the section heading"
+    },
+    "daypart": {
+      "type": "string",
+      "enum": [
+        "all_day",
+        "breakfast",
+        "lunch",
+        "afternoon"
+      ],
+      "default": "all_day",
+      "description": "When this section is served"
+    },
+    "display_order": {
+      "type": "number",
+      "default": 0,
+      "description": "Position of the section on the board, lowest first"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether the section shows on the cafe screen"
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
