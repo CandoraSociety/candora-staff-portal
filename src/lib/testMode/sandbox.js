@@ -298,6 +298,21 @@ function demoData() {
       { original_name: 'Grant Application Package.pdf', display_name: 'Grant Application Package', description: 'Demo grant application with attachments (Test Mode)', keywords: ['grant', 'application', 'funder'], file_type: 'pdf', file_size: 482000, category: 'corporate', access_level: 'universal', storage_backend: 'base44', file_url: '', summary: 'Demo file for Test Mode' },
       { original_name: 'ELL Class Roster.xlsx', display_name: 'ELL Class Roster', description: 'Demo class roster (Test Mode)', keywords: ['ell', 'roster', 'class'], file_type: 'xlsx', file_size: 22000, category: 'ell', access_level: 'universal', storage_backend: 'base44', file_url: '', summary: 'Demo file for Test Mode' },
       { original_name: 'Staff Photo.jpg', display_name: 'Staff Photo', description: 'Demo photo (Test Mode)', keywords: ['photo', 'staff'], file_type: 'jpg', file_size: 1240000, category: 'to_be_sorted', access_level: 'universal', storage_backend: 'base44', file_url: '', summary: 'Demo file for Test Mode' },
+      { original_name: '1994_Opening_Day_Clipping.pdf', display_name: '1994 Opening Day Clipping', description: 'Simulated newspaper clipping for the Archives training (Test Mode)', keywords: ['archives', 'clipping'], file_type: 'pdf', file_size: 840000, category: 'archives', subcategory: 'Newspaper Clippings', access_level: 'universal', storage_backend: 'base44', file_url: '', summary: 'Demo archive document' },
+    ],
+    // Archive history so the Archives training tour has something to read
+    ArchiveTimelineItem: [
+      { title: 'Candora Opens Its Doors (Demo)', year: 1994, month: 9, day: 6, era: 'founding', category: 'founding', summary: 'A demonstration record for the history timeline (Test Mode).', detailed_content: '<p>Simulated archive entry used by the Archives training module. Nothing here is real.</p>', media: [], is_featured: true },
+      { title: 'The Kitchen Reopens After the Flood (Demo)', year: 2007, month: 4, era: 'growth', category: 'crisis_response', summary: 'A demonstration record showing a crisis response entry (Test Mode).', detailed_content: '<p>Simulated archive entry used by the Archives training module.</p>', media: [], is_featured: true },
+      { title: 'New Building on 118 Avenue (Demo)', year: 2019, month: 6, era: 'expansion', category: 'building_expansion', summary: 'A demonstration record for a building expansion (Test Mode).', detailed_content: '<p>Simulated archive entry used by the Archives training module.</p>', media: [], is_featured: false },
+    ],
+    ArchiveBio: [
+      { person_name: 'Demo Founder', role_title: 'founder', role_label: 'Founding Executive Director', term_start: '1994-09-01', term_end: '2003-06-30', is_current: false, bio_content: '<p>Simulated biography used by the Archives training module.</p>', highlights: ['Opened the first location', 'Built the first board'] },
+      { person_name: 'Demo Director', role_title: 'executive_director', term_start: '2016-01-01', is_current: true, bio_content: '<p>Simulated biography used by the Archives training module.</p>', highlights: ['Launched the employment programs'] },
+    ],
+    ArchiveStory: [
+      { title: 'The Year the Money Ran Out (Demo)', content: '<p>Simulated story used by the Archives training module — the kind of account a story entry holds.</p>', story_date: '2001-11-15', era: 'The Early Years', author: 'Demo Curator', media: [], is_featured: true, order_index: 0 },
+      { title: 'The First Graduating Class (Demo)', content: '<p>Simulated story used by the Archives training module.</p>', story_date: '1998-06-20', era: 'The Early Years', author: 'Demo Curator', media: [], is_featured: false, order_index: 1 },
     ],
     Reminder: [
       { title: 'Demo reminder', due_date: D(-2), is_completed: false },

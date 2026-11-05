@@ -44,9 +44,11 @@ export default function ArchivesHome() {
 
   return (
     <div className="space-y-8">
-      <PortalQuickUpload moduleId="archives" />
+      <div data-tour="archives-upload">
+        <PortalQuickUpload moduleId="archives" />
+      </div>
       {/* Hero */}
-      <div className="relative rounded-2xl overflow-hidden bg-sidebar p-8 md:p-12">
+      <div data-tour="archives-hero" className="relative rounded-2xl overflow-hidden bg-sidebar p-8 md:p-12">
         <div className="relative z-10">
           <h1 className="text-3xl md:text-4xl font-display font-bold text-sidebar-foreground mb-2">Candora Archives</h1>
           <p className="text-sidebar-foreground/80 text-lg max-w-2xl">
@@ -61,7 +63,7 @@ export default function ArchivesHome() {
       </div>
 
       {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+      <div data-tour="archives-stats" className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         {stats.map(stat => (
           <Link key={stat.title} to={stat.href}>
             <Card className="hover:shadow-md transition-shadow cursor-pointer h-full">

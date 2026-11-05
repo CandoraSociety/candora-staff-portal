@@ -3,6 +3,7 @@ export const TRAINING_NAV_GROUPS = [
   { title: "Time & Money", keys: ["staffadmin", "staffadmin_money", "staffadmin_supervisor"] },
   { title: "Program portals", keys: ["pathways", "pathways_journey", "pathways_journey_part2", "pathways_assessment", "pathways_service_nav", "pathways_workshops", "joblab", "central_database_basics", "central_database_advanced", "ell", "frn", "phac", "empoweru", "childminding", "rworker", "centralreg", "reception", "reception_simple"] },
   { title: "People & money", keys: ["hr_management", "hr_records", "finance", "finance_planning"] },
+  { title: "Archives & history", keys: ["archives", "archives_curation"] },
   { title: "Tools", keys: ["filemanager", "filemanager_advanced"] },
 ];
 
@@ -36,6 +37,8 @@ export const TRAINING_MODULE_SERIES = {
   hr_records: "hr",
   finance: "finance",
   finance_planning: "finance",
+  archives: "archives",
+  archives_curation: "archives",
   filemanager: "filemanager",
   filemanager_advanced: "filemanager",
   pathways_resources: "mini",
@@ -58,6 +61,7 @@ export const TRAINING_SERIES_TITLES = {
   reception: "Reception",
   hr: "HR Management",
   finance: "Finance",
+  archives: "Candora Archives",
   filemanager: "File Manager",
   mini: "Mini-Modules",
 };

@@ -32,6 +32,7 @@ import { CHILDMINDING_MODULES } from "@/lib/training/modules/childmindingModules
 import { RWORKER_MODULES } from "@/lib/training/modules/rworkerModules";
 import { HR_MODULES } from "@/lib/training/modules/hrModules";
 import { FINANCE_MODULES } from "@/lib/training/modules/financeModules";
+import { ARCHIVES_MODULES } from "@/lib/training/modules/archivesModules";
 
 export const TRAINING_MODULES = [
   // Welcome & app tour leads the catalog — every staff member starts here.
@@ -43,6 +44,7 @@ export const TRAINING_MODULES = [
   ...RWORKER_MODULES,
   ...HR_MODULES,
   ...FINANCE_MODULES,
+  ...ARCHIVES_MODULES,
   {
     key: "dashboard",
     title: "Main User Page",
@@ -1254,6 +1256,7 @@ export const moduleForPath = (pathname) => {
     ["/reception", "reception"],
     ["/nexushr", "hr_management"],
     ["/finance", "finance"],
+    ["/archives", "archives"],
     ["/filemanager", "filemanager"],
   ];
   for (const [prefix, key] of prefixes) {

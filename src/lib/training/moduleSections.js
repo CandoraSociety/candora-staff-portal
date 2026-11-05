@@ -11,6 +11,7 @@ export const TRAINING_MODULE_SECTIONS = [
   { key: "centralreg", title: "Central Registration", moduleKeys: ["centralreg"] },
   { key: "reception", title: "Reception", moduleKeys: ["reception", "reception_simple"] },
   { key: "rworker", title: "Resource Worker", moduleKeys: ["rworker"] },
+  { key: "archives", title: "Candora Archives", moduleKeys: ["archives", "archives_curation"] },
   { key: "filemanager", title: "File Manager", moduleKeys: ["filemanager", "filemanager_advanced"] },
   // Short single-tool trainings — a category of their own, not part of a portal series.
   { key: "mini", title: "Mini-Modules", moduleKeys: ["pathways_resources"] },
