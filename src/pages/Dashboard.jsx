@@ -211,13 +211,14 @@ export default function Dashboard() {
         </div>
       </div>
 
-      {/* Simple mode leaves only announcements, tasks & reminders and portal shortcuts */}
+      {/* Notifications stay put in every mode — they stay hidden only when there is nothing to show */}
+      <DashboardNotifications user={user} />
+
+      {/* Simple mode leaves only announcements, notifications, tasks & reminders and portal shortcuts */}
       {!simpleMode && (
         <>
           {/* E-signature setup reminder — until the user sets up their signature */}
           <ESignatureSetupReminder />
-
-          <DashboardNotifications user={user} />
 
           {/* Employee Info Card */}
           <EmployeeInfoCard user={user} />
