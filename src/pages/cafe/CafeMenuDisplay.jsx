@@ -19,7 +19,13 @@ export default function CafeMenuDisplay() {
 
   const { data: sections = [] } = useQuery({
     queryKey: ['digital-menu-sections'],
-    queryFn: () => base44.entities.DigitalMenuSection.filter({ area: AREA }, { sort: 'display_order', limit: 100 }),
+    queryFn: async () => {
+      const page = await base44.entities.DigitalMenuSection.filter(
+        { area: AREA },
+        { sort: 'display_order', limit: 100 }
+      );
+      return page.items || [];
+    },
     refetchInterval: 45000,
   });
 
