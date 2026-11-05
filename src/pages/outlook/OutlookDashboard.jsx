@@ -100,7 +100,16 @@ export default function OutlookDashboard() {
           clearInterval(timer);
           setConnecting(false);
           fetchProfile().then((ok) => {
-            if (ok) { fetchEmails(); fetchEvents(); }
+            if (ok) {
+              fetchEmails();
+              fetchEvents();
+            } else {
+              toast({
+                title: 'Connection did not finish',
+                description: 'Sign in with your Candora work account. Personal Microsoft accounts (outlook.com, hotmail.com, live.com) cannot connect.',
+                variant: 'destructive',
+              });
+            }
           });
         }
       }, 1000);
