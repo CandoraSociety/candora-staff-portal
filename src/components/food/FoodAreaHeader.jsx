@@ -18,6 +18,7 @@ const AREA_TABS = {
       { label: 'Menu', path: '/food/cafe-candeur/menu' },
       { label: 'Orders', path: '/food/cafe-candeur/orders' },
       { label: 'Recipes', path: '/food/cafe-candeur/recipes' },
+      { label: 'Digital Menu', path: '/food/cafe-candeur/digital-menu' },
       { label: 'Schedule', path: '/food/schedule?area=cafe-candeur' },
     ],
   },

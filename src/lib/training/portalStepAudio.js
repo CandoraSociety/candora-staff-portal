@@ -3,9 +3,11 @@
 // explainer step, which plays its own scene narration). Same female voice as
 // the intro videos; static MP3s, no generation at playback.
 import { FOOD_MARKETING_STEP_AUDIO } from '@/lib/training/portalStepAudioFoodMarketing';
+import { GRANTS_REPORTS_STEP_AUDIO } from '@/lib/training/portalStepAudioGrantsReports';
 
 export const STEP_AUDIO = {
   ...FOOD_MARKETING_STEP_AUDIO,
+  ...GRANTS_REPORTS_STEP_AUDIO,
   welcome: [
     null,
     'https://media.base44.com/files/public/6a249282cb496579542673b7/969137d62_speech.mp3',

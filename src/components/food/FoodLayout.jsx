@@ -3,7 +3,7 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import {
   LayoutDashboard, CalendarDays, Coffee, Heart, Soup, ShoppingBasket, GraduationCap,
-  TrendingUp, ChevronLeft, ChevronRight, LogOut, Menu, ExternalLink, Calendar
+  TrendingUp, ChevronLeft, ChevronRight, LogOut, Menu, ExternalLink, Calendar, Monitor
 } from 'lucide-react';
 import LogoutConfirmationDialog from '@/components/auth/LogoutConfirmationDialog';
 
@@ -13,6 +13,7 @@ const NAV = [
     group: 'Social Enterprise',
     items: [
       { label: 'Cafe Candeur', icon: Coffee, path: '/food/cafe-candeur' },
+      { label: 'Digital Menu', icon: Monitor, path: '/food/cafe-candeur/digital-menu' },
       { label: 'Catering', icon: CalendarDays, path: '/food/catering' },
       { label: "Auntie Bev's", icon: Heart, path: '/food/auntie-bevs' },
     ],

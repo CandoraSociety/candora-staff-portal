@@ -205,6 +205,8 @@ import FoodBank from '@/pages/food/FoodBank';
 import FoodInternalPlacements from '@/pages/food/FoodInternalPlacements';
 import FoodSchedule from '@/pages/food/FoodSchedule';
 import FoodSales from '@/pages/food/FoodSales';
+import CafeDigitalMenu from '@/pages/food/CafeDigitalMenu';
+import CafeMenuDisplay from '@/pages/cafe/CafeMenuDisplay';
 
 // Catering Portal (Public)
 import PublicLayout from '@/components/catering-portal/PublicLayout';
@@ -215,6 +217,15 @@ import BookingWizard from '@/pages/catering-portal/BookingWizard';
 import MyBooking from '@/pages/catering-portal/MyBooking';
 import OurStory from '@/pages/catering-portal/OurStory';
 
+
+// Donor Management
+import DonorsLayout from '@/components/donors/DonorsLayout';
+import DonorsDashboard from '@/pages/donors/DonorsDashboard';
+import DonorsList from '@/pages/donors/DonorsList';
+import DonorDetail from '@/pages/donors/DonorDetail';
+import DonationsPage from '@/pages/donors/Donations';
+import DonationCampaignsPage from '@/pages/donors/Campaigns';
+import DonorReports from '@/pages/donors/DonorReports';
 
 // Candora Board
 import BoardLayout from '@/components/board/BoardLayout';
@@ -424,6 +435,7 @@ const AuthenticatedApp = () => {
     || location.startsWith('/employer-portal')
     || location.startsWith('/fillable-minutes')
     || location.startsWith('/joblab')
+    || location.startsWith('/cafe-menu')
     || location.startsWith('/empoweru-apply');
 
   // Only show loading spinner for protected routes, not public auth pages
@@ -464,6 +476,9 @@ const AuthenticatedApp = () => {
 
       {/* Fillable minutes — public link, no login required */}
       <Route path="/fillable-minutes/:id" element={<FillableMinutesPublic />} />
+
+      {/* Cafe digital menu board — the screen in the cafe, no login required */}
+      <Route path="/cafe-menu" element={<CafeMenuDisplay />} />
 
       {/* External Reception portal — the same front desk, signed in by name and
           the desk PIN, with no staff account attached */}
@@ -650,6 +665,7 @@ const AuthenticatedApp = () => {
           <Route path="/food/cafe-candeur/menu" element={<FoodAreaMenu />} />
           <Route path="/food/cafe-candeur/orders" element={<FoodAreaOrders />} />
           <Route path="/food/cafe-candeur/recipes" element={<FoodAreaRecipes />} />
+          <Route path="/food/cafe-candeur/digital-menu" element={<CafeDigitalMenu />} />
           <Route path="/food/auntie-bevs" element={<FoodAreaOverview />} />
           <Route path="/food/auntie-bevs/menu" element={<FoodAreaMenu />} />
           <Route path="/food/auntie-bevs/orders" element={<FoodAreaOrders />} />
@@ -868,6 +884,16 @@ const AuthenticatedApp = () => {
           <Route path="/filemanager/collections" element={<Collections />} />
           <Route path="/filemanager/collections/:id" element={<CollectionDetail />} />
           <Route path="/filemanager/search" element={<SearchPage />} />
+        </Route>
+
+        {/* Donor Management - standalone layout */}
+        <Route element={<DonorsLayout />}>
+          <Route path="/donors" element={<DonorsDashboard />} />
+          <Route path="/donors/list" element={<DonorsList />} />
+          <Route path="/donors/donations" element={<DonationsPage />} />
+          <Route path="/donors/campaigns" element={<DonationCampaignsPage />} />
+          <Route path="/donors/reports" element={<DonorReports />} />
+          <Route path="/donors/:id" element={<DonorDetail />} />
         </Route>
 
         {/* Finance Portal - standalone layout */}

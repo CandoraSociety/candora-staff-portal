@@ -36,6 +36,8 @@ import { FINANCE_MODULES } from "@/lib/training/modules/financeModules";
 import { ARCHIVES_MODULES } from "@/lib/training/modules/archivesModules";
 import { FOOD_SERVICES_MODULES } from "@/lib/training/modules/foodServicesModules";
 import { MARKETING_MODULES } from "@/lib/training/modules/marketingModules";
+import { GRANTS_MODULES } from "@/lib/training/modules/grantsModules";
+import { REPORTS_MODULES } from "@/lib/training/modules/reportsModules";
 
 export const TRAINING_MODULES = [
   // Welcome & app tour leads the catalog — every staff member starts here.
@@ -51,6 +53,8 @@ export const TRAINING_MODULES = [
   ...ARCHIVES_MODULES,
   ...FOOD_SERVICES_MODULES,
   ...MARKETING_MODULES,
+  ...GRANTS_MODULES,
+  ...REPORTS_MODULES,
   {
     key: "dashboard",
     title: "Main User Page",
