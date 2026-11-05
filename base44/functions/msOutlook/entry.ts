@@ -171,22 +171,25 @@ Deno.serve(async (req) => {
       }
 
       case 'listCalendarEvents': {
-        if (mode === 'app_only') {
-          return Response.json({ events: [], calendarUnavailable: true, mode });
-        }
         const { days = 7 } = body;
         const now = new Date();
         const end = new Date();
         end.setDate(end.getDate() + days);
-        const path = `/me/calendarView?startDateTime=${encodeURIComponent(now.toISOString())}&endDateTime=${encodeURIComponent(end.toISOString())}&$top=50&$select=subject,start,end,location,attendees,organizer,bodyPreview&$orderby=start/dateTime`;
-        const data = await graphRequest(accessToken, path);
-        return Response.json({ events: data.value || [], mode });
+        const path = `${basePath}/calendarView?startDateTime=${encodeURIComponent(now.toISOString())}&endDateTime=${encodeURIComponent(end.toISOString())}&$top=50&$select=subject,start,end,location,attendees,organizer,bodyPreview&$orderby=start/dateTime`;
+        // Without Calendars.Read on the app registration the call comes back 403 —
+        // show the "waiting on IT" note instead of an error.
+        try {
+          const data = await graphRequest(accessToken, path);
+          return Response.json({ events: data.value || [], mode });
+        } catch (error) {
+          if (String(error.message).includes('403')) {
+            return Response.json({ events: [], calendarUnavailable: true, mode });
+          }
+          throw error;
+        }
       }
 
       case 'createCalendarEvent': {
-        if (mode === 'app_only') {
-          return Response.json({ error: 'Calendar is not enabled for this app yet. Ask IT to grant the Calendars.ReadWrite permission.' }, { status: 400 });
-        }
         const { subject, start, end, body: eventBody, location } = body;
         const event = {
           subject,
@@ -195,11 +198,18 @@ Deno.serve(async (req) => {
           end: { dateTime: end, timeZone: AB_TIME_ZONE },
           location: location ? { displayName: location } : undefined,
         };
-        const data = await graphRequest(accessToken, '/me/events', {
-          method: 'POST',
-          body: JSON.stringify(event),
-        });
-        return Response.json({ event: data, mode });
+        try {
+          const data = await graphRequest(accessToken, `${basePath}/events`, {
+            method: 'POST',
+            body: JSON.stringify(event),
+          });
+          return Response.json({ event: data, mode });
+        } catch (error) {
+          if (String(error.message).includes('403')) {
+            return Response.json({ error: 'Calendar is not enabled for this app yet. Ask IT to grant the Calendars.ReadWrite permission.' }, { status: 400 });
+          }
+          throw error;
+        }
       }
 
       case 'deleteEmail': {
