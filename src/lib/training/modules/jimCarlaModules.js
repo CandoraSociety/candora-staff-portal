@@ -1,5 +1,5 @@
 // ── Jim & Carla — focused process training ────────────────────────────────
-// A deliberately short (and deliberately silly) module that opens the
+// A deliberately short, deliberately light module that opens the
 // focused training for the two of them, then sets out what the sessions are
 // actually for: learning the portals that are theirs, and taking real time to
 // straighten out the admin processes underneath Finance, HR and File
@@ -15,7 +15,7 @@ export const JIM_CARLA_MODULES = [
     steps: [
       {
         title: "Welcome to Jim & Carla's Super Duper Awesome Fun, Extra Special Staff Portal Training™",
-        body: "That is now the official name. It will be on the agenda, and quite possibly on a badge. There are two of you, there are about seven slides, and there will be snacks — so pace yourselves. Everything in this module runs in Training Mode, which means every record you open and every button you press is simulated: you cannot break anything, and nothing here touches a real client, staff or finance record.",
+        body: "That is now the official name. It will be on the agenda, and quite possibly on a badge. Two of you, seven slides — this will not take long. Everything in this module runs in Training Mode, which means every record you open and every button you press is simulated: you cannot break anything, and nothing here touches a real client, staff or finance record.",
         path: "/"
       },
       {
@@ -50,7 +50,7 @@ export const JIM_CARLA_MODULES = [
         path: "/"
       },
       {
-        title: "That's the deck. There are snacks.",
+        title: "That's the deck.",
         body: "No quiz, no certificate, no motivational quotation. Just the two portals, one File Manager, a whiteboard, and permission to say \"this process is nonsense\" out loud in a room where something can then be done about it. Welcome aboard, both of you — press Next to start the practice checklist, or read on if you would rather learn the Finance portal first.",
         path: "/"
       }
