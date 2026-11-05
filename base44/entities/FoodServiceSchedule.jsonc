@@ -17,6 +17,7 @@
         "cafe-candeur",
         "auntie-bevs",
         "community-lunch",
+        "food-bank",
         "food-production",
         "general"
       ],
@@ -52,6 +53,53 @@
         "type": "string"
       },
       "description": "Employee IDs assigned to this shift/activity"
+    },
+    "staff_hours": {
+      "type": "array",
+      "description": "Hours worked by each staff member on this shift, logged from the Cafe Candeur scheduler. Submitting the week creates one timesheet per person for the pay period in the Finance portal.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "employee_id": {
+            "type": "string",
+            "description": "Employee record this row belongs to"
+          },
+          "employee_name": {
+            "type": "string",
+            "description": "Employee name (denormalized so timesheets read without a lookup)"
+          },
+          "date": {
+            "type": "string",
+            "format": "date",
+            "description": "Day the hours were worked"
+          },
+          "start_time": {
+            "type": "string",
+            "description": "Clock-in time (HH:MM)"
+          },
+          "end_time": {
+            "type": "string",
+            "description": "Clock-out time (HH:MM)"
+          },
+          "break_hours": {
+            "type": "number",
+            "description": "Unpaid break hours deducted from the day"
+          },
+          "hours": {
+            "type": "number",
+            "description": "Paid hours worked (start/end less break)"
+          },
+          "submitted": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether these hours have been sent to Finance as a timesheet"
+          },
+          "timesheet_id": {
+            "type": "string",
+            "description": "Timesheet record created from these hours"
+          }
+        }
+      }
     },
     "assigned_volunteers": {
       "type": "array",

@@ -1,21 +1,22 @@
 import React, { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
+import { useAuth } from '@/lib/AuthContext';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Plus, ChevronLeft, ChevronRight, AlertTriangle, Users, Trash2 } from 'lucide-react';
+import { Plus, ChevronLeft, ChevronRight, AlertTriangle, Clock, Trash2 } from 'lucide-react';
 import {
   format, startOfWeek, endOfWeek, eachDayOfInterval, addWeeks, subWeeks,
   parseISO, isSameDay, getMonth, getDay, addDays
 } from 'date-fns';
+import CafeShiftHours from '@/components/food/CafeShiftHours';
+import CafeHoursSubmitPanel from '@/components/food/CafeHoursSubmitPanel';
+import { CAFE_START, CAFE_END, newHoursRow, hoursRowsFor } from '@/lib/cafeHours';
 
 // May = 4, August = 7 (0-indexed)
 const SUMMER_MONTHS = [4, 5, 6, 7];
-const SHIFT_START = '08:00';
-const SHIFT_END = '15:30';
 
 function isSummerMonth(date) {
   return SUMMER_MONTHS.includes(getMonth(date));
@@ -33,21 +34,25 @@ function buildShiftDatetime(date, timeStr) {
   return d.toISOString();
 }
 
+const blankForm = () => ({
+  title: 'Cafe Candeur Shift',
+  assigned_staff: [],
+  assigned_volunteers: [],
+  staff_hours: [],
+  internal_placement: false,
+  placement_participant: '',
+  notes: '',
+});
+
 export default function CafeCandeurSchedule() {
   const qc = useQueryClient();
+  const { user } = useAuth();
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [displayMonth, setDisplayMonth] = useState(() => new Date(new Date().getFullYear(), new Date().getMonth(), 1));
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
-  const [form, setForm] = useState({
-    title: 'Cafe Candeur Shift',
-    assigned_staff: [],
-    assigned_volunteers: [],
-    internal_placement: false,
-    placement_participant: '',
-    notes: '',
-  });
+  const [form, setForm] = useState(blankForm());
 
   const weekEnd = endOfWeek(weekStart, { weekStartsOn: 1 });
   const weekDays = eachDayOfInterval({ start: weekStart, end: weekEnd })
@@ -103,17 +108,12 @@ export default function CafeCandeurSchedule() {
     });
   };
 
+  const weekShifts = weekDays.flatMap(day => getShiftsForDay(day));
+
   const openNew = (date) => {
     setSelectedDate(date);
     setEditing(null);
-    setForm({
-      title: 'Cafe Candeur Shift',
-      assigned_staff: [],
-      assigned_volunteers: [],
-      internal_placement: false,
-      placement_participant: '',
-      notes: '',
-    });
+    setForm(blankForm());
     setDialogOpen(true);
   };
 
@@ -124,6 +124,7 @@ export default function CafeCandeurSchedule() {
       title: shift.title,
       assigned_staff: shift.assigned_staff || [],
       assigned_volunteers: shift.assigned_volunteers || [],
+      staff_hours: hoursRowsFor(shift, employees),
       internal_placement: shift.internal_placement || false,
       placement_participant: shift.placement_participant || '',
       notes: shift.notes || '',
@@ -136,10 +137,11 @@ export default function CafeCandeurSchedule() {
       title: form.title,
       area: 'cafe-candeur',
       event_type: 'shift',
-      start_datetime: buildShiftDatetime(selectedDate, SHIFT_START),
-      end_datetime: buildShiftDatetime(selectedDate, SHIFT_END),
+      start_datetime: buildShiftDatetime(selectedDate, CAFE_START),
+      end_datetime: buildShiftDatetime(selectedDate, CAFE_END),
       assigned_staff: form.assigned_staff,
       assigned_volunteers: form.assigned_volunteers,
+      staff_hours: form.staff_hours.filter(h => form.assigned_staff.includes(h.employee_id)),
       internal_placement: form.internal_placement,
       placement_participant: form.placement_participant,
       notes: form.notes,
@@ -151,6 +153,8 @@ export default function CafeCandeurSchedule() {
     }
   };
 
+  const shiftHours = (shift) => (shift.staff_hours || []).reduce((sum, h) => sum + (Number(h.hours) || 0), 0);
+
   const isSummer = weekDays.some(d => isSummerMonth(d));
   const totalAssigned = (s) => (s.assigned_staff?.length || 0) + (s.assigned_volunteers?.length || 0) + (s.internal_placement ? 1 : 0);
 
@@ -159,8 +163,8 @@ export default function CafeCandeurSchedule() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-bold font-heading">Cafe Candeur Shift Schedule</h3>
-          <p className="text-sm text-muted-foreground">Mon–Fri, 8:00 AM – 3:30 PM • Closed May through August</p>
+          <h3 className="text-lg font-bold font-heading">Cafe Candeur Shift Scheduler</h3>
+          <p className="text-sm text-muted-foreground">Mon–Fri, 8:00 AM – 4:00 PM • Closed May through August</p>
         </div>
         <div className="flex flex-col gap-2 items-end">
           <Button onClick={() => openNew(new Date())} className="gap-2 self-end">
@@ -224,7 +228,7 @@ export default function CafeCandeurSchedule() {
                       {format(day, 'd')}
                     </div>
                     {!closed && (
-                      <div className="text-[10px] text-muted-foreground">8:00–3:30</div>
+                      <div className="text-[10px] text-muted-foreground">8:00–4:00</div>
                     )}
                   </div>
 
@@ -256,6 +260,11 @@ export default function CafeCandeurSchedule() {
                               placement
                             </span>
                           )}
+                          {shiftHours(shift) > 0 && (
+                            <span className="text-[9px] bg-white text-amber-800 px-1.5 py-0.5 rounded-full flex items-center gap-0.5">
+                              <Clock className="w-2.5 h-2.5" />{Math.round(shiftHours(shift) * 100) / 100}h
+                            </span>
+                          )}
                           {totalAssigned(shift) === 0 && (
                             <span className="text-[9px] bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full">
                               unassigned
@@ -284,17 +293,20 @@ export default function CafeCandeurSchedule() {
         </CardContent>
       </Card>
 
+      {/* Hours -> timesheets */}
+      <CafeHoursSubmitPanel shifts={weekShifts} employees={employees} user={user} />
+
       {/* Dialog */}
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>
-              {editing ? 'Edit CSJ Catering Event' : 'Add CSJ Catering Event'} — {selectedDate && format(selectedDate, 'EEEE, MMMM d')}
+              {editing ? 'Edit Shift' : 'Add Shift'} — {selectedDate && format(selectedDate, 'EEEE, MMMM d')}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4 py-2">
             <div className="p-2 bg-amber-50 border border-amber-200 rounded text-xs text-amber-800">
-              Shift time: <strong>8:00 AM – 3:30 PM</strong> (Cafe Candeur standard hours)
+              Shift time: <strong>8:00 AM – 4:00 PM</strong> (Cafe Candeur standard hours)
             </div>
 
             <div>
@@ -319,8 +331,23 @@ export default function CafeCandeurSchedule() {
                       type="checkbox"
                       checked={form.assigned_staff.includes(emp.id)}
                       onChange={(e) => {
-                        if (e.target.checked) setForm(f => ({ ...f, assigned_staff: [...f.assigned_staff, emp.id] }));
-                        else setForm(f => ({ ...f, assigned_staff: f.assigned_staff.filter(id => id !== emp.id) }));
+                        if (e.target.checked) {
+                          const date = format(selectedDate, 'yyyy-MM-dd');
+                          setForm(f => ({
+                            ...f,
+                            assigned_staff: [...f.assigned_staff, emp.id],
+                            staff_hours: [
+                              ...f.staff_hours.filter(h => h.employee_id !== emp.id),
+                              newHoursRow(emp, date),
+                            ],
+                          }));
+                        } else {
+                          setForm(f => ({
+                            ...f,
+                            assigned_staff: f.assigned_staff.filter(id => id !== emp.id),
+                            staff_hours: f.staff_hours.filter(h => h.employee_id !== emp.id),
+                          }));
+                        }
                       }}
                       className="w-4 h-4"
                     />
@@ -331,6 +358,20 @@ export default function CafeCandeurSchedule() {
                   </label>
                 ))}
               </div>
+            </div>
+
+            {/* Hours worked */}
+            <div className="border rounded-md p-3 bg-muted/30">
+              <label className="text-sm font-medium mb-1 flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5" /> Hours worked
+              </label>
+              <p className="text-[11px] text-muted-foreground mb-2">
+                Adjust each person's clock-in and clock-out for this shift. These hours become their timesheet.
+              </p>
+              <CafeShiftHours
+                rows={form.staff_hours}
+                onChange={(rows) => setForm(f => ({ ...f, staff_hours: rows }))}
+              />
             </div>
 
             {/* Volunteers */}

@@ -38,6 +38,13 @@ const AREA_TABS = {
       { label: 'Schedule', path: '/food/schedule?area=community-lunch' },
     ],
   },
+  'food-bank': {
+    label: 'Food Bank',
+    tabs: [
+      { label: 'Overview', path: '/food/food-bank' },
+      { label: 'Schedule', path: '/food/schedule?area=food-bank' },
+    ],
+  },
   sales: {
     label: 'Sales',
     tabs: [

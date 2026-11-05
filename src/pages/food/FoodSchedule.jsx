@@ -15,6 +15,7 @@ const AREA_COLORS = {
   'cafe-candeur': 'bg-amber-100 text-amber-700 border-amber-300',
   'auntie-bevs': 'bg-pink-100 text-pink-700 border-pink-300',
   'community-lunch': 'bg-orange-100 text-orange-700 border-orange-300',
+  'food-bank': 'bg-teal-100 text-teal-700 border-teal-300',
   'food-production': 'bg-green-100 text-green-700 border-green-300',
   'general': 'bg-gray-100 text-gray-700 border-gray-300',
 };
@@ -702,6 +703,7 @@ export default function FoodSchedule() {
                   <option value="cafe-candeur">Cafe Candeur</option>
                   <option value="auntie-bevs">Auntie Bev's</option>
                   <option value="community-lunch">Community Lunch</option>
+                  <option value="food-bank">Food Bank</option>
                   <option value="food-production">Food Production</option>
                   <option value="general">General</option>
                 </select>

@@ -2,19 +2,30 @@ import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import {
-  LayoutDashboard, CalendarDays, Coffee, Heart, Soup,
+  LayoutDashboard, CalendarDays, Coffee, Heart, Soup, ShoppingBasket,
   TrendingUp, ChevronLeft, ChevronRight, LogOut, Menu, ExternalLink, Calendar
 } from 'lucide-react';
 import LogoutConfirmationDialog from '@/components/auth/LogoutConfirmationDialog';
 
 const NAV = [
-  { label: 'Dashboard',       icon: LayoutDashboard, path: '/food' },
-  { label: 'Catering',        icon: CalendarDays,    path: '/food/catering' },
-  { label: 'Cafe Candeur',    icon: Coffee,          path: '/food/cafe-candeur' },
-  { label: "Auntie Bev's",   icon: Heart,           path: '/food/auntie-bevs' },
-  { label: 'Community Lunch', icon: Soup,            path: '/food/community-lunch' },
-  { label: 'Sales',           icon: TrendingUp,      path: '/food/sales' },
-  { label: 'Schedule',        icon: Calendar,        path: '/food/schedule' },
+  { label: 'Dashboard', icon: LayoutDashboard, path: '/food' },
+  {
+    group: 'Social Enterprise',
+    items: [
+      { label: 'Cafe Candeur', icon: Coffee, path: '/food/cafe-candeur' },
+      { label: 'Catering', icon: CalendarDays, path: '/food/catering' },
+      { label: "Auntie Bev's", icon: Heart, path: '/food/auntie-bevs' },
+    ],
+  },
+  {
+    group: 'Food Programs',
+    items: [
+      { label: 'Community Lunch', icon: Soup, path: '/food/community-lunch' },
+      { label: 'Food Bank', icon: ShoppingBasket, path: '/food/food-bank' },
+    ],
+  },
+  { label: 'Sales', icon: TrendingUp, path: '/food/sales' },
+  { label: 'Schedule', icon: Calendar, path: '/food/schedule' },
 ];
 
 export default function FoodLayout() {
@@ -29,6 +40,22 @@ export default function FoodLayout() {
     return location.pathname === path || location.pathname.startsWith(path + '/');
   };
 
+  const NavLink = ({ label, icon: Icon, path }) => (
+    <Link
+      to={path}
+      onClick={() => setMobileOpen(false)}
+      title={collapsed ? label : undefined}
+      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
+        isActive(path)
+          ? 'bg-sidebar-primary text-sidebar-primary-foreground'
+          : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
+      }`}
+    >
+      <Icon className="w-4 h-4 flex-shrink-0" />
+      {!collapsed && <span>{label}</span>}
+    </Link>
+  );
+
   const SidebarContent = () => (
     <div className="flex flex-col h-full bg-sidebar">
       <div className="flex items-center gap-3 px-4 py-5 border-b border-sidebar-border">
@@ -40,21 +67,25 @@ export default function FoodLayout() {
       </div>
 
       <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
-        {NAV.map(({ label, icon: Icon, path }) => (
-          <Link
-            key={path}
-            to={path}
-            onClick={() => setMobileOpen(false)}
-            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
-              isActive(path)
-                ? 'bg-sidebar-primary text-sidebar-primary-foreground'
-                : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground'
-            }`}
-          >
-            <Icon className="w-4 h-4 flex-shrink-0" />
-            {!collapsed && <span>{label}</span>}
-          </Link>
-        ))}
+        {NAV.map((entry) => {
+          if (entry.group) {
+            return (
+              <div key={entry.group} className="pt-3">
+                {collapsed ? (
+                  <div className="mx-2 mb-2 border-t border-sidebar-border" />
+                ) : (
+                  <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
+                    {entry.group}
+                  </div>
+                )}
+                <div className="space-y-1">
+                  {entry.items.map((item) => <NavLink key={item.path} {...item} />)}
+                </div>
+              </div>
+            );
+          }
+          return <NavLink key={entry.path} {...entry} />;
+        })}
       </nav>
 
       <div className="px-3 py-4 border-t border-sidebar-border space-y-2">
