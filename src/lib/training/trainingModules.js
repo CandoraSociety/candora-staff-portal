@@ -30,6 +30,8 @@ import { FRN_PHAC_MODULES } from "@/lib/training/modules/frnPhacModules";
 import { EMPOWERU_MODULES } from "@/lib/training/modules/empoweruModules";
 import { CHILDMINDING_MODULES } from "@/lib/training/modules/childmindingModules";
 import { RWORKER_MODULES } from "@/lib/training/modules/rworkerModules";
+import { HR_MODULES } from "@/lib/training/modules/hrModules";
+import { FINANCE_MODULES } from "@/lib/training/modules/financeModules";
 
 export const TRAINING_MODULES = [
   // Welcome & app tour leads the catalog — every staff member starts here.
@@ -39,6 +41,8 @@ export const TRAINING_MODULES = [
   ...EMPOWERU_MODULES,
   ...CHILDMINDING_MODULES,
   ...RWORKER_MODULES,
+  ...HR_MODULES,
+  ...FINANCE_MODULES,
   {
     key: "dashboard",
     title: "Main User Page",
@@ -58,7 +62,7 @@ export const TRAINING_MODULES = [
       },
       {
         title: "What's a portal?",
-        body: "The term \"portal\" can be confusing because it refers both to the whole Candora Staff Portal and to the individual workspaces within it. Each area of work has its own portal: Pathways for employment case management, the Resource Centre for the central client database, ELL for language classes, Central Registration, EmpowerU, Digital Literacy, Food Services, Nexus HR, Reception, Finance, the Board portal and more. Each has its own pages, tools and records for one part of the job. For example, \"open the Finance portal\" means open the Finance workspace within the Candora Staff Portal, not a separate app. You only see the portals your role gives you access to, so your list may differ from a co-worker's.",
+        body: "The term \"portal\" can be confusing because it refers both to the whole Candora Staff Portal and to the individual workspaces within it. Each area of work has its own portal: Pathways for employment case management, the Resource Centre for the central client database, ELL for language classes, Central Registration, EmpowerU, Digital Literacy, Food Services, Nexus HR, Reception, HR Management, Finance, the Board portal and more. Each has its own pages, tools and records for one part of the job. For example, \"open the Finance portal\" means open the Finance workspace within the Candora Staff Portal, not a separate app. You only see the portals your role gives you access to, so your list may differ from a co-worker's.",
         target: { selector: '[data-tour="dashboard-portals"]' }
       },
       {
@@ -1209,6 +1213,10 @@ export const TRAINING_MODULE_ACCESS = {
   empoweru: "empoweru",
   childminding: "childminding",
   rworker: "rworker",
+  hr_management: "nexushr",
+  hr_records: "nexushr",
+  finance: "finance",
+  finance_planning: "finance",
   centralreg: "central-registration",
   reception: "reception",
   reception_simple: "reception",
@@ -1244,6 +1252,8 @@ export const moduleForPath = (pathname) => {
     ["/childminding", "childminding"],
     ["/rworker", "rworker"],
     ["/reception", "reception"],
+    ["/nexushr", "hr_management"],
+    ["/finance", "finance"],
     ["/filemanager", "filemanager"],
   ];
   for (const [prefix, key] of prefixes) {

@@ -29,7 +29,7 @@ export default function NexusBirthdays() {
         to: data.to,
         subject: data.subject,
         body: data.body,
-        from_name: 'NexusHR',
+        from_name: 'HR Management',
       });
       return response;
     },
@@ -103,7 +103,7 @@ export default function NexusBirthdays() {
                     setSelectedEmployee(emp);
                     setEmailForm({
                       subject: `Happy Birthday ${emp.first_name}! 🎉`,
-                      message: `Dear ${emp.first_name},\n\nWishing you a wonderful birthday and a fantastic year ahead!\n\nBest regards,\nNexusHR Team`,
+                      message: `Dear ${emp.first_name},\n\nWishing you a wonderful birthday and a fantastic year ahead!\n\nBest regards,\nCandora HR Team`,
                     });
                     setShowEmail(true);
                   }}><Mail className="w-4 h-4" /></Button>
@@ -153,7 +153,7 @@ export default function NexusBirthdays() {
                           setSelectedEmployee(emp);
                           setEmailForm({
                             subject: `Happy Birthday ${emp.first_name}! 🎉`,
-                            message: `Dear ${emp.first_name},\n\nWishing you a wonderful birthday and a fantastic year ahead!\n\nBest regards,\nNexusHR Team`,
+                            message: `Dear ${emp.first_name},\n\nWishing you a wonderful birthday and a fantastic year ahead!\n\nBest regards,\nCandora HR Team`,
                           });
                           setShowEmail(true);
                         }}><Mail className="w-4 h-4" /></Button>

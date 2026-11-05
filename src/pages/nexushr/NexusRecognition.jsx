@@ -50,7 +50,7 @@ export default function NexusRecognition() {
     e.preventDefault();
     await createMutation.mutate({
       ...form,
-      awarded_by: 'NexusHR Admin',
+      awarded_by: 'HR Management Admin',
     });
   };
 

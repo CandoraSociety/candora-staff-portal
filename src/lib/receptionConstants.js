@@ -10,7 +10,7 @@ export const PROGRAM_PORTAL_OPTIONS = [
   { value: 'volunteermgr', label: 'Volunteer Manager', path: '/volunteermgr' },
   { value: 'grants', label: 'Grants', path: '/grants' },
   { value: 'marketing', label: 'Marketing', path: '/marketing' },
-  { value: 'nexushr', label: 'NexusHR', path: '/nexushr' },
+  { value: 'nexushr', label: 'HR Management', path: '/nexushr' },
   { value: 'eventsmgr', label: 'Events Manager', path: '/eventsmgr' },
   { value: 'archives', label: 'Archives', path: '/archives' },
   { value: 'ed', label: 'Executive Director', path: '/ed' },

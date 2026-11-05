@@ -2,6 +2,7 @@ export const TRAINING_NAV_GROUPS = [
   { title: "Getting started", keys: ["welcome", "dashboard", "dashboard_widgets"] },
   { title: "Time & Money", keys: ["staffadmin", "staffadmin_money", "staffadmin_supervisor"] },
   { title: "Program portals", keys: ["pathways", "pathways_journey", "pathways_journey_part2", "pathways_assessment", "pathways_service_nav", "pathways_workshops", "joblab", "central_database_basics", "central_database_advanced", "ell", "frn", "phac", "empoweru", "childminding", "rworker", "centralreg", "reception", "reception_simple"] },
+  { title: "People & money", keys: ["hr_management", "hr_records", "finance", "finance_planning"] },
   { title: "Tools", keys: ["filemanager", "filemanager_advanced"] },
 ];
 
@@ -31,6 +32,10 @@ export const TRAINING_MODULE_SERIES = {
   reception_simple: "reception",
   centralreg: "centralreg",
   reception: "reception",
+  hr_management: "hr",
+  hr_records: "hr",
+  finance: "finance",
+  finance_planning: "finance",
   filemanager: "filemanager",
   filemanager_advanced: "filemanager",
   pathways_resources: "mini",
@@ -51,6 +56,8 @@ export const TRAINING_SERIES_TITLES = {
   reception_simple: "Simple Mode",
   centralreg: "Central Registration",
   reception: "Reception",
+  hr: "HR Management",
+  finance: "Finance",
   filemanager: "File Manager",
   mini: "Mini-Modules",
 };

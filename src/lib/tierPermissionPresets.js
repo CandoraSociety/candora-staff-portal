@@ -35,7 +35,7 @@ export const LOCKED_TIER_IDS = ['executive_director'];
 
 // Backward compatibility
 export const PORTAL_MODULES = [
-  { id: 'nexushr',          label: 'NexusHR',                        route: '/nexushr' },
+  { id: 'nexushr',          label: 'HR Management',                  route: '/nexushr' },
   { id: 'pathways',         label: 'Pathways Case Mgmt',              route: '/pathways' },
   { id: 'grants',           label: 'Grants & Proposals',              route: '/grants' },
   { id: 'volunteermgr',     label: 'Volunteer Manager',              route: '/volunteermgr' },

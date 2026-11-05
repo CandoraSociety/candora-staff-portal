@@ -26,7 +26,7 @@ export default function NexusEmailEmployees() {
   const sendEmailMutation = useMutation({
     mutationFn: async (data) => {
       const recipients = data.to.split(',').map(e => e.trim());
-      const promises = recipients.map(to => base44.integrations.Core.SendEmail({ to, subject: data.subject, body: data.body, from_name: 'NexusHR' }));
+      const promises = recipients.map(to => base44.integrations.Core.SendEmail({ to, subject: data.subject, body: data.body, from_name: 'HR Management' }));
       await Promise.all(promises);
     },
     onSuccess: () => {

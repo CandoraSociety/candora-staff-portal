@@ -11,7 +11,7 @@ export const PORTAL_UPLOAD_TARGETS = {
   "central-registration": "Central Registration",
   phac: "PHAC Programs",
   frn: "FRN Programs",
-  nexushr: "NexusHR",
+  nexushr: "HR Management",
   finance: "Finance",
   board: "Board of Directors",
   reception: "Reception",
