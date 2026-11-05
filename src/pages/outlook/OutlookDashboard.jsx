@@ -29,11 +29,14 @@ export default function OutlookDashboard() {
   const [events, setEvents] = useState([]);
   const [eventsLoading, setEventsLoading] = useState(false);
   const [profile, setProfile] = useState(null);
+  const [appOnlyMode, setAppOnlyMode] = useState(false);
+  const [calendarUnavailable, setCalendarUnavailable] = useState(false);
 
   const fetchProfile = useCallback(async () => {
     try {
       const res = await base44.functions.invoke('msOutlook', { action: 'getProfile' });
       setProfile(res.data.profile);
+      setAppOnlyMode(res.data.mode === 'app_only');
       setConnected(true);
       return true;
     } catch {
@@ -59,6 +62,7 @@ export default function OutlookDashboard() {
     try {
       const res = await base44.functions.invoke('msOutlook', { action: 'listCalendarEvents', days: 14 });
       setEvents(res.data.events || []);
+      setCalendarUnavailable(!!res.data.calendarUnavailable);
     } catch (err) {
       toast({ title: 'Error loading calendar', description: err.message, variant: 'destructive' });
     } finally {
@@ -147,8 +151,12 @@ export default function OutlookDashboard() {
 
   const handleSendEmail = async ({ to, cc, subject, body }) => {
     try {
-      await base44.functions.invoke('msOutlook', { action: 'sendEmail', to, cc, subject, body });
-      toast({ title: 'Email sent successfully!' });
+      const res = await base44.functions.invoke('msOutlook', { action: 'sendEmail', to, cc, subject, body });
+      if (res.data.savedAsDraft) {
+        toast({ title: 'Saved to your Outlook drafts', description: 'Open Outlook to review and send it.' });
+      } else {
+        toast({ title: 'Email sent successfully!' });
+      }
       fetchEmails();
     } catch (err) {
       toast({ title: 'Failed to send email', description: err.message, variant: 'destructive' });
@@ -220,10 +228,12 @@ export default function OutlookDashboard() {
             <RefreshCw className="w-4 h-4" />
             Refresh
           </Button>
-          <Button variant="outline" size="sm" onClick={handleDisconnect} className="gap-2 text-destructive hover:text-destructive">
-            <Unlink className="w-4 h-4" />
-            Disconnect
-          </Button>
+          {!appOnlyMode && (
+            <Button variant="outline" size="sm" onClick={handleDisconnect} className="gap-2 text-destructive hover:text-destructive">
+              <Unlink className="w-4 h-4" />
+              Disconnect
+            </Button>
+          )}
         </div>
       </div>
 
@@ -277,7 +287,14 @@ export default function OutlookDashboard() {
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold">Upcoming Events (14 days)</h3>
           </div>
-          <CalendarView events={events} loading={eventsLoading} />
+          {calendarUnavailable ? (
+            <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
+              Calendar isn't switched on for the portal yet. Your mailbox works here now — calendar needs
+              IT to grant the Calendars permission to the Candora Staff Portal app in Azure.
+            </div>
+          ) : (
+            <CalendarView events={events} loading={eventsLoading} />
+          )}
         </div>
       )}
 
