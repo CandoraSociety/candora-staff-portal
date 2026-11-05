@@ -1,5 +1,5 @@
 export const TRAINING_NAV_GROUPS = [
-  { title: "Getting started", keys: ["welcome", "dashboard", "dashboard_widgets"] },
+  { title: "Getting started", keys: ["welcome", "jim_carla", "dashboard", "dashboard_widgets"] },
   { title: "Time & Money", keys: ["staffadmin", "staffadmin_money", "staffadmin_supervisor"] },
   { title: "Program portals", keys: ["pathways", "pathways_journey", "pathways_journey_part2", "pathways_assessment", "pathways_service_nav", "pathways_workshops", "joblab", "central_database_basics", "central_database_advanced", "ell", "frn", "phac", "empoweru", "childminding", "rworker", "centralreg", "reception", "reception_simple"] },
   { title: "People & money", keys: ["hr_management", "hr_records", "finance", "finance_planning"] },
@@ -11,6 +11,7 @@ export const TRAINING_NAV_GROUPS = [
 // learner's active modules plus the next module of the same series.
 export const TRAINING_MODULE_SERIES = {
   welcome: "getting_started",
+  jim_carla: "getting_started",
   dashboard: "getting_started",
   dashboard_widgets: "getting_started",
   staffadmin: "time_money",

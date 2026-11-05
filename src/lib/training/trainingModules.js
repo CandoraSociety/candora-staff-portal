@@ -21,6 +21,7 @@ import { FILE_MANAGER_MODULES } from "@/lib/training/modules/fileManagerModules"
 import { ELL_MODULES } from "@/lib/training/modules/ellModules";
 import { FILE_MANAGER_ADVANCED_MODULES } from "@/lib/training/modules/fileManagerAdvancedModules";
 import { WELCOME_MODULES } from "@/lib/training/modules/welcomeModules";
+import { JIM_CARLA_MODULES } from "@/lib/training/modules/jimCarlaModules";
 import { RECEPTION_MODULES } from "@/lib/training/modules/receptionModules";
 import { RECEPTION_SIMPLE_MODULES } from "@/lib/training/modules/receptionSimpleModules";
 import { CENTRAL_DATABASE_MODULES } from "@/lib/training/modules/centralDatabaseModules";
@@ -37,6 +38,7 @@ import { ARCHIVES_MODULES } from "@/lib/training/modules/archivesModules";
 export const TRAINING_MODULES = [
   // Welcome & app tour leads the catalog — every staff member starts here.
   ...WELCOME_MODULES,
+  ...JIM_CARLA_MODULES,
   ...CENTRAL_DATABASE_MODULES,
   ...FRN_PHAC_MODULES,
   ...EMPOWERU_MODULES,
