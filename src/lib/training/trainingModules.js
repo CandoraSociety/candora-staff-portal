@@ -34,6 +34,8 @@ import { RWORKER_MODULES } from "@/lib/training/modules/rworkerModules";
 import { HR_MODULES } from "@/lib/training/modules/hrModules";
 import { FINANCE_MODULES } from "@/lib/training/modules/financeModules";
 import { ARCHIVES_MODULES } from "@/lib/training/modules/archivesModules";
+import { FOOD_SERVICES_MODULES } from "@/lib/training/modules/foodServicesModules";
+import { MARKETING_MODULES } from "@/lib/training/modules/marketingModules";
 
 export const TRAINING_MODULES = [
   // Welcome & app tour leads the catalog — every staff member starts here.
@@ -47,6 +49,8 @@ export const TRAINING_MODULES = [
   ...HR_MODULES,
   ...FINANCE_MODULES,
   ...ARCHIVES_MODULES,
+  ...FOOD_SERVICES_MODULES,
+  ...MARKETING_MODULES,
   {
     key: "dashboard",
     title: "Main User Page",

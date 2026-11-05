@@ -202,6 +202,7 @@ import FoodAreaRecipes from '@/pages/food/FoodAreaRecipes';
 import FoodAreaOverview from '@/pages/food/FoodAreaOverview';
 import CommunityLunch from '@/pages/food/CommunityLunch';
 import FoodBank from '@/pages/food/FoodBank';
+import FoodInternalPlacements from '@/pages/food/FoodInternalPlacements';
 import FoodSchedule from '@/pages/food/FoodSchedule';
 import FoodSales from '@/pages/food/FoodSales';
 
@@ -658,6 +659,7 @@ const AuthenticatedApp = () => {
           <Route path="/food/food-bank" element={<FoodBank />} />
           <Route path="/food/sales" element={<FoodSales />} />
           <Route path="/food/schedule" element={<FoodSchedule />} />
+          <Route path="/food/internal-placements" element={<FoodInternalPlacements />} />
         </Route>
 
         {/* Candora Board - standalone layout */}
@@ -889,6 +891,15 @@ const AuthenticatedApp = () => {
         {/* External Pathways intake portal, mounted in-app so training tours
             can walk the client-facing form while Test Mode is active */}
         <Route path="/pathways/intake-portal" element={<PathwaysPublicIntake />} />
+
+        {/* External catering portal, mounted in-app so training tours can walk
+            the client-facing booking flow while Test Mode is active */}
+        <Route element={<PublicLayout />}>
+          <Route path="/food/catering-portal" element={<CateringHome />} />
+          <Route path="/food/catering-portal/menu" element={<CateringMenuPage />} />
+          <Route path="/food/catering-portal/spaces" element={<OurSpaces />} />
+          <Route path="/food/catering-portal/book" element={<BookingWizard />} />
+        </Route>
 
         {/* Pathways CM - standalone layout */}
         <Route element={<PathwaysLayout />}>

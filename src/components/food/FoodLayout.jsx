@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import {
-  LayoutDashboard, CalendarDays, Coffee, Heart, Soup, ShoppingBasket,
+  LayoutDashboard, CalendarDays, Coffee, Heart, Soup, ShoppingBasket, GraduationCap,
   TrendingUp, ChevronLeft, ChevronRight, LogOut, Menu, ExternalLink, Calendar
 } from 'lucide-react';
 import LogoutConfirmationDialog from '@/components/auth/LogoutConfirmationDialog';
@@ -26,6 +26,7 @@ const NAV = [
   },
   { label: 'Sales', icon: TrendingUp, path: '/food/sales' },
   { label: 'Schedule', icon: Calendar, path: '/food/schedule' },
+  { label: 'Internal Placements', icon: GraduationCap, path: '/food/internal-placements' },
 ];
 
 export default function FoodLayout() {
