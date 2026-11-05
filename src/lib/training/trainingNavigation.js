@@ -366,7 +366,7 @@ const SECTION_STARTS = {
     "Welcome to Food Services": "Getting started",
     "The dashboard in four numbers": "The dashboard",
     "Cafe Candeur — your own cafe": "The food areas",
-    "Catering — quotes and bookings": "Catering",
+    "Catering — quotes and bookings": "Catering & programs",
     "Inventory, menu and customers": "Stock & sales",
     "The schedule for every area": "Schedule & placements",
     "Time to practice": "Practice",
@@ -385,6 +385,7 @@ const SECTION_STARTS = {
     "Email campaigns": "Getting it out",
     "The marketing calendar": "Planning",
     "Requests from the rest of the organization": "Requests & fundraising",
+    "SEO, the website and resources": "Web & resources",
     "Time to practice": "Practice",
   },
 };

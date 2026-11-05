@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -34,9 +34,18 @@ export default function PlacementDetailDialog({ placement, open, onClose }) {
   const qc = useQueryClient();
   const [form, setForm] = useState(() => buildForm(placement || {}));
   const [saving, setSaving] = useState(false);
+  const [supervisorEmail, setSupervisorEmail] = useState('');
+
+  const { data: employees = [] } = useQuery({
+    queryKey: ['food-employees'],
+    queryFn: () => base44.entities.Employee.filter({ status: 'active' }),
+  });
 
   useEffect(() => {
-    if (placement) setForm(buildForm(placement));
+    if (placement) {
+      setForm(buildForm(placement));
+      setSupervisorEmail(placement.supervisor_email || '');
+    }
   }, [placement]);
 
   if (!placement) return null;
@@ -55,6 +64,11 @@ export default function PlacementDetailDialog({ placement, open, onClose }) {
     const patch = { ...form };
     if (form.status === 'completed' && !placement.actual_end_date) {
       patch.actual_end_date = new Date().toISOString().slice(0, 10);
+    }
+    if (supervisorEmail !== (placement.supervisor_email || '')) {
+      const sup = employees.find((e) => e.email === supervisorEmail);
+      patch.supervisor_email = supervisorEmail;
+      patch.supervisor_name = sup ? `${sup.first_name} ${sup.last_name}` : '';
     }
     await base44.entities.InternalTraining.update(placement.id, patch);
     qc.invalidateQueries({ queryKey: ['food-internal-placements'] });
@@ -84,6 +98,20 @@ export default function PlacementDetailDialog({ placement, open, onClose }) {
               </div>
             )}
           </div>
+
+          <label className="text-xs block">
+            <span className="text-muted-foreground">Food Services supervisor</span>
+            <select
+              value={supervisorEmail}
+              onChange={(e) => setSupervisorEmail(e.target.value)}
+              className="w-full h-9 rounded-md border border-input bg-transparent px-2 text-sm"
+            >
+              <option value="">Not assigned</option>
+              {employees.map((emp) => (
+                <option key={emp.id} value={emp.email}>{emp.first_name} {emp.last_name}</option>
+              ))}
+            </select>
+          </label>
 
           <label className="text-xs block">
             <span className="text-muted-foreground">Placement status</span>

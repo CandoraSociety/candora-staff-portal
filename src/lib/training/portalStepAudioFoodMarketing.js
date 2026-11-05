@@ -1,0 +1,46 @@
+// Slide narration for the Food Services and Marketing training modules.
+// One static MP3 per tour step (same voice as every other module), keyed by
+// module and step index. Generated once, never at playback.
+export const FOOD_MARKETING_STEP_AUDIO = {
+  food_services: [
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/33211186d_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/296bd22fb_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/045d770a1_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/09d5ffe7e_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/64a502593_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/37fca2909_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/85256e7a2_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/751c03a2a_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/29e26844a_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/07a67df38_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/41213363d_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/d81a9faf7_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/011ddbdfa_speech.mp3',
+  ],
+  food_catering_portal: [
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/62f9dd31d_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/160390460_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/80f1ac122_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/44be8ab5a_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/9cbd555f5_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/0b0ea07ee_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/4634d1430_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/e7f02eace_speech.mp3',
+  ],
+  marketing: [
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/eb31dd898_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/f3596b5e9_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/f81f2db3c_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/9bff968f1_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/51eb0dbd4_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/b0e54eaff_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/281d46ae0_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/0e1c7494d_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/ff6fe34bf_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/6cc7f4d80_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/ddd98bb6b_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/587cf1c6e_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/f0a69ac4e_speech.mp3',
+    'https://media.base44.com/files/public/6a249282cb496579542673b7/77f3471ba_speech.mp3',
+  ],
+};
