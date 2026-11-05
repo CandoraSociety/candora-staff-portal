@@ -1,0 +1,164 @@
+{
+  "name": "FoodSalesReport",
+  "type": "object",
+  "description": "A POS sales report imported into the Food Services portal for one food operation, normally a Square report covering a date range. Food Services records the revenue from it and the Finance portal reads the same record, so a report is filed once and seen in both places.",
+  "properties": {
+    "unit": {
+      "type": "string",
+      "enum": [
+        "cafe_candeur",
+        "auntie_bevs",
+        "catering",
+        "community_lunch"
+      ],
+      "description": "Food operation the report belongs to"
+    },
+    "unit_label": {
+      "type": "string",
+      "description": "Operation name as displayed (denormalized so lists read without a lookup)"
+    },
+    "period_start": {
+      "type": "string",
+      "format": "date",
+      "description": "First day the report covers"
+    },
+    "period_end": {
+      "type": "string",
+      "format": "date",
+      "description": "Last day the report covers \u2014 the month this revenue is filed under"
+    },
+    "gross_sales": {
+      "type": "number",
+      "description": "Total sales before discounts, refunds and tax"
+    },
+    "discounts": {
+      "type": "number"
+    },
+    "refunds": {
+      "type": "number"
+    },
+    "net_sales": {
+      "type": "number",
+      "description": "Gross sales less discounts and refunds, excluding tax \u2014 the revenue figure Food Services and Finance both use"
+    },
+    "tax": {
+      "type": "number",
+      "description": "Tax collected on the period"
+    },
+    "tips": {
+      "type": "number"
+    },
+    "transaction_count": {
+      "type": "number"
+    },
+    "payment_breakdown": {
+      "type": "array",
+      "description": "Card, cash and other tender totals as the report lists them",
+      "items": {
+        "type": "object",
+        "properties": {
+          "method": {
+            "type": "string"
+          },
+          "amount": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "report_file_uri": {
+      "type": "string",
+      "description": "Private storage URI of the Square report that was uploaded"
+    },
+    "report_file_name": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "square",
+        "manual"
+      ],
+      "default": "square",
+      "description": "Where the figures came from \u2014 a Square report file or totals typed in by hand"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "imported_by_name": {
+      "type": "string",
+      "description": "Food Services staff member who filed the report"
+    },
+    "forwarded_to_finance": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether the report has been passed to the Finance portal"
+    },
+    "forwarded_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "unit",
+    "period_end"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

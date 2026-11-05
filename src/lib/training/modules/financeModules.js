@@ -157,7 +157,7 @@ export const FINANCE_MODULES = [
       },
       {
         title: "Food services",
-        body: "Food Services reads the three operations — Café Candeur, Auntie Bev's and Catering — each with its sales and expenses side by side. The sales come from the food portal's orders and catering bookings; Finance is reading one number per unit rather than reconciling individual orders.",
+        body: "Food Services reads the four operations — Café Candeur, Auntie Bev's, Catering and Community Lunch. Revenue arrives as the Square reports the food team files for each operation in the Food Services portal, so what you read here is the same report they recorded, not a figure Finance types in. Expenses are the half still missing: capturing food cost, wages and supplies so each operation shows a real net profit is something we want to do, and it is not built yet — until it is, read these figures as revenue rather than profit.",
         path: "/finance/food",
         target: { text: "Café Candeur", scope: "main" }
       },
