@@ -8,6 +8,7 @@ import AccountSetupDialog from '@/components/empoweru/AccountSetupDialog';
 import AccountSetupProgressCard from '@/components/empoweru/AccountSetupProgressCard';
 import { ACCOUNT_SETUP_STATUS_OPTIONS } from '@/lib/empoweruConstants';
 import { parseDateSmart } from '@/lib/dateUtils';
+import { abToday } from '@/lib/abTime';
 
 export default function EmpowerUAccountSetup() {
   const [cohortFilter, setCohortFilter] = useState('all');
@@ -34,7 +35,7 @@ export default function EmpowerUAccountSetup() {
       return Object.fromEntries((res.rows || []).map(r => [r.status, r.count]));
     }
   });
-  const today = new Date().toISOString().slice(0, 10);
+  const today = abToday();
   const { data: attentionCount = 0 } = useQuery({
     queryKey: ['empoweru-account-setup-attention', today],
     queryFn: () => base44.entities.EmpowerUAccountSetup.count({ status: { $nin: ['completed', 'declined'] }, $or: [{ next_action_date: { $lt: today } }, { follow_up_attempts: { $gte: 3 }, status: 'contacting' }] })

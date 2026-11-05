@@ -9,6 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { APPOINTMENT_STATUS_OPTIONS, LOCATION_TYPE_LABELS } from '@/lib/rcConstants';
+import { abInputDateTime } from '@/lib/abTime';
 
 const EMPTY = {
   client_id: '', client_name: '', client_email: '', worker_name: '',
@@ -34,7 +35,7 @@ export default function AppointmentDialog({ open, onOpenChange, clientId, client
         client_id: clientId || '',
         client_name: clientName || '',
         client_email: clientEmail || '',
-        appointment_date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
+        appointment_date: abInputDateTime(Date.now() + 24 * 60 * 60 * 1000),
       });
     }
   }, [open, clientId, clientName, clientEmail]);

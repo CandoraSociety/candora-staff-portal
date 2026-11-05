@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 import { LOCATION_TYPE_LABELS } from '@/lib/rcConstants';
+import { abInputDateTime } from '@/lib/abTime';
 
 const EMPTY = {
   appointment_date: '',
@@ -30,7 +31,7 @@ export default function ScheduleAppointmentDialog({ open, onOpenChange, client, 
     if (open) {
       setForm({
         ...EMPTY,
-        appointment_date: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
+        appointment_date: abInputDateTime(Date.now() + 24 * 60 * 60 * 1000),
         worker_name: currentUser?.full_name || '',
       });
     }

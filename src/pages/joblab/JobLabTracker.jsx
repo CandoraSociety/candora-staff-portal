@@ -5,9 +5,10 @@ import { JLButton, JLEmpty, JLTabs } from '@/components/joblab/ui';
 import ApplicationCard from '@/components/joblab/ApplicationCard';
 import ApplicationDialog from '@/components/joblab/ApplicationDialog';
 import { STATUS_LABELS, addDays } from '@/lib/joblab/constants';
+import { abToday } from '@/lib/abTime';
 import { useToast } from '@/components/ui/use-toast';
 
-const today = () => new Date().toISOString().slice(0, 10);
+const today = abToday;
 
 export default function JobLabTracker() {
   const { toast } = useToast();

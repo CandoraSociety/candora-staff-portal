@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import StatusBadge from '@/components/rc/StatusBadge';
 import { PROGRAM_CATEGORY_OPTIONS, PROGRAM_STATUS_OPTIONS } from '@/lib/communityConstants';
 import ProgramReferralsPanel from '@/components/referrals/ProgramReferralsPanel';
+import { abToday } from '@/lib/abTime';
 
 export default function CommunityDashboard() {
   const { data: programs = [] } = useQuery({ queryKey: ['community-programs'], queryFn: () => base44.entities.CommunityProgram.list('name', 200) });
@@ -17,7 +18,7 @@ export default function CommunityDashboard() {
   const { data: evaluations = [] } = useQuery({ queryKey: ['community-evaluations'], queryFn: () => base44.entities.CommunityEvaluation.list('-evaluation_date', 200) });
 
   const activePrograms = programs.filter(p => p.status === 'active');
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = abToday();
   const upcomingSessions = sessions.filter(s => s.session_date >= todayStr && s.status === 'scheduled').slice(0, 5);
 
   const stats = [

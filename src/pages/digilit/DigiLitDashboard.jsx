@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import StatusBadge from '@/components/rc/StatusBadge';
 import { PARTICIPANT_STATUS_OPTIONS, SESSION_STATUS_OPTIONS, TOPIC_AREA_LABELS, SKILL_LEVEL_LABELS, SKILL_LEVEL_OPTIONS } from '@/lib/digilitConstants';
 import ProgramReferralsPanel from '@/components/referrals/ProgramReferralsPanel';
+import { abToday } from '@/lib/abTime';
 
 export default function DigiLitDashboard() {
   const { data: participants = [] } = useQuery({ queryKey: ['digilit-participants'], queryFn: () => base44.entities.DigiLitParticipant.list('-registration_date', 500) });
@@ -18,7 +19,7 @@ export default function DigiLitDashboard() {
   const active = participants.filter(p => p.status === 'started' || p.status === 'registered');
   const completed = participants.filter(p => p.status === 'completed');
   const pathwaysLinked = participants.filter(p => p.is_pathways_participant);
-  const todayStr = new Date().toISOString().split('T')[0];
+  const todayStr = abToday();
   const upcomingSessions = sessions.filter(s => s.session_date >= todayStr && s.status === 'scheduled').slice(0, 5);
 
   const stats = [

@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { APPT_STATUS_OPTIONS } from '@/lib/receptionConstants';
+import { abInputDateTime } from '@/lib/abTime';
 
 const EMPTY = { visitor_name: '', visitor_phone: '', visitor_email: '', appointment_date: '', duration_minutes: 30, purpose: '', staff_member: '', department: '', status: 'scheduled', notes: '' };
 
@@ -17,7 +18,7 @@ export default function AppointmentDialog({ open, onOpenChange, appointment, onS
   const [form, setForm] = useState(EMPTY);
 
   useEffect(() => {
-    if (open) setForm(appointment ? { ...appointment } : { ...EMPTY, appointment_date: new Date(Date.now() + 60 * 60 * 1000).toISOString().slice(0, 16) });
+    if (open) setForm(appointment ? { ...appointment } : { ...EMPTY, appointment_date: abInputDateTime(Date.now() + 60 * 60 * 1000) });
   }, [open, appointment]);
 
   const update = (f, v) => setForm(p => ({ ...p, [f]: v }));

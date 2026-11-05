@@ -2,6 +2,7 @@ import { createClient } from '@base44/sdk';
 import { appParams } from '@/lib/app-params';
 import { normalizeUser } from '@/lib/userDisplayName';
 import { isTestMode, installTestModeInterceptor } from '@/lib/testMode/sandbox';
+import normalizeTimestamps from '@/lib/abTimestamps';
 
 const { appId, token, functionsVersion, appBaseUrl } = appParams;
 
@@ -38,3 +39,35 @@ base44.auth.me = async (...args) => normalizeUser(await originalMe(...args));
 // swapped for the in-memory sandbox: reads return simulated demo records,
 // writes and live-service calls are simulated and never reach the backend.
 if (isTestMode()) installTestModeInterceptor(base44);
+
+// ── Alberta time ───────────────────────────────────────────────────────────
+// created_date / updated_date come back as bare UTC ("…T07:09:29.557000", no
+// trailing Z), which browsers read as local time — that is why clocks around
+// the app read six hours fast. Stamp them as UTC as the records arrive, so they
+// render in Alberta time like everything else. Staff-entered times
+// (appointment_date, session_date, start_datetime …) are left untouched: they
+// are already Alberta wall clock.
+const RECORD_RETURNING_METHODS = new Set([
+  'list', 'filter', 'get', 'create', 'bulkCreate', 'update', 'bulkUpdate'
+]);
+const wrappedEntities = new Map();
+
+const wrapEntity = (entity) =>
+  new Proxy(entity, {
+    get(target, method, receiver) {
+      const value = Reflect.get(target, method, receiver);
+      if (typeof method !== 'string' || typeof value !== 'function' || !RECORD_RETURNING_METHODS.has(method)) {
+        return value;
+      }
+      return async (...args) => normalizeTimestamps(await value.apply(target, args));
+    }
+  });
+
+base44.entities = new Proxy(base44.entities, {
+  get(target, prop, receiver) {
+    const value = Reflect.get(target, prop, receiver);
+    if (typeof prop !== 'string' || !value || typeof value !== 'object') return value;
+    if (!wrappedEntities.has(prop)) wrappedEntities.set(prop, wrapEntity(value));
+    return wrappedEntities.get(prop);
+  }
+});

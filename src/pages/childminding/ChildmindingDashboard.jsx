@@ -10,6 +10,7 @@ import { PROGRAM_OPTIONS, PROGRAM_LABELS, PROGRAM_COLORS, calculateBilling, getP
 import ProgramReferralsPanel from '@/components/referrals/ProgramReferralsPanel';
 import ChildmindingSessionDialog from '@/components/childminding/ChildmindingSessionDialog';
 import ChildmindingSessionDetail from '@/components/childminding/ChildmindingSessionDetail';
+import { abToday } from '@/lib/abTime';
 
 export default function ChildmindingDashboard() {
   const queryClient = useQueryClient();
@@ -46,7 +47,7 @@ export default function ChildmindingDashboard() {
     return { ...p, count: pRecords.length, hours: pRecords.reduce((s, r) => s + (r.hours || 0), 0) };
   }).filter((p) => p.count > 0);
 
-  const todayStr = now.toISOString().split('T')[0];
+  const todayStr = abToday();
   const upcoming = records.filter((r) => r.date >= todayStr).slice(0, 5);
   const todaySessions = sessions.filter((s) => s.date === todayStr);
 
