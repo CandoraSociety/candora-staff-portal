@@ -1,12 +1,11 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Heart, ShoppingBag, ClipboardCheck, Info, Pencil, Wifi, WifiOff, X, Gift } from 'lucide-react';
+import { Heart, ShoppingBag, ClipboardCheck, Pencil, Wifi, WifiOff, X, Gift } from 'lucide-react';
 
 const KIND_LABEL = {
   donation: 'Donation',
   purchase: 'Order',
   self_registration: 'Client info',
-  message: 'Message',
 };
 
 const statusLabel = (prompt) => {
@@ -108,11 +107,8 @@ export default function KioskStationCard({ station, prompt, onSend, onEdit, onCl
         <Button variant="outline" className="justify-start" onClick={() => onSend(station, 'purchase')}>
           <ShoppingBag className="h-4 w-4" /> Order
         </Button>
-        <Button variant="outline" className="justify-start" onClick={() => onSend(station, 'self_registration')}>
+        <Button variant="outline" className="justify-start col-span-2" onClick={() => onSend(station, 'self_registration')}>
           <ClipboardCheck className="h-4 w-4" /> Client Info
-        </Button>
-        <Button variant="outline" className="justify-start" onClick={() => onSend(station, 'message')}>
-          <Info className="h-4 w-4" /> Message
         </Button>
       </div>
 

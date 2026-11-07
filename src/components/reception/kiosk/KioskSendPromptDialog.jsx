@@ -5,20 +5,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Heart, ShoppingBag, ClipboardCheck, Info, Plus, Trash2 } from 'lucide-react';
+import { Heart, ShoppingBag, ClipboardCheck, Plus, Trash2 } from 'lucide-react';
 
 const KINDS = [
   { id: 'donation', label: 'Donation', icon: Heart },
   { id: 'purchase', label: 'Order', icon: ShoppingBag },
   { id: 'self_registration', label: 'Client Info', icon: ClipboardCheck },
-  { id: 'message', label: 'Message', icon: Info },
 ];
 
 const DEFAULTS = {
   donation: { title: 'Support Candora today', message: 'Choose an amount and we will take care of the rest at the counter.' },
   purchase: { title: 'Order at the counter', message: 'Pick what you would like and reception will bring it to you.' },
   self_registration: { title: 'Accessing services today?', message: 'Share your details so a resource worker can help you.' },
-  message: { title: '', message: '' },
 };
 
 export default function KioskSendPromptDialog({ open, onOpenChange, station, initialKind = 'donation', sentByName, onSent }) {
@@ -117,7 +115,7 @@ export default function KioskSendPromptDialog({ open, onOpenChange, station, ini
 
           <div className="space-y-1.5">
             <Label>Supporting line</Label>
-            <Textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={kind === 'message' ? 5 : 2} />
+            <Textarea value={message} onChange={(e) => setMessage(e.target.value)} rows={2} />
           </div>
 
           {kind === 'donation' && (

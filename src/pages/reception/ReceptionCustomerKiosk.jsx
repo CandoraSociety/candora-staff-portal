@@ -10,7 +10,7 @@ import KioskClientVerificationDialog from '@/components/reception/kiosk/KioskCli
 import DonationDialog from '@/components/donors/DonationDialog';
 
 // Reception's remote control for the customer tablet: send a donation ask, an
-// order, a registration form or a message, and watch what comes back.
+// order or a registration form, and watch what comes back.
 export default function ReceptionCustomerKiosk() {
   const { user } = useAuth();
   const [stations, setStations] = useState([]);
@@ -90,7 +90,7 @@ export default function ReceptionCustomerKiosk() {
             <Tablet className="h-6 w-6 text-primary" /> Customer Kiosk
           </h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Put a tablet on the counter and control it from here — donations, orders, registrations and messages appear on it right away.
+            Put a tablet on the counter and control it from here — donations, orders and registrations appear on it right away.
           </p>
         </div>
         <div className="flex items-center gap-2">
