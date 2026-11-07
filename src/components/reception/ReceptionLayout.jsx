@@ -23,6 +23,7 @@ const SIMPLE_NAV_ITEMS = [
   { path: '/reception/appointments', label: 'Appointments', icon: CalendarDays },
   { path: '/reception/dropins', label: 'Drop-Ins', icon: DoorOpen },
   { path: '/reception/client-visit', search: '?type=grab_and_go', label: 'Grab and Go Resources', icon: ShoppingBasket },
+  { path: '/reception/customer-kiosk', label: 'Customer Kiosk', icon: Tablet },
 ];
 
 export default function ReceptionLayout() {

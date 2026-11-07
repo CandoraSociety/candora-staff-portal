@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { CalendarDays, DoorOpen, ShoppingBasket, Siren, ArrowRight, Search } from 'lucide-react';
+import { CalendarDays, DoorOpen, ShoppingBasket, Siren, ArrowRight, Search, Tablet } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import UrgentAlertDialog from '@/components/reception/UrgentAlertDialog';
@@ -39,6 +39,14 @@ const CARDS = [
     icon: Search,
     tone: 'bg-amber-50 text-amber-600',
   },
+  {
+    slug: '/customer-kiosk',
+    label: 'Customer Kiosk',
+    help: 'Send a donation, order or message to the counter tablet',
+    icon: Tablet,
+    tone: 'bg-purple-50 text-purple-600',
+    staffOnly: true,
+  },
 ];
 
 export default function SimpleReceptionHome() {
@@ -46,6 +54,9 @@ export default function SimpleReceptionHome() {
   const { pathname } = useLocation();
   const base = isReceptionPortalRoute(pathname) ? '/reception-portal' : '/reception';
   const user = useReceptionOperator();
+  // The counter tablet is managed from the staff app only, so the external
+  // front desk portal never offers it.
+  const cards = base === '/reception-portal' ? CARDS.filter((c) => !c.staffOnly) : CARDS;
 
   return (
     <div className="space-y-6">
@@ -66,7 +77,7 @@ export default function SimpleReceptionHome() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {CARDS.map((card) => {
+        {cards.map((card) => {
           const Icon = card.icon;
           return (
             <Link key={card.slug} to={`${base}${card.slug}`}>
