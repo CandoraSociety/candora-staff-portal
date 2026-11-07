@@ -171,8 +171,8 @@ export default function KioskRegistrationView({ prompt, onRespond, onClose }) {
               <Input className="h-14 text-lg" type="number" min="0" inputMode="numeric" value={form.dependants_count} onChange={set('dependants_count')} placeholder="0" />
             </div>
             <div className="space-y-1.5 sm:col-span-2">
-              <Label className="text-base">Who do you care for?</Label>
-              <Input className="h-14 text-lg" value={form.dependants_detail} onChange={set('dependants_detail')} placeholder="e.g. 2 children (ages 3 and 7)" />
+              <Label className="text-base">Dependants — who they are and their ages</Label>
+              <Input className="h-14 text-lg" value={form.dependants_detail} onChange={set('dependants_detail')} placeholder="e.g. 2 children (ages 3 and 7), my mother" />
             </div>
           </div>
         </Section>
