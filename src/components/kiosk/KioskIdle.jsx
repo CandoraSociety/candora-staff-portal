@@ -24,7 +24,7 @@ export default function KioskIdle({ brand }) {
           <img
             src={brand.logo_url}
             alt={brand.name}
-            className="w-auto object-contain h-56 sm:h-72 lg:h-80 max-w-[80vw] drop-shadow-[0_18px_40px_rgba(0,0,0,0.45)]"
+            className="w-auto object-contain h-64 sm:h-[24rem] lg:h-[28rem] max-w-[88vw] drop-shadow-[0_18px_40px_rgba(0,0,0,0.45)]"
           />
         ) : (
           <div
