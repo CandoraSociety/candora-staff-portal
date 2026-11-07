@@ -5,20 +5,19 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Heart, ShoppingBag, ClipboardCheck, Info, Plus, Trash2 } from 'lucide-react';
 
 const KINDS = [
   { id: 'donation', label: 'Donation', icon: Heart },
   { id: 'purchase', label: 'Order', icon: ShoppingBag },
-  { id: 'self_registration', label: 'Registration', icon: ClipboardCheck },
+  { id: 'self_registration', label: 'Client Info', icon: ClipboardCheck },
   { id: 'message', label: 'Message', icon: Info },
 ];
 
 const DEFAULTS = {
   donation: { title: 'Support Candora today', message: 'Choose an amount and we will take care of the rest at the counter.' },
   purchase: { title: 'Order at the counter', message: 'Pick what you would like and reception will bring it to you.' },
-  self_registration: { title: 'Register for a program', message: 'Fill in your details and we will confirm your spot.' },
+  self_registration: { title: 'Accessing services today?', message: 'Share your details so a resource worker can help you.' },
   message: { title: '', message: '' },
 };
 
@@ -29,8 +28,6 @@ export default function KioskSendPromptDialog({ open, onOpenChange, station, ini
   const [amounts, setAmounts] = useState('10, 20, 50, 100');
   const [campaignName, setCampaignName] = useState('');
   const [items, setItems] = useState([{ name: '', price: '' }]);
-  const [programKey, setProgramKey] = useState('');
-  const [programs, setPrograms] = useState([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
@@ -40,15 +37,7 @@ export default function KioskSendPromptDialog({ open, onOpenChange, station, ini
     setTitle(DEFAULTS[initialKind].title);
     setMessage(DEFAULTS[initialKind].message);
     setError('');
-    setProgramKey('');
   }, [open, initialKind]);
-
-  useEffect(() => {
-    if (!open || kind !== 'self_registration' || programs.length) return;
-    base44.functions.invoke('getSelfRegCatalog', {})
-      .then((res) => setPrograms(res.data?.programs || []))
-      .catch(() => setPrograms([]));
-  }, [open, kind, programs.length]);
 
   const switchKind = (next) => {
     setKind(next);
@@ -60,15 +49,10 @@ export default function KioskSendPromptDialog({ open, onOpenChange, station, ini
     setItems((prev) => prev.map((item, i) => (i === index ? { ...item, [field]: value } : item)));
   };
 
-  const selectedProgram = programs.find((p) => `${p.area}|${p.program_id || p.program_name}` === programKey) || null;
   const validItems = items.filter((item) => item.name.trim());
 
   const send = async () => {
     if (saving) return;
-    if (kind === 'self_registration' && !selectedProgram) {
-      setError('Choose the program this registration is for.');
-      return;
-    }
     if (kind === 'purchase' && !validItems.length) {
       setError('Add at least one thing the customer can order.');
       return;
@@ -93,12 +77,6 @@ export default function KioskSendPromptDialog({ open, onOpenChange, station, ini
     }
     if (kind === 'purchase') {
       payload.items = validItems.map((item) => ({ name: item.name.trim(), price: Number(item.price) || 0 }));
-    }
-    if (kind === 'self_registration') {
-      payload.reg_area = selectedProgram.area;
-      payload.reg_program_id = selectedProgram.program_id || '';
-      payload.reg_program_name = selectedProgram.program_name;
-      payload.reg_program_json = JSON.stringify(selectedProgram);
     }
     try {
       await base44.entities.KioskPrompt.create(payload);
@@ -191,20 +169,9 @@ export default function KioskSendPromptDialog({ open, onOpenChange, station, ini
           )}
 
           {kind === 'self_registration' && (
-            <div className="space-y-1.5">
-              <Label>Program</Label>
-              <Select value={programKey} onValueChange={setProgramKey}>
-                <SelectTrigger><SelectValue placeholder="Choose a program…" /></SelectTrigger>
-                <SelectContent>
-                  {programs.map((program) => (
-                    <SelectItem key={`${program.area}|${program.program_id || program.program_name}`} value={`${program.area}|${program.program_id || program.program_name}`}>
-                      {program.program_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">Only programs open for self-registration are listed.</p>
-            </div>
+            <p className="text-xs text-muted-foreground">
+              The tablet asks for their name, date of birth, contact details and what they need. What they send becomes their client file in the Resource Centre.
+            </p>
           )}
 
           {error && <p className="text-sm text-destructive">{error}</p>}

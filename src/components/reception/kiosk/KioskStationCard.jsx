@@ -5,7 +5,7 @@ import { Heart, ShoppingBag, ClipboardCheck, Info, Pencil, Wifi, WifiOff, X, Gif
 const KIND_LABEL = {
   donation: 'Donation',
   purchase: 'Order',
-  self_registration: 'Registration',
+  self_registration: 'Client info',
   message: 'Message',
 };
 
@@ -57,10 +57,20 @@ function ResponseSummary({ prompt }) {
   }
   if (prompt.kind === 'self_registration') {
     return (
-      <p className="text-sm">
-        Registration submitted — it is waiting in{' '}
-        <a href="/central-registration/requests" className="underline font-medium">Central Registration requests</a>.
-      </p>
+      <div className="space-y-2">
+        <p className="text-sm">
+          <span className="font-medium">{prompt.response_name || 'Someone'}</span> submitted their details
+          {prompt.response_phone ? ` · ${prompt.response_phone}` : ''}
+          {prompt.response_email && !prompt.response_phone ? ` · ${prompt.response_email}` : ''}
+        </p>
+        {prompt.rc_client_id ? (
+          <a href={`/rc/clients/${prompt.rc_client_id}`} className="text-sm underline font-medium">
+            Open client file
+          </a>
+        ) : (
+          <p className="text-sm text-muted-foreground">Their client file could not be created — add them from Client Visit.</p>
+        )}
+      </div>
     );
   }
   return <p className="text-sm text-muted-foreground">Message acknowledged.</p>;
@@ -99,7 +109,7 @@ export default function KioskStationCard({ station, prompt, onSend, onEdit, onCl
           <ShoppingBag className="h-4 w-4" /> Order
         </Button>
         <Button variant="outline" className="justify-start" onClick={() => onSend(station, 'self_registration')}>
-          <ClipboardCheck className="h-4 w-4" /> Registration
+          <ClipboardCheck className="h-4 w-4" /> Client Info
         </Button>
         <Button variant="outline" className="justify-start" onClick={() => onSend(station, 'message')}>
           <Info className="h-4 w-4" /> Message

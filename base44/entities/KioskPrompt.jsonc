@@ -1,7 +1,7 @@
 {
   "name": "KioskPrompt",
   "type": "object",
-  "description": "Something the reception portal has put on a customer tablet: a donation ask, an order to take, a self-registration form or a message. The tablet shows the newest open prompt and reports back what the customer entered.",
+  "description": "Something the reception portal has put on a customer tablet: a donation ask, an order to take, a sign-in form for someone accessing services in the resource centre, or a message. The tablet shows the newest open prompt and reports back what the customer entered.",
   "properties": {
     "station_id": {
       "type": "string",
@@ -56,20 +56,6 @@
         }
       }
     },
-    "reg_area": {
-      "type": "string",
-      "description": "Program area for a self-registration prompt"
-    },
-    "reg_program_id": {
-      "type": "string"
-    },
-    "reg_program_name": {
-      "type": "string"
-    },
-    "reg_program_json": {
-      "type": "string",
-      "description": "Snapshot of the selected program so the tablet can render the registration form without a lookup"
-    },
     "status": {
       "type": "string",
       "enum": [
@@ -118,6 +104,10 @@
     },
     "response_notes": {
       "type": "string"
+    },
+    "rc_client_id": {
+      "type": "string",
+      "description": "Central Database client file created from a sign-in at the tablet, so reception can open the person's file straight from the prompt"
     },
     "sent_by_name": {
       "type": "string",

@@ -150,6 +150,35 @@ export default async function (req) {
           .map((item) => ({ name: String(item.name), price: num(item.price) || 0, quantity: num(item.quantity) || 1 }));
       }
 
+      // Someone arriving for help at the resource centre types their own
+      // details on the tablet: that becomes their client file straight away so
+      // reception never retypes it.
+      if (prompt.kind === 'self_registration') {
+        const person = response.person || {};
+        const client: Record<string, string> = {
+          first_name: code(person.first_name) || code(response.name).split(' ')[0] || 'Unknown',
+          last_name: code(person.last_name) || code(response.name).split(' ').slice(1).join(' '),
+          case_status: 'intake',
+          intake_date: new Date().toISOString().slice(0, 10),
+          referral_source: 'Front desk tablet',
+          notes: 'Details submitted by the client at the front desk tablet.',
+        };
+        if (code(person.date_of_birth)) client.date_of_birth = code(person.date_of_birth);
+        if (code(person.phone)) client.phone = code(person.phone);
+        if (code(person.email)) client.email = code(person.email);
+        if (code(person.address)) client.address = code(person.address);
+        if (code(person.city)) client.city = code(person.city);
+        if (code(person.preferred_language)) client.preferred_language = code(person.preferred_language);
+        if (code(person.needs)) client.identified_needs = code(person.needs);
+
+        const created = await base44.asServiceRole.entities.RCClient.create(client);
+        update.rc_client_id = created.id;
+        update.response_name = [client.first_name, client.last_name].filter(Boolean).join(' ');
+        update.response_phone = code(person.phone) || null;
+        update.response_email = code(person.email) || null;
+        update.response_notes = code(person.needs) || null;
+      }
+
       const updated = await base44.asServiceRole.entities.KioskPrompt.update(promptId, update);
       return Response.json({ prompt: updated });
     }
