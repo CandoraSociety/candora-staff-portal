@@ -62,6 +62,29 @@ export default async function (req) {
       });
     }
 
+    // The front-desk tablet is a permanent fixture: it opens straight onto the
+    // welcome screen and picks up its station on its own. A ?code= in its home
+    // screen shortcut pins it to one station when more than one exists.
+    if (action === 'station') {
+      const rows = await base44.asServiceRole.entities.KioskStation.filter({ is_active: true }, '-created_date', 200);
+      const active = rows || [];
+      const wanted = code(body.access_code).toLowerCase();
+      const match = wanted
+        ? active.find((row) => code(row.access_code).toLowerCase() === wanted)
+        : (active.length === 1 ? active[0] : null);
+      if (!match) {
+        return Response.json(
+          { error: active.length ? 'More than one tablet is set up at the front desk.' : 'No front desk tablet is set up yet.' },
+          { status: 404 },
+        );
+      }
+      await base44.asServiceRole.entities.KioskStation.update(match.id, { last_seen: new Date().toISOString() });
+      return Response.json({
+        station: { id: match.id, name: match.name, access_code: match.access_code },
+        brand: await brand(base44),
+      });
+    }
+
     const station = await stationFor(base44, body.station_id, body.access_code);
     if (!station) {
       return Response.json({ error: 'This tablet is no longer connected. Ask reception for a new code.' }, { status: 401 });
