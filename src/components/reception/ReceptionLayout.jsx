@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, CalendarDays, UserSearch, Users, ClipboardList, Search, Siren, Menu, X, ArrowLeft, DoorOpen, ExternalLink, ShoppingBasket } from 'lucide-react';
+import { LayoutDashboard, CalendarDays, UserSearch, Users, ClipboardList, Search, Siren, Menu, X, ArrowLeft, DoorOpen, ExternalLink, ShoppingBasket, Tablet } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useOrgSettings } from '@/lib/useOrgSettings';
 import EAFloatingWidget from '@/components/ed/EAFloatingWidget';
@@ -17,6 +17,7 @@ const NAV_ITEMS = [
   { path: '/reception/registration', label: 'Program Registration', icon: ClipboardList },
   { path: '/reception/resources', label: 'Resource Finder', icon: Search },
   { path: '/reception/urgent', label: 'Urgent Alerts', icon: Siren },
+  { path: '/reception/customer-kiosk', label: 'Customer Kiosk', icon: Tablet },
 ];
 
 // Simple mode keeps only the moves a receptionist needs.

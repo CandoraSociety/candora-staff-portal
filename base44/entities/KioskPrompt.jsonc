@@ -1,0 +1,190 @@
+{
+  "name": "KioskPrompt",
+  "type": "object",
+  "description": "Something the reception portal has put on a customer tablet: a donation ask, an order to take, a self-registration form or a message. The tablet shows the newest open prompt and reports back what the customer entered.",
+  "properties": {
+    "station_id": {
+      "type": "string",
+      "description": "KioskStation this prompt was sent to"
+    },
+    "station_name": {
+      "type": "string",
+      "description": "Station name (denormalized so lists read without a lookup)"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "message",
+        "donation",
+        "purchase",
+        "self_registration"
+      ],
+      "default": "message",
+      "description": "What the customer sees on the tablet"
+    },
+    "title": {
+      "type": "string",
+      "description": "Headline shown on the tablet"
+    },
+    "message": {
+      "type": "string",
+      "description": "Supporting line shown under the headline"
+    },
+    "amounts": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "description": "Suggested donation amounts the customer can tap"
+    },
+    "campaign_name": {
+      "type": "string",
+      "description": "Campaign or appeal the gift is for"
+    },
+    "items": {
+      "type": "array",
+      "description": "Things the customer can choose from on a purchase prompt",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "price": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "reg_area": {
+      "type": "string",
+      "description": "Program area for a self-registration prompt"
+    },
+    "reg_program_id": {
+      "type": "string"
+    },
+    "reg_program_name": {
+      "type": "string"
+    },
+    "reg_program_json": {
+      "type": "string",
+      "description": "Snapshot of the selected program so the tablet can render the registration form without a lookup"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "sent",
+        "opened",
+        "submitted",
+        "dismissed"
+      ],
+      "default": "sent",
+      "description": "sent = waiting on the tablet, opened = being read, submitted = customer finished, dismissed = cleared by staff"
+    },
+    "response_amount": {
+      "type": "number",
+      "description": "Donation amount the customer chose"
+    },
+    "response_total": {
+      "type": "number",
+      "description": "Order total for a purchase prompt"
+    },
+    "response_items": {
+      "type": "array",
+      "description": "What the customer ordered",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "price": {
+            "type": "number"
+          },
+          "quantity": {
+            "type": "number"
+          }
+        }
+      }
+    },
+    "response_name": {
+      "type": "string"
+    },
+    "response_email": {
+      "type": "string"
+    },
+    "response_phone": {
+      "type": "string"
+    },
+    "response_notes": {
+      "type": "string"
+    },
+    "sent_by_name": {
+      "type": "string",
+      "description": "Staff member who sent the prompt"
+    },
+    "viewed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the tablet first displayed it"
+    },
+    "responded_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the customer finished"
+    }
+  },
+  "required": [
+    "station_id",
+    "kind"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

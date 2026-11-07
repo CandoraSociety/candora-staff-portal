@@ -20,6 +20,7 @@ import StaffPortal from '@/pages/portal/StaffPortal';
 import PathwaysPublicIntake from '@/pages/portal/PathwaysPublicIntake';
 import EmpowerUPublicApplication from '@/pages/portal/EmpowerUPublicApplication';
 import SelfRegister from '@/pages/portal/SelfRegister';
+import CustomerKiosk from '@/pages/portal/CustomerKiosk';
 import FillableMinutesPublic from '@/pages/board/FillableMinutesPublic';
 
 // Job Lab — a separate, external employment-centre portal. It has its own
@@ -417,6 +418,7 @@ import ReceptionStaffDirectory from '@/pages/reception/ReceptionStaffDirectory';
 import ReceptionProgramRegistration from '@/pages/reception/ReceptionProgramRegistration';
 import ReceptionResourceFinder from '@/pages/reception/ReceptionResourceFinder';
 import ReceptionUrgentAlerts from '@/pages/reception/ReceptionUrgentAlerts';
+import ReceptionCustomerKiosk from '@/pages/reception/ReceptionCustomerKiosk';
 
 // Employer Portal (isolated)
 import EmployerPortalGuard from '@/components/employer-portal/EmployerPortalGuard';
@@ -436,6 +438,7 @@ const AuthenticatedApp = () => {
     || location.startsWith('/fillable-minutes')
     || location.startsWith('/joblab')
     || location.startsWith('/cafe-menu')
+    || location.startsWith('/kiosk')
     || location.startsWith('/empoweru-apply');
 
   // Only show loading spinner for protected routes, not public auth pages
@@ -479,6 +482,9 @@ const AuthenticatedApp = () => {
 
       {/* Cafe digital menu board — the screen in the cafe, no login required */}
       <Route path="/cafe-menu" element={<CafeMenuDisplay />} />
+
+      {/* Customer kiosk tablet — public, pairs with a code from the reception portal */}
+      <Route path="/kiosk" element={<CustomerKiosk />} />
 
       {/* External Reception portal — the same front desk, signed in by name and
           the desk PIN, with no staff account attached */}
@@ -858,6 +864,7 @@ const AuthenticatedApp = () => {
           <Route path="/reception/registration" element={<ReceptionProgramRegistration />} />
           <Route path="/reception/resources" element={<ReceptionResourceFinder />} />
           <Route path="/reception/urgent" element={<ReceptionUrgentAlerts />} />
+          <Route path="/reception/customer-kiosk" element={<ReceptionCustomerKiosk />} />
         </Route>
 
         {/* Central Registration Portal - standalone layout */}
