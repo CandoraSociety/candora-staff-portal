@@ -42,18 +42,18 @@ export default function ReceptionLayout() {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 bg-sidebar border-b border-sidebar-border">
-        <div className="flex items-center justify-between px-4 lg:px-6 h-14">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between gap-2 px-4 lg:px-6 h-14">
+          <div className="flex items-center gap-3 shrink-0">
             <Link to="/" className="text-sidebar-foreground/60 hover:text-sidebar-foreground"><ArrowLeft className="h-4 w-4" /></Link>
             {logoUrl ? <img src={logoUrl} alt={orgName} className="h-8 w-auto object-contain" /> : <div className="h-8 w-8 rounded-lg bg-sidebar-primary flex items-center justify-center"><span className="text-sidebar-primary-foreground font-display font-bold text-sm">R</span></div>}
             <div><h1 className="text-sidebar-foreground font-display font-bold text-sm leading-tight">Reception</h1><p className="text-sidebar-foreground/60 text-xs leading-tight">Front Desk Portal</p></div>
           </div>
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-1 min-w-0 overflow-x-auto">
             {navItems.map(item => { const Icon = item.icon; return (
               <Link key={item.path} to={`${item.path}${item.search || ''}`} className={cn('flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors', isActive(item.path) ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground')}><Icon className="h-4 w-4" />{item.label}</Link>
             ); })}
           </nav>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-3 shrink-0">
             <LeaveMessageButton fromName={user?.full_name} onDark />
             <a
               href="/reception-portal"

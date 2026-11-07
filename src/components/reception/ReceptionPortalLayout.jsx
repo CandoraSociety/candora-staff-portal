@@ -54,8 +54,8 @@ export default function ReceptionPortalLayout() {
   return (
     <div className="min-h-screen bg-background">
       <header className="sticky top-0 z-40 bg-sidebar border-b border-sidebar-border">
-        <div className="flex items-center justify-between px-4 lg:px-6 h-14">
-          <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between gap-2 px-4 lg:px-6 h-14">
+          <div className="flex items-center gap-3 shrink-0">
             {logoUrl ? (
               <img src={logoUrl} alt={orgName} className="h-8 w-auto object-contain" />
             ) : (
@@ -69,7 +69,7 @@ export default function ReceptionPortalLayout() {
             </div>
           </div>
 
-          <nav className="hidden lg:flex items-center gap-1">
+          <nav className="hidden lg:flex items-center gap-1 min-w-0 overflow-x-auto">
             {navItems.map((item) => {
               const Icon = item.icon;
               return (
@@ -90,7 +90,7 @@ export default function ReceptionPortalLayout() {
             })}
           </nav>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 shrink-0">
             <LeaveMessageButton fromName={operatorName} onDark />
             <div className="hidden sm:block">
               <SimpleModeToggle simpleMode={simpleMode} onChange={setSimpleMode} onDark />
