@@ -68,7 +68,7 @@ function ResponseSummary({ prompt }) {
             Open client file
           </a>
         ) : (
-          <p className="text-sm text-muted-foreground">Their client file could not be created — add them from Client Visit.</p>
+          <p className="text-sm text-muted-foreground">Waiting for reception to verify and add them to the Central Database.</p>
         )}
       </div>
     );
@@ -76,7 +76,7 @@ function ResponseSummary({ prompt }) {
   return <p className="text-sm text-muted-foreground">Message acknowledged.</p>;
 }
 
-export default function KioskStationCard({ station, prompt, onSend, onEdit, onClear, onRecordGift }) {
+export default function KioskStationCard({ station, prompt, onSend, onEdit, onClear, onRecordGift, onVerifyClient }) {
   const online = isOnline(station);
   const active = prompt && ['sent', 'opened'].includes(prompt.status);
 
@@ -146,6 +146,11 @@ export default function KioskStationCard({ station, prompt, onSend, onEdit, onCl
               {prompt.kind === 'donation' && (
                 <Button size="sm" onClick={() => onRecordGift(prompt)}>
                   <Gift className="h-3.5 w-3.5 mr-1" /> Record gift
+                </Button>
+              )}
+              {prompt.kind === 'self_registration' && !prompt.rc_client_id && (
+                <Button size="sm" onClick={() => onVerifyClient(prompt)}>
+                  <ClipboardCheck className="h-3.5 w-3.5 mr-1" /> Verify & add client
                 </Button>
               )}
               <Button variant="ghost" size="sm" className="ml-auto text-muted-foreground" onClick={() => onClear(prompt)}>

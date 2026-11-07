@@ -105,9 +105,93 @@
     "response_notes": {
       "type": "string"
     },
+    "response_details": {
+      "type": "object",
+      "description": "Everything the person typed into the tablet's client information form \u2014 the same fields reception enters when registering someone. Reception reviews and verifies these before the client file is added to the Central Database.",
+      "properties": {
+        "first_name": {
+          "type": "string"
+        },
+        "last_name": {
+          "type": "string"
+        },
+        "date_of_birth": {
+          "type": "string"
+        },
+        "gender": {
+          "type": "string"
+        },
+        "marital_status": {
+          "type": "string"
+        },
+        "phone": {
+          "type": "string"
+        },
+        "email": {
+          "type": "string"
+        },
+        "address": {
+          "type": "string"
+        },
+        "city": {
+          "type": "string"
+        },
+        "postal_code": {
+          "type": "string"
+        },
+        "preferred_language": {
+          "type": "string"
+        },
+        "additional_languages": {
+          "type": "string"
+        },
+        "dependants_count": {
+          "type": "number"
+        },
+        "dependants_detail": {
+          "type": "string"
+        },
+        "indigenous_first_nations": {
+          "type": "boolean"
+        },
+        "newcomer": {
+          "type": "boolean"
+        },
+        "senior": {
+          "type": "boolean"
+        },
+        "youth_under_25": {
+          "type": "boolean"
+        },
+        "english_proficiency": {
+          "type": "string"
+        },
+        "english_proficiency_notes": {
+          "type": "string"
+        },
+        "emergency_contact_name": {
+          "type": "string"
+        },
+        "emergency_contact_phone": {
+          "type": "string"
+        },
+        "reason_for_accessing": {
+          "type": "string"
+        },
+        "reason_for_accessing_other": {
+          "type": "string"
+        },
+        "identified_needs": {
+          "type": "string"
+        },
+        "notes": {
+          "type": "string"
+        }
+      }
+    },
     "rc_client_id": {
       "type": "string",
-      "description": "Central Database client file created from a sign-in at the tablet, so reception can open the person's file straight from the prompt"
+      "description": "Central Database client file created (or matched) from a sign-in at the tablet, set once reception has verified the details, so reception can open the file straight from the prompt"
     },
     "sent_by_name": {
       "type": "string",

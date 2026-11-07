@@ -6,6 +6,7 @@ import { Loader2, Plus, Tablet, ExternalLink } from 'lucide-react';
 import KioskStationCard from '@/components/reception/kiosk/KioskStationCard';
 import KioskStationDialog from '@/components/reception/kiosk/KioskStationDialog';
 import KioskSendPromptDialog from '@/components/reception/kiosk/KioskSendPromptDialog';
+import KioskClientVerificationDialog from '@/components/reception/kiosk/KioskClientVerificationDialog';
 import DonationDialog from '@/components/donors/DonationDialog';
 
 // Reception's remote control for the customer tablet: send a donation ask, an
@@ -23,6 +24,7 @@ export default function ReceptionCustomerKiosk() {
   const [sendTo, setSendTo] = useState(null);
   const [sendKind, setSendKind] = useState('donation');
   const [gift, setGift] = useState(null);
+  const [verifying, setVerifying] = useState(null);
 
   const loadStations = useCallback(async () => {
     const rows = await base44.entities.KioskStation.list('-created_date', 50);
@@ -127,6 +129,7 @@ export default function ReceptionCustomerKiosk() {
               onEdit={(row) => { setEditingStation(row); setStationDialogOpen(true); }}
               onClear={clearPrompt}
               onRecordGift={recordGift}
+              onVerifyClient={setVerifying}
             />
           ))}
         </div>
@@ -149,6 +152,13 @@ export default function ReceptionCustomerKiosk() {
           onSent={loadPrompts}
         />
       )}
+
+      <KioskClientVerificationDialog
+        open={!!verifying}
+        prompt={verifying}
+        onOpenChange={(open) => { if (!open) setVerifying(null); }}
+        onSaved={loadPrompts}
+      />
 
       <DonationDialog
         open={!!gift}
