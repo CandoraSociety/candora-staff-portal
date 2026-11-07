@@ -110,7 +110,7 @@ export default function ReceptionCustomerKiosk() {
           <Tablet className="h-10 w-10 mx-auto text-muted-foreground" />
           <h2 className="font-semibold text-lg">No customer tablets yet</h2>
           <p className="text-sm text-muted-foreground max-w-md mx-auto">
-            Add a tablet to get a code. On the tablet itself, open <span className="font-mono">/kiosk</span> and type that code once — it then stays connected and shows whatever you send it.
+            Add the tablet that sits on the counter. On the tablet itself, open <span className="font-mono">/kiosk</span> once — it stays on the welcome screen and shows whatever you send it.
           </p>
           <Button onClick={() => { setEditingStation(null); setStationDialogOpen(true); }}>
             <Plus className="h-4 w-4" /> Add the first tablet

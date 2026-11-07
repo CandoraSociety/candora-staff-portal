@@ -63,20 +63,9 @@ export default function KioskStationDialog({ open, onOpenChange, station, onSave
             <Label>Where it sits</Label>
             <Input value={form.location} onChange={(e) => setForm(p => ({ ...p, location: e.target.value }))} placeholder="Main lobby" />
           </div>
-          <div className="space-y-1.5">
-            <Label>Tablet code</Label>
-            <div className="flex gap-2">
-              <Input
-                value={form.access_code}
-                onChange={(e) => setForm(p => ({ ...p, access_code: e.target.value.replace(/[^0-9]/g, '').slice(0, 6) }))}
-                className="font-mono tracking-widest text-center text-lg"
-              />
-              <Button variant="outline" onClick={() => setForm(p => ({ ...p, access_code: newCode() }))}>New code</Button>
-            </div>
-            <p className="text-xs text-muted-foreground">
-              Open the tablet, go to <span className="font-mono">/kiosk</span> and type this code once.
-            </p>
-          </div>
+          <p className="text-xs text-muted-foreground">
+            The tablet opens straight onto the welcome screen — open <span className="font-mono">/kiosk</span> on it and leave it there.
+          </p>
           {error && <p className="text-sm text-destructive">{error}</p>}
           <div className="flex items-center gap-2">
             {station && (

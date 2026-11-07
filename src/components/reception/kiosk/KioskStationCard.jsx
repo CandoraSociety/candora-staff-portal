@@ -1,7 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Heart, ShoppingBag, ClipboardCheck, Info, Copy, Pencil, Wifi, WifiOff, X, Gift } from 'lucide-react';
-import { toast } from 'sonner';
+import { Heart, ShoppingBag, ClipboardCheck, Info, Pencil, Wifi, WifiOff, X, Gift } from 'lucide-react';
 
 const KIND_LABEL = {
   donation: 'Donation',
@@ -91,21 +90,6 @@ export default function KioskStationCard({ station, prompt, onSend, onEdit, onCl
           <Pencil className="h-4 w-4" />
         </Button>
       </div>
-
-      <button
-        onClick={() => {
-          navigator.clipboard?.writeText(station.access_code);
-          toast.success('Tablet code copied');
-        }}
-        className="w-full flex items-center justify-between rounded-lg bg-muted px-3 py-2 hover:bg-muted/70 transition-colors"
-        title="Copy the code to type on the tablet"
-      >
-        <span className="text-xs text-muted-foreground">Tablet code</span>
-        <span className="flex items-center gap-2 font-mono text-lg font-bold tracking-widest">
-          {station.access_code}
-          <Copy className="h-3.5 w-3.5 text-muted-foreground" />
-        </span>
-      </button>
 
       <div className="grid grid-cols-2 gap-2">
         <Button variant="outline" className="justify-start" onClick={() => onSend(station, 'donation')}>
