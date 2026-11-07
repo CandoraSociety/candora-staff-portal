@@ -2,21 +2,46 @@ import React from 'react';
 import { HandHeart } from 'lucide-react';
 
 // The resting screen: the tablet sits here until reception sends it something.
+// Background is built from the organization's own brand colours so the tablet
+// always matches the rest of the building.
 export default function KioskIdle({ brand }) {
+  const gold = brand?.primary_color || '#f5be19';
+  const navy = brand?.secondary_color || '#0f1f6b';
+
   return (
-    <div className="min-h-screen bg-sidebar flex flex-col">
-      <div className="flex-1 flex flex-col items-center justify-center px-8 text-center">
+    <div
+      className="min-h-screen flex flex-col"
+      style={{
+        background: `
+          radial-gradient(120% 90% at 50% 0%, ${gold}33 0%, transparent 58%),
+          radial-gradient(100% 80% at 10% 100%, ${navy} 0%, transparent 65%),
+          linear-gradient(155deg, ${navy} 0%, #0a1440 48%, #060c26 100%)
+        `,
+      }}
+    >
+      <div className="flex-1 flex flex-col items-center justify-center px-8 py-16 text-center">
         {brand?.logo_url ? (
-          <img src={brand.logo_url} alt={brand.name} className="h-20 w-auto object-contain" />
+          <img
+            src={brand.logo_url}
+            alt={brand.name}
+            className="w-auto object-contain h-56 sm:h-72 lg:h-80 max-w-[80vw] drop-shadow-[0_18px_40px_rgba(0,0,0,0.45)]"
+          />
         ) : (
-          <div className="h-20 w-20 rounded-3xl bg-sidebar-primary flex items-center justify-center">
-            <HandHeart className="h-9 w-9 text-sidebar-primary-foreground" />
+          <div
+            className="h-48 w-48 rounded-[2rem] flex items-center justify-center shadow-2xl"
+            style={{ backgroundColor: gold }}
+          >
+            <HandHeart className="h-24 w-24" style={{ color: navy }} />
           </div>
         )}
-        <h1 className="mt-8 text-sidebar-foreground font-display font-bold text-4xl sm:text-5xl leading-tight">
+
+        <h1 className="mt-12 text-white font-display font-bold text-5xl sm:text-6xl leading-tight drop-shadow">
           Welcome to {brand?.name || 'Candora'}
         </h1>
-        <p className="mt-4 text-sidebar-foreground/70 text-xl max-w-xl">
+
+        <div className="mt-8 h-1 w-24 rounded-full" style={{ backgroundColor: gold }} />
+
+        <p className="mt-8 text-white/70 text-xl sm:text-2xl max-w-2xl">
           Please speak with the reception team — they will help you at the counter.
         </p>
       </div>
