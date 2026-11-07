@@ -7,6 +7,8 @@ import KioskStationCard from '@/components/reception/kiosk/KioskStationCard';
 import KioskStationDialog from '@/components/reception/kiosk/KioskStationDialog';
 import KioskSendPromptDialog from '@/components/reception/kiosk/KioskSendPromptDialog';
 import KioskClientVerificationDialog from '@/components/reception/kiosk/KioskClientVerificationDialog';
+import KioskReceiptDialog from '@/components/reception/kiosk/KioskReceiptDialog';
+import KioskRecentCompletions from '@/components/reception/kiosk/KioskRecentCompletions';
 import DonationDialog from '@/components/donors/DonationDialog';
 
 // Reception's remote control for the customer tablet: send a donation ask, an
@@ -25,6 +27,7 @@ export default function ReceptionCustomerKiosk() {
   const [sendKind, setSendKind] = useState('donation');
   const [gift, setGift] = useState(null);
   const [verifying, setVerifying] = useState(null);
+  const [receipt, setReceipt] = useState(null);
 
   const loadStations = useCallback(async () => {
     const rows = await base44.entities.KioskStation.list('-created_date', 50);
@@ -130,10 +133,13 @@ export default function ReceptionCustomerKiosk() {
               onClear={clearPrompt}
               onRecordGift={recordGift}
               onVerifyClient={setVerifying}
+              onReceipt={setReceipt}
             />
           ))}
         </div>
       )}
+
+      <KioskRecentCompletions prompts={prompts} onReceipt={setReceipt} />
 
       <KioskStationDialog
         open={stationDialogOpen}
@@ -150,6 +156,14 @@ export default function ReceptionCustomerKiosk() {
           initialKind={sendKind}
           sentByName={user?.full_name}
           onSent={loadPrompts}
+        />
+      )}
+
+      {receipt && (
+        <KioskReceiptDialog
+          open={!!receipt}
+          onOpenChange={(open) => { if (!open) setReceipt(null); }}
+          prompt={receipt}
         />
       )}
 

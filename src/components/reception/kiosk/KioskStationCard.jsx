@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Heart, ShoppingBag, ClipboardCheck, Pencil, Wifi, WifiOff, X, Gift } from 'lucide-react';
+import { Heart, ShoppingBag, ClipboardCheck, Pencil, Wifi, WifiOff, X, Gift, Receipt } from 'lucide-react';
 
 const KIND_LABEL = {
   donation: 'Donation',
@@ -75,7 +75,7 @@ function ResponseSummary({ prompt }) {
   return <p className="text-sm text-muted-foreground">Message acknowledged.</p>;
 }
 
-export default function KioskStationCard({ station, prompt, onSend, onEdit, onClear, onRecordGift, onVerifyClient }) {
+export default function KioskStationCard({ station, prompt, onSend, onEdit, onClear, onRecordGift, onVerifyClient, onReceipt }) {
   const online = isOnline(station);
   const active = prompt && ['sent', 'opened'].includes(prompt.status);
 
@@ -142,6 +142,11 @@ export default function KioskStationCard({ station, prompt, onSend, onEdit, onCl
               {prompt.kind === 'donation' && (
                 <Button size="sm" onClick={() => onRecordGift(prompt)}>
                   <Gift className="h-3.5 w-3.5 mr-1" /> Record gift
+                </Button>
+              )}
+              {['donation', 'purchase'].includes(prompt.kind) && (
+                <Button size="sm" variant="outline" onClick={() => onReceipt(prompt)}>
+                  <Receipt className="h-3.5 w-3.5 mr-1" /> Receipt
                 </Button>
               )}
               {prompt.kind === 'self_registration' && !prompt.rc_client_id && (
