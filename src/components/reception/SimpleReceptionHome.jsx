@@ -4,6 +4,7 @@ import { CalendarDays, DoorOpen, ShoppingBasket, Siren, ArrowRight, Search } fro
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import UrgentAlertDialog from '@/components/reception/UrgentAlertDialog';
+import LeaveMessageButton from '@/components/reception/LeaveMessageButton';
 import { useReceptionOperator } from '@/lib/useReceptionOperator';
 import { isReceptionPortalRoute } from '@/lib/receptionPortalSession';
 
@@ -55,9 +56,13 @@ export default function SimpleReceptionHome() {
             {new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
           </p>
         </div>
-        <Button variant="destructive" onClick={() => setUrgentOpen(true)}>
-          <Siren className="h-4 w-4" /> Urgent Alert
-        </Button>
+        <div className="flex items-center gap-2">
+          <Link to={`${base}/urgent`} className="text-xs text-muted-foreground hover:text-foreground hover:underline whitespace-nowrap">Sent alerts</Link>
+          <LeaveMessageButton fromName={user?.full_name} />
+          <Button variant="destructive" onClick={() => setUrgentOpen(true)}>
+            <Siren className="h-4 w-4" /> Urgent Alert
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-5">

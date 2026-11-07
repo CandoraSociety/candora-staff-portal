@@ -2,14 +2,13 @@ import React, { useState } from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, CalendarDays, DoorOpen, UserSearch, Users, ClipboardList,
-  Search, Siren, Menu, X, LogOut, ShoppingBasket,
+  Search, Menu, X, LogOut, ShoppingBasket,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useOrgSettings } from '@/lib/useOrgSettings';
 import SimpleModeToggle from '@/components/shared/SimpleModeToggle';
 import { useSimpleMode } from '@/lib/useSimpleMode';
 import { endReceptionPortalSession, getReceptionPortalSession } from '@/lib/receptionPortalSession';
-import LeaveMessageButton from '@/components/reception/LeaveMessageButton';
 
 // The external Reception portal mirrors the internal one but keeps its own
 // paths, offers no way back into the staff app, and shows who is at the desk.
@@ -20,7 +19,6 @@ const FULL_NAV = [
   { path: '/reception-portal/staff', label: 'Staff Directory', icon: Users },
   { path: '/reception-portal/registration', label: 'Program Registration', icon: ClipboardList },
   { path: '/reception-portal/resources', label: 'Resource Finder', icon: Search },
-  { path: '/reception-portal/urgent', label: 'Urgent Alerts', icon: Siren },
 ];
 
 const SIMPLE_NAV = [
@@ -91,7 +89,6 @@ export default function ReceptionPortalLayout() {
           </nav>
 
           <div className="flex items-center gap-3 shrink-0">
-            <LeaveMessageButton fromName={operatorName} onDark />
             <div className="hidden sm:block">
               <SimpleModeToggle simpleMode={simpleMode} onChange={setSimpleMode} onDark />
             </div>

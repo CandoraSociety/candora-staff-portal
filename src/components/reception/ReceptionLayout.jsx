@@ -1,13 +1,11 @@
 import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, CalendarDays, UserSearch, Users, ClipboardList, Search, Siren, Menu, X, ArrowLeft, DoorOpen, ExternalLink, ShoppingBasket, Tablet } from 'lucide-react';
+import { LayoutDashboard, CalendarDays, UserSearch, Users, ClipboardList, Search, Menu, X, ArrowLeft, DoorOpen, ExternalLink, ShoppingBasket, Tablet } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useOrgSettings } from '@/lib/useOrgSettings';
 import EAFloatingWidget from '@/components/ed/EAFloatingWidget';
 import SimpleModeToggle from '@/components/shared/SimpleModeToggle';
 import { useSimpleMode } from '@/lib/useSimpleMode';
-import { useAuth } from '@/lib/AuthContext';
-import LeaveMessageButton from '@/components/reception/LeaveMessageButton';
 
 const NAV_ITEMS = [
   { path: '/reception', label: 'Dashboard', icon: LayoutDashboard },
@@ -16,7 +14,6 @@ const NAV_ITEMS = [
   { path: '/reception/staff', label: 'Staff Directory', icon: Users },
   { path: '/reception/registration', label: 'Program Registration', icon: ClipboardList },
   { path: '/reception/resources', label: 'Resource Finder', icon: Search },
-  { path: '/reception/urgent', label: 'Urgent Alerts', icon: Siren },
   { path: '/reception/customer-kiosk', label: 'Customer Kiosk', icon: Tablet },
 ];
 
@@ -33,7 +30,6 @@ export default function ReceptionLayout() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { logoUrl, orgName } = useOrgSettings();
   const { simpleMode, setSimpleMode } = useSimpleMode();
-  const { user } = useAuth();
 
   const navItems = simpleMode ? SIMPLE_NAV_ITEMS : NAV_ITEMS;
 
@@ -54,7 +50,6 @@ export default function ReceptionLayout() {
             ); })}
           </nav>
           <div className="flex items-center gap-3 shrink-0">
-            <LeaveMessageButton fromName={user?.full_name} onDark />
             <a
               href="/reception-portal"
               target="_blank"
