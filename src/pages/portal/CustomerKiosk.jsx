@@ -90,10 +90,14 @@ export default function CustomerKiosk() {
   const poll = useCallback(async () => {
     if (!session) return;
     try {
+      // The tablet's own clock, so the class schedule is read in local time.
+      const now = new Date();
       const res = await base44.functions.invoke('kioskApi', {
         action: 'poll',
         station_id: session.id,
         access_code: session.code,
+        local_date: `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`,
+        local_minutes: now.getHours() * 60 + now.getMinutes(),
       });
       const data = res.data || {};
       if (data.brand) setBrand(data.brand);

@@ -81,7 +81,7 @@ export default function CentralRegTablets() {
           <Tablet className="h-6 w-6 text-primary" /> Classroom Tablets
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Wall-mounted tablets in the classrooms. Open <span className="font-mono">/kiosk</span> on a tablet once and type its code — after that it waits on the welcome screen and shows the sign-in form you send it.
+          Wall-mounted tablets in the classrooms. Open <span className="font-mono">/kiosk</span> on a tablet once and type its code — after that it waits on the welcome screen and shows the sign-in form you send it. Tablets also open the form on their own: 30 minutes before a scheduled ELL class or FRN session, until 10 minutes after it ends.
         </p>
       </div>
 

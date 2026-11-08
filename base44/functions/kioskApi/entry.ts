@@ -51,6 +51,149 @@ const num = (value) => {
   return Number.isFinite(parsed) ? parsed : null;
 };
 
+/* ---------------------------------------------------------------------------
+   Automatic classroom check-in.
+   A classroom tablet opens the sign-in form 30 minutes before a scheduled class
+   and closes it 10 minutes after the class ends. The tablet sends its own local
+   date and clock time, so the schedule is read in the room's time, not UTC.
+--------------------------------------------------------------------------- */
+
+const AUTO_SENDER = 'Automatic schedule';
+const OPEN_BEFORE_MIN = 30;
+const CLOSE_AFTER_MIN = 10;
+const REPEAT_COOLDOWN_MS = 5 * 60 * 1000;
+const RESYNC_MS = 60 * 1000;
+const PROGRAM_LABEL: Record<string, string> = { ell: 'ELL', empoweru: 'EmpowerU', frn: 'FRN' };
+const DAY_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+
+const lastSync = new Map<string, number>();
+
+const minutesOf = (hhmm) => {
+  const match = /^(\d{1,2}):(\d{2})/.exec(String(hhmm || ''));
+  if (!match) return null;
+  return Number(match[1]) * 60 + Number(match[2]);
+};
+
+const parseLocalDate = (value) => {
+  const parts = String(value || '').slice(0, 10).split('-').map(Number);
+  if (parts.length !== 3 || !parts[0] || !parts[1] || !parts[2]) return null;
+  return new Date(parts[0], parts[1] - 1, parts[2]);
+};
+
+const isoDate = (date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
+// FRN sessions repeat from their base date until the repeat-until date.
+const occursOn = (row, dateStr) => {
+  const start = parseLocalDate(row.session_date);
+  const target = parseLocalDate(dateStr);
+  if (!start || !target || target.getTime() < start.getTime()) return false;
+  const until = parseLocalDate(row.recurrence_end_date);
+  if (until && target.getTime() > until.getTime()) return false;
+  const pattern = row.recurrence_pattern || 'none';
+  if (pattern === 'none') return isoDate(start) === dateStr;
+  if (pattern === 'monthly') return start.getDate() === target.getDate();
+  const step = pattern === 'biweekly' ? 14 : 7;
+  const days = Math.round((target.getTime() - start.getTime()) / 86400000);
+  return days % step === 0;
+};
+
+// The classes that actually run on this date, as start/end minutes after midnight.
+async function sessionsOnDate(base44, station, dateStr) {
+  const program = station.program || 'reception';
+  const withTimes = (row, course) => {
+    const start = minutesOf(row.start_time);
+    const end = minutesOf(row.end_time);
+    if (start === null || end === null) return null;
+    return { course, start, end };
+  };
+
+  if (program === 'ell') {
+    const rows = await base44.asServiceRole.entities.ELLClass.filter({ status: 'active' }, '-created_date', 200);
+    const weekday = DAY_KEYS[parseLocalDate(dateStr).getDay()];
+    return (rows || [])
+      .filter(
+        (row) =>
+          (row.schedule_days || []).includes(weekday) &&
+          (!row.start_date || dateStr >= row.start_date) &&
+          (!row.end_date || dateStr <= row.end_date),
+      )
+      .map((row) => withTimes(row, row.name))
+      .filter(Boolean)
+      .sort((a, b) => a.start - b.start);
+  }
+
+  if (program === 'frn') {
+    const rows = await base44.asServiceRole.entities.FRNSession.filter({}, '-session_date', 500);
+    return (rows || [])
+      .filter((row) => row.status !== 'cancelled' && occursOn(row, dateStr))
+      .map((row) => withTimes(row, row.program_name || 'FRN session'))
+      .filter(Boolean)
+      .sort((a, b) => a.start - b.start);
+  }
+
+  // EmpowerU cohorts carry only a start and end date, no class times, so there is
+  // nothing to open automatically for them.
+  return [];
+}
+
+async function syncScheduledPrompt(base44, station, localDate, localMinutes) {
+  const program = station.program || 'reception';
+  if (!PROGRAM_LABEL[program]) return;
+
+  const dateStr = /^\d{4}-\d{2}-\d{2}$/.test(code(localDate)) ? code(localDate) : isoDate(new Date());
+  const nowMinutes = Number(localMinutes);
+  if (!Number.isFinite(nowMinutes)) return;
+
+  const sessions = await sessionsOnDate(base44, station, dateStr);
+  const openSession =
+    sessions.find((row) => nowMinutes >= row.start - OPEN_BEFORE_MIN && nowMinutes <= row.end + CLOSE_AFTER_MIN) || null;
+
+  const recent = await base44.asServiceRole.entities.KioskPrompt.filter({ station_id: station.id }, '-created_date', 60);
+  const auto = (recent || []).filter((row) => row.sent_by_name === AUTO_SENDER);
+  const liveAuto = auto.filter((row) => row.status === 'sent' || row.status === 'opened');
+
+  if (!openSession) {
+    for (const row of liveAuto) {
+      await base44.asServiceRole.entities.KioskPrompt.update(row.id, { status: 'dismissed' });
+    }
+    return;
+  }
+
+  // A form is already waiting on the tablet for this class — leave it alone.
+  if (liveAuto.some((row) => row.course_name === openSession.course)) return;
+
+  // Never stomp on something a staff member sent by hand.
+  const staffLive = (recent || []).some(
+    (row) => row.sent_by_name !== AUTO_SENDER && (row.status === 'sent' || row.status === 'opened'),
+  );
+  if (staffLive) return;
+
+  // Do not respawn the form the instant someone backs out: wait a few minutes.
+  const last = auto.find((row) => row.course_name === openSession.course);
+  if (last) {
+    const stamp = new Date(last.updated_date || last.created_date || 0).getTime();
+    if (Date.now() - stamp < REPEAT_COOLDOWN_MS) return;
+  }
+
+  for (const row of liveAuto) {
+    await base44.asServiceRole.entities.KioskPrompt.update(row.id, { status: 'dismissed' });
+  }
+
+  const label = PROGRAM_LABEL[program];
+  await base44.asServiceRole.entities.KioskPrompt.create({
+    station_id: station.id,
+    station_name: station.name,
+    program,
+    course_name: openSession.course,
+    kind: 'self_registration',
+    title: `${openSession.course} sign-in`,
+    message: `Fill in your details so we can register you for ${openSession.course}. A staff member will go over them with you.`,
+    status: 'sent',
+    sent_by_name: AUTO_SENDER,
+  });
+}
+
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
@@ -120,6 +263,17 @@ export default async function (req) {
       const lastSeen = station.last_seen ? new Date(station.last_seen).getTime() : 0;
       if (Date.now() - lastSeen > 55000) {
         await base44.asServiceRole.entities.KioskStation.update(station.id, { last_seen: new Date().toISOString() });
+      }
+
+      // Classroom tablets follow the class schedule: check once a minute, not on
+      // every three-second poll.
+      const program = station.program || 'reception';
+      if (program !== 'reception') {
+        const last = lastSync.get(station.id) || 0;
+        if (Date.now() - last > RESYNC_MS) {
+          lastSync.set(station.id, Date.now());
+          await syncScheduledPrompt(base44, station, body.local_date, body.local_minutes);
+        }
       }
 
       const open = await base44.asServiceRole.entities.KioskPrompt.filter(
