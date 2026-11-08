@@ -1,36 +1,57 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Loader2, Plus, Tablet } from 'lucide-react';
+import { Loader2, Tablet } from 'lucide-react';
 import ProgramTabletCard from '@/components/centralreg/tablets/ProgramTabletCard';
+import ProgramSectionHeader from '@/components/centralreg/tablets/ProgramSectionHeader';
 import ProgramSignInDialog from '@/components/centralreg/tablets/ProgramSignInDialog';
 import KioskStationDialog from '@/components/reception/kiosk/KioskStationDialog';
 import KioskClientVerificationDialog from '@/components/reception/kiosk/KioskClientVerificationDialog';
 import { KIOSK_PROGRAMS } from '@/lib/kioskPrograms';
 
-// Classroom tablets for ELL, EmpowerU, FRN and Central Registration itself.
-// Each wall-mounted tablet shows the sign-in form sent from here, and whatever
-// the person types comes back to be checked before it becomes a client file.
+// Classroom tablets for ELL, EmpowerU and FRN. Each wall-mounted tablet shows the
+// sign-in form sent from here, and whatever the person types comes back to be
+// checked before it becomes a client file.
+const CLASSROOM_PROGRAMS = KIOSK_PROGRAMS.map((program) => program.id);
+
 export default function CentralRegTablets() {
   const { user } = useAuth();
   const [stations, setStations] = useState([]);
   const [prompts, setPrompts] = useState([]);
+  const [options, setOptions] = useState({ ell: [], empoweru: [], frn: [] });
+  const [picked, setPicked] = useState({});
   const [loading, setLoading] = useState(true);
 
-  const [stationDialog, setStationDialog] = useState({ open: false, station: null, program: 'central_registration' });
+  const [stationDialog, setStationDialog] = useState({ open: false, station: null, program: 'ell' });
   const [sendTo, setSendTo] = useState(null);
   const [verifying, setVerifying] = useState(null);
 
   const loadStations = useCallback(async () => {
     const rows = await base44.entities.KioskStation.list('-created_date', 100);
-    setStations((rows || []).filter((row) => (row.program || 'reception') !== 'reception'));
+    setStations((rows || []).filter((row) => CLASSROOM_PROGRAMS.includes(row.program)));
     setLoading(false);
   }, []);
 
   const loadPrompts = useCallback(async () => {
     const rows = await base44.entities.KioskPrompt.list('-created_date', 80);
-    setPrompts((rows || []).filter((row) => (row.program || 'reception') !== 'reception'));
+    setPrompts((rows || []).filter((row) => CLASSROOM_PROGRAMS.includes(row.program)));
+  }, []);
+
+  // The programs and classes inside each group, so staff pick one instead of typing it.
+  useEffect(() => {
+    (async () => {
+      const [classes, cohorts, programs] = await Promise.all([
+        base44.entities.ELLClass.list('-created_date', 100),
+        base44.entities.EmpowerUCohort.list('-created_date', 50),
+        base44.entities.FRNProgram.list('-created_date', 100),
+      ]);
+      const uniqueNames = (rows) => [...new Set((rows || []).map((row) => row.name).filter(Boolean))];
+      setOptions({
+        ell: uniqueNames(classes),
+        empoweru: uniqueNames(cohorts),
+        frn: uniqueNames((programs || []).filter((row) => row.status !== 'completed')),
+      });
+    })();
   }, []);
 
   useEffect(() => {
@@ -69,22 +90,16 @@ export default function CentralRegTablets() {
       ) : (
         <div className="space-y-8">
           {KIOSK_PROGRAMS.map((program) => {
-            const rows = stations.filter((station) => (station.program || 'central_registration') === program.id);
+            const rows = stations.filter((station) => station.program === program.id);
             return (
               <section key={program.id} className="space-y-3">
-                <div className="flex flex-wrap items-start justify-between gap-2">
-                  <div>
-                    <h2 className="text-lg font-semibold">{program.label}</h2>
-                    <p className="text-sm text-muted-foreground">{program.blurb}</p>
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setStationDialog({ open: true, station: null, program: program.id })}
-                  >
-                    <Plus className="h-4 w-4" /> Add tablet
-                  </Button>
-                </div>
+                <ProgramSectionHeader
+                  program={program}
+                  options={options[program.id] || []}
+                  selected={picked[program.id] || ''}
+                  onSelect={(value) => setPicked((prev) => ({ ...prev, [program.id]: value }))}
+                  onAddTablet={() => setStationDialog({ open: true, station: null, program: program.id })}
+                />
 
                 {rows.length === 0 ? (
                   <div className="rounded-xl border border-dashed bg-card p-6 text-center">
@@ -126,6 +141,8 @@ export default function CentralRegTablets() {
           open={!!sendTo}
           onOpenChange={(open) => { if (!open) setSendTo(null); }}
           station={sendTo}
+          options={options[sendTo.program] || []}
+          defaultCourse={picked[sendTo.program] || ''}
           sentByName={user?.full_name}
           onSent={loadPrompts}
         />

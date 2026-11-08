@@ -4,11 +4,6 @@ export const RECEPTION_PROGRAM = 'reception';
 
 export const KIOSK_PROGRAMS = [
   {
-    id: 'central_registration',
-    label: 'Central Registration',
-    blurb: 'Front-desk registration for people signing up to any Candora program.',
-  },
-  {
     id: 'ell',
     label: 'ELL',
     blurb: 'English Language Learning classrooms — learners sign in and register at the wall tablet.',
@@ -30,8 +25,12 @@ export const ALL_KIOSK_PROGRAMS = [
   ...KIOSK_PROGRAMS,
 ];
 
-export const programInfo = (id) =>
-  ALL_KIOSK_PROGRAMS.find((program) => program.id === (id || RECEPTION_PROGRAM)) || ALL_KIOSK_PROGRAMS[0];
+export const programInfo = (id) => {
+  // Old prompts were sent to a "Central Registration" tablet, before the
+  // classroom tablets were split into ELL, EmpowerU and FRN.
+  if (id === 'central_registration') return { id, label: 'Central Registration', blurb: '' };
+  return ALL_KIOSK_PROGRAMS.find((program) => program.id === (id || RECEPTION_PROGRAM)) || ALL_KIOSK_PROGRAMS[0];
+};
 
 export const programLabel = (id) => programInfo(id).label;
 

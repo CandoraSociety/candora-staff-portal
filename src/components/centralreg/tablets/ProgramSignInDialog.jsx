@@ -5,15 +5,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { programLabel } from '@/lib/kioskPrograms';
 
 const defaultMessage = (label) =>
-  `Fill in your details so we can register you${label === 'Central Registration' ? '' : ` for ${label}`}. A staff member will go over them with you.`;
+  `Fill in your details so we can register you for ${label}. A staff member will go over them with you.`;
 
 // Sends the sign-in / self-registration form to a classroom tablet. The tablet
 // shows it the moment this is sent, and the answers come back here.
-export default function ProgramSignInDialog({ open, onOpenChange, station, sentByName, onSent }) {
-  const program = station?.program || 'central_registration';
+export default function ProgramSignInDialog({ open, onOpenChange, station, sentByName, onSent, options = [], defaultCourse = '' }) {
+  const program = station?.program || 'ell';
   const label = programLabel(program);
   const [course, setCourse] = useState('');
   const [title, setTitle] = useState(`${label} sign-in`);
@@ -23,11 +24,11 @@ export default function ProgramSignInDialog({ open, onOpenChange, station, sentB
 
   useEffect(() => {
     if (!open) return;
-    setCourse('');
+    setCourse(defaultCourse || '');
     setTitle(`${label} sign-in`);
     setMessage(defaultMessage(label));
     setError('');
-  }, [open, station?.id]);
+  }, [open, station?.id, defaultCourse]);
 
   const save = async () => {
     if (saving) return;
@@ -63,8 +64,21 @@ export default function ProgramSignInDialog({ open, onOpenChange, station, sentB
 
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label>Class or session (optional)</Label>
-            <Input value={course} onChange={(e) => setCourse(e.target.value)} placeholder="e.g. ELL Level 2 — Tuesday morning" />
+            <Label>Program or class (optional)</Label>
+            {options.length > 0 ? (
+              <Select value={course} onValueChange={setCourse}>
+                <SelectTrigger>
+                  <SelectValue placeholder={`Choose a ${label} program`} />
+                </SelectTrigger>
+                <SelectContent>
+                  {options.map((option) => (
+                    <SelectItem key={option} value={option}>{option}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <Input value={course} onChange={(e) => setCourse(e.target.value)} placeholder="e.g. ELL Level 2 — Tuesday morning" />
+            )}
             <p className="text-xs text-muted-foreground">Shown with the sign-in on the tablet and kept with the registration.</p>
           </div>
 

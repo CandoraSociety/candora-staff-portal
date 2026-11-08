@@ -27,7 +27,12 @@ const SUCCESS_COPY = {
 export default function CustomerKiosk() {
   const [session, setSession] = useState(() => {
     try {
-      return JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+      const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+      // ?program= opens one group's portal on its own, even on a browser that
+      // was already paired with a different tablet.
+      const urlProgram = new URLSearchParams(window.location.search).get('program');
+      if (urlProgram && (stored?.program || 'reception') !== urlProgram) return null;
+      return stored;
     } catch {
       return null;
     }
