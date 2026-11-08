@@ -68,17 +68,25 @@ export default async function (req) {
       }
       await base44.asServiceRole.entities.KioskStation.update(station.id, { last_seen: new Date().toISOString() });
       return Response.json({
-        station: { id: station.id, name: station.name, access_code: station.access_code },
+        station: {
+          id: station.id,
+          name: station.name,
+          access_code: station.access_code,
+          program: station.program || 'reception',
+        },
         brand: await brand(base44),
       });
     }
 
-    // The front-desk tablet is a permanent fixture: it opens straight onto the
-    // welcome screen and picks up its station on its own. A ?code= in its home
-    // screen shortcut pins it to one station when more than one exists.
+    // A tablet is a permanent fixture: it opens straight onto the welcome screen
+    // and picks up its station on its own. ?program= narrows it to one portal's
+    // tablets, and ?code= pins it to one station when a program has several.
     if (action === 'station') {
+      const wantedProgram = code(body.program);
       const rows = await base44.asServiceRole.entities.KioskStation.filter({ is_active: true }, '-created_date', 200);
-      const active = rows || [];
+      const active = (rows || []).filter(
+        (row) => !wantedProgram || (row.program || 'reception') === wantedProgram,
+      );
       const wanted = code(body.access_code).toLowerCase();
       const match = wanted
         ? active.find((row) => code(row.access_code).toLowerCase() === wanted)
@@ -91,7 +99,12 @@ export default async function (req) {
       }
       await base44.asServiceRole.entities.KioskStation.update(match.id, { last_seen: new Date().toISOString() });
       return Response.json({
-        station: { id: match.id, name: match.name, access_code: match.access_code },
+        station: {
+          id: match.id,
+          name: match.name,
+          access_code: match.access_code,
+          program: match.program || 'reception',
+        },
         brand: await brand(base44),
       });
     }

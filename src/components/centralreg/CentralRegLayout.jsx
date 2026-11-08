@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { LayoutDashboard, ClipboardList, Users, ListOrdered, HeartHandshake, Menu, X, ArrowLeft, ClipboardCheck, CalendarDays, Inbox } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, Users, ListOrdered, HeartHandshake, Menu, X, ArrowLeft, ClipboardCheck, CalendarDays, Inbox, Tablet } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useOrgSettings } from '@/lib/useOrgSettings';
 import EAFloatingWidget from '@/components/ed/EAFloatingWidget';
@@ -12,6 +12,7 @@ const NAV_ITEMS = [
   { path: '/central-registration/programs', label: 'Programs & Registration', icon: ClipboardList },
   { path: '/central-registration/registrations', label: 'All Registrations', icon: Users },
   { path: '/central-registration/requests', label: 'Registration Requests', icon: Inbox },
+  { path: '/central-registration/tablets', label: 'Classroom Tablets', icon: Tablet },
   { path: '/central-registration/calendar', label: 'Calendar', icon: CalendarDays },
   { path: '/central-registration/waitlists', label: 'Waitlists', icon: ListOrdered },
   { path: '/central-registration/volunteers', label: 'Volunteer Registration', icon: HeartHandshake },

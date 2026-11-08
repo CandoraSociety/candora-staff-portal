@@ -4,7 +4,7 @@ import { HandHeart } from 'lucide-react';
 // The resting screen: the tablet sits here until reception sends it something.
 // Background is built from the organization's own brand colours so the tablet
 // always matches the rest of the building.
-export default function KioskIdle({ brand }) {
+export default function KioskIdle({ brand, programLabel }) {
   const gold = brand?.primary_color || '#f5be19';
   const navy = brand?.secondary_color || '#0f1f6b';
 
@@ -41,9 +41,18 @@ export default function KioskIdle({ brand }) {
 
         <div className="mt-8 h-1 w-24 rounded-full" style={{ backgroundColor: gold }} />
 
-        <p className="mt-8 text-white/70 text-xl sm:text-2xl max-w-2xl">
-          Please speak with the reception team — they will help you at the counter.
-        </p>
+        {programLabel ? (
+          <>
+            <p className="mt-8 text-white font-semibold text-2xl sm:text-3xl">{programLabel} sign-in</p>
+            <p className="mt-3 text-white/70 text-xl max-w-2xl">
+              This tablet will ask for your details when sign-in opens. Your facilitator will let you know.
+            </p>
+          </>
+        ) : (
+          <p className="mt-8 text-white/70 text-xl sm:text-2xl max-w-2xl">
+            Please speak with the reception team — they will help you at the counter.
+          </p>
+        )}
       </div>
     </div>
   );

@@ -2,8 +2,10 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { CheckCircle2 } from 'lucide-react';
 import KioskIdle from '@/components/kiosk/KioskIdle';
+import KioskPairing from '@/components/kiosk/KioskPairing';
 import KioskPromptView from '@/components/kiosk/KioskPromptView';
 import KioskStillThereOverlay from '@/components/kiosk/KioskStillThereOverlay';
+import { programLabel } from '@/lib/kioskPrograms';
 
 const STORAGE_KEY = 'candora_kiosk_station';
 const POLL_MS = 3000;
@@ -40,25 +42,45 @@ export default function CustomerKiosk() {
   const timer = useRef(null);
   const leaving = useRef(false);
 
-  // Find this counter's station on its own. A ?code= in the tablet's home
-  // screen shortcut pins it when more than one station exists.
+  // Find this tablet's station on its own. ?program= narrows it to one portal's
+  // tablets and ?code= pins it to one station when that portal has several.
   const connect = useCallback(async () => {
-    const urlCode = new URLSearchParams(window.location.search).get('code');
+    const params = new URLSearchParams(window.location.search);
+    const urlCode = params.get('code');
+    const urlProgram = params.get('program');
     try {
       const res = await base44.functions.invoke('kioskApi', {
         action: 'station',
         ...(urlCode ? { access_code: urlCode } : {}),
+        ...(urlProgram ? { program: urlProgram } : {}),
       });
       const station = res.data?.station;
       if (res.data?.brand) setBrand(res.data.brand);
       if (!station) return;
-      const next = { id: station.id, name: station.name, code: station.access_code };
+      const next = {
+        id: station.id,
+        name: station.name,
+        code: station.access_code,
+        program: station.program || 'reception',
+      };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
       setSession(next);
     } catch {
-      /* the welcome screen stays up until the tablet is set up */
+      /* the pairing screen asks for the code instead */
     }
   }, []);
+
+  const paired = (station, incomingBrand) => {
+    if (incomingBrand) setBrand(incomingBrand);
+    const next = {
+      id: station.id,
+      name: station.name,
+      code: station.access_code,
+      program: station.program || 'reception',
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    setSession(next);
+  };
 
   const poll = useCallback(async () => {
     if (!session) return;
@@ -136,6 +158,7 @@ export default function CustomerKiosk() {
     setWarning(false);
     setSuccess({
       kind: current.kind,
+      program: current.program || 'reception',
       amount: Number(response.amount) || 0,
       total: Number(response.total) || 0,
     });
@@ -215,7 +238,10 @@ export default function CustomerKiosk() {
   }
 
   if (success) {
-    const copy = SUCCESS_COPY[success.kind] || { title: 'Thank you!', line: 'Reception has your details.' };
+    const isProgramSignIn = success.kind === 'self_registration' && success.program !== 'reception';
+    const copy = isProgramSignIn
+      ? { title: 'Thank you!', line: 'Our registration team has your details — someone will go over them with you.' }
+      : SUCCESS_COPY[success.kind] || { title: 'Thank you!', line: 'Reception has your details.' };
     const amount = success.kind === 'donation' ? success.amount : success.kind === 'purchase' ? success.total : 0;
     return (
       <div className="min-h-screen bg-sidebar flex flex-col items-center justify-center px-8 text-center">
@@ -229,5 +255,13 @@ export default function CustomerKiosk() {
     );
   }
 
-  return <KioskIdle brand={brand} stationName={session?.name} />;
+  if (!session) return <KioskPairing brand={brand} onPaired={paired} />;
+
+  return (
+    <KioskIdle
+      brand={brand}
+      stationName={session.name}
+      programLabel={session.program !== 'reception' ? programLabel(session.program) : ''}
+    />
+  );
 }

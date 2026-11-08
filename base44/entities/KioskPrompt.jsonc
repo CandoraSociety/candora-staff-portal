@@ -1,7 +1,7 @@
 {
   "name": "KioskPrompt",
   "type": "object",
-  "description": "Something the reception portal has put on a customer tablet: a donation ask, an order to take, a sign-in form for someone accessing services in the resource centre, or a message. The tablet shows the newest open prompt and reports back what the customer entered.",
+  "description": "Something a portal has put on one of the tablets: a donation ask, an order to take, a sign-in / self-registration form for a person at the counter or in a classroom, or a message. The tablet shows the newest open prompt and reports back what the person entered.",
   "properties": {
     "station_id": {
       "type": "string",
@@ -10,6 +10,22 @@
     "station_name": {
       "type": "string",
       "description": "Station name (denormalized so lists read without a lookup)"
+    },
+    "program": {
+      "type": "string",
+      "enum": [
+        "reception",
+        "central_registration",
+        "ell",
+        "empoweru",
+        "frn"
+      ],
+      "default": "reception",
+      "description": "Which portal sent this prompt \u2014 the front desk, or Central Registration for an ELL, EmpowerU or FRN classroom"
+    },
+    "course_name": {
+      "type": "string",
+      "description": "Class, course or session the person is signing in for, when the prompt was sent for a specific one"
     },
     "kind": {
       "type": "string",
@@ -20,7 +36,7 @@
         "self_registration"
       ],
       "default": "message",
-      "description": "What the customer sees on the tablet"
+      "description": "What the person sees on the tablet"
     },
     "title": {
       "type": "string",
@@ -65,7 +81,7 @@
         "dismissed"
       ],
       "default": "sent",
-      "description": "sent = waiting on the tablet, opened = being read, submitted = customer finished, dismissed = cleared by staff"
+      "description": "sent = waiting on the tablet, opened = being read, submitted = the person finished, dismissed = cleared by staff"
     },
     "response_amount": {
       "type": "number",
@@ -112,7 +128,7 @@
     },
     "response_details": {
       "type": "object",
-      "description": "Everything the person typed into the tablet's client information form \u2014 the same fields reception enters when registering someone. Reception reviews and verifies these before the client file is added to the Central Database.",
+      "description": "Everything the person typed into the tablet's client information form \u2014 the same fields reception enters when registering someone. Staff review and verify these before the client file is added to the Central Database.",
       "properties": {
         "first_name": {
           "type": "string"
@@ -196,7 +212,7 @@
     },
     "rc_client_id": {
       "type": "string",
-      "description": "Central Database client file created (or matched) from a sign-in at the tablet, set once reception has verified the details, so reception can open the file straight from the prompt"
+      "description": "Central Database client file created (or matched) from a sign-in at the tablet, set once staff have verified the details, so they can open the file straight from the prompt"
     },
     "sent_by_name": {
       "type": "string",
@@ -210,7 +226,7 @@
     "responded_at": {
       "type": "string",
       "format": "date-time",
-      "description": "When the customer finished"
+      "description": "When the person finished"
     }
   },
   "required": [

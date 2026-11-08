@@ -97,7 +97,9 @@ export default function KioskClientVerificationDialog({ open, prompt, onOpenChan
           ...values,
           case_status: values.case_status || 'intake',
           intake_date: values.intake_date || today(),
-          referral_source: values.referral_source || 'Front desk tablet',
+          referral_source: values.referral_source || (prompt?.program && prompt.program !== 'reception'
+            ? `${prompt.program === 'ell' ? 'ELL' : prompt.program === 'empoweru' ? 'EmpowerU' : prompt.program === 'frn' ? 'FRN' : 'Central Registration'} classroom tablet`
+            : 'Front desk tablet'),
         });
         clientId = created.id;
       }

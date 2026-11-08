@@ -30,8 +30,8 @@ export default function ReceptionCustomerKiosk() {
   const [receipt, setReceipt] = useState(null);
 
   const loadStations = useCallback(async () => {
-    const rows = await base44.entities.KioskStation.list('-created_date', 50);
-    setStations(rows || []);
+    const rows = await base44.entities.KioskStation.list('-created_date', 100);
+    setStations((rows || []).filter((row) => (row.program || 'reception') === 'reception'));
     setLoading(false);
   }, []);
 
@@ -149,6 +149,7 @@ export default function ReceptionCustomerKiosk() {
         open={stationDialogOpen}
         onOpenChange={setStationDialogOpen}
         station={editingStation}
+        program="reception"
         onSaved={loadStations}
       />
 

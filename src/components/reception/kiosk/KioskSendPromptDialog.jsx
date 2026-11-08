@@ -61,6 +61,7 @@ export default function KioskSendPromptDialog({ open, onOpenChange, station, ini
     const payload = {
       station_id: station.id,
       station_name: station.name,
+      program: station.program || 'reception',
       kind,
       title: title.trim() || DEFAULTS[kind].title || 'Message',
       message: message.trim(),

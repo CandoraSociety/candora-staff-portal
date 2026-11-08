@@ -1,19 +1,31 @@
 {
   "name": "KioskStation",
   "type": "object",
-  "description": "A customer-facing tablet running the kiosk screen (for example the tablet on the counter at the front desk). Each station pairs with a short access code typed on the tablet once, then receives whatever the reception portal sends it.",
+  "description": "A customer-facing tablet running the kiosk screen (for example the tablet on the counter at the front desk, or a wall-mounted tablet in a classroom). Each station pairs with a short access code typed on the tablet once, then receives whatever its portal sends it.",
   "properties": {
     "name": {
       "type": "string",
-      "description": "Name shown to staff, e.g. Front Desk Tablet"
+      "description": "Name shown to staff, e.g. Front Desk Tablet or ELL Classroom 2"
+    },
+    "program": {
+      "type": "string",
+      "enum": [
+        "reception",
+        "central_registration",
+        "ell",
+        "empoweru",
+        "frn"
+      ],
+      "default": "reception",
+      "description": "Which portal controls this tablet \u2014 the reception desk kiosk, or Central Registration's classroom tablets for ELL, EmpowerU and FRN"
+    },
+    "location": {
+      "type": "string",
+      "description": "Where the tablet sits, e.g. Main lobby or Large Classroom"
     },
     "access_code": {
       "type": "string",
       "description": "Short code typed on the tablet to pair it with this station"
-    },
-    "location": {
-      "type": "string",
-      "description": "Where the tablet sits, e.g. Main lobby"
     },
     "is_active": {
       "type": "boolean",
