@@ -14,7 +14,7 @@ const SUCCESS_MS = 20000;
 
 const SUCCESS_COPY = {
   donation: { title: 'Thank you for your gift!', line: 'Reception will take care of the rest.' },
-  purchase: { title: 'Order placed!', line: 'Reception has your order and will have it ready at the counter.' },
+  purchase: { title: 'Purchase complete!', line: 'Reception has your purchase and will have it ready at the counter.' },
   self_registration: { title: 'Thank you!', line: 'Reception has your details.' },
 };
 

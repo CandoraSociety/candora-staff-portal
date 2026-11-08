@@ -39,7 +39,7 @@ export default function KioskRecentCompletions({ prompts = [], onReceipt }) {
               <div className="min-w-0 flex-1">
                 <p className="text-sm truncate">
                   <span className="font-medium">{prompt.response_name || (isDonation ? 'Anonymous donor' : 'Walk-in customer')}</span>
-                  <span className="text-muted-foreground"> · {isDonation ? 'Donation' : 'Order'}</span>
+                  <span className="text-muted-foreground"> · {isDonation ? 'Donation' : 'Purchase'}</span>
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {when(prompt.responded_at || prompt.updated_date)}

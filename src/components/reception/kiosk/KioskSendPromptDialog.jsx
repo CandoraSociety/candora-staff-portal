@@ -5,17 +5,18 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Heart, ShoppingBag, ClipboardCheck, Plus, Trash2 } from 'lucide-react';
+import { Heart, ShoppingBag, ClipboardCheck, Plus, Trash2, UtensilsCrossed } from 'lucide-react';
+import { AUNTIE_BEVS_ITEMS } from '@/lib/kioskPresets';
 
 const KINDS = [
   { id: 'donation', label: 'Donation', icon: Heart },
-  { id: 'purchase', label: 'Order', icon: ShoppingBag },
+  { id: 'purchase', label: 'Purchase', icon: ShoppingBag },
   { id: 'self_registration', label: 'Client Info', icon: ClipboardCheck },
 ];
 
 const DEFAULTS = {
   donation: { title: 'Support Candora today', message: 'Choose an amount and we will take care of the rest at the counter.' },
-  purchase: { title: 'Order at the counter', message: 'Pick what you would like and reception will bring it to you.' },
+  purchase: { title: 'Purchase at the counter', message: 'Pick what you would like and reception will bring it to you.' },
   self_registration: { title: 'Accessing services today?', message: 'Share your details so a resource worker can help you.' },
 };
 
@@ -134,7 +135,17 @@ export default function KioskSendPromptDialog({ open, onOpenChange, station, ini
 
           {kind === 'purchase' && (
             <div className="space-y-2">
-              <Label>What can they order</Label>
+              <div className="flex items-center justify-between gap-2">
+                <Label>What can they purchase</Label>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-1.5"
+                  onClick={() => setItems(AUNTIE_BEVS_ITEMS.map((item) => ({ name: item.name, price: item.price.toFixed(2) })))}
+                >
+                  <UtensilsCrossed className="h-3.5 w-3.5" /> Auntie Bev's menu
+                </Button>
+              </div>
               {items.map((item, index) => (
                 <div key={index} className="flex gap-2">
                   <Input

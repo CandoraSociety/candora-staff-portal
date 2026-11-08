@@ -4,7 +4,7 @@ import { Heart, ShoppingBag, ClipboardCheck, Pencil, Wifi, WifiOff, X, Gift, Rec
 
 const KIND_LABEL = {
   donation: 'Donation',
-  purchase: 'Order',
+  purchase: 'Purchase',
   self_registration: 'Client info',
 };
 
@@ -105,7 +105,7 @@ export default function KioskStationCard({ station, prompt, onSend, onEdit, onCl
           <Heart className="h-4 w-4" /> Donation
         </Button>
         <Button variant="outline" className="justify-start" onClick={() => onSend(station, 'purchase')}>
-          <ShoppingBag className="h-4 w-4" /> Order
+          <ShoppingBag className="h-4 w-4" /> Purchase
         </Button>
         <Button variant="outline" className="justify-start col-span-2" onClick={() => onSend(station, 'self_registration')}>
           <ClipboardCheck className="h-4 w-4" /> Client Info
