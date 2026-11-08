@@ -16,7 +16,7 @@ const KINDS = [
 
 const DEFAULTS = {
   donation: { title: 'Support Candora today', message: 'Choose an amount and we will take care of the rest at the counter.' },
-  purchase: { title: 'Purchase at the counter', message: 'Pick what you would like and reception will bring it to you.' },
+  purchase: { title: 'Purchase at the counter', message: 'Choose from our freshly made meals. Tell us your name and we will have it ready for you at the counter.' },
   self_registration: { title: 'Accessing services today?', message: 'Share your details so a resource worker can help you.' },
 };
 

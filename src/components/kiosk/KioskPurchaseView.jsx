@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ShoppingBag, Minus, Plus } from 'lucide-react';
+import { ShoppingBag, Minus, Plus, UtensilsCrossed } from 'lucide-react';
 import KioskFrame from '@/components/kiosk/KioskFrame';
+import { itemImage } from '@/lib/kioskPresets';
 
 export default function KioskPurchaseView({ prompt, onRespond, onClose }) {
   const items = prompt.items || [];
@@ -27,7 +28,7 @@ export default function KioskPurchaseView({ prompt, onRespond, onClose }) {
     setBusy(true);
     setError('');
     try {
-      await onRespond({ total, items: lines, name, notes: 'Order taken at the kiosk' });
+      await onRespond({ total, items: lines, name, notes: 'Purchase at the kiosk' });
     } catch (e) {
       setError(e.response?.data?.error || e.message || 'Something went wrong. Please ask reception for help.');
     } finally {
@@ -44,9 +45,17 @@ export default function KioskPurchaseView({ prompt, onRespond, onClose }) {
           <div className="space-y-3">
             {items.map((item) => {
               const qty = quantities[item.name] || 0;
+              const image = itemImage(item.name);
               return (
-                <div key={item.name} className={`flex items-center justify-between gap-4 rounded-2xl border-2 p-4 ${qty > 0 ? 'border-primary bg-card' : 'border-border bg-card'}`}>
-                  <div className="min-w-0">
+                <div key={item.name} className={`flex items-center justify-between gap-4 rounded-2xl border-2 p-3 ${qty > 0 ? 'border-primary bg-card' : 'border-border bg-card'}`}>
+                  <div className="h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-muted flex items-center justify-center">
+                    {image ? (
+                      <img src={image} alt={item.name} className="h-full w-full object-cover" />
+                    ) : (
+                      <UtensilsCrossed className="h-7 w-7 text-muted-foreground" />
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
                     <p className="text-lg font-semibold truncate">{item.name}</p>
                     <p className="text-muted-foreground">${(Number(item.price) || 0).toFixed(2)}</p>
                   </div>
