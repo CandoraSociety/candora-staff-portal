@@ -1,6 +1,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { ClipboardCheck, Pencil, UserPlus, Wifi, WifiOff, X } from 'lucide-react';
+import { programLabel } from '@/lib/kioskPrograms';
 
 const isOnline = (station) => {
   if (!station.last_seen) return false;
@@ -15,18 +16,26 @@ const timeAgo = (value) => {
   return `${Math.round(seconds / 3600)} h ago`;
 };
 
+const clock = (value) => {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+};
+
 const statusLabel = (prompt) => {
   if (!prompt) return 'Nothing on screen';
   if (prompt.status === 'sent') return 'Sent — tablet has not shown it yet';
-  if (prompt.status === 'opened') return 'Sign-in open on the tablet';
+  if (prompt.status === 'opened') return 'Open on the tablet';
   if (prompt.status === 'submitted') return 'Someone signed in';
   return 'Cleared';
 };
 
-// One wall-mounted classroom tablet: send the sign-in form to it, and check
-// what people typed before it becomes a client file.
-export default function ProgramTabletCard({ station, prompt, onSend, onEdit, onClear, onVerify }) {
+// One wall-mounted classroom tablet: it opens its own check-in from the room's
+// schedule, and staff can also send a form by hand.
+export default function RoomTabletCard({ station, prompt, onSend, onEdit, onClear, onVerify }) {
   const active = prompt && ['sent', 'opened'].includes(prompt.status);
+  const checkins = prompt?.checkins || [];
 
   return (
     <div className="rounded-xl border bg-card p-5 space-y-4">
@@ -51,13 +60,13 @@ export default function ProgramTabletCard({ station, prompt, onSend, onEdit, onC
 
       {!active && (
         <Button variant="outline" className="w-full justify-start" onClick={() => onSend(station)}>
-          <ClipboardCheck className="h-4 w-4" /> Send sign-in form
+          <ClipboardCheck className="h-4 w-4" /> Send a sign-in form
         </Button>
       )}
 
       <div className="rounded-lg border border-border/70 p-3 space-y-2">
         <div className="flex items-center justify-between gap-2">
-          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Sign-in</span>
+          <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Check-in</span>
           <span className="text-xs text-muted-foreground">{statusLabel(prompt)}</span>
         </div>
 
@@ -65,15 +74,35 @@ export default function ProgramTabletCard({ station, prompt, onSend, onEdit, onC
 
         {active && (
           <div className="space-y-2">
-            <p className="font-medium">{prompt.title}</p>
-            {prompt.course_name && <p className="text-sm text-muted-foreground">{prompt.course_name}</p>}
-            <div className="flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-warning animate-pulse" />
-              <span className="text-sm text-muted-foreground">Waiting for someone to sign in</span>
-              <Button variant="ghost" size="sm" className="ml-auto text-muted-foreground" onClick={() => onClear(prompt)}>
-                <X className="h-3.5 w-3.5 mr-1" /> Stop
-              </Button>
-            </div>
+            <p className="font-medium">{prompt.course_name || prompt.title}</p>
+            <p className="text-sm text-muted-foreground">
+              {programLabel(prompt.program)}
+              {prompt.session_id ? ' · opened from this room’s schedule' : ''}
+            </p>
+
+            {checkins.length > 0 ? (
+              <div className="rounded-md bg-muted/60 p-2 space-y-1">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                  {checkins.length} checked in
+                </p>
+                {checkins.map((row, index) => (
+                  <p key={`${row.name}-${index}`} className="text-sm flex items-center gap-1">
+                    <span className="font-medium">{row.name}</span>
+                    {row.walk_in && <span className="text-xs text-warning">not on the list</span>}
+                    {row.at && <span className="ml-auto text-xs text-muted-foreground">{clock(row.at)}</span>}
+                  </p>
+                ))}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2">
+                <span className="h-2 w-2 rounded-full bg-warning animate-pulse" />
+                <span className="text-sm text-muted-foreground">Waiting for people to check in</span>
+              </div>
+            )}
+
+            <Button variant="ghost" size="sm" className="text-muted-foreground" onClick={() => onClear(prompt)}>
+              <X className="h-3.5 w-3.5 mr-1" /> Stop
+            </Button>
           </div>
         )}
 

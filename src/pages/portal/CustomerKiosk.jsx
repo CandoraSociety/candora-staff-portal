@@ -4,8 +4,10 @@ import { CheckCircle2 } from 'lucide-react';
 import KioskIdle from '@/components/kiosk/KioskIdle';
 import KioskPairing from '@/components/kiosk/KioskPairing';
 import KioskPromptView from '@/components/kiosk/KioskPromptView';
+import KioskCheckInWelcome from '@/components/kiosk/KioskCheckInWelcome';
+import KioskCheckInView from '@/components/kiosk/KioskCheckInView';
 import KioskStillThereOverlay from '@/components/kiosk/KioskStillThereOverlay';
-import { programLabel } from '@/lib/kioskPrograms';
+import { roomLabel } from '@/lib/kioskPrograms';
 
 const STORAGE_KEY = 'candora_kiosk_station';
 const POLL_MS = 3000;
@@ -28,9 +30,12 @@ export default function CustomerKiosk() {
   const [session, setSession] = useState(() => {
     try {
       const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
-      // ?program= opens one group's portal on its own, even on a browser that
-      // was already paired with a different tablet.
-      const urlProgram = new URLSearchParams(window.location.search).get('program');
+      // ?room= opens one room's classroom tablet, ?program= the front desk, even
+      // on a browser that was already paired with a different station.
+      const params = new URLSearchParams(window.location.search);
+      const urlRoom = params.get('room');
+      const urlProgram = params.get('program');
+      if (urlRoom && stored?.room !== urlRoom) return null;
       if (urlProgram && (stored?.program || 'reception') !== urlProgram) return null;
       return stored;
     } catch {
@@ -42,6 +47,9 @@ export default function CustomerKiosk() {
   const [success, setSuccess] = useState(null);
   const [warning, setWarning] = useState(false);
   const [secondsLeft, setSecondsLeft] = useState(WARN_SECONDS);
+  const [tapped, setTapped] = useState(false);
+  const [people, setPeople] = useState([]);
+  const [rosterLoading, setRosterLoading] = useState(false);
   const shownId = useRef(null);
   const lastActivity = useRef(Date.now());
   const timer = useRef(null);
@@ -52,11 +60,13 @@ export default function CustomerKiosk() {
   const connect = useCallback(async () => {
     const params = new URLSearchParams(window.location.search);
     const urlCode = params.get('code');
+    const urlRoom = params.get('room');
     const urlProgram = params.get('program');
     try {
       const res = await base44.functions.invoke('kioskApi', {
         action: 'station',
         ...(urlCode ? { access_code: urlCode } : {}),
+        ...(urlRoom ? { room: urlRoom } : {}),
         ...(urlProgram ? { program: urlProgram } : {}),
       });
       const station = res.data?.station;
@@ -67,6 +77,7 @@ export default function CustomerKiosk() {
         name: station.name,
         code: station.access_code,
         program: station.program || 'reception',
+        room: station.room || '',
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
       setSession(next);
@@ -82,6 +93,7 @@ export default function CustomerKiosk() {
       name: station.name,
       code: station.access_code,
       program: station.program || 'reception',
+      room: station.room || '',
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
     setSession(next);
@@ -111,6 +123,8 @@ export default function CustomerKiosk() {
         shownId.current = incoming.id;
         setSuccess(null);
         setWarning(false);
+        setTapped(false);
+        setPeople([]);
         lastActivity.current = Date.now();
         setPrompt(incoming);
       }
@@ -179,6 +193,13 @@ export default function CustomerKiosk() {
   // thank-you — the tablet simply goes back to the welcome screen.
   const leave = async () => {
     const current = prompt;
+    // A room's check-in stays open for the next person — backing out only goes
+    // back to the welcome screen.
+    if (current?.session_id) {
+      setWarning(false);
+      setTapped(false);
+      return;
+    }
     if (leaving.current) return;
     leaving.current = true;
     returnHome();
@@ -189,6 +210,54 @@ export default function CustomerKiosk() {
     } finally {
       leaving.current = false;
     }
+  };
+
+  // A room check-in carries the class it belongs to. Those open with a welcome
+  // screen the person touches, then the class list — everyone else's prompts
+  // (front desk donations, orders, messages) go straight to their own screen.
+  const isClassCheckIn = !!prompt?.session_id;
+
+  const startCheckIn = async () => {
+    setTapped(true);
+    if (!prompt) return;
+    setRosterLoading(true);
+    try {
+      const res = await base44.functions.invoke('kioskApi', {
+        action: 'roster',
+        station_id: session.id,
+        access_code: session.code,
+        prompt_id: prompt.id,
+      });
+      setPeople(res.data?.people || []);
+    } catch {
+      setPeople([]);
+    } finally {
+      setRosterLoading(false);
+    }
+  };
+
+  const checkIn = async (person) => {
+    const current = prompt;
+    await base44.functions.invoke('kioskApi', {
+      action: 'check_in',
+      station_id: session.id,
+      access_code: session.code,
+      prompt_id: current.id,
+      person,
+    });
+    const name = person.participant_id
+      ? people.find((row) => row.id === person.participant_id)?.name || ''
+      : [person.first_name, person.last_name].filter(Boolean).join(' ');
+    setTapped(false);
+    setWarning(false);
+    setPeople([]);
+    setSuccess({ checkedIn: name, course: current.course_name });
+    clearSuccessTimer();
+    timer.current = setTimeout(() => {
+      setSuccess(null);
+      // The class list is still open for the next person.
+      shownId.current = null;
+    }, SUCCESS_MS);
   };
 
   // Two minutes without a touch: ask, then count down before giving up.
@@ -229,28 +298,56 @@ export default function CustomerKiosk() {
     return () => clearInterval(tick);
   }, [warning]);
 
+  const stillThere = warning && (
+    <KioskStillThereOverlay
+      secondsLeft={secondsLeft}
+      onStay={() => {
+        lastActivity.current = Date.now();
+        setWarning(false);
+      }}
+    />
+  );
+
+  if (prompt && isClassCheckIn && !tapped) {
+    return (
+      <>
+        <KioskCheckInWelcome brand={brand} prompt={prompt} onStart={startCheckIn} />
+        {stillThere}
+      </>
+    );
+  }
+
   if (prompt) {
     return (
       <>
-        <KioskPromptView prompt={prompt} onRespond={respond} onClose={leave} />
-        {warning && (
-          <KioskStillThereOverlay
-            secondsLeft={secondsLeft}
-            onStay={() => {
-              lastActivity.current = Date.now();
-              setWarning(false);
-            }}
+        {isClassCheckIn ? (
+          <KioskCheckInView
+            prompt={prompt}
+            people={people}
+            loading={rosterLoading}
+            onCheckIn={checkIn}
+            onWalkIn={checkIn}
+            onClose={() => setTapped(false)}
           />
+        ) : (
+          <KioskPromptView prompt={prompt} onRespond={respond} onClose={leave} />
         )}
+        {stillThere}
       </>
     );
   }
 
   if (success) {
-    const isProgramSignIn = success.kind === 'self_registration' && success.program !== 'reception';
-    const copy = isProgramSignIn
-      ? { title: 'Thank you!', line: 'Our registration team has your details — someone will go over them with you.' }
-      : SUCCESS_COPY[success.kind] || { title: 'Thank you!', line: 'Reception has your details.' };
+    const isCheckIn = !!success.checkedIn;
+    const isProgramSignIn = !isCheckIn && success.kind === 'self_registration' && success.program !== 'reception';
+    const copy = isCheckIn
+      ? {
+          title: `You're checked in${success.checkedIn ? `, ${success.checkedIn}` : ''}`,
+          line: success.course ? `Enjoy ${success.course}.` : 'Your facilitator has you marked as here.',
+        }
+      : isProgramSignIn
+        ? { title: 'Thank you!', line: 'Our registration team has your details — someone will go over them with you.' }
+        : SUCCESS_COPY[success.kind] || { title: 'Thank you!', line: 'Reception has your details.' };
     const amount = success.kind === 'donation' ? success.amount : success.kind === 'purchase' ? success.total : 0;
     return (
       <div className="min-h-screen bg-sidebar flex flex-col items-center justify-center px-8 text-center">
@@ -266,11 +363,5 @@ export default function CustomerKiosk() {
 
   if (!session) return <KioskPairing brand={brand} onPaired={paired} />;
 
-  return (
-    <KioskIdle
-      brand={brand}
-      stationName={session.name}
-      programLabel={session.program !== 'reception' ? programLabel(session.program) : ''}
-    />
-  );
+  return <KioskIdle brand={brand} roomName={session.room ? roomLabel(session.room) : ''} />;
 }

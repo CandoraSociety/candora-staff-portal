@@ -15,13 +15,19 @@
       "type": "string",
       "enum": [
         "reception",
+        "classroom",
         "central_registration",
         "ell",
         "empoweru",
-        "frn"
+        "frn",
+        "phac",
+        "community",
+        "digilit",
+        "workshop",
+        "other"
       ],
       "default": "reception",
-      "description": "Which portal sent this prompt \u2014 the front desk, or Central Registration for an ELL, EmpowerU or FRN classroom"
+      "description": "Which program the prompt belongs to \u2014 the front desk, or the program whose class is running in the room"
     },
     "course_name": {
       "type": "string",
@@ -82,6 +88,48 @@
       ],
       "default": "sent",
       "description": "sent = waiting on the tablet, opened = being read, submitted = the person finished, dismissed = cleared by staff"
+    },
+    "session_entity": {
+      "type": "string",
+      "description": "Entity holding the class this check-in belongs to (ELLClass, FRNSession, PHACSession, CommunitySession, DigiLitSession, Workshop) \u2014 set when the tablet opened this itself from the room's schedule"
+    },
+    "session_id": {
+      "type": "string",
+      "description": "Record id of the class this check-in belongs to"
+    },
+    "session_date": {
+      "type": "string",
+      "format": "date",
+      "description": "The date of the class this check-in is for \u2014 one class runs on many dates"
+    },
+    "checkins": {
+      "type": "array",
+      "description": "Everyone who checked in at the tablet before this class",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Participant record the person picked from the class list (blank for someone not on it)"
+          },
+          "name": {
+            "type": "string"
+          },
+          "contact": {
+            "type": "string",
+            "description": "Phone or email a person not on the class list left behind"
+          },
+          "walk_in": {
+            "type": "boolean",
+            "default": false,
+            "description": "True when the person was not on the class list"
+          },
+          "at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
     },
     "response_amount": {
       "type": "number",

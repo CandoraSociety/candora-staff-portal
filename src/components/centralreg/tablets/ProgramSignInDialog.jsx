@@ -8,27 +8,38 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { programLabel } from '@/lib/kioskPrograms';
 
+const PROGRAMS = ['ell', 'empoweru', 'frn', 'phac', 'community', 'digilit', 'other'];
+
 const defaultMessage = (label) =>
   `Fill in your details so we can register you for ${label}. A staff member will go over them with you.`;
 
-// Sends the sign-in / self-registration form to a classroom tablet. The tablet
-// shows it the moment this is sent, and the answers come back here.
+// Sends a sign-in / self-registration form to a classroom tablet by hand — for a
+// class the schedule does not know about. The tablet shows it the moment this is
+// sent, and the answers come back here.
 export default function ProgramSignInDialog({ open, onOpenChange, station, sentByName, onSent, options = [], defaultCourse = '' }) {
-  const program = station?.program || 'ell';
-  const label = programLabel(program);
+  const [program, setProgram] = useState('ell');
   const [course, setCourse] = useState('');
-  const [title, setTitle] = useState(`${label} sign-in`);
-  const [message, setMessage] = useState(defaultMessage(label));
+  const [title, setTitle] = useState('');
+  const [message, setMessage] = useState('');
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
+  const label = programLabel(program);
+
   useEffect(() => {
     if (!open) return;
+    const startProgram = station?.program && station.program !== 'classroom' ? station.program : 'ell';
+    setProgram(PROGRAMS.includes(startProgram) ? startProgram : 'ell');
     setCourse(defaultCourse || '');
-    setTitle(`${label} sign-in`);
-    setMessage(defaultMessage(label));
+    setTitle(`${programLabel(startProgram)} sign-in`);
+    setMessage(defaultMessage(programLabel(startProgram)));
     setError('');
   }, [open, station?.id, defaultCourse]);
+
+  const changeProgram = (value) => {
+    setProgram(value);
+    setTitle(`${programLabel(value)} sign-in`);
+  };
 
   const save = async () => {
     if (saving) return;
@@ -42,7 +53,7 @@ export default function ProgramSignInDialog({ open, onOpenChange, station, sentB
         course_name: course.trim(),
         kind: 'self_registration',
         title: title.trim() || `${label} sign-in`,
-        message: message.trim(),
+        message: message.trim() || defaultMessage(label),
         status: 'sent',
         sent_by_name: sentByName || '',
       });
@@ -59,16 +70,28 @@ export default function ProgramSignInDialog({ open, onOpenChange, station, sentB
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-lg">
         <DialogHeader>
-          <DialogTitle>Send sign-in to {station?.name || 'the tablet'}</DialogTitle>
+          <DialogTitle>Send a sign-in to {station?.name || 'the tablet'}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4">
           <div className="space-y-1.5">
-            <Label>Program or class (optional)</Label>
+            <Label>Program</Label>
+            <Select value={program} onValueChange={changeProgram}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {PROGRAMS.map((value) => (
+                  <SelectItem key={value} value={value}>{programLabel(value)}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Class or program (optional)</Label>
             {options.length > 0 ? (
               <Select value={course} onValueChange={setCourse}>
                 <SelectTrigger>
-                  <SelectValue placeholder={`Choose a ${label} program`} />
+                  <SelectValue placeholder="Choose a class" />
                 </SelectTrigger>
                 <SelectContent>
                   {options.map((option) => (

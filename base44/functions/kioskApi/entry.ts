@@ -1,8 +1,17 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
+import {
+  ROOM_IDS,
+  isoDate,
+  roomSessions,
+  rosterFor,
+  markCheckedIn,
+  finishSession,
+} from '../../shared/roomSchedule.ts';
 
 // Customer-facing kiosk endpoint. Public: the tablet has no staff sign-in, so a
-// station id + access code is what proves which counter this screen belongs to.
-// Nothing else is exposed — only that station's open prompt and its own answers.
+// station id + access code is what proves which counter or classroom this screen
+// belongs to. Nothing else is exposed — only that station's open prompt and its
+// own answers.
 
 const code = (value) => String(value ?? '').trim();
 
@@ -51,146 +60,99 @@ const num = (value) => {
   return Number.isFinite(parsed) ? parsed : null;
 };
 
+const stationSummary = (station) => ({
+  id: station.id,
+  name: station.name,
+  access_code: station.access_code,
+  program: station.program || 'reception',
+  room: station.room || '',
+});
+
 /* ---------------------------------------------------------------------------
-   Automatic classroom check-in.
-   A classroom tablet opens the sign-in form 30 minutes before a scheduled class
-   and closes it 10 minutes after the class ends. The tablet sends its own local
-   date and clock time, so the schedule is read in the room's time, not UTC.
+   Automatic room check-in.
+   A tablet in a classroom opens its check-in 30 minutes before anything starts
+   in that room and closes it 10 minutes after the scheduled end, whichever
+   program the class belongs to. The tablet sends its own local date and clock
+   time, so the schedule is read in the room's time, not UTC.
 --------------------------------------------------------------------------- */
 
-const AUTO_SENDER = 'Automatic schedule';
+const AUTO_SENDERS = ['Room schedule', 'Automatic schedule'];
+const AUTO_SENDER = 'Room schedule';
 const OPEN_BEFORE_MIN = 30;
 const CLOSE_AFTER_MIN = 10;
 const REPEAT_COOLDOWN_MS = 5 * 60 * 1000;
 const RESYNC_MS = 60 * 1000;
-const PROGRAM_LABEL: Record<string, string> = { ell: 'ELL', empoweru: 'EmpowerU', frn: 'FRN' };
-const DAY_KEYS = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
-const lastSync = new Map<string, number>();
+const isAuto = (prompt) => AUTO_SENDERS.includes(prompt.sent_by_name);
+const isLive = (prompt) => prompt.status === 'sent' || prompt.status === 'opened';
 
-const minutesOf = (hhmm) => {
-  const match = /^(\d{1,2}):(\d{2})/.exec(String(hhmm || ''));
-  if (!match) return null;
-  return Number(match[1]) * 60 + Number(match[2]);
-};
+const sessionOf = (prompt) => ({
+  entity: prompt.session_entity,
+  id: prompt.session_id,
+  name: prompt.course_name,
+  date: prompt.session_date,
+  program: prompt.program,
+});
 
-const parseLocalDate = (value) => {
-  const parts = String(value || '').slice(0, 10).split('-').map(Number);
-  if (parts.length !== 3 || !parts[0] || !parts[1] || !parts[2]) return null;
-  return new Date(parts[0], parts[1] - 1, parts[2]);
-};
+async function syncRoomPrompt(base44, station, localDate, localMinutes) {
+  if (!ROOM_IDS.includes(station.room)) return;
 
-const isoDate = (date) =>
-  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-
-// FRN sessions repeat from their base date until the repeat-until date.
-const occursOn = (row, dateStr) => {
-  const start = parseLocalDate(row.session_date);
-  const target = parseLocalDate(dateStr);
-  if (!start || !target || target.getTime() < start.getTime()) return false;
-  const until = parseLocalDate(row.recurrence_end_date);
-  if (until && target.getTime() > until.getTime()) return false;
-  const pattern = row.recurrence_pattern || 'none';
-  if (pattern === 'none') return isoDate(start) === dateStr;
-  if (pattern === 'monthly') return start.getDate() === target.getDate();
-  const step = pattern === 'biweekly' ? 14 : 7;
-  const days = Math.round((target.getTime() - start.getTime()) / 86400000);
-  return days % step === 0;
-};
-
-// The classes that actually run on this date, as start/end minutes after midnight.
-async function sessionsOnDate(base44, station, dateStr) {
-  const program = station.program || 'reception';
-  const withTimes = (row, course) => {
-    const start = minutesOf(row.start_time);
-    const end = minutesOf(row.end_time);
-    if (start === null || end === null) return null;
-    return { course, start, end };
-  };
-
-  if (program === 'ell') {
-    const rows = await base44.asServiceRole.entities.ELLClass.filter({ status: 'active' }, '-created_date', 200);
-    const weekday = DAY_KEYS[parseLocalDate(dateStr).getDay()];
-    return (rows || [])
-      .filter(
-        (row) =>
-          (row.schedule_days || []).includes(weekday) &&
-          (!row.start_date || dateStr >= row.start_date) &&
-          (!row.end_date || dateStr <= row.end_date),
-      )
-      .map((row) => withTimes(row, row.name))
-      .filter(Boolean)
-      .sort((a, b) => a.start - b.start);
-  }
-
-  if (program === 'frn') {
-    const rows = await base44.asServiceRole.entities.FRNSession.filter({}, '-session_date', 500);
-    return (rows || [])
-      .filter((row) => row.status !== 'cancelled' && occursOn(row, dateStr))
-      .map((row) => withTimes(row, row.program_name || 'FRN session'))
-      .filter(Boolean)
-      .sort((a, b) => a.start - b.start);
-  }
-
-  // EmpowerU cohorts carry only a start and end date, no class times, so there is
-  // nothing to open automatically for them.
-  return [];
-}
-
-async function syncScheduledPrompt(base44, station, localDate, localMinutes) {
-  const program = station.program || 'reception';
-  if (!PROGRAM_LABEL[program]) return;
-
+  const api = base44.asServiceRole.entities;
   const dateStr = /^\d{4}-\d{2}-\d{2}$/.test(code(localDate)) ? code(localDate) : isoDate(new Date());
   const nowMinutes = Number(localMinutes);
   if (!Number.isFinite(nowMinutes)) return;
 
-  const sessions = await sessionsOnDate(base44, station, dateStr);
-  const openSession =
+  const sessions = await roomSessions(base44, station.room, dateStr);
+  const open =
     sessions.find((row) => nowMinutes >= row.start - OPEN_BEFORE_MIN && nowMinutes <= row.end + CLOSE_AFTER_MIN) || null;
 
-  const recent = await base44.asServiceRole.entities.KioskPrompt.filter({ station_id: station.id }, '-created_date', 60);
-  const auto = (recent || []).filter((row) => row.sent_by_name === AUTO_SENDER);
-  const liveAuto = auto.filter((row) => row.status === 'sent' || row.status === 'opened');
+  const recent = (await api.KioskPrompt.filter({ station_id: station.id }, '-created_date', 40)) || [];
+  const live = recent.filter(isLive);
+  const liveAuto = live.filter(isAuto);
 
-  if (!openSession) {
+  // Nothing running in this room any more: take the check-in down and close the
+  // day out on the session itself.
+  if (!open) {
     for (const row of liveAuto) {
-      await base44.asServiceRole.entities.KioskPrompt.update(row.id, { status: 'dismissed' });
+      await api.KioskPrompt.update(row.id, { status: 'dismissed' });
+      if (row.session_entity && row.session_id) await finishSession(base44, sessionOf(row));
     }
     return;
   }
 
-  // A form is already waiting on the tablet for this class — leave it alone.
-  if (liveAuto.some((row) => row.course_name === openSession.course)) return;
+  // The same class is already waiting on this tablet.
+  if (liveAuto.some((row) => row.session_id === open.id && row.session_date === dateStr)) return;
 
   // Never stomp on something a staff member sent by hand.
-  const staffLive = (recent || []).some(
-    (row) => row.sent_by_name !== AUTO_SENDER && (row.status === 'sent' || row.status === 'opened'),
-  );
-  if (staffLive) return;
+  if (live.some((row) => !isAuto(row))) return;
 
-  // Do not respawn the form the instant someone backs out: wait a few minutes.
-  const last = auto.find((row) => row.course_name === openSession.course);
-  if (last) {
-    const stamp = new Date(last.updated_date || last.created_date || 0).getTime();
+  // Do not reopen the instant someone backs out: wait a few minutes.
+  const previous = recent.find(
+    (row) => isAuto(row) && row.session_id === open.id && row.session_date === dateStr,
+  );
+  if (previous) {
+    const stamp = new Date(previous.updated_date || previous.created_date || 0).getTime();
     if (Date.now() - stamp < REPEAT_COOLDOWN_MS) return;
   }
 
   for (const row of liveAuto) {
-    await base44.asServiceRole.entities.KioskPrompt.update(row.id, { status: 'dismissed' });
+    await api.KioskPrompt.update(row.id, { status: 'dismissed' });
   }
 
-  const label = PROGRAM_LABEL[program];
-  await base44.asServiceRole.entities.KioskPrompt.create({
+  await api.KioskPrompt.create({
     station_id: station.id,
     station_name: station.name,
-    program,
-    course_name: openSession.course,
+    program: open.program,
+    course_name: open.name,
+    session_entity: open.entity,
+    session_id: open.id,
+    session_date: dateStr,
     kind: 'self_registration',
-    title: `${openSession.course} sign-in`,
-    message: `Fill in your details so we can register you for ${openSession.course}. A staff member will go over them with you.`,
+    title: `${open.name} check-in`,
+    message: `Touch the screen to check in for ${open.name}.`,
     status: 'sent',
     sent_by_name: AUTO_SENDER,
+    checkins: [],
   });
 }
 
@@ -202,78 +164,69 @@ export default async function (req) {
 
     if (action === 'pair') {
       if (!code(body.access_code)) {
-        return Response.json({ error: 'Enter the code shown in the reception portal.' }, { status: 400 });
+        return Response.json({ error: 'Enter the code shown in the Central Registration portal.' }, { status: 400 });
       }
       const matches = await base44.asServiceRole.entities.KioskStation.filter({ is_active: true }, '-created_date', 200);
       const station = (matches || []).find((row) => code(row.access_code).toLowerCase() === code(body.access_code).toLowerCase());
       if (!station) {
-        return Response.json({ error: 'That code is not recognised. Check the code in the reception portal.' }, { status: 404 });
+        return Response.json({ error: 'That code is not recognised. Check the code in the portal.' }, { status: 404 });
       }
       await base44.asServiceRole.entities.KioskStation.update(station.id, { last_seen: new Date().toISOString() });
-      return Response.json({
-        station: {
-          id: station.id,
-          name: station.name,
-          access_code: station.access_code,
-          program: station.program || 'reception',
-        },
-        brand: await brand(base44),
-      });
+      return Response.json({ station: stationSummary(station), brand: await brand(base44) });
     }
 
     // A tablet is a permanent fixture: it opens straight onto the welcome screen
-    // and picks up its station on its own. ?program= narrows it to one portal's
-    // tablets, and ?code= pins it to one station when a program has several.
+    // and picks up its station on its own. ?room= pins it to the tablet mounted in
+    // that room, ?program= to the front desk, ?code= to one specific station.
     if (action === 'station') {
       const wantedProgram = code(body.program);
+      const wantedRoom = code(body.room);
       const rows = await base44.asServiceRole.entities.KioskStation.filter({ is_active: true }, '-created_date', 200);
-      const active = (rows || []).filter(
-        (row) => !wantedProgram || (row.program || 'reception') === wantedProgram,
-      );
+      const active = (rows || []).filter((row) => {
+        if (wantedRoom) return row.room === wantedRoom;
+        if (!wantedProgram) return true;
+        return (row.program || 'reception') === wantedProgram && !row.room;
+      });
       const wanted = code(body.access_code).toLowerCase();
       const match = wanted
         ? active.find((row) => code(row.access_code).toLowerCase() === wanted)
         : (active.length === 1 ? active[0] : null);
       if (!match) {
         return Response.json(
-          { error: active.length ? 'More than one tablet is set up for this screen.' : 'No tablet is set up yet.' },
+          {
+            error: wantedRoom
+              ? 'No tablet is set up for this room yet.'
+              : active.length
+                ? 'More than one tablet is set up for this screen.'
+                : 'No tablet is set up yet.',
+          },
           { status: 404 },
         );
       }
       await base44.asServiceRole.entities.KioskStation.update(match.id, { last_seen: new Date().toISOString() });
-      return Response.json({
-        station: {
-          id: match.id,
-          name: match.name,
-          access_code: match.access_code,
-          program: match.program || 'reception',
-        },
-        brand: await brand(base44),
-      });
+      return Response.json({ station: stationSummary(match), brand: await brand(base44) });
     }
 
     const station = await stationFor(base44, body.station_id, body.access_code);
     if (!station) {
-      return Response.json({ error: 'This tablet is no longer connected. Ask reception for a new code.' }, { status: 401 });
+      return Response.json({ error: 'This tablet is no longer connected. Ask the front desk for a new code.' }, { status: 401 });
     }
 
     if (action === 'poll') {
-      // Check in roughly once a minute so the reception portal can show a
-      // connected indicator without a write on every poll.
+      // Check in roughly once a minute so the portal can show a connected
+      // indicator without a write on every poll.
       const lastSeen = station.last_seen ? new Date(station.last_seen).getTime() : 0;
       if (Date.now() - lastSeen > 55000) {
         await base44.asServiceRole.entities.KioskStation.update(station.id, { last_seen: new Date().toISOString() });
       }
 
-      // Classroom tablets follow the class schedule: check once a minute, not on
+      // Classroom tablets follow the room's schedule: check once a minute, not on
       // every three-second poll.
-      const program = station.program || 'reception';
-      if (program !== 'reception') {
-        const last = lastSync.get(station.id) || 0;
-        if (Date.now() - last > RESYNC_MS) {
-          lastSync.set(station.id, Date.now());
-          await syncScheduledPrompt(base44, station, body.local_date, body.local_minutes);
-        }
+      const lastSyncKey = station.id;
+      const last = lastSyncAt.get(lastSyncKey) || 0;
+      if (station.room && Date.now() - last > RESYNC_MS) {
+        lastSyncAt.set(lastSyncKey, Date.now());
+        await syncRoomPrompt(base44, station, body.local_date, body.local_minutes);
       }
 
       const open = await base44.asServiceRole.entities.KioskPrompt.filter(
@@ -291,21 +244,60 @@ export default async function (req) {
       return Response.json({ prompt, brand: await brand(base44) });
     }
 
-    if (action === 'respond' || action === 'close') {
-      const promptId = body.prompt_id;
-      if (!promptId) return Response.json({ error: 'Missing prompt.' }, { status: 400 });
-      let prompt;
-      try {
-        prompt = await base44.asServiceRole.entities.KioskPrompt.get(promptId);
-      } catch {
-        prompt = null;
-      }
-      if (!prompt || prompt.station_id !== station.id) {
-        return Response.json({ error: 'That prompt is no longer available.' }, { status: 404 });
+    // Who is expected in the class the tablet is signing people in for.
+    if (action === 'roster') {
+      const prompt = await promptFor(base44, station, body.prompt_id);
+      if (!prompt) return Response.json({ error: 'That check-in has closed.' }, { status: 404 });
+      if (!prompt.session_entity) return Response.json({ people: [] });
+      const people = await rosterFor(base44, sessionOf(prompt));
+      return Response.json({ people });
+    }
+
+    // Someone ticked themselves off the class list — or was not on it.
+    if (action === 'check_in') {
+      const prompt = await promptFor(base44, station, body.prompt_id);
+      if (!prompt) return Response.json({ error: 'That check-in has closed.' }, { status: 404 });
+      if (!prompt.session_entity) return Response.json({ error: 'This tablet is not checking anyone in.' }, { status: 400 });
+
+      const session = sessionOf(prompt);
+      const person = body.person || {};
+      const pickedId = code(person.participant_id);
+      let entry;
+
+      if (pickedId) {
+        const people = await rosterFor(base44, session);
+        const found = people.find((row) => row.id === pickedId);
+        if (!found) return Response.json({ error: 'That name is not on this class list.' }, { status: 400 });
+        entry = { id: found.id, name: found.name, at: new Date().toISOString() };
+      } else {
+        const name = [code(person.first_name), code(person.last_name)].filter(Boolean).join(' ');
+        if (!name) return Response.json({ error: 'Please enter your name.' }, { status: 400 });
+        entry = {
+          id: '',
+          name,
+          contact: code(person.contact).slice(0, 200),
+          walk_in: true,
+          at: new Date().toISOString(),
+        };
       }
 
+      const already = (prompt.checkins || []).some(
+        (row) => (entry.id && row.id === entry.id) || (!entry.id && row.name === entry.name && row.walk_in),
+      );
+
+      await markCheckedIn(base44, session, { id: entry.id, name: entry.name });
+
+      const checkins = already ? prompt.checkins || [] : [...(prompt.checkins || []), entry];
+      const updated = await base44.asServiceRole.entities.KioskPrompt.update(prompt.id, { checkins });
+      return Response.json({ prompt: updated, entry, already });
+    }
+
+    if (action === 'respond' || action === 'close') {
+      const prompt = await promptFor(base44, station, body.prompt_id);
+      if (!prompt) return Response.json({ error: 'That prompt is no longer available.' }, { status: 404 });
+
       if (action === 'close') {
-        const updated = await base44.asServiceRole.entities.KioskPrompt.update(promptId, { status: 'dismissed' });
+        const updated = await base44.asServiceRole.entities.KioskPrompt.update(prompt.id, { status: 'dismissed' });
         return Response.json({ prompt: updated });
       }
 
@@ -335,7 +327,7 @@ export default async function (req) {
       // existing file) before anything is added to the Central Database.
       if (prompt.kind === 'self_registration') {
         const person = response.person || {};
-        const details: Record<string, unknown> = {};
+        const details = {};
         for (const field of REGISTRATION_FIELDS) {
           const value = person[field];
           if (value === undefined || value === null || value === '') continue;
@@ -352,12 +344,26 @@ export default async function (req) {
         update.response_notes = code(details.identified_needs) || null;
       }
 
-      const updated = await base44.asServiceRole.entities.KioskPrompt.update(promptId, update);
+      const updated = await base44.asServiceRole.entities.KioskPrompt.update(prompt.id, update);
       return Response.json({ prompt: updated });
     }
 
     return Response.json({ error: 'Unknown action: ' + action }, { status: 400 });
   } catch (error) {
     return Response.json({ error: error.message }, { status: 500 });
+  }
+}
+
+const lastSyncAt = new Map();
+
+async function promptFor(base44, station, promptId) {
+  if (!promptId) return null;
+  try {
+    const prompt = await base44.asServiceRole.entities.KioskPrompt.get(promptId);
+    if (!prompt || prompt.station_id !== station.id) return null;
+    if (!isLive(prompt)) return null;
+    return prompt;
+  } catch {
+    return null;
   }
 }

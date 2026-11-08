@@ -1,23 +1,36 @@
 {
   "name": "KioskStation",
   "type": "object",
-  "description": "A customer-facing tablet running the kiosk screen (for example the tablet on the counter at the front desk, or a wall-mounted tablet in a classroom). Each station pairs with a short access code typed on the tablet once, then receives whatever its portal sends it.",
+  "description": "A customer-facing tablet running the kiosk screen (for example the tablet on the counter at the front desk, or the wall tablet in one of the classrooms). Each station pairs with a short access code typed on the tablet once, then receives whatever its portal sends it. Classroom tablets are assigned to a physical room, so whatever is scheduled in that room opens its check-in \u2014 whichever program the class belongs to.",
   "properties": {
     "name": {
       "type": "string",
-      "description": "Name shown to staff, e.g. Front Desk Tablet or ELL Classroom 2"
+      "description": "Name shown to staff, e.g. Front Desk Tablet or Large Classroom Tablet"
     },
     "program": {
       "type": "string",
       "enum": [
         "reception",
+        "classroom",
         "central_registration",
         "ell",
         "empoweru",
         "frn"
       ],
       "default": "reception",
-      "description": "Which portal controls this tablet \u2014 the reception desk kiosk, or Central Registration's classroom tablets for ELL, EmpowerU and FRN"
+      "description": "reception = the front-desk kiosk; classroom = a wall tablet in one of the teaching rooms"
+    },
+    "room": {
+      "type": "string",
+      "enum": [
+        "large_classroom",
+        "small_classroom",
+        "employment_classroom",
+        "arc",
+        "echo_valley",
+        "other"
+      ],
+      "description": "Physical room the classroom tablet is mounted in \u2014 its schedule comes from what is booked in this room"
     },
     "location": {
       "type": "string",
