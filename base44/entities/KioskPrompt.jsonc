@@ -71,6 +71,11 @@
       "type": "number",
       "description": "Donation amount the customer chose"
     },
+    "response_recurring": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the customer chose to repeat this gift every month"
+    },
     "response_total": {
       "type": "number",
       "description": "Order total for a purchase prompt"

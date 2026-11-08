@@ -77,9 +77,13 @@ export default function ReceptionCustomerKiosk() {
       donation: {
         amount: prompt.response_amount,
         donation_date: new Date().toISOString().slice(0, 10),
-        donation_type: 'one_time',
+        donation_type: prompt.response_recurring ? 'recurring_monthly' : 'one_time',
         payment_method: 'cash',
-        notes: [prompt.campaign_name, 'Gift collected at the customer tablet', prompt.response_notes].filter(Boolean).join(' — '),
+        notes: [
+          prompt.campaign_name,
+          prompt.response_recurring ? 'Monthly gift set up at the customer tablet' : 'Gift collected at the customer tablet',
+          prompt.response_notes,
+        ].filter(Boolean).join(' — '),
       },
       donorId: donor?.id || '',
     });

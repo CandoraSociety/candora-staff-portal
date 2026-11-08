@@ -35,6 +35,8 @@ function ResponseSummary({ prompt }) {
       <div className="space-y-1">
         <p className="text-2xl font-bold">${Number(prompt.response_amount).toFixed(2)}</p>
         <p className="text-sm text-muted-foreground">
+          {prompt.response_recurring ? 'Monthly gift' : 'One-time gift'}
+          {' · '}
           {prompt.response_name || 'Anonymous donor'}
           {prompt.response_email ? ` · ${prompt.response_email}` : ''}
         </p>

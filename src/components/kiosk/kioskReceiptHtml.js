@@ -61,14 +61,20 @@ export function buildKioskReceiptHtml({ prompt, orgName = 'Candora', logoUrl = '
           <td style="padding:12px 0;font-size:14px;color:#111827;text-align:right;border-top:1px solid #e5e7eb;">${esc(campaign)}</td>
         </tr>` : ''}
         <tr>
+          <td style="padding:12px 0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;border-top:1px solid #e5e7eb;">Frequency</td>
+          <td style="padding:12px 0;font-size:14px;color:#111827;text-align:right;border-top:1px solid #e5e7eb;">${prompt?.response_recurring ? 'Every month' : 'One time'}</td>
+        </tr>
+        <tr>
           <td style="padding:12px 0;font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;border-top:1px solid #e5e7eb;">Received</td>
           <td style="padding:12px 0;font-size:14px;color:#111827;text-align:right;border-top:1px solid #e5e7eb;">At the front desk</td>
         </tr>
       </table>
       <div style="background:#fdf6dd;border:1px solid #f5be19;border-radius:10px;padding:18px 20px;">
-        <div style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;">Gift amount</div>
-        <div style="font-size:34px;font-weight:700;color:#0a0f29;margin-top:4px;">${money(total)}</div>
-        <div style="font-size:13px;color:#4b5563;margin-top:6px;">Official receipt for income tax purposes.</div>
+        <div style="font-size:12px;letter-spacing:.08em;text-transform:uppercase;color:#6b7280;">${prompt?.response_recurring ? 'Monthly gift amount' : 'Gift amount'}</div>
+        <div style="font-size:34px;font-weight:700;color:#0a0f29;margin-top:4px;">${money(total)}${prompt?.response_recurring ? '<span style="font-size:16px;font-weight:600;color:#4b5563;"> / month</span>' : ''}</div>
+        <div style="font-size:13px;color:#4b5563;margin-top:6px;">${prompt?.response_recurring
+          ? 'This gift repeats every month. Reception has recorded the schedule, so this one receipt covers your first payment.'
+          : 'Official receipt for income tax purposes.'}</div>
       </div>`
     : `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="width:100%;border-collapse:collapse;margin:0 0 18px;">
         <thead>

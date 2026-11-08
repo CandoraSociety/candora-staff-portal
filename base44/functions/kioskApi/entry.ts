@@ -153,6 +153,7 @@ export default async function (req) {
       };
       const amount = num(response.amount);
       if (amount !== null) update.response_amount = amount;
+      if (response.recurring !== undefined) update.response_recurring = response.recurring === true;
       const total = num(response.total);
       if (total !== null) update.response_total = total;
       if (Array.isArray(response.items)) {

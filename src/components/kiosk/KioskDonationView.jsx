@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Heart } from 'lucide-react';
+import { Check, Heart } from 'lucide-react';
 import KioskFrame from '@/components/kiosk/KioskFrame';
 
 const DEFAULT_AMOUNTS = [10, 20, 50, 100];
@@ -11,6 +11,7 @@ export default function KioskDonationView({ prompt, onRespond, onClose }) {
   const [amount, setAmount] = useState(null);
   const [custom, setCustom] = useState('');
   const [form, setForm] = useState({ name: '', email: '' });
+  const [monthly, setMonthly] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
 
@@ -23,9 +24,10 @@ export default function KioskDonationView({ prompt, onRespond, onClose }) {
     try {
       await onRespond({
         amount: chosen,
+        recurring: monthly,
         name: form.name,
         email: form.email,
-        notes: prompt.campaign_name ? `Kiosk gift — ${prompt.campaign_name}` : 'Kiosk gift',
+        notes: [prompt.campaign_name, monthly ? 'Monthly gift' : 'Kiosk gift'].filter(Boolean).join(' — '),
       });
     } catch (e) {
       setError(e.response?.data?.error || e.message || 'Something went wrong. Please ask reception for help.');
@@ -68,10 +70,28 @@ export default function KioskDonationView({ prompt, onRespond, onClose }) {
           <Input value={form.email} onChange={(e) => setForm(p => ({ ...p, email: e.target.value }))} placeholder="Email for a receipt (optional)" className="h-14 text-lg" />
         </div>
 
+        <button
+          type="button"
+          onClick={() => setMonthly((value) => !value)}
+          className={`w-full flex items-center gap-4 rounded-2xl border-2 p-4 text-left transition-colors ${monthly ? 'border-primary bg-primary/10' : 'border-border bg-card hover:border-primary'}`}
+        >
+          <span className={`h-10 w-10 rounded-full border-2 flex items-center justify-center shrink-0 ${monthly ? 'bg-primary border-primary text-primary-foreground' : 'border-border text-transparent'}`}>
+            <Check className="h-6 w-6" />
+          </span>
+          <span>
+            <span className="block text-lg font-semibold">Make it a monthly gift</span>
+            <span className="block text-sm text-muted-foreground">
+              {monthly ? 'This amount will be given every month.' : 'Give this amount every month instead of once.'}
+            </span>
+          </span>
+        </button>
+
         {error && <p className="text-sm text-destructive">{error}</p>}
 
         <Button onClick={submit} disabled={busy || !chosen || chosen <= 0} className="w-full h-16 text-xl font-semibold">
-          {chosen > 0 ? `Give $${Number(chosen).toFixed(2)}` : 'Choose an amount'}
+          {chosen > 0
+            ? `Give $${Number(chosen).toFixed(2)}${monthly ? ' a month' : ''}`
+            : 'Choose an amount'}
         </Button>
       </div>
     </KioskFrame>
