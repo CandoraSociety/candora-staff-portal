@@ -93,7 +93,7 @@ export default async function (req) {
         : (active.length === 1 ? active[0] : null);
       if (!match) {
         return Response.json(
-          { error: active.length ? 'More than one tablet is set up at the front desk.' : 'No front desk tablet is set up yet.' },
+          { error: active.length ? 'More than one tablet is set up for this screen.' : 'No tablet is set up yet.' },
           { status: 404 },
         );
       }
