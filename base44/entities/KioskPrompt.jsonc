@@ -24,10 +24,11 @@
         "community",
         "digilit",
         "workshop",
+        "childminding",
         "other"
       ],
       "default": "reception",
-      "description": "Which program the prompt belongs to \u2014 the front desk, or the program whose class is running in the room"
+      "description": "Which program the prompt belongs to \u2014 the front desk, or the program whose class is running in the room (childminding for the childminding room)"
     },
     "course_name": {
       "type": "string",
@@ -91,7 +92,7 @@
     },
     "session_entity": {
       "type": "string",
-      "description": "Entity holding the class this check-in belongs to (ELLClass, FRNSession, PHACSession, CommunitySession, DigiLitSession, Workshop) \u2014 set when the tablet opened this itself from the room's schedule"
+      "description": "Entity holding the class this check-in belongs to (ELLClass, FRNSession, PHACSession, CommunitySession, DigiLitSession, Workshop, ChildmindingSession) \u2014 set when the tablet opened this itself from the room's schedule"
     },
     "session_id": {
       "type": "string",

@@ -285,7 +285,7 @@ export default async function (req) {
         (row) => (entry.id && row.id === entry.id) || (!entry.id && row.name === entry.name && row.walk_in),
       );
 
-      await markCheckedIn(base44, session, { id: entry.id, name: entry.name });
+      await markCheckedIn(base44, session, { id: entry.id, name: entry.name, local_time: code(body.local_time) });
 
       const checkins = already ? prompt.checkins || [] : [...(prompt.checkins || []), entry];
       const updated = await base44.asServiceRole.entities.KioskPrompt.update(prompt.id, { checkins });

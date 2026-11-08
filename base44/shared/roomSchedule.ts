@@ -8,7 +8,12 @@ export const ROOMS = [
   { id: 'small_classroom', label: 'Small Classroom' },
   { id: 'employment_classroom', label: 'Employment Classroom' },
   { id: 'echo_valley', label: 'Echo Valley' },
+  { id: 'childminding', label: 'Childminding Room' },
 ];
+
+// The childminding room belongs to one service only: its tablet follows the
+// sessions the Childminding portal books, not the room's other bookings.
+export const CHILDMINDING_ROOM = 'childminding';
 
 export const ROOM_IDS = ROOMS.map((room) => room.id);
 export const roomLabel = (id) => ROOMS.find((room) => room.id === id)?.label || '';
@@ -21,6 +26,7 @@ export const PROGRAM_LABELS = {
   community: 'Community Programs',
   digilit: 'Digital Literacy',
   workshop: 'Workshops',
+  childminding: 'Childminding',
   other: 'Candora',
 };
 
@@ -81,6 +87,18 @@ const withTimes = (row, { entity, dateField, name, program }) => {
 export async function roomSessions(base44, room, dateStr) {
   if (!ROOM_IDS.includes(room)) return [];
   const api = base44.asServiceRole.entities;
+
+  // Childminding runs its own sessions from its portal, and this room is only
+  // ever used for childminding — nothing else booked here opens its tablet.
+  if (room === CHILDMINDING_ROOM) {
+    const rows = await api.ChildmindingSession.filter({ date: dateStr }, 'start_time', 50).catch(() => []);
+    return (rows || [])
+      .filter((row) => !['cancelled', 'completed'].includes(row.status))
+      .map((row) => withTimes(row, { entity: 'ChildmindingSession', dateField: 'date', name: row.title, program: 'childminding' }))
+      .filter(Boolean)
+      .sort((a, b) => a.start - b.start);
+  }
+
   const weekday = DAY_KEYS[(parseLocalDate(dateStr) || new Date()).getDay()];
 
   const [ell, frn, phac, community, digilit, workshops] = await Promise.all([
@@ -161,6 +179,15 @@ export async function rosterFor(base44, session) {
     } else if (session.entity === 'PHACSession') {
       const rows = await api.PHACParticipant.filter({}, '-created_date', 300);
       for (const row of rows || []) push(row.id, fullName(row));
+    } else if (session.entity === 'ChildmindingSession') {
+      // The children booked into this session in the Childminding portal; the
+      // parent dropping one off taps their child's name.
+      const rows = await api.ChildmindingRecord.filter({ session_id: session.id }, 'child_first_name', 200);
+      for (const row of rows || []) {
+        const parent = row.parent_name || [row.parent_first_name, row.parent_last_name].filter(Boolean).join(' ');
+        const child = row.child_first_name || '';
+        push(row.id, [child, parent ? `(${parent})` : ''].filter(Boolean).join(' '));
+      }
     } else if (session.entity === 'CommunitySession' || session.entity === 'DigiLitSession') {
       const isCommunity = session.entity === 'CommunitySession';
       const sessionRow = await (isCommunity ? api.CommunitySession : api.DigiLitSession).get(session.id);
@@ -186,6 +213,17 @@ const uniqueId = () => `ci_${Date.now()}_${Math.random().toString(36).slice(2, 7
 export async function markCheckedIn(base44, session, person) {
   const api = base44.asServiceRole.entities;
   const dateStr = session.date;
+
+  // A child dropped off: stamp their arrival on the record the Childminding
+  // portal already holds, so the parent's hours start from this moment.
+  if (session.entity === 'ChildmindingSession') {
+    if (!person.id) return;
+    const row = await api.ChildmindingRecord.get(person.id).catch(() => null);
+    if (!row || row.check_in_time) return;
+    const now = person.local_time || new Date().toTimeString().slice(0, 5);
+    await api.ChildmindingRecord.update(person.id, { check_in_time: now });
+    return;
+  }
 
   if (session.entity === 'ELLClass') {
     const row = await api.ELLClass.get(session.id);

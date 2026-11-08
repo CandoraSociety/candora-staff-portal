@@ -1,7 +1,7 @@
 {
   "name": "KioskStation",
   "type": "object",
-  "description": "A customer-facing tablet running the kiosk screen (for example the tablet on the counter at the front desk, or the wall tablet in one of the classrooms). Each station pairs with a short access code typed on the tablet once, then receives whatever its portal sends it. Classroom tablets are assigned to a physical room, so whatever is scheduled in that room opens its check-in \u2014 whichever program the class belongs to.",
+  "description": "A customer-facing tablet running the kiosk screen (for example the tablet on the counter at the front desk, or the wall tablet in one of the classrooms). Each station pairs with a short access code typed on the tablet once, then receives whatever its portal sends it. Classroom tablets are assigned to a physical room, so whatever is scheduled in that room opens its check-in \u2014 whichever program the class belongs to. The childminding tablet is assigned to the childminding room and follows the sessions booked in the Childminding portal.",
   "properties": {
     "name": {
       "type": "string",
@@ -18,7 +18,7 @@
         "frn"
       ],
       "default": "reception",
-      "description": "reception = the front-desk kiosk; classroom = a wall tablet in one of the teaching rooms"
+      "description": "reception = the front-desk kiosk; classroom = a wall tablet in one of the teaching rooms, including the childminding room"
     },
     "room": {
       "type": "string",
@@ -28,9 +28,10 @@
         "employment_classroom",
         "arc",
         "echo_valley",
+        "childminding",
         "other"
       ],
-      "description": "Physical room the classroom tablet is mounted in \u2014 its schedule comes from what is booked in this room"
+      "description": "Physical room the classroom tablet is mounted in \u2014 its schedule comes from what is booked in this room. The childminding room only ever follows Childminding sessions."
     },
     "location": {
       "type": "string",

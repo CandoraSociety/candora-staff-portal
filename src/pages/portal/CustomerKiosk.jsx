@@ -238,12 +238,15 @@ export default function CustomerKiosk() {
 
   const checkIn = async (person) => {
     const current = prompt;
+    // The tablet's own clock, so an arrival time is stamped in local time.
+    const now = new Date();
     await base44.functions.invoke('kioskApi', {
       action: 'check_in',
       station_id: session.id,
       access_code: session.code,
       prompt_id: current.id,
       person,
+      local_time: `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`,
     });
     const name = person.participant_id
       ? people.find((row) => row.id === person.participant_id)?.name || ''

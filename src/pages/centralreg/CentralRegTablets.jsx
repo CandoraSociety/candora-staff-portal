@@ -82,7 +82,7 @@ export default function CentralRegTablets() {
           <Tablet className="h-6 w-6 text-primary" /> Classroom Tablets
         </h1>
         <p className="text-sm text-muted-foreground mt-1">
-          One tablet per room. Open <span className="font-mono">/kiosk</span> on a tablet once and type its code — after that it waits on the welcome screen. When anything is scheduled in that room, the tablet opens its check-in 30 minutes before the start and keeps it open until 10 minutes after the scheduled end, whichever program the class belongs to.
+          One tablet per room. Open <span className="font-mono">/kiosk</span> on a tablet once and type its code — after that it waits on the welcome screen. When anything is scheduled in that room, the tablet opens its check-in 30 minutes before the start and keeps it open until 10 minutes after the scheduled end, whichever program the class belongs to. The childminding room is the exception: it only ever follows the sessions booked in the Childminding portal, and a parent checking a child in stamps their arrival on that child's record.
         </p>
       </div>
 

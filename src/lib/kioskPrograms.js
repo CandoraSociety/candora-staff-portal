@@ -25,6 +25,11 @@ export const KIOSK_ROOMS = [
     label: 'Echo Valley',
     blurb: 'The tablet in the Echo Valley space.',
   },
+  {
+    id: 'childminding',
+    label: 'Childminding Room',
+    blurb: 'The tablet in the childminding room — its sessions come from the Childminding portal.',
+  },
 ];
 
 export const KIOSK_ROOM_IDS = KIOSK_ROOMS.map((room) => room.id);
@@ -44,6 +49,7 @@ const PROGRAM_LABELS = {
   community: 'Community Programs',
   digilit: 'Digital Literacy',
   workshop: 'Workshops',
+  childminding: 'Childminding',
   other: 'Candora',
 };
 
