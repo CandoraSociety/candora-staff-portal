@@ -34,21 +34,25 @@ export default function CentralRegTablets() {
     setPrompts(rows || []);
   }, []);
 
-  // The classes staff can pick from when sending a form by hand.
+  // The classes staff can pick from when sending a form by hand. These lists are
+  // only suggestions for the free-text class field, so each one is fetched on
+  // its own: a list that can't be read (for example while a session is being
+  // re-checked) is skipped instead of taking the whole page down.
   useEffect(() => {
     (async () => {
-      const [classes, cohorts, programs, phac] = await Promise.all([
-        base44.entities.ELLClass.list('-created_date', 100),
-        base44.entities.EmpowerUCohort.list('-created_date', 50),
-        base44.entities.FRNProgram.list('-created_date', 100),
-        base44.entities.PHACProgram.list('-created_date', 100),
-      ]);
-      const names = [
-        ...(classes || []).map((row) => row.name),
-        ...(cohorts || []).map((row) => row.name),
-        ...(programs || []).filter((row) => row.status !== 'completed').map((row) => row.name),
-        ...(phac || []).filter((row) => row.status !== 'ended').map((row) => row.name),
-      ].filter(Boolean);
+      const sources = [
+        { entity: 'ELLClass', limit: 100, keep: () => true },
+        { entity: 'EmpowerUCohort', limit: 50, keep: () => true },
+        { entity: 'FRNProgram', limit: 100, keep: (row) => row.status !== 'completed' },
+        { entity: 'PHACProgram', limit: 100, keep: (row) => row.status !== 'ended' },
+      ];
+      const settled = await Promise.allSettled(
+        sources.map((source) => base44.entities[source.entity].list('-created_date', source.limit))
+      );
+      const names = settled.flatMap((result, index) => {
+        if (result.status !== 'fulfilled') return [];
+        return (result.value || []).filter(sources[index].keep).map((row) => row.name);
+      }).filter(Boolean);
       setOptions([...new Set(names)].sort());
     })();
   }, []);
