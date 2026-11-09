@@ -12,7 +12,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Briefcase, Plus, Trash2, Pencil, Loader2 } from 'lucide-react';
+import { Briefcase, Plus, Trash2, Pencil, Loader2, RefreshCw } from 'lucide-react';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { currentBillingMonth, parseBillingMonth } from './billingMonth';
@@ -25,29 +25,17 @@ function billingMonthFromDate(dateStr) {
   return String(dateStr).slice(0, 7); // YYYY-MM
 }
 
-// Push the paid work-exposure dollar total for a month into the CRT workbook's
-// Invoice Tracker (column CJ). The active workbook is updated directly; if the
-// month isn't in it (an earlier open workbook), every open workbook is
-// refreshed instead so the right one picks it up.
-async function syncWorkExposureToCrt(billingMonth) {
-  try {
-    const res = await base44.functions.invoke('syncWorkExposureToInvoiceTracker', { billing_month: billingMonth });
-    const data = res.data || {};
-    if (data.status === 'success') {
-      toast.success('CRT paid work exposure updated', {
-        description: `${billingMonth} → $${Number(data.expected || 0).toFixed(2)}`,
-      });
-      return;
-    }
-    if (data.status === 'no_row' || data.status === 'no_workbook' || data.status === 'no_sheet') {
-      await base44.functions.invoke('refreshAllBillingCounts', {});
-      toast.success('CRT workbooks updated', { description: `Paid work exposure refreshed for ${billingMonth}` });
-      return;
-    }
-    toast.warning(data.message || 'Could not update the CRT');
-  } catch (e) {
-    toast.error(e?.response?.data?.error || e?.message || 'Could not update the CRT');
-  }
+// Recompute the CRT's paid-work-exposure dollar total (column CJ) for every
+// open monthly workbook from ALL paid work exposure records — not just the entry
+// just saved — so the CRT always mirrors the entries listed in this section,
+// including ones entered before any sync existed. Idempotent: cells already
+// holding the right value are skipped.
+async function pushWorkExposureTotalsToCrt() {
+  const res = await base44.functions.invoke('refreshAllBillingCounts', {});
+  const data = res.data || {};
+  if (data.status === 'no_workbook') throw new Error('No CRT workbook is open yet.');
+  if (data.status !== 'success') throw new Error(data.message || 'Could not update the CRT');
+  return data;
 }
 
 export default function WorkExposureManualEntry({ clients, lockedMonth }) {
@@ -55,7 +43,25 @@ export default function WorkExposureManualEntry({ clients, lockedMonth }) {
   const [billingMonth, setBillingMonth] = useState(lockedMonth || currentBillingMonth());
   const [open, setOpen] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [syncingCrt, setSyncingCrt] = useState(false);
   const [editingId, setEditingId] = useState(null);
+
+  // Keeps the CRT's paid work exposure figure in step with every entry here.
+  const syncCrt = async (notify = false) => {
+    setSyncingCrt(true);
+    try {
+      await pushWorkExposureTotalsToCrt();
+      if (notify) {
+        toast.success('CRT updated', {
+          description: 'Paid work exposure totals now match these entries.',
+        });
+      }
+    } catch (e) {
+      toast.error(e?.response?.data?.error || e?.message || 'Could not update the CRT');
+    } finally {
+      setSyncingCrt(false);
+    }
+  };
 
   // Form state
   const [clientId, setClientId] = useState('');
@@ -190,8 +196,8 @@ export default function WorkExposureManualEntry({ clients, lockedMonth }) {
       resetForm();
       setEditingId(null);
       setOpen(false);
-      // Keep the CRT's paid work exposure dollar total in step with this entry.
-      syncWorkExposureToCrt(payload.billing_month || billingMonth);
+      // Reconcile the CRT against the full list of entries (not just this one).
+      syncCrt();
     } catch (e) {
       toast.error(e?.message || 'Could not save the entry.');
     } finally {
@@ -206,7 +212,7 @@ export default function WorkExposureManualEntry({ clients, lockedMonth }) {
       queryClient.invalidateQueries({ queryKey: ['financial-records', 'paid_external_placement'] });
       queryClient.invalidateQueries({ queryKey: ['financial-records'] });
       toast.success('Entry deleted.');
-      syncWorkExposureToCrt(record.billing_month || billingMonth);
+      syncCrt();
     } catch (e) {
       toast.error(e?.message || 'Could not delete.');
     }
@@ -234,6 +240,16 @@ export default function WorkExposureManualEntry({ clients, lockedMonth }) {
                 />
               </div>
             )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => syncCrt(true)}
+              disabled={syncingCrt}
+              title="Update the CRT with every work exposure entry listed here"
+            >
+              <RefreshCw className={`h-4 w-4 mr-1.5 ${syncingCrt ? 'animate-spin' : ''}`} />
+              {syncingCrt ? 'Syncing…' : 'Sync to CRT'}
+            </Button>
             <Dialog open={open} onOpenChange={(v) => { setOpen(v); if (!v) { setEditingId(null); resetForm(); } }}>
               <DialogTrigger asChild>
                 <Button size="sm" onClick={openAdd}><Plus className="h-4 w-4 mr-1.5" /> Add Manual Entry</Button>
