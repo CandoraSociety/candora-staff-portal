@@ -124,7 +124,9 @@ export default async function(req: Request): Promise<Response> {
     //    row's Reporting Period (Start/End) to the new month's first/last day.
     let narrativeResult = null;
     try {
-      narrativeResult = await syncNarrativeReportIntoWorkbook(accessToken, newFile);
+      // clearOtherMonths: this file was just cloned for a new month, so any
+      // row still dated in another month is carry-over, not an intentional entry.
+      narrativeResult = await syncNarrativeReportIntoWorkbook(accessToken, newFile, { clearOtherMonths: true });
     } catch (e) {
       narrativeResult = { status: 'error', error: e.message };
     }

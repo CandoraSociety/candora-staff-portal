@@ -43,7 +43,13 @@ export function narrativeMonthFromFileName(fileName) {
 // Sync the Narrative Report sheet of a single workbook to that workbook's
 // month. Returns a small status object. Non-fatal: callers may run this
 // alongside the client-data sync without aborting on a narrative error.
-export async function syncNarrativeReportIntoWorkbook(accessToken, workbook) {
+// options.clearOtherMonths — set TRUE only right after a workbook has been
+// cloned for a new month, where any row dated in a different month is stale
+// carry-over to be wiped. Everywhere else a row dated in another month is an
+// intentional entry (e.g. July's narrative filed in August's CRT), so its text
+// and its own Reporting Period dates are left exactly as they are.
+export async function syncNarrativeReportIntoWorkbook(accessToken, workbook, options: any = {}) {
+  const clearOtherMonths = options.clearOtherMonths === true;
   const wbKey = narrativeMonthFromFileName(workbook.name);
   if (!wbKey) {
     return { status: 'no_month', message: 'Could not parse month from filename: ' + workbook.name };
@@ -80,7 +86,7 @@ export async function syncNarrativeReportIntoWorkbook(accessToken, workbook) {
   }
 
   // Compose the updated A:D rows for the data region.
-  let kept = 0, cleared = 0, fresh = 0;
+  let kept = 0, cleared = 0, fresh = 0, otherMonth = 0;
   const outRows = [];
   for (let i = DATA_START_ROW - 1; i <= lastDataIdx; i++) {
     const row = values[i] || [];
@@ -92,6 +98,8 @@ export async function syncNarrativeReportIntoWorkbook(accessToken, workbook) {
 
     let newC = cText;
     let newD = dText;
+    let rowStart = startSerial;
+    let rowEnd = endSerial;
 
     if (aKey || bKey) {
       // Row already has reporting-period dates.
@@ -100,11 +108,19 @@ export async function syncNarrativeReportIntoWorkbook(accessToken, workbook) {
       if (aMatches || bMatches) {
         // Already this month — preserve the narrative text.
         if (hasText) kept++;
-      } else {
+      } else if (clearOtherMonths) {
         // Stale carry-over from a different month — clear the narrative text.
         newC = '';
         newD = '';
         if (hasText) cleared++;
+      } else {
+        // Another month's narrative filed in this workbook on purpose — keep
+        // its text and its own month's dates so the row still reads as that
+        // month (e.g. July 1–31 for a July summary in August's CRT).
+        const k = aKey || bKey;
+        rowStart = excelSerial(new Date(Date.UTC(k.year, k.month, 1)));
+        rowEnd = excelSerial(new Date(Date.UTC(k.year, k.month + 1, 0)));
+        if (hasText) otherMonth++;
       }
     } else {
       // No parseable date — treat as a fresh in-progress entry: keep any text
@@ -112,7 +128,7 @@ export async function syncNarrativeReportIntoWorkbook(accessToken, workbook) {
       if (hasText) fresh++;
     }
 
-    outRows.push([startSerial, endSerial, newC, newD]);
+    outRows.push([rowStart, rowEnd, newC, newD]);
   }
 
   // PATCH the data region A10:D<lastRow>.
@@ -134,19 +150,19 @@ export async function syncNarrativeReportIntoWorkbook(accessToken, workbook) {
     status: 'success',
     month: `${wbKey.year}-${String(wbKey.month + 1).padStart(2, '0')}`,
     rows: outRows.length,
-    kept, cleared, fresh,
+    kept, cleared, fresh, otherMonth,
     startSerial, endSerial
   };
 }
 
-// Write the given narrative summaries (in order) into the Narrative Report
-// sheet's Category (C) + Summary (D) columns for the workbook's month. Each
-// data row (10+) gets the workbook month's Reporting Period dates (A/B) and
-// either a summary's category/text or blanks. Rows beyond the summary count
-// are cleared (C/D) but keep their dates so the sheet stays dated for the month.
-// If there are more summaries than existing data rows, the range is extended
-// to fit them. Returns a small status object.
-export async function writeNarrativeSummariesIntoWorkbook(accessToken, workbook, summaries) {
+// Write the given narrative rows (in order) into the Narrative Report sheet's
+// Category (C) + Summary (D) columns. Each row carries its own Reporting
+// Period dates (A/B) as Excel serials, so a summary belonging to an earlier
+// month can sit in a later month's workbook under its own dates. Rows beyond
+// the row count are cleared (C/D) but keep the workbook month's dates so the
+// sheet stays dated for the month. If there are more rows than existing data
+// rows, the range is extended to fit them. Returns a small status object.
+export async function writeNarrativeSummariesIntoWorkbook(accessToken, workbook, rows) {
   const wbKey = narrativeMonthFromFileName(workbook.name);
   if (!wbKey) {
     return { status: 'no_month', message: 'Could not parse month from filename: ' + workbook.name };
@@ -178,12 +194,17 @@ export async function writeNarrativeSummariesIntoWorkbook(accessToken, workbook,
     if (hasContent) { lastDataIdx = i; break; }
   }
 
-  // Ensure enough rows to cover all summaries (extend past the used range if needed).
-  const endIdx = Math.max(lastDataIdx, DATA_START_ROW - 1 + Math.max(summaries.length, 1) - 1);
+  // Ensure enough rows to cover all rows (extend past the used range if needed).
+  const endIdx = Math.max(lastDataIdx, DATA_START_ROW - 1 + Math.max(rows.length, 1) - 1);
   const outRows = [];
   for (let i = 0; i <= endIdx - (DATA_START_ROW - 1); i++) {
-    const s = summaries[i];
-    outRows.push([startSerial, endSerial, s ? (s.category || '') : '', s ? (s.summary || '') : '']);
+    const r = rows[i];
+    outRows.push([
+      r && typeof r.startSerial === 'number' ? r.startSerial : startSerial,
+      r && typeof r.endSerial === 'number' ? r.endSerial : endSerial,
+      r ? (r.category || '') : '',
+      r ? (r.summary || '') : '',
+    ]);
   }
 
   const endRow1 = endIdx + 1; // 1-based
@@ -203,7 +224,7 @@ export async function writeNarrativeSummariesIntoWorkbook(accessToken, workbook,
   return {
     status: 'success',
     month: `${wbKey.year}-${String(wbKey.month + 1).padStart(2, '0')}`,
-    written: summaries.length,
+    written: rows.length,
     rows: outRows.length,
     startSerial, endSerial
   };

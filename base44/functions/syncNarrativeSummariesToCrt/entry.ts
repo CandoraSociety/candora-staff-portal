@@ -18,18 +18,32 @@ const CATEGORY_LABELS: Record<string, string> = {
 
 const CATEGORY_ORDER = ['client_issues_trends','communication_collaboration_scss','employer_engagement_activities','labour_market_observations','program_marketing_activities','program_delivery_activities','risk_management_strategies','staffing_updates','other'];
 
-// Push the narrative summaries a staff member has flagged (include_in_crt=true)
-// for a given reporting month into the matching monthly CRT workbook's
-// Narrative Report sheet — Category (col C) + Summary (col D), rows 10+.
+// Excel serial for the first / last day of a YYYY-MM month (same epoch maths as
+// the shared crtDatePatch helper, kept local so this function stays self-contained).
+function monthSerials(ym: string): { start: number; end: number } | null {
+  const m = String(ym || '').match(/^(\d{4})-(\d{2})$/);
+  if (!m) return null;
+  const year = parseInt(m[1], 10);
+  const month = parseInt(m[2], 10) - 1;
+  const start = Math.round((Date.UTC(year, month, 1) - Date.UTC(1899, 11, 30)) / 86400000);
+  const end = Math.round((Date.UTC(year, month + 1, 0) - Date.UTC(1899, 11, 30)) / 86400000);
+  return { start, end };
+}
+
+// Push the narrative summaries staff have flagged (include_in_crt=true) into a
+// monthly CRT workbook's Narrative Report sheet — Category (col C) + Summary
+// (col D), rows 10+.
 //
 // Payload:
-//   { reportMonth: "YYYY-MM" }  → required
+//   { crtMonth: "YYYY-MM" }  → the CRT workbook to write into (required)
+//   { reportMonth: "YYYY-MM" } → accepted as an alias for crtMonth
+//   { clearIfEmpty: true }     → allowed to clear the sheet when nothing is checked
 //
-// The matching workbook is CRT_<Month>_<Year>.xlsx in the _DEPT_Pathways
-// SharePoint folder. Closed (frozen) workbooks are NOT skipped here — the
-// manager may legitimately populate a closed month's narrative at reporting
-// time. The sheet's Reporting Period dates (A/B) are re-asserted to the
-// workbook month so rows are correctly dated regardless of prior state.
+// A summary goes into the workbook named by its own crt_month (falling back to
+// its report_month), so July's summaries can be filed in August's CRT while
+// August's summaries go into the same workbook. Each row keeps the Reporting
+// Period dates of the month the summary belongs to, so a July row in August's
+// CRT still reads as July.
 export default async function(req: Request): Promise<Response> {
   try {
     const base44 = createClientFromRequest(req);
@@ -38,11 +52,11 @@ export default async function(req: Request): Promise<Response> {
     let payload: any = {};
     try { payload = await req.json(); } catch { /* no body */ }
 
-    const reportMonth = payload?.reportMonth;
-    if (!reportMonth || !/^\d{4}-\d{2}$/.test(reportMonth)) {
-      return Response.json({ error: 'reportMonth (YYYY-MM) is required.' }, { status: 400 });
+    const crtMonth = payload?.crtMonth || payload?.reportMonth;
+    if (!crtMonth || !/^\d{4}-\d{2}$/.test(crtMonth)) {
+      return Response.json({ error: 'crtMonth (YYYY-MM) is required.' }, { status: 400 });
     }
-    const [yearStr, monthStr] = reportMonth.split('-');
+    const [yearStr, monthStr] = crtMonth.split('-');
     const year = parseInt(yearStr, 10);
     const monthIdx = parseInt(monthStr, 10) - 1;
     const workbookName = `CRT_${MONTHS[monthIdx]}_${year}.xlsx`;
@@ -53,20 +67,25 @@ export default async function(req: Request): Promise<Response> {
     if (!workbook) {
       return Response.json({
         status: 'not_found',
-        message: `No CRT workbook named "${workbookName}" found in SharePoint for ${reportMonth}.`,
+        message: `No CRT workbook named "${workbookName}" found in SharePoint for ${crtMonth}.`,
       });
     }
 
-    // Fetch the checked narrative summaries for this month.
-    const summaries = await base44.asServiceRole.entities.NarrativeSummary.filter({
-      report_month: reportMonth,
+    // Every checked summary, then keep the ones aimed at this CRT month. A
+    // summary with no crt_month belongs to its own report_month's workbook.
+    const allChecked = await base44.asServiceRole.entities.NarrativeSummary.filter({
       include_in_crt: true,
     });
+    const summaries = (allChecked || []).filter(
+      (s: any) => (s.crt_month || s.report_month) === crtMonth
+    );
 
-    // Sort by the order staff set in Staff Monthly Reports (display_order),
-    // then fall back to category order and submitted_date for summaries that
-    // have not been ordered yet.
+    // Source month first (July's rows above August's), then the order staff set
+    // with the arrows, then category / submitted date for anything unordered.
     summaries.sort((a: any, b: any) => {
+      const ma = String(a.report_month || '');
+      const mb = String(b.report_month || '');
+      if (ma !== mb) return ma < mb ? -1 : 1;
       const oa = typeof a.display_order === 'number' ? a.display_order : Number.MAX_SAFE_INTEGER;
       const ob = typeof b.display_order === 'number' ? b.display_order : Number.MAX_SAFE_INTEGER;
       if (oa !== ob) return oa - ob;
@@ -82,15 +101,20 @@ export default async function(req: Request): Promise<Response> {
     if (summaries.length === 0 && !clearIfEmpty) {
       return Response.json({
         status: 'no_selection',
-        message: `No narrative summaries are checked for ${reportMonth}. Select at least one summary to push to the CRT.`,
+        message: `No narrative summaries are checked for ${crtMonth}. Select at least one summary to push to the CRT.`,
       });
     }
 
-    // Map category keys → human-readable labels for the Category column.
-    const mapped = summaries.map((s: any) => ({
-      category: CATEGORY_LABELS[s.category] || s.category,
-      summary: s.summary || '',
-    }));
+    // Map each summary to a sheet row, dated to its own reporting month.
+    const mapped = summaries.map((s: any) => {
+      const serials = monthSerials(s.report_month) || monthSerials(crtMonth);
+      return {
+        category: CATEGORY_LABELS[s.category] || s.category,
+        summary: s.summary || '',
+        startSerial: serials?.start,
+        endSerial: serials?.end,
+      };
+    });
 
     // When clearIfEmpty is true (called after a summary is deleted), an empty
     // mapped set clears the sheet's data rows so removed summaries disappear
@@ -99,7 +123,7 @@ export default async function(req: Request): Promise<Response> {
 
     return Response.json({
       status: 'success',
-      reportMonth,
+      crtMonth,
       workbook: workbook.name,
       checkedCount: summaries.length,
       cleared: summaries.length === 0,

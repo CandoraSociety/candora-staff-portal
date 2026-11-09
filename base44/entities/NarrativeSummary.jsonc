@@ -45,6 +45,10 @@
     "display_order": {
       "type": "number",
       "description": "Position of this summary among the checked summaries for its month \u2014 lowest is written to the CRT Narrative Report sheet first. Set by the up/down arrows in Staff Monthly Reports."
+    },
+    "crt_month": {
+      "type": "string",
+      "description": "YYYY-MM \u2014 the CRT workbook month this summary is pushed into. Blank means its own report_month's CRT. Set when a month's summaries are carried into a later month's CRT (for example July summaries added to August's CRT); the row keeps its own Reporting Period dates in the sheet."
     }
   },
   "required": [

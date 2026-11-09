@@ -40,6 +40,7 @@ export default function StaffMonthlyReports() {
   const [pushingMonth, setPushingMonth] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
   const [reorderingId, setReorderingId] = useState(null);
+  const [savingTargetMonth, setSavingTargetMonth] = useState(null);
 
   const handleSubmit = async () => {
     if (!reportMonth) { toast.error("Select a reporting month."); return; }
@@ -115,7 +116,7 @@ export default function StaffMonthlyReports() {
         // the whole sheet if none remain).
         try {
           await base44.functions.invoke('syncNarrativeSummariesToCrt', {
-            reportMonth: item.report_month,
+            crtMonth: item.crt_month || item.report_month,
             clearIfEmpty: true,
           });
           toast.success("Summary removed and CRT updated.");
@@ -132,10 +133,32 @@ export default function StaffMonthlyReports() {
     }
   };
 
+  // Send a whole month's summaries into a chosen CRT workbook (e.g. July 2026's
+  // summaries into August 2026's CRT). Each summary keeps its own report month,
+  // so its row lands in the sheet dated to that month.
+  const setGroupCrtMonth = async (month, target) => {
+    const list = narrativeSummaries.filter(s => s.report_month === month);
+    if (!list.length) return;
+    setSavingTargetMonth(month);
+    try {
+      await base44.entities.NarrativeSummary.bulkUpdate(
+        list.map(s => ({ id: s.id, crt_month: target }))
+      );
+      await refetchSummaries();
+      toast.success(`These summaries will go into the ${monthLabel(target)} CRT.`);
+    } catch (e) {
+      toast.error("Failed to set CRT month: " + (e.message || "Unknown error"));
+    } finally {
+      setSavingTargetMonth(null);
+    }
+  };
+
+  // `month` here is the CRT workbook month being written, which can differ from
+  // the month the summaries belong to.
   const pushMonthToCrt = async (month) => {
     setPushingMonth(month);
     try {
-      const res = await base44.functions.invoke('syncNarrativeSummariesToCrt', { reportMonth: month });
+      const res = await base44.functions.invoke('syncNarrativeSummariesToCrt', { crtMonth: month });
       const data = res.data;
       if (data.status === 'success') {
         toast.success(`Pushed ${data.checkedCount} narrative summary(ies) to ${data.workbook}.`);
@@ -185,6 +208,28 @@ export default function StaffMonthlyReports() {
     const unique = new Set(clients.map(c => c.assigned_worker_name).filter(Boolean));
     return Array.from(unique).sort();
   }, [clients]);
+
+  // CRT workbook months a summary can be pushed into: every month that already
+  // has summaries, out to six months past today.
+  const crtMonthOptions = useMemo(() => {
+    const todayYm = new Date().toISOString().slice(0, 7);
+    const months = new Set([todayYm]);
+    narrativeSummaries.forEach(s => { if (s.report_month) months.add(s.report_month); });
+    const sorted = Array.from(months).sort();
+    const firstTotal = (() => {
+      const [y, m] = sorted[0].split('-').map(Number);
+      return y * 12 + (m - 1);
+    })();
+    const lastTotal = (() => {
+      const [y, m] = sorted[sorted.length - 1].split('-').map(Number);
+      return y * 12 + (m - 1);
+    })();
+    const out = [];
+    for (let total = firstTotal; total <= lastTotal + 6; total++) {
+      out.push(`${Math.floor(total / 12)}-${String((total % 12) + 1).padStart(2, '0')}`);
+    }
+    return out;
+  }, [narrativeSummaries]);
 
   if (isLoading) {
     return (
@@ -252,7 +297,7 @@ export default function StaffMonthlyReports() {
         <div>
           <h3 className="text-lg font-semibold">Narrative Summaries</h3>
           <p className="text-xs text-muted-foreground">
-            Use the arrows to set each summary's order — summaries are written to the CRT Narrative Report in this order.
+            Use the arrows to set each summary's order — summaries are written to the CRT Narrative Report in this order. Use <span className="font-medium">Into CRT</span> to send a month's summaries into a later month's CRT (July → August); those rows keep their own month's dates.
           </p>
         </div>
         <Select value={filterWorker} onValueChange={setFilterWorker}>
@@ -281,6 +326,9 @@ export default function StaffMonthlyReports() {
           .sort((a, b) => new Date(b[0] + "-01") - new Date(a[0] + "-01"))
           .map(([month, items]) => {
             const checkedCount = items.filter(i => i.include_in_crt).length;
+            // The CRT workbook these summaries are filed into — normally their
+            // own month, but it can be moved forward (July → August's CRT).
+            const crtTarget = items[0]?.crt_month || month;
             return (
               <Card key={month}>
                 <CardHeader>
@@ -291,17 +339,35 @@ export default function StaffMonthlyReports() {
                       <Badge variant={checkedCount > 0 ? "default" : "secondary"}>
                         {checkedCount} selected
                       </Badge>
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-xs text-muted-foreground whitespace-nowrap">Into CRT:</span>
+                        <Select
+                          value={crtTarget}
+                          onValueChange={(v) => setGroupCrtMonth(month, v)}
+                          disabled={savingTargetMonth === month}
+                        >
+                          <SelectTrigger className="h-8 w-40 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {crtMonthOptions.map(opt => (
+                              <SelectItem key={opt} value={opt}>{monthLabel(opt)}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        {savingTargetMonth === month && <Loader2 className="w-3.5 h-3.5 animate-spin text-muted-foreground" />}
+                      </div>
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => pushMonthToCrt(month)}
-                        disabled={pushingMonth === month || checkedCount === 0}
+                        onClick={() => pushMonthToCrt(crtTarget)}
+                        disabled={pushingMonth === crtTarget || checkedCount === 0}
                         className="gap-1.5"
                       >
-                        {pushingMonth === month
+                        {pushingMonth === crtTarget
                           ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
                           : <Upload className="w-3.5 h-3.5" />}
-                        {pushingMonth === month ? "Pushing..." : "Push to CRT"}
+                        {pushingMonth === crtTarget ? "Pushing..." : "Push to CRT"}
                       </Button>
                     </div>
                   </div>
@@ -341,6 +407,11 @@ export default function StaffMonthlyReports() {
                           <span className="text-sm font-semibold" style={{ color: "hsl(231,64%,28%)" }}>
                             {categoryLabel(item.category)}
                           </span>
+                          {(item.crt_month || item.report_month) !== item.report_month && (
+                            <Badge variant="outline" className="text-[10px] font-normal">
+                              dated {monthLabel(item.report_month)} → {monthLabel(item.crt_month)} CRT
+                            </Badge>
+                          )}
                           <div className="flex items-center gap-2">
                             <span className="text-xs text-muted-foreground">
                               {item.submitted_by_name} · {item.submitted_date}
