@@ -288,7 +288,20 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
   const completionDate  = parseDate(client?.completion_date);
   const followup90Date  = parseDate(client?.followup_90day_date);
 
-  const leftAnchor = intakeDate || serviceStart || new Date();
+  const allItemDates = items.flatMap(i => [
+    parseDate(i.statusData?.timeline_start),
+    parseDate(i.statusData?.timeline_end),
+    parseDate(i.statusData?.started_date),
+    parseDate(i.statusData?.completed_date),
+    parseDate(i.detail?.timeline_start),
+    parseDate(i.detail?.timeline_end),
+  ]).filter(Boolean);
+
+  const earliestItem = allItemDates.length > 0 ? allItemDates.reduce((a, b) => b < a ? b : a) : null;
+  const anchors = [intakeDate, serviceStart, earliestItem].filter(Boolean);
+  // The map opens on the client's intake — or earlier when their service start
+  // or an activity is dated before intake, so nothing falls off the left edge.
+  const leftAnchor = anchors.length > 0 ? anchors.reduce((a, b) => b < a ? b : a) : new Date();
 
   const projectedEnd = serviceStart
     ? new Date(serviceStart.getTime() + (isDEA ? 14 : 112) * 86400000)
@@ -297,14 +310,6 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
   const followup90Calc = completionDate
     ? new Date(completionDate.getTime() + 91 * 86400000)
     : null;
-
-  const allItemDates = items.flatMap(i => [
-    parseDate(i.statusData?.timeline_start),
-    parseDate(i.statusData?.timeline_end),
-    parseDate(i.statusData?.started_date),
-    parseDate(i.statusData?.completed_date),
-    parseDate(i.detail?.timeline_end),
-  ]).filter(Boolean);
 
   const latestItem = allItemDates.length > 0 ? allItemDates.reduce((a, b) => b > a ? b : a) : null;
   const maxDateRaw = [projectedEnd, latestItem, followup90Date, followup90Calc].filter(Boolean).reduce((a, b) => b > a ? b : a, projectedEnd);
@@ -323,7 +328,7 @@ export default function ActionPlanRoadmap({ client, selectedItems, itemDetails, 
 
   // ── Milestones ─────────────────────────────────────────────────────────────
   const milestones = [
-    { key: 'intake',        date: intakeDate,      label: 'Intake',     color: '#8b5cf6', forcePct: 0 },
+    { key: 'intake',        date: intakeDate,      label: 'Intake',     color: '#8b5cf6' },
     { key: 'service_start', date: serviceStart,    label: 'Start',      color: '#10b981' },
     { key: 'projected_end', date: projectedEnd,    label: 'Proj.End',   color: '#3b82f6', dashed: true },
     { key: 'completion',    date: completionDate,  label: 'End',        color: '#16a34a' },
