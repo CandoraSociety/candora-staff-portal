@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -166,17 +166,31 @@ export default function IntakeForm({ client, onSave, onCancel, onSaveAndContinue
   const [educationEntries, setEducationEntries] = useState([]);
   const [errors, setErrors] = useState({});
   const [uploading, setUploading] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const set = (field, value) => setForm(f => ({ ...f, [field]: value }));
 
+  // Guard: a double click (or Enter twice) must never create the client twice.
+  const savedRef = useRef(false);
+
   const submitForm = async (continueAfter = false) => {
+    if (savedRef.current) return;
     const errs = validate(form);
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
+    savedRef.current = true;
+    setSaving(true);
     setErrors({});
-    const empHistoryStr = JSON.stringify(employmentEntries);
-    const data = { ...form, employment_history: empHistoryStr };
-    await onSave(data);
-    if (continueAfter && onSaveAndContinue) onSaveAndContinue(data);
+    try {
+      const empHistoryStr = JSON.stringify(employmentEntries);
+      const data = { ...form, employment_history: empHistoryStr };
+      await onSave(data);
+      if (continueAfter && onSaveAndContinue) onSaveAndContinue(data);
+    } catch (error) {
+      savedRef.current = false;
+      setSaving(false);
+      throw error;
+    }
+    setSaving(false);
   };
 
   const handleSubmit = (e) => {
@@ -620,11 +634,11 @@ export default function IntakeForm({ client, onSave, onCancel, onSaveAndContinue
 
       <div className="flex justify-end gap-3">
         <Button type="button" variant="outline" onClick={onCancel}>Cancel</Button>
-        <Button type="submit" className="gap-2">
-          <Save className="w-4 h-4" /> {client ? 'Save Changes' : 'Save Client'}
+        <Button type="submit" className="gap-2" disabled={saving}>
+          <Save className="w-4 h-4" /> {saving ? 'Saving…' : client ? 'Save Changes' : 'Save Client'}
         </Button>
         {onSaveAndContinue && (
-          <Button type="button" onClick={() => submitForm(true)} className="gap-2">
+          <Button type="button" onClick={() => submitForm(true)} className="gap-2" disabled={saving}>
             <Save className="w-4 h-4" /> Save Changes & Begin Assessment
           </Button>
         )}
