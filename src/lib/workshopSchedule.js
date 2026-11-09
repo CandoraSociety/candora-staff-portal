@@ -101,6 +101,7 @@ export const WORKSHOP_CATEGORIES = [
   { value: 'job_search_workshop', label: 'Job Search Workshop' },
   { value: 'resume_writing_workshop', label: 'Resume Writing Workshop' },
   { value: 'interview_skills_workshop', label: 'Interview Skills Workshop' },
+  { value: 'job_club_workshop', label: 'Job Club Workshop' },
   { value: 'workplace_readiness_workshop', label: 'Workplace Readiness Workshop' },
   { value: 'financial_literacy_workshop', label: 'Financial Literacy Workshop' },
   { value: 'digital_literacy_workshop', label: 'Digital Literacy Workshop' },

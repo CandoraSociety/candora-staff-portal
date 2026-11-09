@@ -36,6 +36,7 @@ const SERVICENAV_OUTCOMES = ['E-RF', 'E-UF', 'SE'];
 
 const SDP_LABELS = {
   job_search_workshop: 'Job Search Workshop',
+  job_club_workshop: 'Job Club Workshop',
   resume_writing_workshop: 'Resume Writing Workshop',
   interview_skills_workshop: 'Interview Skills Workshop',
   workplace_readiness_workshop: 'Workplace Readiness Workshop',

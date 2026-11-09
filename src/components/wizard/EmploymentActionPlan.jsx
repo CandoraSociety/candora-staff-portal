@@ -20,6 +20,7 @@ const DEA_ACTIVITY_TYPES = [
   'Job Search Workshop',
   'Resume Writing Workshop',
   'Interview Skills Workshop',
+  'Job Club Workshop',
   'Workplace Readiness Workshop',
   'Financial Literacy Workshop',
   'Skills Assessment',
@@ -51,7 +52,13 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
   }, []);
   const [selectedItems, setSelectedItems] = useState(defaultSelected);
   const [itemDetails, setItemDetails] = useState(client?.sdp_item_details || {});
-  const [otherDesc, setOtherDesc] = useState(client?.sdp_other_desc || '');
+  // Several "other" activities can be planned. An older single description is
+  // folded in as the first entry so existing plans open unchanged.
+  const [otherItems, setOtherItems] = useState(() => {
+    const stored = client?.sdp_item_details?.other_items;
+    if (Array.isArray(stored) && stored.length) return stored;
+    return client?.sdp_other_desc ? [{ description: client.sdp_other_desc }] : [];
+  });
   const [sdpNotes, setSdpNotes] = useState(client?.sdp_notes || '');
   // Program start date — defaults to today on first action plan creation, editable thereafter
   const [programStartDate, setProgramStartDate] = useState(
@@ -78,8 +85,15 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
       JSON.stringify((client?.dea_activities || []).filter(a => a.type).map(a => a.type).sort())
     : JSON.stringify([...selectedItems].sort()) !== JSON.stringify([...(client?.sdp_items || [])].sort());
 
-  const toggleItem = (key) =>
+  const toggleItem = (key) => {
+    if (key === 'other' && !selectedItems.includes('other') && otherItems.length === 0) {
+      setOtherItems([{ description: '' }]);
+    }
     setSelectedItems(prev => prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]);
+  };
+
+  const updateOther = (idx, patch) =>
+    setOtherItems(prev => prev.map((o, i) => i === idx ? { ...o, ...patch } : o));
 
   const addDeaActivity = () =>
     setDeaActivities(prev => [...prev, { id: Date.now().toString(), type: '', notes: '' }]);
@@ -100,9 +114,15 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
   const handleSave = async (andComplete = false) => {
     setSaving(true);
     try {
+      const details = { ...itemDetails };
+      if (selectedItems.includes('other')) {
+        details.other_items = otherItems.filter(o => (o.description || '').trim() || o.timeline_end);
+      } else {
+        delete details.other_items;
+      }
       const updates = isDEA
         ? { dea_activities: deaActivities, sdp_notes: sdpNotes, action_plan_submitted: true, service_start_date: programStartDate }
-        : { sdp_items: selectedItems, sdp_item_details: itemDetails, sdp_other_desc: otherDesc, sdp_notes: sdpNotes, action_plan_submitted: true, service_start_date: programStartDate };
+        : { sdp_items: selectedItems, sdp_item_details: details, sdp_other_desc: details.other_items?.[0]?.description || '', sdp_notes: sdpNotes, action_plan_submitted: true, service_start_date: programStartDate };
 
       const updatedClient = await onSave(updates);
 
@@ -252,7 +272,7 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
                         />
                         <span className="text-sm">{item.label}</span>
                       </label>
-                      {selectedItems.includes(item.key) && (
+                      {selectedItems.includes(item.key) && item.key !== 'other' && (
                         <div data-tour="pw-plan-dates" className="ml-6 mt-1 flex items-center gap-2">
                           <Label className="text-xs text-muted-foreground whitespace-nowrap">Anticipated Completion:</Label>
                           <Input
@@ -263,8 +283,42 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
                           />
                         </div>
                       )}
+                      {item.key === 'job_club_workshop' && selectedItems.includes('job_club_workshop') && (
+                        <Input
+                          value={itemDetails.job_club_workshop?.job_club_type || ''}
+                          onChange={e => setItemDetails(prev => ({ ...prev, job_club_workshop: { ...prev.job_club_workshop, job_club_type: e.target.value } }))}
+                          className="mt-1 ml-6 text-sm"
+                          placeholder="Which job club? e.g. Trades job club, Youth job club..."
+                        />
+                      )}
                       {item.key === 'other' && selectedItems.includes('other') && (
-                        <Input value={otherDesc} onChange={e => setOtherDesc(e.target.value)} className="mt-2 text-sm" placeholder="Describe other activity..." />
+                        <div className="ml-6 mt-2 space-y-2">
+                          {otherItems.map((entry, idx) => (
+                            <div key={idx} className="flex flex-wrap items-center gap-2">
+                              <Input
+                                value={entry.description || ''}
+                                onChange={e => updateOther(idx, { description: e.target.value })}
+                                className="text-sm flex-1 min-w-[12rem]"
+                                placeholder={`Describe other activity ${idx + 1}...`}
+                              />
+                              <Input
+                                type="date"
+                                title="Anticipated completion"
+                                value={entry.timeline_end || ''}
+                                onChange={e => updateOther(idx, { timeline_end: e.target.value })}
+                                className="h-8 text-xs w-auto"
+                              />
+                              {otherItems.length > 1 && (
+                                <button type="button" onClick={() => setOtherItems(prev => prev.filter((_, i) => i !== idx))} className="text-muted-foreground hover:text-destructive">
+                                  <X className="w-4 h-4" />
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                          <Button type="button" variant="outline" size="sm" onClick={() => setOtherItems(prev => [...prev, { description: '' }])}>
+                            <Plus className="w-3 h-3 mr-1" /> Add Another Other Activity
+                          </Button>
+                        </div>
                       )}
                       {item.key === 'one_on_one_counselling' && selectedItems.includes('one_on_one_counselling') && (
                         <Textarea

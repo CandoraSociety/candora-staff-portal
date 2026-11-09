@@ -4,6 +4,7 @@ export const ACTION_PLAN_ITEMS = [
   { key: 'job_search_workshop',          label: 'Job Search Workshop',          category: 'Workshops' },
   { key: 'resume_writing_workshop',      label: 'Resume Writing Workshop',       category: 'Workshops' },
   { key: 'interview_skills_workshop',    label: 'Interview Skills Workshop',     category: 'Workshops' },
+  { key: 'job_club_workshop',            label: 'Job Club Workshop',             category: 'Workshops' },
   { key: 'workplace_readiness_workshop', label: 'Workplace Readiness Workshop',  category: 'Workshops' },
   { key: 'financial_literacy_workshop',  label: 'Financial Literacy Workshop',   category: 'Workshops' },
   { key: 'skills_assessment',            label: 'Skills Assessment',             category: 'Programs' },

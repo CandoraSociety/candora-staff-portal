@@ -5,6 +5,7 @@ const ACTION_PLAN_LABELS = {
   job_search_workshop: 'Job Search Workshop',
   resume_writing_workshop: 'Resume Writing Workshop',
   interview_skills_workshop: 'Interview Skills Workshop',
+  job_club_workshop: 'Job Club Workshop',
   workplace_readiness_workshop: 'Workplace Readiness Workshop',
   financial_literacy_workshop: 'Financial Literacy Workshop',
   digital_literacy_workshop: 'Digital Literacy Workshop',
