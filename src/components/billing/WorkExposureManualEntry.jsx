@@ -25,6 +25,31 @@ function billingMonthFromDate(dateStr) {
   return String(dateStr).slice(0, 7); // YYYY-MM
 }
 
+// Push the paid work-exposure dollar total for a month into the CRT workbook's
+// Invoice Tracker (column CJ). The active workbook is updated directly; if the
+// month isn't in it (an earlier open workbook), every open workbook is
+// refreshed instead so the right one picks it up.
+async function syncWorkExposureToCrt(billingMonth) {
+  try {
+    const res = await base44.functions.invoke('syncWorkExposureToInvoiceTracker', { billing_month: billingMonth });
+    const data = res.data || {};
+    if (data.status === 'success') {
+      toast.success('CRT paid work exposure updated', {
+        description: `${billingMonth} → $${Number(data.expected || 0).toFixed(2)}`,
+      });
+      return;
+    }
+    if (data.status === 'no_row' || data.status === 'no_workbook' || data.status === 'no_sheet') {
+      await base44.functions.invoke('refreshAllBillingCounts', {});
+      toast.success('CRT workbooks updated', { description: `Paid work exposure refreshed for ${billingMonth}` });
+      return;
+    }
+    toast.warning(data.message || 'Could not update the CRT');
+  } catch (e) {
+    toast.error(e?.response?.data?.error || e?.message || 'Could not update the CRT');
+  }
+}
+
 export default function WorkExposureManualEntry({ clients, lockedMonth }) {
   const queryClient = useQueryClient();
   const [billingMonth, setBillingMonth] = useState(lockedMonth || currentBillingMonth());
@@ -165,6 +190,8 @@ export default function WorkExposureManualEntry({ clients, lockedMonth }) {
       resetForm();
       setEditingId(null);
       setOpen(false);
+      // Keep the CRT's paid work exposure dollar total in step with this entry.
+      syncWorkExposureToCrt(payload.billing_month || billingMonth);
     } catch (e) {
       toast.error(e?.message || 'Could not save the entry.');
     } finally {
@@ -179,6 +206,7 @@ export default function WorkExposureManualEntry({ clients, lockedMonth }) {
       queryClient.invalidateQueries({ queryKey: ['financial-records', 'paid_external_placement'] });
       queryClient.invalidateQueries({ queryKey: ['financial-records'] });
       toast.success('Entry deleted.');
+      syncWorkExposureToCrt(record.billing_month || billingMonth);
     } catch (e) {
       toast.error(e?.message || 'Could not delete.');
     }
