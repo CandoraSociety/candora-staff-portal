@@ -5,6 +5,7 @@ import { formatDateLong } from '@/lib/workshopSchedule';
 const RECURRENCE_LABEL = { none: 'One-off', weekly: 'Weekly', biweekly: 'Biweekly', monthly: 'Monthly' };
 const CATEGORY_LABEL = {
   none: '—', job_search_workshop: 'Job Search', resume_writing_workshop: 'Resume Writing',
+  cover_letter_workshop: 'Cover Letter',
   interview_skills_workshop: 'Interview Skills', workplace_readiness_workshop: 'Workplace Readiness',
   financial_literacy_workshop: 'Financial Literacy', digital_literacy_workshop: 'Digital Literacy',
 };

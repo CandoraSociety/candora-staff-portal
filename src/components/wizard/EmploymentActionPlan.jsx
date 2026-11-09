@@ -19,6 +19,7 @@ const ALL_ITEMS = ACTION_PLAN_ITEMS;
 const DEA_ACTIVITY_TYPES = [
   'Job Search Workshop',
   'Resume Writing Workshop',
+  'Cover Letter Workshop',
   'Interview Skills Workshop',
   'Job Club Workshop',
   'Workplace Readiness Workshop',
@@ -228,7 +229,7 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
                     </button>
                   )}
                 </div>
-                {act.type && (
+                {act.type && !(act.type === 'Job Club Workshop' && act.ongoing) && (
                   <div className="flex items-center gap-2 ml-18 pl-[72px]">
                     <Label className="text-xs text-muted-foreground whitespace-nowrap">Anticipated Completion:</Label>
                     <Input
@@ -247,6 +248,19 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
                       className="text-sm max-w-md"
                       placeholder="Which exposure course? e.g. Food Safe Level 1..."
                     />
+                  </div>
+                )}
+                {act.type === 'Job Club Workshop' && (
+                  <div className="pl-[72px]">
+                    <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+                      <input
+                        type="checkbox"
+                        className="accent-primary w-3.5 h-3.5"
+                        checked={!!act.ongoing}
+                        onChange={e => updateDea(act.id, 'ongoing', e.target.checked)}
+                      />
+                      Ongoing (no completion date)
+                    </label>
                   </div>
                 )}
               </div>
@@ -282,7 +296,7 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
                         />
                         <span className="text-sm">{item.label}</span>
                       </label>
-                      {selectedItems.includes(item.key) && item.key !== 'other' && (
+                      {selectedItems.includes(item.key) && item.key !== 'other' && !(item.key === 'job_club_workshop' && itemDetails.job_club_workshop?.ongoing) && (
                         <div data-tour="pw-plan-dates" className="ml-6 mt-1 flex items-center gap-2">
                           <Label className="text-xs text-muted-foreground whitespace-nowrap">Anticipated Completion:</Label>
                           <Input
@@ -294,12 +308,23 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
                         </div>
                       )}
                       {item.key === 'job_club_workshop' && selectedItems.includes('job_club_workshop') && (
-                        <Input
-                          value={itemDetails.job_club_workshop?.job_club_type || ''}
-                          onChange={e => setItemDetails(prev => ({ ...prev, job_club_workshop: { ...prev.job_club_workshop, job_club_type: e.target.value } }))}
-                          className="mt-1 ml-6 text-sm"
-                          placeholder="Which job club? e.g. Trades job club, Youth job club..."
-                        />
+                        <div className="mt-1 ml-6 space-y-1">
+                          <Input
+                            value={itemDetails.job_club_workshop?.job_club_type || ''}
+                            onChange={e => setItemDetails(prev => ({ ...prev, job_club_workshop: { ...prev.job_club_workshop, job_club_type: e.target.value } }))}
+                            className="text-sm"
+                            placeholder="Which job club? e.g. Trades job club, Youth job club..."
+                          />
+                          <label className="flex items-center gap-2 text-xs text-muted-foreground cursor-pointer">
+                            <input
+                              type="checkbox"
+                              className="accent-primary w-3.5 h-3.5"
+                              checked={!!itemDetails.job_club_workshop?.ongoing}
+                              onChange={e => setItemDetails(prev => ({ ...prev, job_club_workshop: { ...prev.job_club_workshop, ongoing: e.target.checked } }))}
+                            />
+                            Ongoing (no completion date)
+                          </label>
+                        </div>
                       )}
                       {item.key === 'exposure_course' && selectedItems.includes('exposure_course') && (
                         <Input

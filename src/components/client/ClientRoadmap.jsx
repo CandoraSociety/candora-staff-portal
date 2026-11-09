@@ -4,6 +4,7 @@ import { CheckCircle2, Circle, Printer, Calendar } from 'lucide-react';
 const ACTION_PLAN_LABELS = {
   job_search_workshop: 'Job Search Workshop',
   resume_writing_workshop: 'Resume Writing Workshop',
+  cover_letter_workshop: 'Cover Letter Workshop',
   interview_skills_workshop: 'Interview Skills Workshop',
   job_club_workshop: 'Job Club Workshop',
   workplace_readiness_workshop: 'Workplace Readiness Workshop',

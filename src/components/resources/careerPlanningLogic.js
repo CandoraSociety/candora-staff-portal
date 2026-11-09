@@ -28,6 +28,7 @@ for (let i = 1; i <= 12; i++) CLB[`clb_${i}`] = `CLB ${i}`;
 const SDP_LABELS = {
   job_search_workshop: 'Job Search Workshop',
   resume_writing_workshop: 'Resume Writing Workshop',
+  cover_letter_workshop: 'Cover Letter Workshop',
   interview_skills_workshop: 'Interview Skills Workshop',
   workplace_readiness_workshop: 'Workplace Readiness Workshop',
   financial_literacy_workshop: 'Financial Literacy Workshop',

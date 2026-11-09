@@ -19,6 +19,7 @@ import CrtAdditionalComments from './CrtAdditionalComments';
 const ITEM_LABELS = {
   job_search_workshop: 'Job Search Workshop',
   resume_writing_workshop: 'Resume Writing Workshop',
+  cover_letter_workshop: 'Cover Letter Workshop',
   interview_skills_workshop: 'Interview Skills Workshop',
   job_club_workshop: 'Job Club Workshop',
   workplace_readiness_workshop: 'Workplace Readiness Workshop',
@@ -87,9 +88,12 @@ function buildItems(client, internalTrainings = [], workExposures = [], workshop
 
   const items = selectedItems.map(key => {
     const courseName = key === 'exposure_course' ? (itemDetails.exposure_course?.course_name || '').trim() : '';
+    const ongoingJobClub = key === 'job_club_workshop' && itemDetails.job_club_workshop?.ongoing;
     const item = {
       key,
-      label: (ITEM_LABELS[key] || key.replace(/_/g, ' ')) + (courseName ? ` (${courseName})` : ''),
+      label: (ITEM_LABELS[key] || key.replace(/_/g, ' '))
+        + (courseName ? ` (${courseName})` : '')
+        + (ongoingJobClub ? ' (Ongoing)' : ''),
       color: getItemColor(key),
       detail: itemDetails[key] || {},
       status: roadmapStatus[key]?.status || 'planned',
