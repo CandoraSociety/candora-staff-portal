@@ -47,7 +47,8 @@ function monthSerials(ym: string): { start: number; end: number } | null {
 export default async function(req: Request): Promise<Response> {
   try {
     const base44 = createClientFromRequest(req);
-    try { await base44.auth.me(); } catch { /* service-role */ }
+    const user = await base44.auth.me().catch(error => error.status === 401 ? null : Promise.reject(error));
+    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     let payload: any = {};
     try { payload = await req.json(); } catch { /* no body */ }
@@ -120,6 +121,9 @@ export default async function(req: Request): Promise<Response> {
     // mapped set clears the sheet's data rows so removed summaries disappear
     // from the CRT Narrative Report, including when none remain.
     const result = await writeNarrativeSummariesIntoWorkbook(accessToken, workbook, mapped);
+    if (result.status !== 'success') {
+      return Response.json({ status: 'error', error: result.error || result.message || 'Narrative workbook update failed.', result }, { status: 502 });
+    }
 
     return Response.json({
       status: 'success',

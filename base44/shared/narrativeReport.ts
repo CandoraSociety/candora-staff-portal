@@ -23,6 +23,7 @@
 import { DRIVE_ID } from './crtWorkbook.ts';
 import { cellToMonthKey } from './invoiceTracker.ts';
 import { excelSerial } from './crtDatePatch.ts';
+import { revealAndVerifyNarrativeRows } from './narrativeVisibility.ts';
 
 const MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
 export const NARRATIVE_SHEET = 'Narrative Report';
@@ -221,11 +222,15 @@ export async function writeNarrativeSummariesIntoWorkbook(accessToken, workbook,
     return { status: 'write_failed', error: await patchRes.text() };
   }
 
+  await patchRes.arrayBuffer();
+  const visibility = await revealAndVerifyNarrativeRows(accessToken, workbook, outRows.slice(0, rows.length));
+
   return {
     status: 'success',
     month: `${wbKey.year}-${String(wbKey.month + 1).padStart(2, '0')}`,
     written: rows.length,
     rows: outRows.length,
+    ...visibility,
     startSerial, endSerial
   };
 }
