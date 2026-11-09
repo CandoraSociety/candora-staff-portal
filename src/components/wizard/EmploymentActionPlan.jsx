@@ -6,7 +6,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { CheckCircle2, ChevronRight, Plus, X } from 'lucide-react';
+import { CheckCircle2, ChevronRight, Plus, RotateCcw, X } from 'lucide-react';
+import ResetActionPlanDialog from '@/components/wizard/ResetActionPlanDialog';
 import { toast } from 'sonner';
 import { base44 } from '@/api/base44Client';
 import { createCompassTask, taskActionPlanCreated } from '@/lib/compassTasks';
@@ -43,6 +44,8 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
   const isSubmitted = !!client?.action_plan_submitted;
 
   const [saving, setSaving] = useState(false);
+  const [resetting, setResetting] = useState(false);
+  const [showResetDialog, setShowResetDialog] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [pendingAndComplete, setPendingAndComplete] = useState(false);
 
@@ -163,6 +166,32 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
     setPendingAndComplete(false);
   };
 
+  // Reverses the saved plan so the client returns to "Not Started".
+  const handleReset = async () => {
+    setResetting(true);
+    try {
+      await onSave({
+        action_plan_submitted: false,
+        sdp_items: [],
+        sdp_item_details: {},
+        sdp_other_desc: '',
+        sdp_notes: '',
+        dea_activities: [],
+      });
+      setSelectedItems([]);
+      setItemDetails({});
+      setOtherItems([]);
+      setSdpNotes('');
+      setDeaActivities([{ id: '1', type: '', notes: '' }, { id: '2', type: '', notes: '' }, { id: '3', type: '', notes: '' }]);
+      setShowResetDialog(false);
+      toast.success('Action plan reset — client moved back to Not Started');
+    } catch (error) {
+      toast.error('Failed to reset action plan');
+    } finally {
+      setResetting(false);
+    }
+  };
+
   // ─── Render ────────────────────────────────────────────────────────────────
 
   return (
@@ -174,6 +203,9 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
             <span className="font-semibold">Employment Action Plan Created</span>
             {itemsChanged && <span className="text-xs text-amber-600 ml-2">(unsaved changes)</span>}
           </div>
+          <Button variant="outline" size="sm" className="text-destructive hover:text-destructive" onClick={() => setShowResetDialog(true)}>
+            <RotateCcw className="w-3.5 h-3.5 mr-1" /> Reset Action Plan
+          </Button>
         </div>
       )}
 
@@ -399,6 +431,15 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
           </Button>
         )}
       </div>
+
+      {/* Reset (reverse a saved plan) */}
+      <ResetActionPlanDialog
+        open={showResetDialog}
+        onOpenChange={setShowResetDialog}
+        client={client}
+        onConfirm={handleReset}
+        saving={resetting}
+      />
 
       {/* Confirmation Dialog */}
       <AlertDialog open={showConfirmDialog} onOpenChange={setShowConfirmDialog}>
