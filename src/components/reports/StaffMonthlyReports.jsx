@@ -76,12 +76,37 @@ export default function StaffMonthlyReports() {
     }
   };
 
+  // Write one month's ticked summaries into that month's CRT workbook.
+  const syncCrtMonth = async (crtMonth, opts = {}) => {
+    const res = await base44.functions.invoke('syncNarrativeSummariesToCrt', { crtMonth, ...opts });
+    return res.data || {};
+  };
+
+  // Ticking the box IS the push — no second step. Unticking the last one clears
+  // that month's sheet so the removed entry disappears from the CRT too.
   const toggleIncludeInCrt = async (item) => {
+    const target = item.crt_month || item.report_month;
+    const nowIncluded = !item.include_in_crt;
+    setPushingMonth(target);
     try {
-      await base44.entities.NarrativeSummary.update(item.id, { include_in_crt: !item.include_in_crt });
+      await base44.entities.NarrativeSummary.update(item.id, { include_in_crt: nowIncluded });
       await refetchSummaries();
+      const data = await syncCrtMonth(target, { clearIfEmpty: true });
+      if (data.status === 'success') {
+        toast.success(
+          `${monthLabel(target)} CRT updated — ${data.checkedCount} summar${data.checkedCount === 1 ? 'y' : 'ies'} on the sheet.`
+        );
+      } else if (data.status === 'not_found') {
+        toast.error(data.message);
+      } else if (data.status !== 'no_selection') {
+        toast.error(data.error || data.message || "CRT sync failed.");
+      } else {
+        toast.success("Summary updated.");
+      }
     } catch (e) {
       toast.error("Failed to update: " + (e.message || "Unknown error"));
+    } finally {
+      setPushingMonth(null);
     }
   };
 
@@ -193,6 +218,7 @@ export default function StaffMonthlyReports() {
   const setGroupCrtMonth = async (month, target) => {
     const list = narrativeSummaries.filter(s => s.report_month === month);
     if (!list.length) return;
+    const previous = list[0]?.crt_month || month;
     setSavingTargetMonth(month);
     try {
       await base44.entities.NarrativeSummary.bulkUpdate(
@@ -200,6 +226,21 @@ export default function StaffMonthlyReports() {
       );
       await refetchSummaries();
       toast.success(`These summaries will go into the ${monthLabel(target)} CRT.`);
+
+      // Anything already ticked moves with them, so no row is left behind in
+      // the workbook the month was filed into before.
+      if (list.some(s => s.include_in_crt)) {
+        setPushingMonth(target);
+        try {
+          for (const m of Array.from(new Set([previous, target]))) {
+            await base44.functions.invoke('syncNarrativeSummariesToCrt', { crtMonth: m, clearIfEmpty: true });
+          }
+        } catch {
+          toast.error("CRT month saved, but the workbook could not be updated.");
+        } finally {
+          setPushingMonth(null);
+        }
+      }
     } catch (e) {
       toast.error("Failed to set CRT month: " + (e.message || "Unknown error"));
     } finally {
@@ -351,7 +392,7 @@ export default function StaffMonthlyReports() {
         <div>
           <h3 className="text-lg font-semibold">Narrative Summaries</h3>
           <p className="text-xs text-muted-foreground">
-            Use the arrows to set each summary's order — summaries are written to the CRT Narrative Report in this order. Use <span className="font-medium">Into CRT</span> to send a month's summaries into a later month's CRT (July → August); those rows keep their own month's dates.
+            Tick the box beside a summary to include it in the CRT — it is written to the sheet as soon as you tick it, and again whenever you edit it. Unticking removes it. Use the arrows to set their order, and <span className="font-medium">Into CRT</span> to file a month into a later month's CRT (July → August); those rows keep their own month's dates.
           </p>
         </div>
         <Select value={filterWorker} onValueChange={setFilterWorker}>
@@ -417,6 +458,9 @@ export default function StaffMonthlyReports() {
                         onClick={() => pushMonthToCrt(crtTarget)}
                         disabled={pushingMonth === crtTarget || checkedCount === 0}
                         className="gap-1.5"
+                        title={checkedCount === 0
+                          ? "Nothing is ticked for this month yet — tick a summary and it is sent automatically. This button re-sends everything already ticked."
+                          : "Re-send this month's ticked summaries to the CRT"}
                       >
                         {pushingMonth === crtTarget
                           ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
