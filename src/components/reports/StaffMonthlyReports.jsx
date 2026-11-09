@@ -84,12 +84,29 @@ export default function StaffMonthlyReports() {
 
   // Ticking the box IS the push — no second step. Unticking the last one clears
   // that month's sheet so the removed entry disappears from the CRT too.
+  // The CRT workbook a month's summaries are filed into — the same value the
+  // month card shows in its "Into CRT" picker, so the card and the write agree.
+  const groupCrtTarget = (reportMonth) => {
+    const same = narrativeSummaries
+      .filter(s => s.report_month === reportMonth)
+      .sort((a, b) => {
+        const oa = typeof a.display_order === "number" ? a.display_order : Number.MAX_SAFE_INTEGER;
+        const ob = typeof b.display_order === "number" ? b.display_order : Number.MAX_SAFE_INTEGER;
+        return oa - ob;
+      });
+    return same[0]?.crt_month || reportMonth;
+  };
+
   const toggleIncludeInCrt = async (item) => {
-    const target = item.crt_month || item.report_month;
+    const target = item.crt_month || groupCrtTarget(item.report_month);
     const nowIncluded = !item.include_in_crt;
     setPushingMonth(target);
     try {
-      await base44.entities.NarrativeSummary.update(item.id, { include_in_crt: nowIncluded });
+      // Record the CRT month too when it was never set, so this summary can
+      // never be written to a different workbook than the one the card shows.
+      const patch = { include_in_crt: nowIncluded };
+      if (!item.crt_month) patch.crt_month = target;
+      await base44.entities.NarrativeSummary.update(item.id, patch);
       await refetchSummaries();
       const data = await syncCrtMonth(target, { clearIfEmpty: true });
       if (data.status === 'success') {
