@@ -8,9 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, FileText, Loader2, Upload, Trash2, ChevronUp, ChevronDown } from "lucide-react";
+import { Plus, FileText, Loader2, Upload, Trash2, ChevronUp, ChevronDown, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { NARRATIVE_CATEGORIES } from "@/components/pathways/MonthlyNarrativeReportTab";
+import NarrativeSummaryEditForm from "@/components/reports/NarrativeSummaryEditForm";
 
 export default function StaffMonthlyReports() {
   const queryClient = useQueryClient();
@@ -41,6 +42,8 @@ export default function StaffMonthlyReports() {
   const [deletingId, setDeletingId] = useState(null);
   const [reorderingId, setReorderingId] = useState(null);
   const [savingTargetMonth, setSavingTargetMonth] = useState(null);
+  const [editingId, setEditingId] = useState(null);
+  const [savingEditId, setSavingEditId] = useState(null);
 
   const handleSubmit = async () => {
     if (!reportMonth) { toast.error("Select a reporting month."); return; }
@@ -130,6 +133,57 @@ export default function StaffMonthlyReports() {
       toast.error("Failed to delete: " + (e.message || "Unknown error"));
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  // Correct an existing summary: its reporting month, category and text. A
+  // month change re-files the entry under that month, so a summary entered as
+  // July but written in August can simply be moved to August.
+  const handleSaveEdit = async (item, data) => {
+    const newMonth = data.report_month;
+    const moved = newMonth !== item.report_month;
+    const oldCrtTarget = item.crt_month || item.report_month;
+
+    const patch = {
+      report_month: newMonth,
+      category: data.category,
+      summary: data.summary,
+    };
+
+    if (moved) {
+      // Land at the end of the new month's order.
+      const nextOrder = narrativeSummaries
+        .filter(s => s.report_month === newMonth && s.id !== item.id)
+        .reduce((max, s) => Math.max(max, typeof s.display_order === "number" ? s.display_order : -1), -1) + 1;
+      patch.display_order = nextOrder;
+    }
+
+    setSavingEditId(item.id);
+    try {
+      await base44.entities.NarrativeSummary.update(item.id, patch);
+      await refetchSummaries();
+      setEditingId(null);
+
+      // A flagged summary already sits in a CRT sheet, so rewrite the sheet(s)
+      // involved — the old month as well when the entry moved to a new one.
+      if (item.include_in_crt) {
+        const newCrtTarget = item.crt_month || newMonth;
+        const targets = [oldCrtTarget, newCrtTarget].filter((v, i, arr) => arr.indexOf(v) === i);
+        try {
+          for (const target of targets) {
+            await base44.functions.invoke('syncNarrativeSummariesToCrt', { crtMonth: target, clearIfEmpty: true });
+          }
+          toast.success("Summary updated and CRT refreshed.");
+        } catch (syncErr) {
+          toast.error("Saved, but CRT sync failed: " + (syncErr.message || "Unknown error"));
+        }
+      } else {
+        toast.success("Summary updated.");
+      }
+    } catch (e) {
+      toast.error("Failed to update: " + (e.message || "Unknown error"));
+    } finally {
+      setSavingEditId(null);
     }
   };
 
@@ -417,6 +471,16 @@ export default function StaffMonthlyReports() {
                               {item.submitted_by_name} · {item.submitted_date}
                             </span>
                             <button
+                              onClick={() => setEditingId(editingId === item.id ? null : item.id)}
+                              disabled={savingEditId === item.id}
+                              className="text-muted-foreground hover:text-foreground disabled:opacity-50"
+                              title="Edit month, category or text"
+                            >
+                              {savingEditId === item.id
+                                ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                : <Pencil className="w-3.5 h-3.5" />}
+                            </button>
+                            <button
                               onClick={() => handleDelete(item)}
                               disabled={deletingId === item.id}
                               className="text-muted-foreground hover:text-destructive disabled:opacity-50"
@@ -428,7 +492,16 @@ export default function StaffMonthlyReports() {
                             </button>
                           </div>
                         </div>
-                        <p className="text-sm text-muted-foreground whitespace-pre-wrap">{item.summary}</p>
+                        {editingId === item.id ? (
+                          <NarrativeSummaryEditForm
+                            item={item}
+                            saving={savingEditId === item.id}
+                            onCancel={() => setEditingId(null)}
+                            onSave={(data) => handleSaveEdit(item, data)}
+                          />
+                        ) : (
+                          <p className="text-sm text-muted-foreground whitespace-pre-wrap">{item.summary}</p>
+                        )}
                       </div>
                     </div>
                   ))}
