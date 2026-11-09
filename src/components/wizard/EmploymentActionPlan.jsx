@@ -239,6 +239,16 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
                     />
                   </div>
                 )}
+                {act.type === 'Exposure Course' && (
+                  <div className="pl-[72px]">
+                    <Input
+                      value={act.course_name || ''}
+                      onChange={e => updateDea(act.id, 'course_name', e.target.value)}
+                      className="text-sm max-w-md"
+                      placeholder="Which exposure course? e.g. Food Safe Level 1..."
+                    />
+                  </div>
+                )}
               </div>
             ))}
             <Button type="button" variant="outline" size="sm" onClick={addDeaActivity}>
@@ -289,6 +299,14 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
                           onChange={e => setItemDetails(prev => ({ ...prev, job_club_workshop: { ...prev.job_club_workshop, job_club_type: e.target.value } }))}
                           className="mt-1 ml-6 text-sm"
                           placeholder="Which job club? e.g. Trades job club, Youth job club..."
+                        />
+                      )}
+                      {item.key === 'exposure_course' && selectedItems.includes('exposure_course') && (
+                        <Input
+                          value={itemDetails.exposure_course?.course_name || ''}
+                          onChange={e => setItemDetails(prev => ({ ...prev, exposure_course: { ...prev.exposure_course, course_name: e.target.value } }))}
+                          className="mt-1 ml-6 text-sm"
+                          placeholder="Which exposure course? e.g. Food Safe Level 1..."
                         />
                       )}
                       {item.key === 'other' && selectedItems.includes('other') && (

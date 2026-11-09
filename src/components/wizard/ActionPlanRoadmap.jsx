@@ -86,9 +86,10 @@ function buildItems(client, internalTrainings = [], workExposures = [], workshop
   const activeSignups = (workshopSignups || []).filter(s => s.status !== 'cancelled');
 
   const items = selectedItems.map(key => {
+    const courseName = key === 'exposure_course' ? (itemDetails.exposure_course?.course_name || '').trim() : '';
     const item = {
       key,
-      label: ITEM_LABELS[key] || key.replace(/_/g, ' '),
+      label: (ITEM_LABELS[key] || key.replace(/_/g, ' ')) + (courseName ? ` (${courseName})` : ''),
       color: getItemColor(key),
       detail: itemDetails[key] || {},
       status: roadmapStatus[key]?.status || 'planned',
