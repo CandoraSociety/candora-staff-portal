@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, FileText, Loader2, Upload, Trash2 } from "lucide-react";
+import { Plus, FileText, Loader2, Upload, Trash2, ChevronUp, ChevronDown } from "lucide-react";
 import { toast } from "sonner";
 import { NARRATIVE_CATEGORIES } from "@/components/pathways/MonthlyNarrativeReportTab";
 
@@ -39,6 +39,7 @@ export default function StaffMonthlyReports() {
 
   const [pushingMonth, setPushingMonth] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
+  const [reorderingId, setReorderingId] = useState(null);
 
   const handleSubmit = async () => {
     if (!reportMonth) { toast.error("Select a reporting month."); return; }
@@ -47,6 +48,10 @@ export default function StaffMonthlyReports() {
     if (!user?.email) { toast.error("Could not determine your account."); return; }
     setSubmitting(true);
     try {
+      // New summaries land at the end of their month's order.
+      const nextOrder = narrativeSummaries
+        .filter(s => s.report_month === reportMonth)
+        .reduce((max, s) => Math.max(max, typeof s.display_order === "number" ? s.display_order : -1), -1) + 1;
       await base44.entities.NarrativeSummary.create({
         report_month: reportMonth,
         category,
@@ -55,6 +60,7 @@ export default function StaffMonthlyReports() {
         submitted_by_name: user.full_name || "",
         submitted_date: new Date().toISOString().split("T")[0],
         include_in_crt: false,
+        display_order: nextOrder,
       });
       toast.success("Narrative summary added.");
       setSummary("");
@@ -72,6 +78,28 @@ export default function StaffMonthlyReports() {
       await refetchSummaries();
     } catch (e) {
       toast.error("Failed to update: " + (e.message || "Unknown error"));
+    }
+  };
+
+  // Move a summary one place up/down inside its month and save the new order.
+  // The CRT Narrative Report sheet is written in this order.
+  const moveSummary = async (month, item, dir) => {
+    const list = groupedSummaries[month] || [];
+    const idx = list.findIndex(i => i.id === item.id);
+    const targetIdx = idx + dir;
+    if (idx === -1 || targetIdx < 0 || targetIdx >= list.length) return;
+    const reordered = [...list];
+    [reordered[idx], reordered[targetIdx]] = [reordered[targetIdx], reordered[idx]];
+    setReorderingId(item.id);
+    try {
+      await base44.entities.NarrativeSummary.bulkUpdate(
+        reordered.map((it, i) => ({ id: it.id, display_order: i }))
+      );
+      await refetchSummaries();
+    } catch (e) {
+      toast.error("Failed to save order: " + (e.message || "Unknown error"));
+    } finally {
+      setReorderingId(null);
     }
   };
 
@@ -142,6 +170,14 @@ export default function StaffMonthlyReports() {
       if (!groups[x.report_month]) groups[x.report_month] = [];
       groups[x.report_month].push(x);
     });
+    // Display order first (lowest first), then newest-first for anything that
+    // has not been ordered yet.
+    Object.values(groups).forEach(list => list.sort((a, b) => {
+      const oa = typeof a.display_order === "number" ? a.display_order : Number.MAX_SAFE_INTEGER;
+      const ob = typeof b.display_order === "number" ? b.display_order : Number.MAX_SAFE_INTEGER;
+      if (oa !== ob) return oa - ob;
+      return new Date(b.submitted_date || 0) - new Date(a.submitted_date || 0);
+    }));
     return groups;
   }, [narrativeSummaries, filterWorker]);
 
@@ -213,7 +249,12 @@ export default function StaffMonthlyReports() {
 
       {/* Narrative Summaries list */}
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold">Narrative Summaries</h3>
+        <div>
+          <h3 className="text-lg font-semibold">Narrative Summaries</h3>
+          <p className="text-xs text-muted-foreground">
+            Use the arrows to set each summary's order — summaries are written to the CRT Narrative Report in this order.
+          </p>
+        </div>
         <Select value={filterWorker} onValueChange={setFilterWorker}>
           <SelectTrigger className="w-56">
             <SelectValue placeholder="Filter by staff" />
@@ -266,8 +307,28 @@ export default function StaffMonthlyReports() {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-2">
-                  {items.map(item => (
+                  {items.map((item, itemIdx) => (
                     <div key={item.id} className="border rounded-lg p-3 flex gap-3">
+                      <div className="flex flex-col items-center justify-center gap-0.5 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => moveSummary(month, item, -1)}
+                          disabled={filterWorker !== "all" || reorderingId === item.id || itemIdx === 0}
+                          className="text-muted-foreground hover:text-foreground disabled:opacity-25 p-0.5"
+                          title={filterWorker !== "all" ? "Show all staff to reorder" : "Move up"}
+                        >
+                          <ChevronUp className="w-4 h-4" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveSummary(month, item, 1)}
+                          disabled={filterWorker !== "all" || reorderingId === item.id || itemIdx === items.length - 1}
+                          className="text-muted-foreground hover:text-foreground disabled:opacity-25 p-0.5"
+                          title={filterWorker !== "all" ? "Show all staff to reorder" : "Move down"}
+                        >
+                          <ChevronDown className="w-4 h-4" />
+                        </button>
+                      </div>
                       <input
                         type="checkbox"
                         checked={!!item.include_in_crt}

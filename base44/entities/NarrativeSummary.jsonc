@@ -41,6 +41,10 @@
       "type": "boolean",
       "default": false,
       "description": "When checked, this summary is included in the next push to the CRT Narrative Report sheet for its month."
+    },
+    "display_order": {
+      "type": "number",
+      "description": "Position of this summary among the checked summaries for its month \u2014 lowest is written to the CRT Narrative Report sheet first. Set by the up/down arrows in Staff Monthly Reports."
     }
   },
   "required": [

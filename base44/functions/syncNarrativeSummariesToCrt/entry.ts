@@ -63,8 +63,13 @@ export default async function(req: Request): Promise<Response> {
       include_in_crt: true,
     });
 
-    // Sort by category order, then by submitted_date for a stable layout.
+    // Sort by the order staff set in Staff Monthly Reports (display_order),
+    // then fall back to category order and submitted_date for summaries that
+    // have not been ordered yet.
     summaries.sort((a: any, b: any) => {
+      const oa = typeof a.display_order === 'number' ? a.display_order : Number.MAX_SAFE_INTEGER;
+      const ob = typeof b.display_order === 'number' ? b.display_order : Number.MAX_SAFE_INTEGER;
+      if (oa !== ob) return oa - ob;
       const ca = CATEGORY_ORDER.indexOf(a.category);
       const cb = CATEGORY_ORDER.indexOf(b.category);
       const caRank = ca === -1 ? 99 : ca;
