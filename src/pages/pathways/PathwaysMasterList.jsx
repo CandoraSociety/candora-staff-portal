@@ -12,6 +12,7 @@ import ServiceNavigationSections from "@/components/pathways/ServiceNavigationSe
 import PlacementSections from "@/components/pathways/PlacementSections";
 import EmployersListTab from "@/components/pathways/EmployersListTab";
 import CrossRefTab from "@/components/pathways/CrossRefTab";
+import CrtNameVerificationTab from "@/components/pathways/CrtNameVerificationTab";
 import MasterListFlatTable from "@/components/pathways/MasterListFlatTable";
 import CrossRefTriageSection from "@/components/pathways/CrossRefTriageSection";
 import { Switch } from "@/components/ui/switch";
@@ -88,6 +89,7 @@ export default function PathwaysMasterList() {
   const [viewAll, setViewAll] = useState(false);
   const [activeOneList, setActiveOneList] = useState(false);
   const [crossRefCounts, setCrossRefCounts] = useState({ all: 0, matched: 0, unmatched: 0 });
+  const [nameVerifyCounts, setNameVerifyCounts] = useState(null);
 
   useEffect(() => {
     Promise.all([
@@ -218,6 +220,7 @@ export default function PathwaysMasterList() {
                 { id: "internal_training", label: "Internal Training", count: internalTrainingClients.length },
                 { id: "work_exposure", label: "Work Exposure", count: workExposureClients.length },
                 { id: "cross_ref", label: "Cross-Ref", count: crossRefCounts.all },
+                { id: "name_verification", label: "Name Verification", count: nameVerifyCounts?.pending },
               ].map(sub => (
                 <button
                   key={sub.id}
@@ -284,7 +287,7 @@ export default function PathwaysMasterList() {
           </>
         ) : placementSubTab === "internal_training" ? (
           <PlacementSections clients={displayed} type="internal" />
-        ) : placementSubTab === "cross_ref" ? null : (
+        ) : placementSubTab === "cross_ref" || placementSubTab === "name_verification" ? null : (
           <>
             <ClientListControls
               search={search} onSearch={setSearch}
@@ -337,6 +340,10 @@ export default function PathwaysMasterList() {
         <div className={placementSubTab === "cross_ref" && !viewAll ? "" : "hidden"}>
           <CrossRefTab activeClients={sourceList} onCountsChange={setCrossRefCounts} />
         </div>
+
+        {placementSubTab === "name_verification" && !viewAll && (
+          <CrtNameVerificationTab onCountsChange={setNameVerifyCounts} />
+        )}
       </div>
 
       {/* Reassign Confirmation Dialog */}
