@@ -38,9 +38,10 @@ export default function ResetActionPlanDialog({ open, onOpenChange, client, onCo
               <li>The plan's submitted status</li>
               <li>The selected action plan activities and their details</li>
               <li>The plan's additional notes</li>
+              <li>The program start date and In Progress status</li>
             </ul>
             <div className="pt-1 text-muted-foreground">
-              Placements, exposure courses, workshop signups and the program start date are not deleted.
+              Placements, exposure courses and workshop signups are not deleted.
             </div>
           </div>
 

@@ -177,6 +177,10 @@ export default function EmploymentActionPlan({ client, onSave, onComplete, onCli
         sdp_other_desc: '',
         sdp_notes: '',
         dea_activities: [],
+        // Moving back to Not Started means the program is no longer running
+        // for this client — clear the start date and the in-progress status.
+        program_status: null,
+        service_start_date: null,
       });
       setSelectedItems([]);
       setItemDetails({});
