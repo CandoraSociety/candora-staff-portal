@@ -68,6 +68,13 @@ const stationSummary = (station) => ({
   room: station.room || '',
 });
 
+// What this tablet shows when nothing is on it — its own message and background.
+const idleScreen = (station) => ({
+  message: code(station.idle_message),
+  background: code(station.idle_background) || 'candora',
+  background_url: code(station.idle_background_url),
+});
+
 /* ---------------------------------------------------------------------------
    Automatic room check-in.
    A tablet in a classroom opens its check-in 30 minutes before anything starts
@@ -241,7 +248,7 @@ export default async function (req) {
           viewed_at: new Date().toISOString(),
         });
       }
-      return Response.json({ prompt, brand: await brand(base44) });
+      return Response.json({ prompt, brand: await brand(base44), screen: idleScreen(station) });
     }
 
     // Who is expected in the class the tablet is signing people in for.

@@ -5,6 +5,7 @@ import { Loader2, Tablet } from 'lucide-react';
 import RoomTabletCard from '@/components/centralreg/tablets/RoomTabletCard';
 import RoomSectionHeader from '@/components/centralreg/tablets/RoomSectionHeader';
 import ProgramSignInDialog from '@/components/centralreg/tablets/ProgramSignInDialog';
+import TabletScreenDialog from '@/components/centralreg/tablets/TabletScreenDialog';
 import KioskStationDialog from '@/components/reception/kiosk/KioskStationDialog';
 import KioskClientVerificationDialog from '@/components/reception/kiosk/KioskClientVerificationDialog';
 import { KIOSK_ROOMS, KIOSK_ROOM_IDS } from '@/lib/kioskPrograms';
@@ -22,6 +23,7 @@ export default function CentralRegTablets() {
   const [stationDialog, setStationDialog] = useState({ open: false, station: null, room: '' });
   const [sendTo, setSendTo] = useState(null);
   const [verifying, setVerifying] = useState(null);
+  const [screenFor, setScreenFor] = useState(null);
 
   const loadStations = useCallback(async () => {
     const rows = await base44.entities.KioskStation.list('-created_date', 100);
@@ -120,6 +122,7 @@ export default function CentralRegTablets() {
                         onEdit={(row) => setStationDialog({ open: true, station: row, room: row.room || room.id })}
                         onClear={clearPrompt}
                         onVerify={setVerifying}
+                        onScreen={setScreenFor}
                       />
                     ))}
                   </div>
@@ -149,6 +152,13 @@ export default function CentralRegTablets() {
           onSent={loadPrompts}
         />
       )}
+
+      <TabletScreenDialog
+        open={!!screenFor}
+        onOpenChange={(open) => { if (!open) setScreenFor(null); }}
+        station={screenFor}
+        onSaved={loadStations}
+      />
 
       <KioskClientVerificationDialog
         open={!!verifying}

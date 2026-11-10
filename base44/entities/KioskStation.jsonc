@@ -46,6 +46,37 @@
       "default": true,
       "description": "Turn off to disconnect the tablet \u2014 it stops receiving prompts"
     },
+    "idle_message": {
+      "type": "string",
+      "description": "Message shown on this tablet's welcome screen, under the welcome headline. Blank means the standard room message."
+    },
+    "idle_background": {
+      "type": "string",
+      "enum": [
+        "candora",
+        "navy",
+        "gold",
+        "ocean",
+        "forest",
+        "berry",
+        "light"
+      ],
+      "default": "candora",
+      "enumColors": [
+        "purple",
+        "blue",
+        "yellow",
+        "blue",
+        "green",
+        "pink",
+        "gray"
+      ],
+      "description": "Look of this tablet's welcome screen \u2014 'candora' follows the organization's own brand colours."
+    },
+    "idle_background_url": {
+      "type": "string",
+      "description": "Photo shown behind this tablet's welcome screen. When set it replaces the colour background."
+    },
     "last_seen": {
       "type": "string",
       "format": "date-time",

@@ -49,6 +49,7 @@ export default function CustomerKiosk() {
   const [secondsLeft, setSecondsLeft] = useState(WARN_SECONDS);
   const [tapped, setTapped] = useState(false);
   const [people, setPeople] = useState([]);
+  const [screen, setScreen] = useState(null);
   const [rosterLoading, setRosterLoading] = useState(false);
   const shownId = useRef(null);
   const lastActivity = useRef(Date.now());
@@ -113,6 +114,7 @@ export default function CustomerKiosk() {
       });
       const data = res.data || {};
       if (data.brand) setBrand(data.brand);
+      if (data.screen) setScreen(data.screen);
       const incoming = data.prompt || null;
       if (!incoming) {
         shownId.current = null;
@@ -366,5 +368,5 @@ export default function CustomerKiosk() {
 
   if (!session) return <KioskPairing brand={brand} onPaired={paired} />;
 
-  return <KioskIdle brand={brand} roomName={session.room ? roomLabel(session.room) : ''} />;
+  return <KioskIdle brand={brand} roomName={session.room ? roomLabel(session.room) : ''} screen={screen} />;
 }

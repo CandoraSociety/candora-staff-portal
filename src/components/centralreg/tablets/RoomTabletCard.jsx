@@ -1,6 +1,6 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { ClipboardCheck, Pencil, UserPlus, Wifi, WifiOff, X } from 'lucide-react';
+import { ClipboardCheck, Palette, Pencil, UserPlus, Wifi, WifiOff, X } from 'lucide-react';
 import { programLabel } from '@/lib/kioskPrograms';
 
 const isOnline = (station) => {
@@ -33,7 +33,7 @@ const statusLabel = (prompt) => {
 
 // One wall-mounted classroom tablet: it opens its own check-in from the room's
 // schedule, and staff can also send a form by hand.
-export default function RoomTabletCard({ station, prompt, onSend, onEdit, onClear, onVerify }) {
+export default function RoomTabletCard({ station, prompt, onSend, onEdit, onClear, onVerify, onScreen }) {
   const active = prompt && ['sent', 'opened'].includes(prompt.status);
   const checkins = prompt?.checkins || [];
 
@@ -63,6 +63,10 @@ export default function RoomTabletCard({ station, prompt, onSend, onEdit, onClea
           <ClipboardCheck className="h-4 w-4" /> Send a sign-in form
         </Button>
       )}
+
+      <Button variant="outline" className="w-full justify-start" onClick={() => onScreen(station)}>
+        <Palette className="h-4 w-4" /> Welcome screen
+      </Button>
 
       <div className="rounded-lg border border-border/70 p-3 space-y-2">
         <div className="flex items-center justify-between gap-2">
