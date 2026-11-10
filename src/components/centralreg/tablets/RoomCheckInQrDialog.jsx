@@ -15,8 +15,9 @@ import { ExternalLink } from 'lucide-react';
 // onto the list from then on.
 export default function RoomCheckInQrDialog({ room, open, onOpenChange }) {
   if (!room) return null;
-  const path = `/central-registration/check-in?room=${room.id}`;
-  const url = `${window.location.origin}${path}`;
+  const path = `/central-registration/check-in?room=${encodeURIComponent(room.id)}`;
+  // Scans leave the editor: always use the verified published app address.
+  const url = `https://candora-staff-link.base44.app${path}`;
   const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=10&data=${encodeURIComponent(url)}`;
 
   return (
@@ -25,8 +26,8 @@ export default function RoomCheckInQrDialog({ room, open, onOpenChange }) {
         <DialogHeader>
           <DialogTitle>{room.label} check-in QR</DialogTitle>
           <DialogDescription>
-            Scan on a phone to open the {room.label} class list and mark people present. Staff sign in once
-            on that phone — after that the scan goes straight to the list.
+            Scan to open the {room.label} class list on the published staff portal and mark people present.
+            Staff sign-in is required; no tablet pairing code is needed.
           </DialogDescription>
         </DialogHeader>
 
