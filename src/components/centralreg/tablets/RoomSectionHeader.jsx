@@ -17,7 +17,7 @@ export default function RoomSectionHeader({ room, onAddTablet }) {
 
       <div className="flex flex-wrap items-center gap-2">
         <Button size="sm" variant="outline" asChild>
-          <a href={`/central-registration/check-in?room=${encodeURIComponent(room.id)}`} target="_blank" rel="noopener noreferrer">
+          <a href={`/kiosk?room=${room.id}`} target="_blank" rel="noopener noreferrer">
             <ExternalLink className="h-4 w-4" /> Open check-in screen
           </a>
         </Button>
