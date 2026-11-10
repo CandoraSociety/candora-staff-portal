@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { LayoutDashboard, ClipboardList, Users, ListOrdered, HeartHandshake, Menu, X, ArrowLeft, ClipboardCheck, CalendarDays, Inbox, Tablet } from 'lucide-react';
+import { LayoutDashboard, ClipboardList, Users, ListOrdered, HeartHandshake, ArrowLeft, ClipboardCheck, CalendarDays, Inbox, Tablet } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useOrgSettings } from '@/lib/useOrgSettings';
 import EAFloatingWidget from '@/components/ed/EAFloatingWidget';
@@ -20,7 +20,6 @@ const NAV_ITEMS = [
 
 export default function CentralRegLayout() {
   const location = useLocation();
-  const [mobileOpen, setMobileOpen] = useState(false);
   const { logoUrl, orgName } = useOrgSettings();
 
   // Pending public QR self-registration requests — shown as a badge on the nav.
@@ -46,11 +45,13 @@ export default function CentralRegLayout() {
               <Link key={item.path} to={item.path} className={cn('flex items-center gap-2 px-3 py-2 rounded-md text-sm font-medium transition-colors', isActive(item.path) ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground')}><Icon className="h-4 w-4" />{item.label}{item.path === '/central-registration/requests' && pendingCount > 0 && <span className="ml-0.5 inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-semibold">{pendingCount}</span>}</Link>
             ); })}
           </nav>
-          <button className="lg:hidden text-sidebar-foreground" onClick={() => setMobileOpen(!mobileOpen)}>{mobileOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}</button>
         </div>
-        {mobileOpen && <nav className="lg:hidden flex flex-col p-2 border-t border-sidebar-border">{NAV_ITEMS.map(item => { const Icon = item.icon; return (
-          <Link key={item.path} to={item.path} onClick={() => setMobileOpen(false)} className={cn('flex items-center gap-2 px-3 py-2.5 rounded-md text-sm font-medium', isActive(item.path) ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50')}><Icon className="h-4 w-4" />{item.label}{item.path === '/central-registration/requests' && pendingCount > 0 && <span className="ml-auto inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-semibold">{pendingCount}</span>}</Link>
-        ); })}</nav>}
+        {/* Small screens: the same tabs in a swipeable row, so none of them are hidden. */}
+        <nav className="lg:hidden flex items-center gap-1 px-3 pb-2 overflow-x-auto">
+          {NAV_ITEMS.map(item => { const Icon = item.icon; return (
+            <Link key={item.path} to={item.path} className={cn('flex shrink-0 items-center gap-2 px-3 py-2 rounded-md text-sm font-medium whitespace-nowrap', isActive(item.path) ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground/70 hover:bg-sidebar-accent/50')}><Icon className="h-4 w-4" />{item.label}{item.path === '/central-registration/requests' && pendingCount > 0 && <span className="inline-flex items-center justify-center min-w-4 h-4 px-1 rounded-full bg-destructive text-destructive-foreground text-[10px] font-semibold">{pendingCount}</span>}</Link>
+          ); })}
+        </nav>
       </header>
       <main className="p-4 lg:p-6 max-w-7xl mx-auto"><Outlet /></main>
       <EAFloatingWidget />
