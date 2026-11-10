@@ -1,10 +1,13 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, Plus } from 'lucide-react';
+import { ExternalLink, Plus, QrCode } from 'lucide-react';
+import RoomCheckInQrDialog from './RoomCheckInQrDialog';
 
 // Heading for one teaching room: the tablet mounted there, the screen it opens,
-// and a shortcut to open that same check-in on this computer.
+// a QR code to that same check-in, and a shortcut to open it on this computer.
 export default function RoomSectionHeader({ room, onAddTablet }) {
+  const [qrOpen, setQrOpen] = useState(false);
+
   return (
     <div className="flex flex-wrap items-start justify-between gap-3">
       <div>
@@ -19,10 +22,16 @@ export default function RoomSectionHeader({ room, onAddTablet }) {
           </a>
         </Button>
 
+        <Button size="sm" variant="outline" onClick={() => setQrOpen(true)}>
+          <QrCode className="h-4 w-4" /> QR code
+        </Button>
+
         <Button size="sm" onClick={onAddTablet}>
           <Plus className="h-4 w-4" /> Add tablet
         </Button>
       </div>
+
+      <RoomCheckInQrDialog room={room} open={qrOpen} onOpenChange={setQrOpen} />
     </div>
   );
 }
