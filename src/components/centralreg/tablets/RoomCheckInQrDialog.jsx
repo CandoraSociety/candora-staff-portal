@@ -6,13 +6,17 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { ExternalLink } from 'lucide-react';
 
-// QR code for one teaching room. Scanning it opens that room's check-in screen
-// (/kiosk?room=...), so a phone in the room can check people in without the
-// wall tablet — the same screen the tablet opens when a class starts.
+// QR code for one teaching room, for staff. Scanning it opens that room's
+// check-in list (/central-registration/check-in?room=...) on a phone or tablet
+// that is already signed in — sign in once on the phone and it opens straight
+// onto the list from then on.
 export default function RoomCheckInQrDialog({ room, open, onOpenChange }) {
   if (!room) return null;
-  const url = `${window.location.origin}/kiosk?room=${room.id}`;
+  const path = `/central-registration/check-in?room=${room.id}`;
+  const url = `${window.location.origin}${path}`;
   const qrSrc = `https://api.qrserver.com/v1/create-qr-code/?size=320x320&margin=10&data=${encodeURIComponent(url)}`;
 
   return (
@@ -21,15 +25,21 @@ export default function RoomCheckInQrDialog({ room, open, onOpenChange }) {
         <DialogHeader>
           <DialogTitle>{room.label} check-in QR</DialogTitle>
           <DialogDescription>
-            Scanning this opens the {room.label} check-in screen for whatever class is running in that room.
+            Scan on a phone to open the {room.label} class list and mark people present. Staff sign in once
+            on that phone — after that the scan goes straight to the list.
           </DialogDescription>
         </DialogHeader>
 
         <div className="flex flex-col items-center gap-3 py-2">
           <div className="rounded-xl border bg-white p-3">
-            <img src={qrSrc} alt={`QR code for the ${room.label} check-in screen`} className="h-56 w-56" />
+            <img src={qrSrc} alt={`QR code for the ${room.label} check-in list`} className="h-56 w-56" />
           </div>
           <p className="text-xs font-mono text-muted-foreground break-all text-center">{url}</p>
+          <Button variant="outline" size="sm" asChild>
+            <a href={path}>
+              <ExternalLink className="h-4 w-4" /> Open on this device
+            </a>
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
