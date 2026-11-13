@@ -4,8 +4,9 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
-import { BellRing, ChevronDown, ChevronUp, Check, X } from 'lucide-react';
+import { BellRing, ChevronDown, ChevronUp, Check, Pencil, X } from 'lucide-react';
 import TimesheetDetail from '@/components/timesheets/TimesheetDetail';
+import TimesheetEditDialog from '@/components/timesheets/TimesheetEditDialog';
 import ESignatureCaptureDialog from '@/components/esignature/ESignatureCaptureDialog';
 import { uploadSignatureImage } from '@/lib/esignatureCapture';
 import { ymd } from '@/lib/payPeriods';
@@ -20,6 +21,7 @@ export default function SupervisorTimesheetAlerts({ user }) {
   const [reason, setReason] = useState('');
   const [acting, setActing] = useState(false);
   const [signTarget, setSignTarget] = useState(null); // timesheet awaiting the supervisor's e-signature
+  const [editTarget, setEditTarget] = useState(null); // timesheet the supervisor is correcting
 
   const { data: pending = [] } = useQuery({
     queryKey: ['timesheets', 'pending'],
@@ -89,13 +91,23 @@ export default function SupervisorTimesheetAlerts({ user }) {
               <Button variant="ghost" size="sm" onClick={() => { setRejectingId(null); setReason(''); }}>Cancel</Button>
             </div>
           ) : (
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               <Button size="sm" disabled={acting} onClick={() => setSignTarget(t)}><Check className="w-4 h-4 mr-1" /> Approve</Button>
+              <Button size="sm" variant="outline" disabled={acting} onClick={() => setEditTarget(t)}>
+                <Pencil className="w-4 h-4 mr-1" /> Edit hours
+              </Button>
               <Button size="sm" variant="outline" disabled={acting} onClick={() => setRejectingId(t.id)}>Reject</Button>
             </div>
           )}
         </div>
       ))}
+
+      <TimesheetEditDialog
+        open={!!editTarget}
+        onOpenChange={o => { if (!o) setEditTarget(null); }}
+        timesheet={editTarget}
+        onSaved={() => qc.invalidateQueries({ queryKey: ['timesheets'] })}
+      />
 
       <ESignatureCaptureDialog
         open={!!signTarget}
