@@ -1,8 +1,7 @@
 import React from "react";
 import Candora360Wordmark from "@/components/brand/Candora360Wordmark";
-import { APP_TAGLINE } from "@/lib/brand";
 
-export default function AuthLayout({ icon: Icon, title, subtitle, footer, children, brandText = APP_TAGLINE }) {
+export default function AuthLayout({ icon: Icon, title, subtitle, footer, children, brandText }) {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-background via-background to-primary/5 px-4">
       <div className="w-full max-w-md">
@@ -10,7 +9,9 @@ export default function AuthLayout({ icon: Icon, title, subtitle, footer, childr
           <Candora360Wordmark size="lg" tone="light" className="justify-center mb-4" />
           <h1 className="text-3xl font-display font-bold tracking-tight text-foreground">{title}</h1>
           {subtitle && <p className="text-muted-foreground mt-2">{subtitle}</p>}
-          <p className="text-sm text-muted-foreground mt-3 max-w-xs mx-auto leading-relaxed">{brandText}</p>
+          {brandText && (
+            <p className="text-sm text-muted-foreground mt-3 max-w-xs mx-auto leading-relaxed">{brandText}</p>
+          )}
         </div>
         <div className="bg-card rounded-2xl shadow-sm border border-border p-8">
           {children}
