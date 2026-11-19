@@ -5,6 +5,7 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import WebsiteImageField from "@/components/website/WebsiteImageField";
+import PopupCampaignSuggestions from "@/components/website/PopupCampaignSuggestions";
 
 const FREQUENCIES = [
   { value: "every_visit", label: "Every visit" },
@@ -31,6 +32,8 @@ export default function HomePopupCard({ form, set }) {
           </div>
           <Switch checked={enabled} onCheckedChange={(value) => set("popup_enabled", value)} />
         </div>
+
+        <PopupCampaignSuggestions set={set} />
 
         {!enabled ? (
           <p className="text-xs italic text-muted-foreground">
