@@ -10,6 +10,7 @@
       "type": "string",
       "enum": [
         "logo",
+        "logo_component",
         "banner",
         "photo",
         "video",
@@ -19,7 +20,7 @@
         "font",
         "other"
       ],
-      "description": "Type of asset"
+      "description": "Type of asset. 'logo' is a complete logo (mark plus name where it has one); 'logo_component' is a single piece of the brand mark, like the sunflower on its own, kept for building other branded images rather than used as a logo."
     },
     "category": {
       "type": "string",

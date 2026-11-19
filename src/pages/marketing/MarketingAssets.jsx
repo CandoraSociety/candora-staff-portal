@@ -13,12 +13,12 @@ import { Upload, Search, Image, FileText, Video, Plus, Trash2, Download, Tag, Pe
 import { toast } from 'sonner';
 import BrandLogoLibrary from '@/components/marketing/BrandLogoLibrary';
 
-const ASSET_TYPES = ['logo', 'banner', 'photo', 'video', 'document', 'template', 'icon', 'font', 'other'];
-const GRID_TYPES = ASSET_TYPES.filter(t => t !== 'logo');
+const ASSET_TYPES = ['logo', 'logo_component', 'banner', 'photo', 'video', 'document', 'template', 'icon', 'font', 'other'];
+const GRID_TYPES = ASSET_TYPES.filter(t => t !== 'logo' && t !== 'logo_component');
 const CATEGORIES = ['brand', 'program', 'event', 'fundraising', 'social_media', 'print', 'web', 'other'];
 
 const TYPE_ICONS = {
-  logo: Image, banner: Image, photo: Image, video: Video, document: FileText,
+  logo: Image, logo_component: Image, banner: Image, photo: Image, video: Video, document: FileText,
   template: FileText, icon: Image, font: FileText, other: FileText,
 };
 

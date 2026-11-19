@@ -29,9 +29,9 @@ export default function SidebarNavGroup({ item, collapsed, active }) {
       <div ref={row} data-tour={item.tourId} aria-expanded={open} className={cn(
         'flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200 cursor-pointer',
         collapsed && 'justify-center px-0',
-        active ? 'bg-sidebar-primary text-sidebar-primary-foreground' : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground'
+        active ? 'bg-highlight text-highlight-foreground shadow-[0_4px_14px_-4px_hsl(var(--highlight)/0.7)]' : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground'
       )}>
-        <Icon className={cn('w-[18px] h-[18px] flex-shrink-0', active ? 'text-sidebar-primary-foreground' : 'text-sidebar-foreground/70')} />
+        <Icon className={cn('w-[18px] h-[18px] flex-shrink-0', active ? 'text-highlight-foreground' : 'text-sidebar-foreground/70')} />
         {!collapsed && <span>{item.label}</span>}
       </div>
       {open && pos && <div style={pos} className="fixed z-50 min-w-[220px] rounded-lg border border-sidebar-border bg-sidebar py-1.5 px-1.5 shadow-xl">
@@ -39,7 +39,7 @@ export default function SidebarNavGroup({ item, collapsed, active }) {
           const ChildIcon = child.icon;
           return <Link key={child.path} to={child.path} data-tour-path={child.path} onClick={() => setHovered(false)} className={cn(
             'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-            pathname.startsWith(child.path) ? 'bg-sidebar-primary text-sidebar-primary-foreground' : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground'
+            pathname.startsWith(child.path) ? 'bg-highlight text-highlight-foreground' : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground'
           )}><ChildIcon className="w-4 h-4 flex-shrink-0" /><span className="whitespace-nowrap">{child.label}</span></Link>;
         })}
       </div>}

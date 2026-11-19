@@ -52,11 +52,11 @@ function MarketingSidebar({ collapsed, setCollapsed }) {
   return (
     <aside className={cn(
       'h-screen flex flex-col transition-all duration-300 shrink-0',
-      'bg-[hsl(330,60%,12%)]',
+      'bg-sidebar',
       collapsed ? 'w-16' : 'w-60'
     )}>
       {/* Logo */}
-      <div className="border-b border-[hsl(330,50%,18%)] px-3 pt-4 pb-3">
+      <div className="border-b border-sidebar-border px-3 pt-4 pb-3">
         <Link to="/" className={cn('flex items-center gap-2 group', collapsed ? 'justify-center' : '')}>
           <img
             src={logoUrl}
@@ -66,13 +66,13 @@ function MarketingSidebar({ collapsed, setCollapsed }) {
         </Link>
         <div className={cn('flex items-center mt-2', collapsed ? 'justify-center' : 'justify-between')}>
           {!collapsed && (
-            <span className="text-[10px] uppercase tracking-widest text-[hsl(330,60%,70%)] font-semibold">
+            <span className="text-[10px] uppercase tracking-widest text-sidebar-foreground/60 font-semibold">
               Marketing &amp; Fundraising
             </span>
           )}
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="p-1 rounded hover:bg-[hsl(330,55%,20%)] text-[hsl(330,60%,70%)] transition-colors"
+            className="p-1 rounded hover:bg-sidebar-accent text-sidebar-foreground/60 transition-colors"
           >
             {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
           </button>
@@ -93,15 +93,15 @@ function MarketingSidebar({ collapsed, setCollapsed }) {
               className={cn(
                 'flex items-center gap-3 px-2 py-2 rounded-md text-sm transition-colors',
                 active
-                  ? 'bg-[hsl(45,92%,53%)] text-[hsl(330,60%,12%)] font-semibold'
-                  : 'text-[hsl(330,60%,80%)] hover:bg-[hsl(330,55%,20%)] hover:text-[hsl(330,92%,90%)]',
+                  ? 'bg-highlight text-highlight-foreground font-semibold'
+                  : 'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground',
                 collapsed && 'justify-center'
               )}
             >
               <div className="relative">
                 <Icon className="w-4 h-4 shrink-0" />
                 {hasBadge && (
-                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-[hsl(330,60%,12%)]" />
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-sidebar" />
                 )}
               </div>
               {!collapsed && (
@@ -118,12 +118,12 @@ function MarketingSidebar({ collapsed, setCollapsed }) {
       </nav>
 
       {/* Back to main app */}
-      <div className="px-2 py-2 border-t border-[hsl(330,50%,18%)]">
+      <div className="px-2 py-2 border-t border-sidebar-border">
         <Link
           to="/"
           className={cn(
             'flex items-center gap-3 px-2 py-2 rounded-md text-sm transition-colors font-semibold',
-            'text-[hsl(45,92%,53%)] hover:bg-[hsl(330,55%,20%)]',
+            'text-sidebar-primary hover:bg-sidebar-accent',
             collapsed && 'justify-center'
           )}
         >
@@ -133,15 +133,15 @@ function MarketingSidebar({ collapsed, setCollapsed }) {
       </div>
 
       {/* User + sign out */}
-      <div className={cn('p-2 border-t border-[hsl(330,50%,18%)] space-y-0.5', collapsed && 'flex flex-col items-center')}>
+      <div className={cn('p-2 border-t border-sidebar-border space-y-0.5', collapsed && 'flex flex-col items-center')}>
         {!collapsed && user && (
-          <p className="text-[11px] text-[hsl(330,40%,60%)] px-2 mb-1 truncate">{user.full_name || user.email}</p>
+          <p className="text-[11px] text-sidebar-foreground/50 px-2 mb-1 truncate">{user.full_name || user.email}</p>
         )}
         <button
           onClick={() => base44.auth.logout()}
           className={cn(
             'flex items-center gap-2 w-full px-2 py-2 rounded-md text-sm transition-colors',
-            'text-[hsl(330,60%,65%)] hover:bg-[hsl(330,55%,20%)] hover:text-[hsl(330,92%,90%)]',
+            'text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground',
             collapsed && 'justify-center w-auto'
           )}
         >

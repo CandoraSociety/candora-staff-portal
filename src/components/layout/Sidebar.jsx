@@ -181,11 +181,11 @@ function NavItem({ item, collapsed, active }) {
             "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all duration-200",
             collapsed && "justify-center px-0",
             active
-              ? "bg-sidebar-primary text-sidebar-primary-foreground"
+              ? "bg-highlight text-highlight-foreground shadow-[0_4px_14px_-4px_hsl(var(--highlight)/0.7)]"
               : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
           )}
         >
-          <Icon className={cn("w-[18px] h-[18px] flex-shrink-0", active ? "text-sidebar-primary-foreground" : "text-sidebar-foreground/70")} />
+          <Icon className={cn("w-[18px] h-[18px] flex-shrink-0", active ? "text-highlight-foreground" : "text-sidebar-foreground/70")} />
           {!collapsed && <span>{item.label}</span>}
         </Link>
       </TooltipTrigger>

@@ -34,12 +34,16 @@ export default function BrandLogoLibrary() {
     queryKey: ['mkt-logo-assets'],
     queryFn: async () => {
       const page = await base44.entities.MarketingAsset.filter(
-        { asset_type: 'logo' },
+        { asset_type: { $in: ['logo', 'logo_component'] } },
         { sort: '-created_date', limit: 200 },
       );
       return page.items || [];
     },
   });
+
+  // A logo component (the sunflower on its own, for example) is a piece of the mark,
+  // not a logo, so only complete logos can fill a logo role.
+  const fullLogos = logoAssets.filter(a => a.asset_type !== 'logo_component');
 
   const byId = Object.fromEntries(logoAssets.map(a => [a.id, a]));
   const selection = settings?.brand_logo_selection || {};
@@ -137,7 +141,9 @@ export default function BrandLogoLibrary() {
         <h2 className="text-base font-bold text-slate-900">Logos &amp; logo components</h2>
         <p className="text-sm text-slate-500 mt-1">
           Choose which uploaded logo is the primary mark used across the app, which is the long-form
-          version used in documents, and up to three alternates.
+          version used in documents, and up to three alternates. Logo components are single pieces of
+          the mark, such as the sunflower without the name, so they never fill a logo role — they are
+          kept here to use when building other branded images.
         </p>
       </div>
 
@@ -173,7 +179,7 @@ export default function BrandLogoLibrary() {
 
       {logoAssets.length > 0 && (
         <div className="space-y-2 pt-2 border-t">
-          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Logo assets</p>
+          <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Logos &amp; components</p>
           <div className="flex flex-wrap gap-3">
             {logoAssets.map(asset => {
               const role = roleOf(asset);
@@ -183,9 +189,13 @@ export default function BrandLogoLibrary() {
                     <img src={asset.file_url} alt={asset.name} className="max-h-full max-w-full object-contain" />
                   </div>
                   <p className="text-[10px] text-slate-600 px-1.5 pb-1 truncate">{asset.name}</p>
-                  {role && (
+                  {asset.asset_type === 'logo_component' ? (
+                    <Badge className="absolute top-1 left-1 text-[9px] px-1.5 py-0 bg-highlight text-highlight-foreground">
+                      Component
+                    </Badge>
+                  ) : role ? (
                     <Badge className="absolute top-1 left-1 text-[9px] px-1.5 py-0">{role}</Badge>
-                  )}
+                  ) : null}
                   <button
                     type="button"
                     onClick={() => deleteLogo(asset)}
@@ -205,7 +215,7 @@ export default function BrandLogoLibrary() {
         open={!!pickerTarget}
         onOpenChange={(open) => !open && setPickerTarget(null)}
         title={`Choose ${ROLE_LABELS[pickerTarget] || 'logo'}`}
-        assets={logoAssets}
+        assets={fullLogos}
         onPick={(asset) => assign(pickerTarget, asset)}
         onUpload={handleUpload}
         uploading={uploading}
