@@ -69,6 +69,11 @@
       "default": false,
       "description": "Whether the campaign's public page is live and can accept online gifts"
     },
+    "is_general_fund": {
+      "type": "boolean",
+      "default": false,
+      "description": "Marks this record as the general fund behind the public donation page at /donate. Its giving options are the preset general donations, and it is listed separately from the campaigns shown there."
+    },
     "allow_custom_amount": {
       "type": "boolean",
       "default": true,

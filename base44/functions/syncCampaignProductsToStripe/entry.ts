@@ -59,7 +59,8 @@ export default async function (req) {
 
       const productParams = new URLSearchParams();
       productParams.set('name', `${campaign.name} — ${option.name}`.slice(0, 120));
-      productParams.set('description', option.description || '');
+      // Stripe refuses an empty description, so only send one when there is copy.
+      if (option.description) productParams.set('description', option.description);
       productParams.set('active', option.is_active === false ? 'false' : 'true');
       productParams.set('metadata[base44_app_id]', appId);
       productParams.set('metadata[campaign_id]', campaign.id);

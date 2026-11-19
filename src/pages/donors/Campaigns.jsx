@@ -11,7 +11,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Pencil, Trash2, Settings2 } from 'lucide-react';
+import { Plus, Pencil, Trash2, Settings2, ExternalLink } from 'lucide-react';
 import { CAMPAIGN_TYPES, activeTiers, formatMoney, labelFor, slugify } from '@/lib/donorConstants';
 
 const EMPTY = {
@@ -76,7 +76,14 @@ export default function Campaigns() {
           <h1 className="text-2xl font-bold font-display">Campaigns</h1>
           <p className="text-sm text-muted-foreground">Appeals and drives, with progress from recorded gifts</p>
         </div>
-        <Button onClick={openNew}><Plus className="w-4 h-4 mr-2" /> New campaign</Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" asChild>
+            <a href="/donate" target="_blank" rel="noreferrer">
+              <ExternalLink className="w-4 h-4 mr-2" /> Donation page
+            </a>
+          </Button>
+          <Button onClick={openNew}><Plus className="w-4 h-4 mr-2" /> New campaign</Button>
+        </div>
       </div>
 
       {isLoading ? (
@@ -111,6 +118,9 @@ export default function Campaigns() {
                       <Badge className={campaign.public_page_enabled ? 'bg-blue-100 text-blue-700' : 'bg-muted text-muted-foreground'}>
                         {campaign.public_page_enabled ? 'Page live' : 'No page'}
                       </Badge>
+                      {campaign.is_general_fund && (
+                        <Badge className="bg-primary/20 text-foreground">General fund</Badge>
+                      )}
                     </div>
                   </div>
 

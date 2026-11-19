@@ -12,7 +12,12 @@ import { PAYMENTS_READY, startCampaignCheckout } from '@/lib/campaignPayments';
 // campaign's giving options (and a price variation where there are several, or
 // names their own amount), chooses whether to repeat it and whether to cover
 // the processing fee, then pays by card through the app's payment provider.
-export default function CampaignDonate({ campaign }) {
+export default function CampaignDonate({
+  campaign,
+  heading = 'Give to this campaign',
+  subheading = 'Every gift goes straight to the appeal.',
+  returnPath,
+}) {
   const tiers = activeTiers(campaign);
   const allowCustom = campaign.allow_custom_amount !== false;
   const allowMonthly = campaign.allow_monthly !== false;
@@ -81,6 +86,7 @@ export default function CampaignDonate({ campaign }) {
         donorEmail: email.trim(),
         anonymous,
         message: message.trim(),
+        returnPath,
       });
     } catch (err) {
       setError(
@@ -93,8 +99,8 @@ export default function CampaignDonate({ campaign }) {
   return (
     <div className="rounded-2xl border bg-card shadow-lg p-5 sm:p-6 space-y-5">
       <div>
-        <h2 className="font-display font-bold text-lg">Give to this campaign</h2>
-        <p className="text-sm text-muted-foreground">Every gift goes straight to the appeal.</p>
+        <h2 className="font-display font-bold text-lg">{heading}</h2>
+        <p className="text-sm text-muted-foreground">{subheading}</p>
       </div>
 
       {tiers.length > 0 && (

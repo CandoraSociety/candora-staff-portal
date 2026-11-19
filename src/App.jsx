@@ -21,6 +21,7 @@ import PathwaysPublicIntake from '@/pages/portal/PathwaysPublicIntake';
 import EmpowerUPublicApplication from '@/pages/portal/EmpowerUPublicApplication';
 import SelfRegister from '@/pages/portal/SelfRegister';
 import CampaignPublicPage from '@/pages/portal/CampaignPublicPage';
+import GeneralDonationPage from '@/pages/portal/GeneralDonationPage';
 import CustomerKiosk from '@/pages/portal/CustomerKiosk';
 import FillableMinutesPublic from '@/pages/board/FillableMinutesPublic';
 
@@ -445,6 +446,7 @@ const AuthenticatedApp = () => {
     || location.startsWith('/cafe-menu')
     || location.startsWith('/kiosk')
     || location.startsWith('/campaign')
+    || location.startsWith('/donate')
     || location.startsWith('/empoweru-apply');
 
   // Only show loading spinner for protected routes, not public auth pages
@@ -482,6 +484,9 @@ const AuthenticatedApp = () => {
 
       {/* Public campaign page — supporters read the appeal and give online, no login */}
       <Route path="/campaign/:slug" element={<CampaignPublicPage />} />
+
+      {/* Public general donation page — general fund giving plus every open campaign */}
+      <Route path="/donate" element={<GeneralDonationPage />} />
 
       {/* EmpowerU cohort application form — public link, no login required, no portal access */}
       <Route path="/empoweru-apply/:cohortId" element={<EmpowerUPublicApplication />} />

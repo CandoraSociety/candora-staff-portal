@@ -113,7 +113,10 @@ export default async function (req) {
 
     const appId = secrets.get('BASE44_APP_ID');
     const amount = cents / 100;
-    const pagePath = `/campaign/${campaign.slug || ''}`;
+    // Only the app's own giving pages may be returned to after checkout.
+    const pagePath = String(body.returnPath || '') === '/donate'
+      ? '/donate'
+      : `/campaign/${campaign.slug || ''}`;
 
     const intent = await base44.asServiceRole.entities.CampaignDonationIntent.create({
       campaign_id: campaign.id,
