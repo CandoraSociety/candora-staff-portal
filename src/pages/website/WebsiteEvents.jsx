@@ -1,4 +1,5 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { Plus, RefreshCw, Search, Loader2, CalendarDays } from "lucide-react";
@@ -18,11 +19,26 @@ const FILTERS = [
 export default function WebsiteEvents() {
   const [wizardOpen, setWizardOpen] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [initialSource, setInitialSource] = useState(null);
   const [filter, setFilter] = useState("all");
   const [search, setSearch] = useState("");
   const [syncing, setSyncing] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  // Lets a program or event open its website setup directly, e.g.
+  // /website/events?source=event&id=<record id>
+  useEffect(() => {
+    const sourceType = searchParams.get("source");
+    const sourceId = searchParams.get("id");
+    if (!sourceType || !sourceId) return;
+    setEditing(null);
+    setInitialSource({ source_type: sourceType, source_id: sourceId });
+    setWizardOpen(true);
+    setSearchParams({}, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const { data: publications = [], isLoading } = useQuery({
     queryKey: ["website-publications"],
@@ -50,11 +66,13 @@ export default function WebsiteEvents() {
 
   const openNew = () => {
     setEditing(null);
+    setInitialSource(null);
     setWizardOpen(true);
   };
 
   const openEdit = (publication) => {
     setEditing(publication);
+    setInitialSource(null);
     setWizardOpen(true);
   };
 
@@ -185,8 +203,12 @@ export default function WebsiteEvents() {
 
       <PublishWizard
         open={wizardOpen}
-        onOpenChange={setWizardOpen}
+        onOpenChange={(value) => {
+          setWizardOpen(value);
+          if (!value) setInitialSource(null);
+        }}
         publication={editing}
+        initialSource={initialSource}
         onSaved={refresh}
       />
     </div>

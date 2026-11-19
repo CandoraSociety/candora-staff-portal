@@ -60,6 +60,7 @@ export default function PublishWizard({ open, onOpenChange, publication, initial
   const [sourceType, setSourceType] = useState("event");
   const [sourceId, setSourceId] = useState("");
   const [existingId, setExistingId] = useState(null);
+  const [existingStatus, setExistingStatus] = useState(null);
   const [form, setForm] = useState(EMPTY);
   const [search, setSearch] = useState("");
   const [loadingSource, setLoadingSource] = useState(false);
@@ -103,6 +104,7 @@ export default function PublishWizard({ open, onOpenChange, publication, initial
     setError("");
     if (publication) {
       setExistingId(publication.id);
+      setExistingStatus(publication.status);
       setSourceType(publication.source_type);
       setSourceId(publication.source_id);
       setForm({
@@ -140,6 +142,7 @@ export default function PublishWizard({ open, onOpenChange, publication, initial
       setSourceId(id);
       if (existing) {
         setExistingId(existing.id);
+        setExistingStatus(existing.status);
         setForm({
           ...EMPTY,
           ...existing,
@@ -148,6 +151,7 @@ export default function PublishWizard({ open, onOpenChange, publication, initial
         });
       } else {
         setExistingId(null);
+        setExistingStatus(null);
         setForm({
           ...EMPTY,
           source_name: source.source_name,
@@ -208,7 +212,7 @@ export default function PublishWizard({ open, onOpenChange, publication, initial
       let status = "draft";
       if (!form.advertise) status = "unpublished";
       else if (publish) status = "published";
-      else if (publication?.status === "published") status = "published";
+      else if (existingStatus === "published") status = "published";
 
       const payload = {
         source_type: sourceType,
