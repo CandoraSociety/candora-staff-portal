@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Loader2, Package, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react';
+import { ExternalLink, Loader2, Package, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import DonationProductDialog from '@/components/donors/DonationProductDialog';
 import { tierAmountLabel } from '@/lib/donorConstants';
 
@@ -124,6 +124,11 @@ export default function DonationProducts() {
           <Button variant="outline" onClick={syncAll} disabled={syncing}>
             {syncing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <RefreshCw className="w-4 h-4 mr-2" />}
             {syncing ? 'Syncing…' : 'Sync with Stripe'}
+          </Button>
+          <Button variant="outline" asChild>
+            <a href="/donate" target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="w-4 h-4 mr-2" /> Donation page
+            </a>
           </Button>
           <Button onClick={() => { setEditing(null); setDialogOpen(true); }}>
             <Plus className="w-4 h-4 mr-2" /> New product
