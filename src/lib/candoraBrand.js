@@ -3,7 +3,7 @@
 export const CANDORA_BRAND = {
   name: 'CANDORA',
   legalName: 'Candora Society',
-  logoUrl: 'https://base44.app/api/apps/6a249282cb496579542673b7/files/mp/public/6a249282cb496579542673b7/ba25bbc7f_SquareLogo_Sunflower.png',
+  logoUrl: 'https://base44.app/api/apps/6a249282cb496579542673b7/files/mp/public/6a249282cb496579542673b7/d5980b065_candora-360-logo.png',
   longLogoUrl: 'https://base44.app/api/apps/6a249282cb496579542673b7/files/mp/public/6a249282cb496579542673b7/5625645f1_LongFormLogo.png',
   address: '#262, 3210 118 Avenue NW',
   city: 'Edmonton',
