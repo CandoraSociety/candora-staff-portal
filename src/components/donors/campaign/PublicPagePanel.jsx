@@ -3,8 +3,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { Copy, ExternalLink, Globe } from 'lucide-react';
+import { Copy, ExternalLink, Globe, ImagePlus, Sparkles } from 'lucide-react';
 import { publicCampaignUrl, slugify } from '@/lib/donorConstants';
+import HeroImageAiDialog from '@/components/donors/campaign/HeroImageAiDialog';
+import PublicPageAiCopyDialog from '@/components/donors/campaign/PublicPageAiCopyDialog';
 
 // Publishes the campaign's own page: its web address, whether it is live, and a
 // link staff can open (or share) to see exactly what supporters see.
@@ -85,6 +87,35 @@ export default function PublicPagePanel({ campaign, onSave }) {
             </>
           )}
         </div>
+      </div>
+
+      <div className="rounded-xl border bg-card p-5 space-y-4">
+        <div>
+          <h2 className="font-display font-bold flex items-center gap-2">
+            <Sparkles className="w-4 h-4 text-primary" /> Build the page with AI
+          </h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Generate the hero photo from a description you type, or write the tagline, story and thank-you message from the campaign's details.
+          </p>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-4">
+          {campaign?.hero_image_url ? (
+            <img src={campaign.hero_image_url} alt="" className="h-20 w-32 rounded-lg object-cover border" />
+          ) : (
+            <div className="h-20 w-32 rounded-lg border border-dashed flex items-center justify-center text-muted-foreground">
+              <ImagePlus className="w-5 h-5" />
+            </div>
+          )}
+          <div className="flex flex-wrap gap-2">
+            <HeroImageAiDialog campaign={campaign} onSave={onSave} />
+            <PublicPageAiCopyDialog campaign={campaign} onSave={onSave} />
+          </div>
+        </div>
+
+        {campaign?.tagline && (
+          <p className="text-sm"><span className="text-muted-foreground">Current tagline:</span> {campaign.tagline}</p>
+        )}
       </div>
 
       <div className="rounded-xl border border-dashed bg-muted/40 p-5 text-sm text-muted-foreground space-y-2">
