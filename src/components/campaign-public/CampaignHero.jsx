@@ -1,5 +1,6 @@
 import React from 'react';
 import { formatMoney } from '@/lib/donorConstants';
+import CandoraBrandLockup from '@/components/campaign-public/CandoraBrandLockup';
 
 // The top of a campaign's public page: photo, name, tagline and progress.
 export default function CampaignHero({ campaign, raised }) {
@@ -14,14 +15,7 @@ export default function CampaignHero({ campaign, raised }) {
       <div className="absolute inset-0 bg-gradient-to-t from-sidebar via-sidebar/85 to-sidebar/50" />
 
       <div className="relative max-w-5xl mx-auto px-4 sm:px-6 pt-6 pb-12 sm:pb-16">
-        <div className="flex items-center gap-3">
-          <img
-            src="https://media.base44.com/images/public/6a249282cb496579542673b7/418f6d576_logo.png"
-            alt="Candora"
-            className="h-10 w-auto"
-          />
-          <div className="text-sm font-semibold tracking-wide text-sidebar-foreground/80">Candora Society</div>
-        </div>
+        <CandoraBrandLockup />
 
         <div className="mt-10 max-w-2xl space-y-4">
           <h1 className="text-3xl sm:text-5xl font-display font-extrabold leading-tight">{campaign.name}</h1>

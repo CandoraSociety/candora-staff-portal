@@ -5,6 +5,8 @@ import { base44 } from '@/api/base44Client';
 import { Heart, Loader2, Mail, XCircle } from 'lucide-react';
 import CampaignHero from '@/components/campaign-public/CampaignHero';
 import CampaignDonate from '@/components/campaign-public/CampaignDonate';
+import CandoraBrandLockup from '@/components/campaign-public/CandoraBrandLockup';
+import { CANDORA_BRAND, brandFooterLines } from '@/lib/candoraBrand';
 import moment from 'moment';
 
 // A campaign's public page — standalone, no staff sign-in. Supporters read the
@@ -126,18 +128,14 @@ export default function CampaignPublicPage() {
         </div>
       </main>
 
-      <footer className="border-t bg-sidebar text-sidebar-foreground">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 flex flex-wrap items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <img
-              src="https://media.base44.com/images/public/6a249282cb496579542673b7/418f6d576_logo.png"
-              alt="Candora"
-              className="h-8 w-auto"
-            />
-            <span className="text-sm text-sidebar-foreground/70">Candora Society</span>
+      <footer className="bg-sidebar text-sidebar-foreground border-t border-sidebar-border">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 flex flex-wrap items-start justify-between gap-6">
+          <CandoraBrandLockup compact />
+          <div className="text-xs text-sidebar-foreground/70 space-y-1">
+            {brandFooterLines().map((line) => <p key={line}>{line}</p>)}
           </div>
-          <p className="text-xs text-sidebar-foreground/50">
-            Gifts are processed securely. Thank you for supporting our community.
+          <p className="text-xs text-sidebar-foreground/50 max-w-xs">
+            Gifts are processed securely. Thank you for supporting {CANDORA_BRAND.legalName}.
           </p>
         </div>
       </footer>
