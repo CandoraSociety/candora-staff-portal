@@ -2,7 +2,7 @@ import React from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Loader2, Mail, XCircle } from 'lucide-react';
+import { Heart, Loader2, Mail, XCircle } from 'lucide-react';
 import CampaignHero from '@/components/campaign-public/CampaignHero';
 import CampaignDonate from '@/components/campaign-public/CampaignDonate';
 import moment from 'moment';
@@ -44,6 +44,7 @@ export default function CampaignPublicPage() {
   const ended = campaign.end_date && moment(campaign.end_date).endOf('day').isBefore(moment());
   const closed = campaign.is_active === false || ended;
   const paragraphs = String(campaign.story || '').split(/\n{2,}/).filter(Boolean);
+  const gift = new URLSearchParams(window.location.search).get('gift');
 
   return (
     <div className="min-h-screen bg-background">
@@ -90,8 +91,19 @@ export default function CampaignPublicPage() {
           )}
         </article>
 
-        <div className="lg:sticky lg:top-6">
-          {closed ? (
+        <div className="lg:sticky lg:top-6 space-y-3">
+          {gift === 'success' ? (
+            <div className="rounded-2xl border bg-card p-6 text-center space-y-3">
+              <div className="h-14 w-14 rounded-full bg-success/10 text-success flex items-center justify-center mx-auto">
+                <Heart className="w-7 h-7" />
+              </div>
+              <h2 className="font-display font-bold text-lg">Thank you for your gift</h2>
+              <p className="text-sm text-muted-foreground">
+                {campaign.thank_you_message || 'Your gift has been received — thank you for standing with us.'}
+              </p>
+              <a className="text-sm underline inline-block" href={window.location.pathname}>Give again</a>
+            </div>
+          ) : closed ? (
             <div className="rounded-2xl border bg-card p-6 text-center space-y-2">
               <h2 className="font-display font-bold text-lg">This campaign has closed</h2>
               <p className="text-sm text-muted-foreground">
@@ -102,7 +114,14 @@ export default function CampaignPublicPage() {
               )}
             </div>
           ) : (
-            <CampaignDonate campaign={campaign} />
+            <>
+              {gift === 'cancelled' && (
+                <p className="text-sm rounded-lg border bg-card px-3 py-2 text-muted-foreground">
+                  Your gift wasn't completed — nothing was charged.
+                </p>
+              )}
+              <CampaignDonate campaign={campaign} />
+            </>
           )}
         </div>
       </main>

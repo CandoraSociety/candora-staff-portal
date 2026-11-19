@@ -1,0 +1,128 @@
+{
+  "name": "CampaignDonationIntent",
+  "type": "object",
+  "description": "One online gift started on a campaign's public page \u2014 what the supporter chose, the Stripe checkout session it belongs to, and whether the payment came through. Written by the checkout and webhook functions only, so the gift is recorded from a confirmed payment and never from the browser.",
+  "properties": {
+    "campaign_id": {
+      "type": "string",
+      "description": "Campaign the gift is for"
+    },
+    "campaign_name": {
+      "type": "string",
+      "description": "Campaign name at the time of the gift (denormalized)"
+    },
+    "campaign_slug": {
+      "type": "string",
+      "description": "Public page the gift was started from"
+    },
+    "session_id": {
+      "type": "string",
+      "description": "Stripe checkout session id"
+    },
+    "subscription_id": {
+      "type": "string",
+      "description": "Stripe subscription id for a monthly gift \u2014 its renewals are matched on this"
+    },
+    "payment_reference": {
+      "type": "string",
+      "description": "Stripe payment intent id of the charge"
+    },
+    "amount": {
+      "type": "number",
+      "description": "Gift amount in CAD, as resolved on the server from the campaign's giving options"
+    },
+    "currency": {
+      "type": "string",
+      "default": "cad"
+    },
+    "product_id": {
+      "type": "string",
+      "description": "Giving option chosen, when the supporter picked one"
+    },
+    "product_name": {
+      "type": "string",
+      "description": "Giving option label, or Custom gift"
+    },
+    "frequency": {
+      "type": "string",
+      "enum": [
+        "one_time",
+        "monthly"
+      ],
+      "default": "one_time",
+      "description": "Whether the supporter chose to repeat the gift every month"
+    },
+    "donor_name": {
+      "type": "string"
+    },
+    "donor_email": {
+      "type": "string"
+    },
+    "gift_message": {
+      "type": "string"
+    },
+    "is_anonymous": {
+      "type": "boolean",
+      "default": false
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "paid",
+        "expired"
+      ],
+      "default": "pending",
+      "enumColors": [
+        "yellow",
+        "green",
+        "gray"
+      ],
+      "description": "pending = checkout started; paid = confirmed by Stripe; expired = the supporter left checkout"
+    },
+    "donation_id": {
+      "type": "string",
+      "description": "Gift recorded once the payment was confirmed"
+    },
+    "paid_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "campaign_id",
+    "amount",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

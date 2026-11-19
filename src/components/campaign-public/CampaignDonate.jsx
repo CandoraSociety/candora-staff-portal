@@ -24,7 +24,6 @@ export default function CampaignDonate({ campaign }) {
   const [anonymous, setAnonymous] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  const [notice, setNotice] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   const tier = tiers.find((t) => t.id === selectedId);
@@ -33,32 +32,31 @@ export default function CampaignDonate({ campaign }) {
 
   const submit = async () => {
     setError('');
-    setNotice('');
     if (!amount || amount <= 0) { setError('Choose or enter a gift amount.'); return; }
     if (!name.trim()) { setError('Please tell us your name.'); return; }
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) { setError('Please enter a valid email address.'); return; }
 
     setSubmitting(true);
-    const result = await startCampaignCheckout({
-      slug: campaign.slug,
-      campaignId: campaign.id,
-      campaignName: campaign.name,
-      productId: tier?.id || '',
-      productName: tier?.name || 'Custom gift',
-      amount,
-      frequency: monthlyAllowed ? frequency : 'one_time',
-      donorName: name.trim(),
-      donorEmail: email.trim(),
-      anonymous,
-      message: message.trim(),
-    });
-    setSubmitting(false);
-
-    if (result?.notReady) {
-      setNotice('Online card giving for this campaign is being set up. Please check back shortly, or contact us to give today.');
-      return;
+    try {
+      await startCampaignCheckout({
+        slug: campaign.slug,
+        campaignId: campaign.id,
+        campaignName: campaign.name,
+        productId: tier?.id || '',
+        productName: tier?.name || 'Custom gift',
+        amount,
+        frequency: monthlyAllowed ? frequency : 'one_time',
+        donorName: name.trim(),
+        donorEmail: email.trim(),
+        anonymous,
+        message: message.trim(),
+      });
+    } catch (err) {
+      setError(
+        err?.response?.data?.error || err?.message || 'Could not start checkout. Please try again.'
+      );
+      setSubmitting(false);
     }
-    if (result?.url) window.location.href = result.url;
   };
 
   return (
@@ -158,9 +156,6 @@ export default function CampaignDonate({ campaign }) {
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
-      {notice && (
-        <p className="text-sm rounded-lg bg-amber-50 text-amber-900 border border-amber-200 px-3 py-2">{notice}</p>
-      )}
 
       <Button className="w-full h-12 font-medium" onClick={submit} disabled={submitting}>
         {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Heart className="w-4 h-4" />}

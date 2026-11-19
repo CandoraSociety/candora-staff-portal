@@ -166,7 +166,7 @@ export default function DonorsDashboard() {
             return (
               <div key={campaign.id}>
                 <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium">{campaign.name}</span>
+                  <Link to={`/donors/campaigns/${campaign.id}`} className="font-medium hover:underline">{campaign.name}</Link>
                   <span className="text-muted-foreground">
                     {formatMoney(raised)}{campaign.goal_amount ? ` of ${formatMoney(campaign.goal_amount)}` : ''}
                   </span>
