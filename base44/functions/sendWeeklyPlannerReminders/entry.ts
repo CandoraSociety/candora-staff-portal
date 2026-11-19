@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
             base44.asServiceRole.integrations.Core.SendEmail({
               to: record.user_email,
               subject: 'Weekly Planner Reminder — ' + item.text,
-              body: `Hi,\n\nThis is a reminder from your Weekly Planner:\n\n"${item.text}"\n\nScheduled: ${dateStr}${item.notes ? '\nNotes: ' + item.notes : ''}\n\nStay on top of it!\n\nCandora Staff Portal`
+              body: `Hi,\n\nThis is a reminder from your Weekly Planner:\n\n"${item.text}"\n\nScheduled: ${dateStr}${item.notes ? '\nNotes: ' + item.notes : ''}\n\nStay on top of it!\n\nCandora 360`
             });
             remindersSent++;
           } catch (emailErr) {

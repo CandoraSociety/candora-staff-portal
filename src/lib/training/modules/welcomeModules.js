@@ -1,6 +1,6 @@
 // ── Welcome & app tour training module ─────────────────────────────────────
 // The first module everyone takes: a friendly orientation to the whole
-// Candora Staff Portal — the portals themselves, how they connect, the layout
+// Candora 360 — the portals themselves, how they connect, the layout
 // and the few moves that apply everywhere. It explains each portal in a
 // sentence or two rather than teaching any one of them in depth, and tells
 // learners, repeatedly, that they are not expected to remember any of it.
@@ -8,13 +8,13 @@
 export const WELCOME_MODULES = [
   {
     key: "welcome",
-    title: "Welcome to the Candora Staff Portal",
+    title: "Welcome to Candora 360",
     shortTitle: "Welcome & App Tour",
     blurb: "Start here. An orientation to the whole app: the portals and what each area of Candora does, how those portals feed each other, the sidebar, your main page — and why you only need to remember a few things today.",
     path: "/",
     steps: [
       {
-        title: "Welcome to the Candora Staff Portal",
+        title: "Welcome to Candora 360",
         body: "Press Play to hear the orientation: what this app is, the workspaces inside it, and the three parts of the screen that never move. Each scene stays on screen until its narration has finished. Nothing here is graded, and everything you see in training is simulated. When you're ready, press Next below to walk the app itself.",
         introExplainer: true,
         path: "/"
@@ -26,7 +26,7 @@ export const WELCOME_MODULES = [
       },
       {
         title: "One app, many workspaces",
-        body: "The Candora Staff Portal is one application. Inside it, each area of work has its own portal — Pathways for employment case management, the Resource Centre for the central client database, ELL for language classes, Finance, Reception, the File Manager, and more. A portal is simply a workspace with its own pages and records, not a separate program to install. And nobody has all of them: your access decides which portals appear for you, which is why your list can look different from a co-worker's. That's normal.",
+        body: "Candora 360 is one application. Inside it, each area of work has its own portal — Pathways for employment case management, the Resource Centre for the central client database, ELL for language classes, Finance, Reception, the File Manager, and more. A portal is simply a workspace with its own pages and records, not a separate program to install. And nobody has all of them: your access decides which portals appear for you, which is why your list can look different from a co-worker's. That's normal.",
         target: { selector: '[data-tour="dashboard-portals"]' }
       },
       {

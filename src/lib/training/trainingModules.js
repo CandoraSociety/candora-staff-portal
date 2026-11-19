@@ -1,4 +1,4 @@
-// ── Candora Staff Portal training content ─────────────────────────────────
+// ── Candora 360 training content ─────────────────────────────────
 // Each module = a guided spotlight tour (steps) + a hands-on practice
 // checklist (tasks). Training always runs on top of Test Mode, so learners
 // use the real app on simulated data — nothing they create touches live
@@ -68,13 +68,13 @@ export const TRAINING_MODULES = [
         target: { selector: '[data-tour="dashboard-hero"]' }
       },
       {
-        title: "What is the Candora Staff Portal?",
+        title: "What is Candora 360?",
         body: "Press Play to hear the introduction. You can pause, replay or move between scenes; each scene stays on screen until its narration finishes. When you're ready, press Next below to continue training.",
         introExplainer: true
       },
       {
         title: "What's a portal?",
-        body: "The term \"portal\" can be confusing because it refers both to the whole Candora Staff Portal and to the individual workspaces within it. Each area of work has its own portal: Pathways for employment case management, the Resource Centre for the central client database, ELL for language classes, Central Registration, EmpowerU, Digital Literacy, Food Services, Nexus HR, Reception, HR Management, Finance, the Board portal and more. Each has its own pages, tools and records for one part of the job. For example, \"open the Finance portal\" means open the Finance workspace within the Candora Staff Portal, not a separate app. You only see the portals your role gives you access to, so your list may differ from a co-worker's.",
+        body: "The term \"portal\" can be confusing because it refers both to the whole Candora 360 and to the individual workspaces within it. Each area of work has its own portal: Pathways for employment case management, the Resource Centre for the central client database, ELL for language classes, Central Registration, EmpowerU, Digital Literacy, Food Services, Nexus HR, Reception, HR Management, Finance, the Board portal and more. Each has its own pages, tools and records for one part of the job. For example, \"open the Finance portal\" means open the Finance workspace within Candora 360, not a separate app. You only see the portals your role gives you access to, so your list may differ from a co-worker's.",
         target: { selector: '[data-tour="dashboard-portals"]' }
       },
       {

@@ -1,11 +1,11 @@
 export const STAFF_LOGIN_URL = 'https://candora-staff-link.base44.app/login';
 
 export function staffWelcomeMessage(employee) {
-  return `Subject: Welcome to the Candora Staff Portal
+  return `Subject: Welcome to Candora 360
 
 Hi ${employee.first_name},
 
-Welcome to the team! Your employee profile has been added to the Candora Staff Portal. An employee profile is separate from your sign-in account.
+Welcome to the team! Your employee profile has been added to Candora 360. An employee profile is separate from your sign-in account.
 
 FIRST-TIME ACCESS
 Open the app invitation email sent to ${employee.email}. If you have not received an invitation, ask your manager or HR to arrange one before you try to sign in.

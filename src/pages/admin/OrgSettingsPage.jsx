@@ -45,7 +45,7 @@ export default function OrgSettingsPage() {
     primary_color: '#f5c116',
     secondary_color: '#0f1f6b',
     accent_color: '#2b2de8',
-    welcome_message: 'Welcome to the Candora Staff Portal',
+    welcome_message: 'Welcome to Candora 360',
   });
 
   useEffect(() => {
@@ -57,7 +57,7 @@ export default function OrgSettingsPage() {
         primary_color: settings.primary_color || '#f5c116',
         secondary_color: settings.secondary_color || '#0f1f6b',
         accent_color: settings.accent_color || '#2b2de8',
-        welcome_message: settings.welcome_message || 'Welcome to the Candora Staff Portal',
+        welcome_message: settings.welcome_message || 'Welcome to Candora 360',
       });
     }
   }, [settings?.id]);

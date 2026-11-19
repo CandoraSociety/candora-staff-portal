@@ -24,7 +24,7 @@ export default function FacilitatorRunSheet({ module, open, onClose }) {
         <div className="runsheet-card bg-white rounded-2xl shadow-2xl p-8 text-slate-900">
           <div className="flex items-start justify-between gap-4">
             <div>
-              <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Candora Staff Portal — Facilitator Run-Sheet</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-slate-500">Candora 360 — Facilitator Run-Sheet</p>
               <h1 className="text-2xl font-bold mt-1">{module.title}</h1>
               <p className="text-sm text-slate-600 mt-1">{module.blurb}</p>
               {guide?.duration && (

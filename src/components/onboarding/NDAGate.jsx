@@ -64,7 +64,7 @@ export default function NDAGate({ user, employee, onSigned }) {
           </div>
           <div>
             <h2 className="text-lg font-bold text-gray-900">Confidentiality Agreement</h2>
-            <p className="text-sm text-gray-500">Required before accessing the Candora Staff Portal</p>
+            <p className="text-sm text-gray-500">Required before accessing Candora 360</p>
           </div>
         </div>
 

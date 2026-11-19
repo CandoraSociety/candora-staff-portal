@@ -290,7 +290,7 @@ export default function OutlookDashboard() {
           {calendarUnavailable ? (
             <div className="rounded-lg border border-dashed p-6 text-center text-sm text-muted-foreground">
               Calendar isn't switched on for the portal yet. Your mailbox works here now — calendar needs
-              IT to grant the Calendars permission to the Candora Staff Portal app in Azure.
+              IT to grant the Calendars permission to Candora 360 app in Azure.
             </div>
           ) : (
             <CalendarView events={events} loading={eventsLoading} />

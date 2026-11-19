@@ -106,7 +106,7 @@ const quickReference = {
 
     <h2>Names that catch people out</h2>
     <ul>
-      <li><strong>The Candora Staff Portal</strong> is the whole app. The workspaces inside it are also called portals.</li>
+      <li><strong>Candora 360</strong> is the whole app. The workspaces inside it are also called portals.</li>
       <li><strong>The central client database</strong> is the one shared record per person. It is never called the Resource Centre.</li>
       <li><strong>Pathways</strong> is the employment program: one client file per participant, with their barriers, plan, placements and outcomes.</li>
       <li><strong>Compass</strong> is the government system. The portal records that work was done there — it does not replace it.</li>

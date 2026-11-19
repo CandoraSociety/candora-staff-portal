@@ -14,13 +14,13 @@ export default function WelcomeWidget({ user }) {
       <div className="relative">
         <div className="flex items-center gap-2 mb-1">
           <Sparkles className="w-4 h-4 opacity-80" />
-          <span className="text-xs font-medium opacity-80 uppercase tracking-wider">Staff Portal</span>
+          <span className="text-xs font-medium opacity-80 uppercase tracking-wider">Candora 360</span>
         </div>
         <h1 className="text-2xl font-display font-bold mt-2">
           {greeting}, {firstName}
         </h1>
         <p className="text-sm opacity-80 mt-1">
-          Welcome to the Candora Staff Portal. Access your tools and resources below.
+          Your complete staff admin centre — every record and every workspace, in one place.
         </p>
       </div>
     </div>

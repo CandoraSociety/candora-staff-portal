@@ -26,7 +26,7 @@ export function useOrgSettings() {
     primaryColor: s.primary_color || '#f5c116',
     secondaryColor: s.secondary_color || '#0f1f6b',
     accentColor: s.accent_color || '#005afd',
-    welcomeMessage: s.welcome_message || 'Welcome to the Candora Staff Portal',
+    welcomeMessage: s.welcome_message || 'Welcome to Candora 360',
     tierPortalAccess: s.tier_portal_access || {},
     ownerEmail: s.owner_email || null,
     isLoading,

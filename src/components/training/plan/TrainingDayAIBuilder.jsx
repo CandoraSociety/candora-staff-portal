@@ -38,7 +38,7 @@ export default function TrainingDayAIBuilder({ open, onClose, onCreated, plan, o
     const window = Math.max(60, toMinutes(form.finish) - toMinutes(form.hard_start));
     try {
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are helping a facilitator at Candora, a community services non-profit, plan a live in-room training day for the Candora Staff Portal app.
+        prompt: `You are helping a facilitator at Candora, a community services non-profit, plan a live in-room training day for Candora 360 app.
 
 Audience: ${form.audience_type === "individual" ? "one individual" : "a team"}${form.audience ? ` — ${form.audience}` : ""}
 Facilitator's priorities: ${form.focus || "general onboarding to the app, then real work with clients"}

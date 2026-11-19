@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
         </div>
         <div style="padding:32px;background:#ffffff;border:1px solid #e5e7eb;">
           <h2 style="color:#0f1f6b;">Welcome, ${employee.first_name}!</h2>
-          <p style="color:#374151;line-height:1.6;">You've been added to the <strong>Candora Staff Portal</strong>. To set up your account, simply click the button below and register using <strong>this email address (${employee.email})</strong>.</p>
+          <p style="color:#374151;line-height:1.6;">You've been added to the <strong>Candora 360</strong>. To set up your account, simply click the button below and register using <strong>this email address (${employee.email})</strong>.</p>
           <p style="margin:32px 0;text-align:center;">
             <a href="${registerUrl}" style="background-color:#f5c116;color:#0f1f6b;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:bold;font-size:16px;display:inline-block;">
               Set Up My Account →
@@ -42,7 +42,7 @@ Deno.serve(async (req) => {
 
     await base44.asServiceRole.integrations.Core.SendEmail({
       to: employee.email,
-      subject: `Welcome to the Candora Staff Portal, ${employee.first_name}!`,
+      subject: `Welcome to Candora 360, ${employee.first_name}!`,
       body,
       from_name: 'The Candora Society'
     });

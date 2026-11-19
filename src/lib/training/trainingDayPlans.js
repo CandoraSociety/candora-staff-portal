@@ -52,7 +52,7 @@ export const PATHWAYS_TRAINING_DAY = {
       title: "One app, many workspaces",
       module: "welcome",
       why: "Nobody should spend the day lost in a workspace they can't name, and nobody needs to learn all twenty.",
-      cue: "Say the two-name thing out loud: the app is the Candora Staff Portal, and the workspaces inside it are also called portals. Then name the three things they'll use all day — main page, sidebar, tab bar.",
+      cue: "Say the two-name thing out loud: the app is Candora 360, and the workspaces inside it are also called portals. Then name the three things they'll use all day — main page, sidebar, tab bar.",
       activities: [
         "Open Portals, open Pathways, then click back to your Main Page tab — twice, until the switch stops feeling new.",
         "Pin Pathways on your main page. If it isn't in your list it's an access question for your supervisor, not a fault.",

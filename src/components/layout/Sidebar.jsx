@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 import { useOrgSettings } from '@/lib/useOrgSettings';
 import LogoutConfirmationDialog from '@/components/auth/LogoutConfirmationDialog';
 import SidebarNavGroup from '@/components/layout/SidebarNavGroup';
+import Candora360Wordmark from '@/components/brand/Candora360Wordmark';
 
 const NAV_ITEMS = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard, adminOnly: false },
@@ -62,7 +63,6 @@ const ADMIN_ITEMS = [
 
 export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
   const location = useLocation();
-  const { logoUrl, orgName } = useOrgSettings();
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
   const isActive = (path) => {
@@ -87,16 +87,7 @@ export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
             "flex items-center justify-between px-3 h-full",
             collapsed ? "justify-center" : ""
           )}>
-            <div className="flex items-center gap-3">
-              <img
-                src={logoUrl}
-                alt={orgName}
-                className="w-10 h-10 rounded-xl flex-shrink-0 object-contain"
-              />
-              {!collapsed && (
-                <span className="font-display font-bold text-sidebar-primary text-sm truncate">{orgName}</span>
-              )}
-            </div>
+            <Candora360Wordmark size="sm" tone="dark" showName={!collapsed} />
             <Tooltip>
               <TooltipTrigger asChild>
                 <button

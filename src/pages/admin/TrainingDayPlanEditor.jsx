@@ -92,7 +92,7 @@ export default function TrainingDayPlanEditor() {
     setAiBlock(index);
     try {
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are helping a facilitator plan a live in-room session on the Candora Staff Portal app.
+        prompt: `You are helping a facilitator plan a live in-room session on Candora 360 app.
 Training day: ${plan.title} — audience: ${plan.audience || "staff"}.
 This block: "${block.title}"${block.module ? ` teaching the module "${block.module.title}"` : ""}, ${block.minutes} minutes.
 Its purpose in the sequence: ${block.why || "not stated"}.

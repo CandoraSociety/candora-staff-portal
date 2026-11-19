@@ -16,8 +16,8 @@ const INTRO_SCENES_BY_MODULE = {
   welcome: [
     {
       kicker: 'Orientation',
-      title: 'Welcome to the Candora Staff Portal.',
-      body: 'Welcome to the Candora Staff Portal. This is the app you sign into at the start of your workday: one system for the tools, the information, and the paperwork that come with your job. Over the next few minutes you will see how the whole thing is laid out, and where everything lives.',
+      title: 'Welcome to Candora 360.',
+      body: 'Welcome to Candora 360. This is the app you sign into at the start of your workday: one system for the tools, the information, and the paperwork that come with your job. Over the next few minutes you will see how the whole thing is laid out, and where everything lives.',
       audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/e0525d226_speech.mp3',
     },
     {
@@ -59,15 +59,15 @@ const INTRO_SCENES_BY_MODULE = {
   ],
   dashboard: [
     {
-      kicker: 'Candora Staff Portal',
-      title: 'Welcome to the Candora Staff Portal.',
-      body: 'Welcome to the Candora Staff Portal. This is the place you will log into at the beginning of your workday, your starting point for the tools, information, and administrative work you need.',
+      kicker: 'Candora 360',
+      title: 'Welcome to Candora 360.',
+      body: 'Welcome to Candora 360. This is the place you will log into at the beginning of your workday, your starting point for the tools, information, and administrative work you need.',
       audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/bd9cda51d_speech.mp3',
     },
     {
       kicker: 'One connected system',
       title: 'What is an ERP?',
-      body: "ERP stands for Enterprise Resource Planning. In simple terms, it means one connected system for running an organization's day-to-day operations, rather than juggling lots of separate programs. The Candora Staff Portal is our complete ERP.",
+      body: "ERP stands for Enterprise Resource Planning. In simple terms, it means one connected system for running an organization's day-to-day operations, rather than juggling lots of separate programs. The Candora 360 is our complete ERP.",
       audioUrl: 'https://media.base44.com/files/public/6a249282cb496579542673b7/3e2406fe0_speech.mp3',
     },
     {
