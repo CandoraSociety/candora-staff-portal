@@ -7,6 +7,7 @@ import PaidReimbursementAlerts from '@/components/dashboard/PaidReimbursementAle
 import ReceptionMessageAlerts from '@/components/dashboard/ReceptionMessageAlerts';
 import TrainingMaterialAlerts from '@/components/dashboard/TrainingMaterialAlerts';
 import EdBriefingAlerts from '@/components/dashboard/EdBriefingAlerts';
+import AppChangeRequestAlerts from '@/components/dashboard/AppChangeRequestAlerts';
 import FinanceFileApprovalWidget from '@/components/ed/FinanceFileApprovalWidget';
 
 export default function DashboardNotifications({ user }) {
@@ -32,6 +33,7 @@ export default function DashboardNotifications({ user }) {
       <ReceptionMessageAlerts user={user} />
       <TrainingMaterialAlerts user={user} />
       <EdBriefingAlerts user={user} />
+      <AppChangeRequestAlerts user={user} />
       {user?.email?.toLowerCase() === 'graham.currie@candorasociety.com' && (
         <FinanceFileApprovalWidget />
       )}

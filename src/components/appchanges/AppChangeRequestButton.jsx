@@ -11,14 +11,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { APP_ADJUSTMENT_EMAILS } from '@/lib/appAdjustments';
 import { Lightbulb, Send, Loader2, Clock } from 'lucide-react';
 
-const ALLOWED_EMAILS = [
-  'luis.valbuena@candorasociety.com',
-  'yazmin.escobar@candorasociety.com',
-  'carla.bosse@candorasociety.com',
-  'graham.currie@candorasociety.com',
-];
+const ALLOWED_EMAILS = APP_ADJUSTMENT_EMAILS;
 
 const CATEGORIES = [
   { value: 'adjustment', label: 'Adjustment' },
@@ -157,6 +153,14 @@ export default function AppChangeRequestButton() {
                       </span>
                     </div>
                     <p className="text-sm text-muted-foreground whitespace-pre-wrap">{req.request_text}</p>
+                    {req.admin_message && (
+                      <div className="rounded-md border border-primary/30 bg-primary/5 p-2">
+                        <p className="text-xs font-medium text-primary">
+                          Message from {req.admin_message_by_name || 'App Adjustments'}
+                        </p>
+                        <p className="text-sm whitespace-pre-wrap">{req.admin_message}</p>
+                      </div>
+                    )}
                   </div>
                 ))
               )}

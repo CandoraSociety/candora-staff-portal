@@ -41,6 +41,28 @@
       ],
       "default": "new",
       "description": "Processing status of the request"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the request was marked complete \u2014 the submitter is notified on their Dashboard at that moment"
+    },
+    "completed_by_name": {
+      "type": "string",
+      "description": "Who marked the request complete"
+    },
+    "admin_message": {
+      "type": "string",
+      "description": "Latest message from the app administrator to the submitter about this request (e.g. asking for clarification). Sent to the submitter's Dashboard as a notification."
+    },
+    "admin_message_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the administrator's message was sent"
+    },
+    "admin_message_by_name": {
+      "type": "string",
+      "description": "Who sent the administrator's message"
     }
   },
   "required": [

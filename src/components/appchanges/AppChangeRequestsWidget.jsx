@@ -6,8 +6,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import CollapsibleWidget from '@/components/dashboard/CollapsibleWidget';
+import { Textarea } from '@/components/ui/textarea';
+import { useAuth } from '@/lib/AuthContext';
+import { hasAppAdjustmentsAccess } from '@/lib/appAdjustments';
 import { toast } from 'sonner';
-import { ChevronDown, ChevronRight, Filter, Lightbulb, Loader2 } from 'lucide-react';
+import { ChevronDown, ChevronRight, Filter, Lightbulb, Loader2, Send } from 'lucide-react';
 
 const STATUS_CONFIG = {
   new: { label: 'New', color: 'bg-blue-100 text-blue-700' },
@@ -24,8 +27,11 @@ function formatDate(dateStr) {
 }
 
 export default function AppChangeRequestsWidget() {
+  const { user } = useAuth();
   const queryClient = useQueryClient();
   const [expandedId, setExpandedId] = useState(null);
+  // Message drafts, keyed by request id — sent to the submitter's Dashboard.
+  const [drafts, setDrafts] = useState({});
   const [filterEmployee, setFilterEmployee] = useState('all');
   const [filterDate, setFilterDate] = useState('');
 
@@ -64,11 +70,61 @@ export default function AppChangeRequestsWidget() {
 
   const newCount = requests.filter(r => r.status === 'new').length;
 
+  // Notifies the submitter on their own Dashboard. Only staff who have the App
+  // Adjustments function receive these notifications.
+  const notifySubmitter = (req, title, message) => {
+    if (!hasAppAdjustmentsAccess(req.submitted_by_email)) return null;
+    return base44.entities.DashboardNotification.create({
+      recipient_email: req.submitted_by_email,
+      recipient_name: req.submitted_by_name || req.submitted_by_email,
+      kind: 'app_change_request',
+      from_name: user?.full_name || user?.email || 'App Adjustments',
+      related_form_id: req.id,
+      title,
+      message,
+    });
+  };
+
+  const requestLabel = (req) => req.title || (req.request_text || '').slice(0, 80);
+
   const statusMutation = useMutation({
-    mutationFn: ({ id, status }) => base44.entities.AppChangeRequest.update(id, { status }),
+    mutationFn: async ({ req, status }) => {
+      const patch = { status };
+      if (status === 'completed') {
+        patch.completed_at = new Date().toISOString();
+        patch.completed_by_name = user?.full_name || user?.email || '';
+      }
+      await base44.entities.AppChangeRequest.update(req.id, patch);
+      if (status === 'completed' && req.status !== 'completed') {
+        await notifySubmitter(
+          req,
+          'Your app change request is complete',
+          `"${requestLabel(req)}" has been marked complete.`
+        );
+      }
+    },
     onSuccess: () => {
       queryClient.invalidateQueries(['appChangeRequests', 'all']);
+      queryClient.invalidateQueries(['appChangeRequestNotifications']);
       toast.success('Status updated');
+    },
+  });
+
+  const messageMutation = useMutation({
+    mutationFn: async ({ req, text }) => {
+      const now = new Date().toISOString();
+      const byName = user?.full_name || user?.email || '';
+      await base44.entities.AppChangeRequest.update(req.id, {
+        admin_message: text,
+        admin_message_at: now,
+        admin_message_by_name: byName,
+      });
+      await notifySubmitter(req, `Message about "${requestLabel(req)}"`, text);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['appChangeRequests', 'all']);
+      queryClient.invalidateQueries(['appChangeRequestNotifications']);
+      toast.success('Message sent to their dashboard');
     },
   });
 
@@ -125,13 +181,48 @@ export default function AppChangeRequestsWidget() {
                       <span className="text-xs text-muted-foreground">Update status:</span>
                       <Select
                         value={req.status}
-                        onValueChange={(val) => statusMutation.mutate({ id: req.id, status: val })}
+                        onValueChange={(val) => statusMutation.mutate({ req, status: val })}
                       >
                         <SelectTrigger className="w-36 h-7 text-xs"><SelectValue /></SelectTrigger>
                         <SelectContent>
                           {Object.entries(STATUS_CONFIG).map(([k, v]) => <SelectItem key={k} value={k}>{v.label}</SelectItem>)}
                         </SelectContent>
                       </Select>
+                    </div>
+
+                    {req.admin_message && (
+                      <div className="rounded-lg border border-primary/30 bg-primary/5 p-2">
+                        <p className="text-xs font-medium text-primary">
+                          Your last message · {req.admin_message_by_name || 'App Adjustments'} · {formatDate(req.admin_message_at)}
+                        </p>
+                        <p className="text-sm whitespace-pre-wrap">{req.admin_message}</p>
+                      </div>
+                    )}
+
+                    <div className="space-y-1.5 pt-1">
+                      <span className="text-xs text-muted-foreground">
+                        Send a message to {req.submitted_by_name || req.submitted_by_email}'s dashboard
+                        (e.g. ask for clarification):
+                      </span>
+                      <Textarea
+                        rows={2}
+                        className="text-sm"
+                        placeholder="Type your message..."
+                        value={drafts[req.id] || ''}
+                        onChange={(e) => setDrafts({ ...drafts, [req.id]: e.target.value })}
+                      />
+                      <Button
+                        size="sm"
+                        className="gap-1.5"
+                        disabled={!drafts[req.id]?.trim() || messageMutation.isPending}
+                        onClick={() => messageMutation.mutate(
+                          { req, text: drafts[req.id].trim() },
+                          { onSuccess: () => setDrafts({ ...drafts, [req.id]: '' }) }
+                        )}
+                      >
+                        {messageMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Send className="h-3.5 w-3.5" />}
+                        Send message
+                      </Button>
                     </div>
                   </div>
                 )}

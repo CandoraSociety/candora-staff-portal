@@ -18,10 +18,11 @@
         "ed_briefing",
         "training_material",
         "reception_message",
+        "app_change_request",
         "other"
       ],
       "default": "other",
-      "description": "Type of notification (reimbursement marked paid, MasterCard receipt submission processed, scheduled ED briefing, training handout shared by a facilitator, a message left at the front desk, other)"
+      "description": "Type of notification (reimbursement marked paid, MasterCard receipt submission processed, scheduled ED briefing, training handout shared by a facilitator, a message left at the front desk, an app change request completed or commented on, other)"
     },
     "from_name": {
       "type": "string",
