@@ -26,6 +26,7 @@ const EMPTY = {
   office_hours: "",
   charity_number: "",
   footer_note: "",
+  public_site_url: "",
   social_links: [],
 };
 
@@ -255,6 +256,18 @@ export default function WebsiteSettings() {
             <div className="space-y-1.5">
               <Label htmlFor="footer-note">Footer note</Label>
               <Input id="footer-note" value={form.footer_note} onChange={(e) => set("footer_note", e.target.value)} />
+            </div>
+            <div className="space-y-1.5 sm:col-span-2">
+              <Label htmlFor="site-url">Public website address</Label>
+              <Input
+                id="site-url"
+                value={form.public_site_url}
+                onChange={(e) => set("public_site_url", e.target.value)}
+                placeholder="https://candora.ca"
+              />
+              <p className="text-xs text-muted-foreground">
+                Where supporters go back to after giving online. Leave blank until the website is live.
+              </p>
             </div>
           </div>
 

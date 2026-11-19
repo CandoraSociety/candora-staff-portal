@@ -63,6 +63,10 @@
       "type": "string",
       "description": "Closing line in the site footer"
     },
+    "public_site_url": {
+      "type": "string",
+      "description": "Live address of the public website, e.g. https://candora.ca. A gift started on the website is sent back to this address after payment, so supporters finish on the site they started on."
+    },
     "social_links": {
       "type": "array",
       "description": "Social profiles shown in the site footer",

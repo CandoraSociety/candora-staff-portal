@@ -88,6 +88,10 @@ export default function WebsiteFeed() {
             <li>Visible content blocks for each page, in order.</li>
             <li>Published news posts.</li>
             <li>Events and programs that are published and advertised, with their page path.</li>
+            <li>
+              Giving pages read their own public endpoints: the general fund and open campaigns with their progress, and
+              checkout starts through the donor portal so every gift is recorded in one place.
+            </li>
           </ul>
           <p className="text-xs text-muted-foreground">
             Drafts, items set to “Do not advertise”, and every other Candora 360 record stay out of the feed.

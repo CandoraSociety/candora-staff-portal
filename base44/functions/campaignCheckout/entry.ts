@@ -118,6 +118,16 @@ export default async function (req) {
       ? '/donate'
       : `/campaign/${campaign.slug || ''}`;
 
+    // A gift started on the public website finishes on that website. The address
+    // is read from the site settings staff saved, never from the browser, so a
+    // checkout can only ever return to the organization's own site.
+    let returnBase = appUrl;
+    if (body.fromWebsite === true) {
+      const settingsPage = await base44.asServiceRole.entities.WebsiteSettings.list({ limit: 1 });
+      const siteUrl = String((settingsPage.items || [])[0]?.public_site_url || '').trim().replace(/\/+$/, '');
+      if (/^https?:\/\/[^/\s]+/i.test(siteUrl)) returnBase = siteUrl;
+    }
+
     const intent = await base44.asServiceRole.entities.CampaignDonationIntent.create({
       campaign_id: campaign.id,
       campaign_name: campaign.name,
@@ -142,8 +152,8 @@ export default async function (req) {
     params.set('mode', frequency === 'monthly' ? 'subscription' : 'payment');
     // Every gift returns to the thank-you page, which confirms the payment with
     // Stripe before thanking the supporter.
-    params.set('success_url', `${appUrl}/donate/thank-you?session_id={CHECKOUT_SESSION_ID}`);
-    params.set('cancel_url', `${appUrl}${pagePath}?gift=cancelled`);
+    params.set('success_url', `${returnBase}/donate/thank-you?session_id={CHECKOUT_SESSION_ID}`);
+    params.set('cancel_url', `${returnBase}${pagePath}?gift=cancelled`);
     params.set('customer_email', donorEmail);
     params.set('line_items[0][quantity]', '1');
     params.set('line_items[0][price_data][currency]', CURRENCY);
