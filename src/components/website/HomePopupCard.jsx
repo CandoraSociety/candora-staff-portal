@@ -108,6 +108,34 @@ export default function HomePopupCard({ form, set }) {
               </Select>
             </div>
 
+            <div className="rounded-xl border border-border p-4 space-y-3 bg-muted/30">
+              <p className="text-sm font-semibold text-foreground">Schedule this pop-up</p>
+              <div className="grid sm:grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="popup-starts">Show from (optional)</Label>
+                  <Input
+                    id="popup-starts"
+                    type="datetime-local"
+                    value={form.popup_starts_at || ""}
+                    onChange={(e) => set("popup_starts_at", e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="popup-ends">Show until (optional)</Label>
+                  <Input
+                    id="popup-ends"
+                    type="datetime-local"
+                    value={form.popup_ends_at || ""}
+                    onChange={(e) => set("popup_ends_at", e.target.value)}
+                  />
+                </div>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Leave both empty to show it from the moment you save. With dates set, the website starts and stops
+                showing it on its own.
+              </p>
+            </div>
+
             <div className="rounded-xl border border-dashed border-border bg-muted/30 p-4">
               <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground font-semibold mb-3">
                 Preview

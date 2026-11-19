@@ -28,6 +28,11 @@
       "format": "date",
       "description": "Date the post is shown as published"
     },
+    "publish_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Optional moment the change goes live on the website. While it is still in the future the website is not sent this post; leave it blank to go live as soon as the post is published."
+    },
     "status": {
       "type": "string",
       "enum": [

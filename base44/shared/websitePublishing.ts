@@ -44,6 +44,26 @@ export function publicationFromSource(sourceType, source) {
   return null;
 }
 
+// A change can be given a moment to go live. Until that moment passes, the
+// public website is not sent the item, so the change appears on its own.
+export function scheduledForLater(record, now = Date.now()) {
+  const at = record?.publish_at;
+  if (!at) return false;
+  const time = new Date(at).getTime();
+  return Number.isFinite(time) && time > now;
+}
+
+// The pop-up can also be given a window: it only shows between its start and
+// end, so an appeal can be queued ahead of time and retire itself.
+export function popupActive(settings, now = Date.now()) {
+  if (!settings?.popup_enabled) return false;
+  const start = settings.popup_starts_at ? new Date(settings.popup_starts_at).getTime() : null;
+  const end = settings.popup_ends_at ? new Date(settings.popup_ends_at).getTime() : null;
+  if (start && Number.isFinite(start) && now < start) return false;
+  if (end && Number.isFinite(end) && now > end) return false;
+  return true;
+}
+
 // The only shape the public website receives for one published item.
 export function publicPublication(pub) {
   return {
@@ -128,7 +148,7 @@ export function publicSite(settings, fallbackLogo) {
     // The home page pop-up. enabled is always present so the website can check
     // one field before showing anything.
     popup: {
-      enabled: !!settings.popup_enabled,
+      enabled: popupActive(settings),
       title: settings.popup_title || '',
       message: settings.popup_message || '',
       image_url: settings.popup_image_url || '',

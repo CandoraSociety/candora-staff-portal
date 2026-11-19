@@ -11,6 +11,7 @@ import { useToast } from "@/components/ui/use-toast";
 import WebsiteImageField from "@/components/website/WebsiteImageField";
 import NewsFeedStyleCard from "@/components/website/NewsFeedStyleCard";
 import HomePopupCard from "@/components/website/HomePopupCard";
+import { toDateTimeLocal } from "@/lib/websiteManager";
 
 const EMPTY = {
   site_name: "Candora",
@@ -35,6 +36,8 @@ const EMPTY = {
   popup_button_label: "",
   popup_button_url: "",
   popup_frequency: "once_per_session",
+  popup_starts_at: "",
+  popup_ends_at: "",
   contact_email: "",
   contact_phone: "",
   contact_address: "",
@@ -65,6 +68,8 @@ export default function WebsiteSettings() {
       ...EMPTY,
       ...settings,
       social_links: Array.isArray(settings.social_links) ? settings.social_links : [],
+      popup_starts_at: toDateTimeLocal(settings.popup_starts_at),
+      popup_ends_at: toDateTimeLocal(settings.popup_ends_at),
     });
   }, [settings?.id]);
 
@@ -93,7 +98,12 @@ export default function WebsiteSettings() {
     }
     setSaving(true);
     try {
-      const payload = { ...form, social_links: (form.social_links || []).filter((l) => l.label || l.url) };
+      const payload = {
+        ...form,
+        social_links: (form.social_links || []).filter((l) => l.label || l.url),
+        popup_starts_at: form.popup_starts_at ? new Date(form.popup_starts_at).toISOString() : "",
+        popup_ends_at: form.popup_ends_at ? new Date(form.popup_ends_at).toISOString() : "",
+      };
       if (settingsId) {
         await base44.entities.WebsiteSettings.update(settingsId, payload);
       } else {

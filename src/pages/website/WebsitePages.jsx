@@ -5,7 +5,7 @@ import { Plus, Loader2, Pencil, Trash2, Eye, EyeOff, FileText } from "lucide-rea
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import SectionEditorDialog from "@/components/website/SectionEditorDialog";
-import { WEBSITE_PAGES } from "@/lib/websiteManager";
+import { WEBSITE_PAGES, formatWebsiteDate, isScheduledLater } from "@/lib/websiteManager";
 
 export default function WebsitePages() {
   const [page, setPage] = useState("home");
@@ -117,6 +117,11 @@ export default function WebsitePages() {
                     {section.is_visible === false && (
                       <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
                         Hidden
+                      </span>
+                    )}
+                    {isScheduledLater(section.publish_at) && (
+                      <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-warning/10 text-warning">
+                        Goes live {formatWebsiteDate(section.publish_at, true)}
                       </span>
                     )}
                   </div>

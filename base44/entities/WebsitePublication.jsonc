@@ -116,6 +116,11 @@
       "type": "string",
       "description": "Staff member who published it"
     },
+    "publish_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Optional moment this page's change goes live on the website. While it is still in the future the website keeps the previous version; leave it blank to change it straight away."
+    },
     "last_synced_at": {
       "type": "string",
       "format": "date-time",

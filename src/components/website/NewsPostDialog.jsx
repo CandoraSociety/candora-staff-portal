@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import WebsiteImageField from "@/components/website/WebsiteImageField";
+import { toDateTimeLocal } from "@/lib/websiteManager";
 
 const EMPTY = {
   title: "",
@@ -14,6 +15,7 @@ const EMPTY = {
   body: "",
   image_url: "",
   publish_date: new Date().toISOString().slice(0, 10),
+  publish_at: "",
   is_pinned: false,
 };
 
@@ -25,7 +27,7 @@ export default function NewsPostDialog({ open, onOpenChange, post, onSave }) {
   useEffect(() => {
     if (!open) return;
     setError("");
-    setForm(post ? { ...EMPTY, ...post } : EMPTY);
+    setForm(post ? { ...EMPTY, ...post, publish_at: toDateTimeLocal(post.publish_at) } : EMPTY);
   }, [open, post?.id]);
 
   const set = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
@@ -41,6 +43,7 @@ export default function NewsPostDialog({ open, onOpenChange, post, onSave }) {
       await onSave({
         ...form,
         status,
+        publish_at: form.publish_at ? new Date(form.publish_at).toISOString() : "",
         slug:
           form.slug ||
           form.title.toLowerCase().replace(/[^\w\s-]/g, "").trim().replace(/[\s_]+/g, "-").slice(0, 70),
@@ -89,15 +92,30 @@ export default function NewsPostDialog({ open, onOpenChange, post, onSave }) {
             <Textarea id="news-body" rows={7} value={form.body} onChange={(e) => set("body", e.target.value)} />
           </div>
           <WebsiteImageField label="Image" value={form.image_url} onChange={(url) => set("image_url", url)} />
-          <div className="space-y-1.5 max-w-xs">
-            <Label htmlFor="news-date">Date</Label>
-            <Input
-              id="news-date"
-              type="date"
-              value={form.publish_date}
-              onChange={(e) => set("publish_date", e.target.value)}
-            />
+          <div className="grid sm:grid-cols-2 gap-4">
+            <div className="space-y-1.5">
+              <Label htmlFor="news-date">Date</Label>
+              <Input
+                id="news-date"
+                type="date"
+                value={form.publish_date}
+                onChange={(e) => set("publish_date", e.target.value)}
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="news-schedule">Go live at (optional)</Label>
+              <Input
+                id="news-schedule"
+                type="datetime-local"
+                value={form.publish_at || ""}
+                onChange={(e) => set("publish_at", e.target.value)}
+              />
+            </div>
           </div>
+          <p className="text-[11px] text-muted-foreground -mt-2">
+            Leave “Go live at” empty to go live as soon as you publish. Set a time and the website adds the post
+            itself at that moment.
+          </p>
           <div className="flex items-center justify-between rounded-lg border border-border px-4 py-3">
             <div>
               <p className="text-sm font-medium text-foreground">Pin to the top of the news list</p>

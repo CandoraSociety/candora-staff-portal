@@ -5,7 +5,7 @@ import { Plus, Loader2, Pencil, Trash2, Newspaper, Eye, EyeOff } from "lucide-re
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import NewsPostDialog from "@/components/website/NewsPostDialog";
-import { formatWebsiteDate } from "@/lib/websiteManager";
+import { formatWebsiteDate, isScheduledLater } from "@/lib/websiteManager";
 
 const STATUS_STYLES = {
   published: "bg-success/10 text-success",
@@ -114,10 +114,18 @@ export default function WebsiteNews() {
                           Pinned
                         </span>
                       )}
+                      {isScheduledLater(post.publish_at) && (
+                        <span className="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-warning/10 text-warning">
+                          Scheduled
+                        </span>
+                      )}
                     </div>
                     <p className="text-xs text-muted-foreground mt-0.5">
                       {formatWebsiteDate(post.publish_date)}
                       {post.author_name ? ` · ${post.author_name}` : ""}
+                      {isScheduledLater(post.publish_at)
+                        ? ` · goes live ${formatWebsiteDate(post.publish_at, true)}`
+                        : ""}
                     </p>
                   </div>
                   <span

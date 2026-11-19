@@ -1,5 +1,11 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
-import { publicPublication, publicNewsPost, publicSection, publicSite } from '../../shared/websitePublishing.ts';
+import {
+  publicPublication,
+  publicNewsPost,
+  publicSection,
+  publicSite,
+  scheduledForLater,
+} from '../../shared/websitePublishing.ts';
 
 // Public feed for the separate Candora website app. Anyone can read it, so it
 // only ever returns published website content, shaped by the shared allowlist.
@@ -33,9 +39,14 @@ export default async function (req) {
       brandLogoUrl = asset?.file_url || '';
     }
     const fallbackLogo = brandLogoUrl || org?.logo_url || '';
-    const sections = (sectionPage.items || []).filter((s) => s.is_visible !== false);
-    const news = (newsPage.items || []).filter((p) => p.advertise !== false);
-    const publications = publicationPage.items || [];
+    // Anything with a scheduled time still in the future is held back, so a
+    // change goes live on the website by itself at the moment chosen.
+    const now = Date.now();
+    const sections = (sectionPage.items || []).filter(
+      (s) => s.is_visible !== false && !scheduledForLater(s, now)
+    );
+    const news = (newsPage.items || []).filter((p) => p.advertise !== false && !scheduledForLater(p, now));
+    const publications = (publicationPage.items || []).filter((p) => !scheduledForLater(p, now));
 
     const events = publications.map(publicPublication);
 

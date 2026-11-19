@@ -22,6 +22,24 @@ export const WEBSITE_PAGES = [
   { value: 'get_involved', label: 'Get involved' },
 ];
 
+// Turns a stored date into the value a datetime-local field expects.
+export function toDateTimeLocal(value) {
+  if (!value) return '';
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return '';
+  const pad = (n) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(
+    date.getHours()
+  )}:${pad(date.getMinutes())}`;
+}
+
+// True while a change is still waiting for its scheduled moment.
+export function isScheduledLater(value) {
+  if (!value) return false;
+  const time = new Date(value).getTime();
+  return Number.isFinite(time) && time > Date.now();
+}
+
 export function formatWebsiteDate(value, withTime = false) {
   if (!value) return '';
   const date = new Date(value);

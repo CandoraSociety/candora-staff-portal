@@ -9,6 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { WEBSITE_PAGES } from "@/lib/websiteManager";
 import WebsiteImageField from "@/components/website/WebsiteImageField";
+import { toDateTimeLocal } from "@/lib/websiteManager";
 
 const EMPTY = {
   page: "home",
@@ -20,6 +21,7 @@ const EMPTY = {
   cta_url: "",
   display_order: 0,
   is_visible: true,
+  publish_at: "",
 };
 
 export default function SectionEditorDialog({ open, onOpenChange, section, onSave }) {
@@ -30,7 +32,7 @@ export default function SectionEditorDialog({ open, onOpenChange, section, onSav
   useEffect(() => {
     if (!open) return;
     setError("");
-    setForm(section ? { ...EMPTY, ...section } : EMPTY);
+    setForm(section ? { ...EMPTY, ...section, publish_at: toDateTimeLocal(section.publish_at) } : EMPTY);
   }, [open, section?.id]);
 
   const set = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
@@ -47,6 +49,7 @@ export default function SectionEditorDialog({ open, onOpenChange, section, onSav
         ...form,
         section_key: form.section_key || form.heading.toLowerCase().replace(/[^\w]+/g, "_").slice(0, 40),
         display_order: Number(form.display_order) || 0,
+        publish_at: form.publish_at ? new Date(form.publish_at).toISOString() : "",
       });
       onOpenChange(false);
     } catch (err) {
@@ -137,6 +140,20 @@ export default function SectionEditorDialog({ open, onOpenChange, section, onSav
               <p className="text-xs text-muted-foreground">Turn off to hide the block without deleting it.</p>
             </div>
             <Switch checked={form.is_visible} onCheckedChange={(v) => set("is_visible", v)} />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="section-schedule">Go live at (optional)</Label>
+            <Input
+              id="section-schedule"
+              type="datetime-local"
+              value={form.publish_at || ""}
+              onChange={(e) => set("publish_at", e.target.value)}
+            />
+            <p className="text-[11px] text-muted-foreground">
+              Leave empty to change the website right away. Set a time and the website shows this change at that
+              moment.
+            </p>
           </div>
         </div>
 

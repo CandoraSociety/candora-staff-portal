@@ -129,6 +129,16 @@
       "default": "once_per_session",
       "description": "How often the same visitor sees the pop-up"
     },
+    "popup_starts_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Optional moment the pop-up starts showing on the website \u2014 lets an appeal be queued ahead of time"
+    },
+    "popup_ends_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Optional moment the pop-up stops showing on the website \u2014 lets an appeal retire itself"
+    },
     "contact_email": {
       "type": "string"
     },

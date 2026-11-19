@@ -1,6 +1,6 @@
-import { Pencil, Eye, EyeOff, Trash2, CalendarDays, MapPin, ExternalLink } from "lucide-react";
+import { Pencil, Eye, EyeOff, Trash2, CalendarDays, MapPin, ExternalLink, Clock } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { formatWebsiteDate } from "@/lib/websiteManager";
+import { formatWebsiteDate, isScheduledLater } from "@/lib/websiteManager";
 
 const STATUS_STYLES = {
   published: "bg-success/10 text-success",
@@ -66,6 +66,11 @@ export default function PublicationCard({ publication, onEdit, onToggleStatus, o
           {publication.public_path && status === "published" && (
             <span className="inline-flex items-center gap-1">
               <ExternalLink className="w-3.5 h-3.5" /> {publication.public_path}
+            </span>
+          )}
+          {isScheduledLater(publication.publish_at) && (
+            <span className="inline-flex items-center gap-1 font-medium text-warning">
+              <Clock className="w-3.5 h-3.5" /> Goes live {formatWebsiteDate(publication.publish_at, true)}
             </span>
           )}
         </div>

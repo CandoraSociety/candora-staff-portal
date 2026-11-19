@@ -28,6 +28,7 @@ const EMPTY = {
   advertise: true,
   featured_on_home: false,
   home_order: 0,
+  publish_at: "",
 };
 
 const STEPS = ["Source", "Page content", "Details & advertising", "Review"];
@@ -113,6 +114,7 @@ export default function PublishWizard({ open, onOpenChange, publication, initial
         ...publication,
         event_start: toLocal(publication.event_start),
         event_end: toLocal(publication.event_end),
+        publish_at: toLocal(publication.publish_at),
       });
       setStep(1);
     } else if (initialSource) {
@@ -149,6 +151,7 @@ export default function PublishWizard({ open, onOpenChange, publication, initial
           ...existing,
           event_start: toLocal(existing.event_start),
           event_end: toLocal(existing.event_end),
+          publish_at: toLocal(existing.publish_at),
         });
       } else {
         setExistingId(null);
@@ -234,6 +237,7 @@ export default function PublishWizard({ open, onOpenChange, publication, initial
         advertise: !!form.advertise,
         featured_on_home: !!form.featured_on_home,
         home_order: Number(form.home_order) || 0,
+        publish_at: fromLocal(form.publish_at),
         status,
         public_path: `/events/${slug}`,
         last_synced_at: new Date().toISOString(),
@@ -512,6 +516,20 @@ export default function PublishWizard({ open, onOpenChange, publication, initial
                     <p><span className="text-muted-foreground">Cost:</span> {form.cost || "—"}</p>
                   </div>
                 </div>
+                <div className="rounded-xl border border-border p-4 space-y-1.5">
+                  <Label htmlFor="pub-schedule">Go live at (optional)</Label>
+                  <Input
+                    id="pub-schedule"
+                    type="datetime-local"
+                    value={form.publish_at || ""}
+                    onChange={(e) => set("publish_at", e.target.value)}
+                  />
+                  <p className="text-[11px] text-muted-foreground">
+                    Leave empty to put this change on the website right away. Set a time and the website keeps the
+                    current page until then, then switches to this one on its own.
+                  </p>
+                </div>
+
                 <div
                   className={`rounded-xl border p-4 text-sm flex items-start gap-2 ${
                     form.advertise
