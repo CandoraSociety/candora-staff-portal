@@ -265,21 +265,21 @@ export default function CampaignDonate({
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
-      <Button className="w-full h-12 font-medium" onClick={submit} disabled={submitting}>
-        {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Heart className="w-4 h-4" />}
-        {submitting ? 'Starting checkout…' : `Give ${total > 0 ? formatMoneyExact(total) : ''}`}
-      </Button>
-
-      {checkoutUrl && (
+      {checkoutUrl ? (
         <a
           href={checkoutUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-center gap-2 w-full h-11 rounded-md border border-primary/40 bg-primary/5 text-sm font-medium text-foreground hover:bg-primary/10 transition-colors"
+          className="flex items-center justify-center gap-2 w-full h-12 rounded-md bg-primary text-primary-foreground text-sm font-medium shadow hover:bg-primary/90 transition-colors"
         >
           <Lock className="w-4 h-4" />
-          Checkout didn't open? Continue securely
+          Continue to secure checkout
         </a>
+      ) : (
+        <Button className="w-full h-12 font-medium" onClick={submit} disabled={submitting}>
+          {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Heart className="w-4 h-4" />}
+          {submitting ? 'Starting checkout…' : `Give ${total > 0 ? formatMoneyExact(total) : ''}`}
+        </Button>
       )}
 
       <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
