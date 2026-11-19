@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { formatWebsiteDate } from "@/lib/websiteManager";
+import WebsiteImageField from "@/components/website/WebsiteImageField";
 
 const EMPTY = {
   source_name: "",
@@ -396,31 +397,11 @@ export default function PublishWizard({ open, onOpenChange, publication, initial
                     onChange={(e) => set("body", e.target.value)}
                   />
                 </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="pub-image">Image</Label>
-                  <div className="flex gap-2">
-                    <Input
-                      id="pub-image"
-                      placeholder="Paste an image link"
-                      value={form.image_url}
-                      onChange={(e) => set("image_url", e.target.value)}
-                    />
-                    <Button asChild variant="outline" className="flex-shrink-0">
-                      <label className="cursor-pointer gap-2">
-                        <Upload className="w-4 h-4" />
-                        Upload
-                        <input type="file" accept="image/*" className="hidden" onChange={handleImageUpload} />
-                      </label>
-                    </Button>
-                  </div>
-                  {form.image_url && (
-                    <img
-                      src={form.image_url}
-                      alt="Public page"
-                      className="mt-2 h-28 w-full object-cover rounded-lg border border-border"
-                    />
-                  )}
-                </div>
+                <WebsiteImageField
+                  label="Image"
+                  value={form.image_url}
+                  onChange={(url) => set("image_url", url)}
+                />
               </div>
             )}
 

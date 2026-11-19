@@ -93,10 +93,13 @@ export function publicSection(section) {
   };
 }
 
-export function publicSite(settings) {
+// fallbackLogo is the organization's primary brand logo, used when the site
+// settings do not name a logo of their own.
+export function publicSite(settings, fallbackLogo) {
   if (!settings) return null;
   return {
     site_name: settings.site_name || 'Candora',
+    logo_url: settings.logo_url || fallbackLogo || '',
     tagline: settings.tagline || '',
     hero_headline: settings.hero_headline || '',
     hero_subheadline: settings.hero_subheadline || '',

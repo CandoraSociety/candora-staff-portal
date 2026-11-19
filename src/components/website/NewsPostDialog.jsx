@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import WebsiteImageField from "@/components/website/WebsiteImageField";
 
 const EMPTY = {
   title: "",
@@ -87,25 +88,15 @@ export default function NewsPostDialog({ open, onOpenChange, post, onSave }) {
             <Label htmlFor="news-body">Post text</Label>
             <Textarea id="news-body" rows={7} value={form.body} onChange={(e) => set("body", e.target.value)} />
           </div>
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="news-image">Image link</Label>
-              <Input
-                id="news-image"
-                value={form.image_url}
-                onChange={(e) => set("image_url", e.target.value)}
-                placeholder="https://…"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="news-date">Date</Label>
-              <Input
-                id="news-date"
-                type="date"
-                value={form.publish_date}
-                onChange={(e) => set("publish_date", e.target.value)}
-              />
-            </div>
+          <WebsiteImageField label="Image" value={form.image_url} onChange={(url) => set("image_url", url)} />
+          <div className="space-y-1.5 max-w-xs">
+            <Label htmlFor="news-date">Date</Label>
+            <Input
+              id="news-date"
+              type="date"
+              value={form.publish_date}
+              onChange={(e) => set("publish_date", e.target.value)}
+            />
           </div>
           <div className="flex items-center justify-between rounded-lg border border-border px-4 py-3">
             <div>

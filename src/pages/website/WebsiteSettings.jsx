@@ -8,9 +8,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
+import WebsiteImageField from "@/components/website/WebsiteImageField";
 
 const EMPTY = {
   site_name: "Candora",
+  logo_url: "",
   tagline: "",
   hero_headline: "",
   hero_subheadline: "",
@@ -124,6 +126,12 @@ export default function WebsiteSettings() {
       <Card className="border-border/70">
         <CardContent className="p-6 space-y-4">
           <h2 className="font-display text-lg font-bold text-foreground">Brand</h2>
+          <WebsiteImageField
+            label="Website logo"
+            value={form.logo_url}
+            onChange={(url) => set("logo_url", url)}
+            hint="Leave empty to use the primary logo from Marketing → Brand Assets."
+          />
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label htmlFor="site-name">Site name</Label>
@@ -166,16 +174,13 @@ export default function WebsiteSettings() {
               onChange={(e) => set("hero_subheadline", e.target.value)}
             />
           </div>
+          <WebsiteImageField
+            label="Hero image"
+            value={form.hero_image_url}
+            onChange={(url) => set("hero_image_url", url)}
+            hint="The photo behind the home page headline."
+          />
           <div className="grid sm:grid-cols-2 gap-4">
-            <div className="space-y-1.5">
-              <Label htmlFor="hero-image">Hero image link</Label>
-              <Input
-                id="hero-image"
-                value={form.hero_image_url}
-                onChange={(e) => set("hero_image_url", e.target.value)}
-                placeholder="https://…"
-              />
-            </div>
             <div className="space-y-1.5">
               <Label htmlFor="hero-cta">Button label</Label>
               <Input
@@ -184,15 +189,15 @@ export default function WebsiteSettings() {
                 onChange={(e) => set("hero_cta_label", e.target.value)}
               />
             </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="hero-cta-url">Button link</Label>
-            <Input
-              id="hero-cta-url"
-              value={form.hero_cta_url}
-              onChange={(e) => set("hero_cta_url", e.target.value)}
-              placeholder="/programs"
-            />
+            <div className="space-y-1.5">
+              <Label htmlFor="hero-cta-url">Button link</Label>
+              <Input
+                id="hero-cta-url"
+                value={form.hero_cta_url}
+                onChange={(e) => set("hero_cta_url", e.target.value)}
+                placeholder="/programs"
+              />
+            </div>
           </div>
         </CardContent>
       </Card>

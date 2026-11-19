@@ -7,7 +7,7 @@ export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
 
-    const [settingsPage, sectionPage, newsPage, publicationPage] = await Promise.all([
+    const [settingsPage, sectionPage, newsPage, publicationPage, orgPage] = await Promise.all([
       base44.asServiceRole.entities.WebsiteSettings.list({ limit: 1 }),
       base44.asServiceRole.entities.WebsiteSection.list({ sort: 'display_order', limit: 300 }),
       base44.asServiceRole.entities.WebsiteNewsPost.filter(
@@ -18,9 +18,21 @@ export default async function (req) {
         { status: 'published', advertise: true },
         { sort: 'event_start', limit: 100 }
       ),
+      base44.asServiceRole.entities.OrgSettings.list({ limit: 1 }),
     ]);
 
     const settings = (settingsPage.items || [])[0] || null;
+
+    // The website's logo defaults to the primary logo chosen in Brand Assets,
+    // so the site never drifts from the organization's own brand mark.
+    const org = (orgPage.items || [])[0] || null;
+    let brandLogoUrl = '';
+    const primaryAssetId = org?.brand_logo_selection?.primary_asset_id;
+    if (primaryAssetId) {
+      const asset = await base44.asServiceRole.entities.MarketingAsset.get(primaryAssetId).catch(() => null);
+      brandLogoUrl = asset?.file_url || '';
+    }
+    const fallbackLogo = brandLogoUrl || org?.logo_url || '';
     const sections = (sectionPage.items || []).filter((s) => s.is_visible !== false);
     const news = (newsPage.items || []).filter((p) => p.advertise !== false);
     const publications = publicationPage.items || [];
@@ -28,7 +40,7 @@ export default async function (req) {
     const events = publications.map(publicPublication);
 
     return Response.json({
-      site: publicSite(settings),
+      site: publicSite(settings, fallbackLogo),
       sections: sections.map(publicSection),
       news: news.map(publicNewsPost),
       events,

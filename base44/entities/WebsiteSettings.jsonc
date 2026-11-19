@@ -1,11 +1,15 @@
 {
   "name": "WebsiteSettings",
   "type": "object",
-  "description": "Site-wide content for Candora's public website \u2014 the brand line, hero area, contact details and how events are introduced on the home page. Edited only from Website Studio; the separate website app reads it through the public feed.",
+  "description": "Site-wide content for Candora's public website \u2014 the logo, brand line, hero area, contact details and how events are introduced on the home page. Edited only from Website Studio; the separate website app reads it through the public feed.",
   "properties": {
     "site_name": {
       "type": "string",
       "description": "Organization name shown in the site header"
+    },
+    "logo_url": {
+      "type": "string",
+      "description": "Logo shown in the website header and footer. Left empty, the site uses the primary logo chosen in Marketing \u2192 Brand Assets."
     },
     "tagline": {
       "type": "string",

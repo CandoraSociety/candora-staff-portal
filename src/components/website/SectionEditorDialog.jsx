@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { WEBSITE_PAGES } from "@/lib/websiteManager";
+import WebsiteImageField from "@/components/website/WebsiteImageField";
 
 const EMPTY = {
   page: "home",
@@ -113,15 +114,11 @@ export default function SectionEditorDialog({ open, onOpenChange, section, onSav
             />
           </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="section-image">Image link (optional)</Label>
-            <Input
-              id="section-image"
-              value={form.image_url}
-              onChange={(e) => set("image_url", e.target.value)}
-              placeholder="https://…"
-            />
-          </div>
+          <WebsiteImageField
+            label="Image (optional)"
+            value={form.image_url}
+            onChange={(url) => set("image_url", url)}
+          />
 
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
