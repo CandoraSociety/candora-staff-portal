@@ -1,0 +1,115 @@
+{
+  "name": "WebsiteSection",
+  "type": "object",
+  "description": "One bounded block of copy on a page of the public website \u2014 a heading, paragraph, optional image and button. Staff edit the text inside these blocks; the website decides how each block is laid out, so pages stay within the site's design.",
+  "properties": {
+    "page": {
+      "type": "string",
+      "enum": [
+        "home",
+        "about",
+        "programs",
+        "events",
+        "contact",
+        "get_involved"
+      ],
+      "enumColors": [
+        "blue",
+        "purple",
+        "green",
+        "yellow",
+        "pink",
+        "gray"
+      ],
+      "description": "Page of the public website this block belongs to"
+    },
+    "section_key": {
+      "type": "string",
+      "description": "Stable identifier for the block within its page, e.g. mission or impact (set once; the website matches on it)"
+    },
+    "heading": {
+      "type": "string",
+      "description": "Block heading"
+    },
+    "body": {
+      "type": "string",
+      "description": "Block text \u2014 keep it to a short paragraph or two"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "Optional image shown with this block (publicly stored file URL)"
+    },
+    "cta_label": {
+      "type": "string",
+      "description": "Optional button label"
+    },
+    "cta_url": {
+      "type": "string",
+      "description": "Where the optional button goes"
+    },
+    "display_order": {
+      "type": "number",
+      "default": 0,
+      "description": "Position of the block on its page, lowest first"
+    },
+    "is_visible": {
+      "type": "boolean",
+      "default": true,
+      "description": "Turn off to keep the block out of the public site without deleting it"
+    }
+  },
+  "required": [
+    "page",
+    "section_key",
+    "heading"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

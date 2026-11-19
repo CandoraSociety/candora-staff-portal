@@ -1,0 +1,179 @@
+{
+  "name": "WebsitePublication",
+  "type": "object",
+  "description": "A program or event from Candora 360 that has been set up for the public website. Created by the publishing wizard, which pre-fills the approved source fields and lets staff write the public page. When published and advertised it appears in Website Studio and is handed to the separate website app through the public feed, which builds its detail page and home-page listing.",
+  "properties": {
+    "source_type": {
+      "type": "string",
+      "enum": [
+        "event",
+        "program"
+      ],
+      "enumColors": [
+        "yellow",
+        "blue"
+      ],
+      "description": "Which Candora 360 record this public page belongs to"
+    },
+    "source_id": {
+      "type": "string",
+      "description": "Id of the Event or Program record"
+    },
+    "source_name": {
+      "type": "string",
+      "description": "Name of the source record at the last sync \u2014 used to keep the public title in step when the record is renamed"
+    },
+    "title": {
+      "type": "string",
+      "description": "Public page title, pre-filled from the source record and editable in the wizard"
+    },
+    "slug": {
+      "type": "string",
+      "description": "Web address of the public page \u2014 the site serves it at /events/<slug>. Generated once and then kept stable."
+    },
+    "summary": {
+      "type": "string",
+      "description": "Short description shown on the home page and events list"
+    },
+    "body": {
+      "type": "string",
+      "description": "Full public description shown on the detail page"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "Photo for the public page and listing (publicly stored file URL)"
+    },
+    "event_start": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Start date and time \u2014 kept in sync with the source record"
+    },
+    "event_end": {
+      "type": "string",
+      "format": "date-time",
+      "description": "End date and time \u2014 kept in sync with the source record"
+    },
+    "location": {
+      "type": "string",
+      "description": "Where it happens \u2014 kept in sync with the source record"
+    },
+    "cost": {
+      "type": "string",
+      "description": "Cost shown to supporters, e.g. Free or $10"
+    },
+    "audience": {
+      "type": "string",
+      "description": "Who the program or event is for"
+    },
+    "registration_url": {
+      "type": "string",
+      "description": "Where supporters register \u2014 a form link or in-app path"
+    },
+    "registration_note": {
+      "type": "string",
+      "description": "Line shown under the register button, e.g. Call the front desk to register"
+    },
+    "advertise": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this item may be advertised. When off (Do not advertise), nothing is sent to the public website."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "published",
+        "unpublished"
+      ],
+      "enumColors": [
+        "gray",
+        "green",
+        "yellow"
+      ],
+      "default": "draft",
+      "description": "draft = being written; published = live on the website; unpublished = removed from the site but kept here"
+    },
+    "featured_on_home": {
+      "type": "boolean",
+      "default": false,
+      "description": "Highlight this item at the top of the events area on the home page"
+    },
+    "home_order": {
+      "type": "number",
+      "default": 0,
+      "description": "Order within the home page events area, lowest first"
+    },
+    "public_path": {
+      "type": "string",
+      "description": "Path of the page on the public website, e.g. /events/winter-warmth-dinner"
+    },
+    "published_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the page last went live"
+    },
+    "published_by_name": {
+      "type": "string",
+      "description": "Staff member who published it"
+    },
+    "last_synced_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last time the approved source fields were refreshed from Candora 360"
+    }
+  },
+  "required": [
+    "source_type",
+    "source_id",
+    "title"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

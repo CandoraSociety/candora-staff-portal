@@ -1,0 +1,109 @@
+{
+  "name": "WebsiteNewsPost",
+  "type": "object",
+  "description": "A news item or announcement posted to the public website from Website Studio. Drafts stay in Candora 360; only published posts are handed to the website through the public feed.",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Headline as supporters see it"
+    },
+    "slug": {
+      "type": "string",
+      "description": "Web address of the post \u2014 the site serves it at /news/<slug>. Generated from the title when left blank."
+    },
+    "summary": {
+      "type": "string",
+      "description": "One or two lines shown on the news list and in link previews"
+    },
+    "body": {
+      "type": "string",
+      "description": "Full post text"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "Photo shown with the post (publicly stored file URL)"
+    },
+    "publish_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the post is shown as published"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "published",
+        "archived"
+      ],
+      "enumColors": [
+        "gray",
+        "green",
+        "yellow"
+      ],
+      "default": "draft",
+      "description": "Only published posts reach the public website"
+    },
+    "author_name": {
+      "type": "string",
+      "description": "Staff member who wrote the post"
+    },
+    "is_pinned": {
+      "type": "boolean",
+      "default": false,
+      "description": "Keep this post at the top of the news list on the website"
+    }
+  },
+  "required": [
+    "title",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

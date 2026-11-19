@@ -133,6 +133,15 @@ import PathwaysInternalTraining from '@/pages/pathways/PathwaysInternalTraining'
 import PathwaysWorkshops from '@/pages/pathways/PathwaysWorkshops';
 import PathwaysAssessment from '@/pages/pathways/PathwaysAssessment';
 
+// Website Studio (public website management)
+import WebsiteManagerLayout from '@/components/website/WebsiteManagerLayout';
+import WebsiteHome from '@/pages/website/WebsiteHome';
+import WebsiteEvents from '@/pages/website/WebsiteEvents';
+import WebsitePages from '@/pages/website/WebsitePages';
+import WebsiteNews from '@/pages/website/WebsiteNews';
+import WebsiteSettings from '@/pages/website/WebsiteSettings';
+import WebsiteFeed from '@/pages/website/WebsiteFeed';
+
 // Candora File Manager
 import FileManagerLayout from '@/components/filemanager/FileManagerLayout';
 import FileManagerHome from '@/pages/filemanager/FileManagerHome';
@@ -896,6 +905,16 @@ const AuthenticatedApp = () => {
           <Route path="/central-registration/tablets" element={<CentralRegTablets />} />
           <Route path="/central-registration/check-in" element={<RoomCheckIn />} />
           <Route path="/central-registration/volunteers" element={<CentralRegVolunteers />} />
+        </Route>
+
+        {/* Website Studio - manage the separate public website */}
+        <Route element={<WebsiteManagerLayout />}>
+          <Route path="/website" element={<WebsiteHome />} />
+          <Route path="/website/events" element={<WebsiteEvents />} />
+          <Route path="/website/pages" element={<WebsitePages />} />
+          <Route path="/website/news" element={<WebsiteNews />} />
+          <Route path="/website/settings" element={<WebsiteSettings />} />
+          <Route path="/website/feed" element={<WebsiteFeed />} />
         </Route>
 
         {/* Candora File Manager - standalone layout */}

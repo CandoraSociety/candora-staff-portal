@@ -1,0 +1,139 @@
+{
+  "name": "WebsiteSettings",
+  "type": "object",
+  "description": "Site-wide content for Candora's public website \u2014 the brand line, hero area, contact details and how events are introduced on the home page. Edited only from Website Studio; the separate website app reads it through the public feed.",
+  "properties": {
+    "site_name": {
+      "type": "string",
+      "description": "Organization name shown in the site header"
+    },
+    "tagline": {
+      "type": "string",
+      "description": "Short line under the site name"
+    },
+    "hero_headline": {
+      "type": "string",
+      "description": "Main headline on the website home page"
+    },
+    "hero_subheadline": {
+      "type": "string",
+      "description": "Supporting sentence under the hero headline"
+    },
+    "hero_image_url": {
+      "type": "string",
+      "description": "Photo behind the home page hero (publicly stored file URL)"
+    },
+    "hero_cta_label": {
+      "type": "string",
+      "description": "Button label in the hero area"
+    },
+    "hero_cta_url": {
+      "type": "string",
+      "description": "Where the hero button goes \u2014 a page path or an outside link"
+    },
+    "about_summary": {
+      "type": "string",
+      "description": "Short organization summary used on the home and about pages"
+    },
+    "events_heading": {
+      "type": "string",
+      "description": "Heading above the events advertised on the home page"
+    },
+    "events_intro": {
+      "type": "string",
+      "description": "One line shown under the events heading"
+    },
+    "contact_email": {
+      "type": "string"
+    },
+    "contact_phone": {
+      "type": "string"
+    },
+    "contact_address": {
+      "type": "string"
+    },
+    "office_hours": {
+      "type": "string"
+    },
+    "charity_number": {
+      "type": "string",
+      "description": "Registered charity number shown in the site footer"
+    },
+    "footer_note": {
+      "type": "string",
+      "description": "Closing line in the site footer"
+    },
+    "social_links": {
+      "type": "array",
+      "description": "Social profiles shown in the site footer",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "description": "Platform name, e.g. Facebook"
+          },
+          "url": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "updated_by_name": {
+      "type": "string",
+      "description": "Staff member who last saved the site settings"
+    }
+  },
+  "required": [
+    "site_name"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

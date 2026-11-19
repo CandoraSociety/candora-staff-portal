@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { 
   LayoutDashboard, AppWindow, Settings, Users, Bell, 
   Building2, Shield, ChevronLeft, ChevronRight, LogOut,
@@ -7,8 +8,10 @@ import {
   ShoppingBag, CreditCard, CalendarClock, PlaneTakeoff, ThermometerSun,
   ClipboardList,
   PenTool,
-  GraduationCap
+  GraduationCap,
+  Globe2
 } from 'lucide-react';
+import { hasWebsiteAccess } from '@/lib/websiteManager';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { base44 } from '@/api/base44Client';
@@ -65,6 +68,12 @@ export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
   const location = useLocation();
   const [showLogoutDialog, setShowLogoutDialog] = useState(false);
 
+  const { data: currentUser } = useQuery({
+    queryKey: ['currentUser'],
+    queryFn: () => base44.auth.me(),
+  });
+  const canManageWebsite = hasWebsiteAccess(currentUser?.email, currentUser?.role);
+
   const isActive = (path) => {
     if (path === '/') return location.pathname === '/';
     return location.pathname.startsWith(path);
@@ -111,6 +120,14 @@ export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
           {NAV_ITEMS.map(item => (
             <NavItem key={item.path} item={item} collapsed={collapsed} active={isActive(item.path)} />
           ))}
+
+          {canManageWebsite && (
+            <NavItem
+              item={{ path: '/website', label: 'Website Studio', icon: Globe2 }}
+              collapsed={collapsed}
+              active={isActive('/website')}
+            />
+          )}
 
           <SidebarNavGroup item={PURCHASES} collapsed={collapsed} active={PURCHASES.children.some(c => isActive(c.path))} />
 
