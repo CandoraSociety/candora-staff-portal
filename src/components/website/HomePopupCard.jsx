@@ -25,6 +25,9 @@ export default function HomePopupCard({ form, set }) {
               A message that opens over the website when someone lands on the home page — an appeal, an
               event or an announcement.
             </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Visitors see it on the public website, not inside Website Studio — the preview below shows how it looks.
+            </p>
           </div>
           <Switch checked={enabled} onCheckedChange={(value) => set("popup_enabled", value)} />
         </div>
