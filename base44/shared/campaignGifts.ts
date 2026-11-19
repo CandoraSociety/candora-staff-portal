@@ -71,6 +71,7 @@ export async function recordCampaignGift(base44, {
   campaignName,
   productName,
   amount,
+  feeAmount = 0,
   frequency,
   donorName,
   donorEmail,
@@ -99,7 +100,9 @@ export async function recordCampaignGift(base44, {
     donor_email: donorEmail || '',
     gift_message: message || '',
     is_anonymous: !!anonymous,
-    notes: 'Paid online on the campaign page.',
+    notes: Number(feeAmount) > 0
+      ? `Paid online on the campaign page. The supporter also covered $${Number(feeAmount).toFixed(2)} in processing fees.`
+      : 'Paid online on the campaign page.',
   });
 
   await recalcDonorTotals(base44, donor.id);

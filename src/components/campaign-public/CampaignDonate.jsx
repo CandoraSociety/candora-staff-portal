@@ -3,21 +3,27 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 import { Check, Heart, Loader2, Lock } from 'lucide-react';
-import { activeTiers, formatMoneyExact } from '@/lib/donorConstants';
+import { activeTiers, formatMoneyExact, tierAmountLabel } from '@/lib/donorConstants';
+import { feeToCover } from '@/lib/stripeFees';
 import { PAYMENTS_READY, startCampaignCheckout } from '@/lib/campaignPayments';
 
 // The giving box on a campaign's public page. A supporter picks one of the
-// campaign's giving options (or an amount of their own), chooses whether to
-// repeat it, and pays by card through the app's payment provider.
+// campaign's giving options (and a price variation where there are several, or
+// names their own amount), chooses whether to repeat it and whether to cover
+// the processing fee, then pays by card through the app's payment provider.
 export default function CampaignDonate({ campaign }) {
   const tiers = activeTiers(campaign);
   const allowCustom = campaign.allow_custom_amount !== false;
   const allowMonthly = campaign.allow_monthly !== false;
+  const offerFeeCover = campaign.allow_fee_coverage !== false;
 
   const [selectedId, setSelectedId] = useState(tiers[0]?.id || 'custom');
-  const [customAmount, setCustomAmount] = useState('');
+  const [variationId, setVariationId] = useState('');
+  const [customAmount, setCustomAmount] = useState(
+    tiers[0]?.allow_custom_price ? String(tiers[0].amount ?? '') : ''
+  );
+  const [coverFee, setCoverFee] = useState(false);
   const [frequency, setFrequency] = useState('one_time');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -26,15 +32,38 @@ export default function CampaignDonate({ campaign }) {
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
-  const tier = tiers.find((t) => t.id === selectedId);
-  const amount = selectedId === 'custom' ? Number(customAmount) : Number(tier?.amount);
+  const tier = tiers.find((option) => option.id === selectedId);
+  const variations = (tier?.variations || []).filter((variation) => Number(variation.amount) > 0);
+  const activeVariation = variations.find((variation) => variation.id === variationId) || variations[0];
+
+  let amount = 0;
+  if (selectedId === 'custom') amount = Number(customAmount);
+  else if (tier?.allow_custom_price) amount = Number(customAmount);
+  else if (variations.length) amount = Number(activeVariation?.amount) || 0;
+  else if (tier) amount = Number(tier.amount);
+
   const monthlyAllowed = allowMonthly && (selectedId === 'custom' || tier?.allow_monthly !== false);
+  const monthly = monthlyAllowed && frequency === 'monthly';
+  const fee = amount > 0 ? feeToCover(amount) : 0;
+  const total = amount > 0 ? amount + (coverFee ? fee : 0) : 0;
+
+  const selectTier = (option) => {
+    setSelectedId(option.id);
+    const optionVariations = (option.variations || []).filter((variation) => Number(variation.amount) > 0);
+    setVariationId(optionVariations[0]?.id || '');
+    if (option.allow_custom_price) setCustomAmount(String(option.amount ?? ''));
+  };
 
   const submit = async () => {
     setError('');
     if (!amount || amount <= 0) { setError('Choose or enter a gift amount.'); return; }
     if (!name.trim()) { setError('Please tell us your name.'); return; }
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) { setError('Please enter a valid email address.'); return; }
+
+    const variationLabel = activeVariation?.label || '';
+    const productName = tier
+      ? (variationLabel ? `${tier.name} — ${variationLabel}` : tier.name)
+      : 'Custom gift';
 
     setSubmitting(true);
     try {
@@ -43,9 +72,11 @@ export default function CampaignDonate({ campaign }) {
         campaignId: campaign.id,
         campaignName: campaign.name,
         productId: tier?.id || '',
-        productName: tier?.name || 'Custom gift',
+        variationId: variations.length ? (activeVariation?.id || '') : '',
+        productName,
         amount,
-        frequency: monthlyAllowed ? frequency : 'one_time',
+        coverFees: coverFee,
+        frequency: monthly ? 'monthly' : 'one_time',
         donorName: name.trim(),
         donorEmail: email.trim(),
         anonymous,
@@ -72,14 +103,14 @@ export default function CampaignDonate({ campaign }) {
             <button
               key={option.id}
               type="button"
-              onClick={() => setSelectedId(option.id)}
+              onClick={() => selectTier(option)}
               className={`w-full text-left rounded-xl border p-3 transition-colors ${
                 selectedId === option.id ? 'border-primary bg-primary/5' : 'hover:bg-muted/60'
               }`}
             >
               <div className="flex items-center justify-between gap-2">
                 <span className="font-medium text-sm">{option.name}</span>
-                <span className="font-display font-bold">{formatMoneyExact(option.amount)}</span>
+                <span className="font-display font-bold">{tierAmountLabel(option)}</span>
               </div>
               {option.description && (
                 <p className="text-xs text-muted-foreground mt-1">{option.description}</p>
@@ -89,7 +120,46 @@ export default function CampaignDonate({ campaign }) {
         </div>
       )}
 
-      {allowCustom && (
+      {tier && variations.length > 0 && (
+        <div className="space-y-2">
+          <Label>Choose an amount</Label>
+          <div className="grid sm:grid-cols-2 gap-2">
+            {variations.map((variation) => (
+              <button
+                key={variation.id}
+                type="button"
+                onClick={() => setVariationId(variation.id)}
+                className={`rounded-lg border px-3 py-2 text-left text-sm transition-colors ${
+                  activeVariation?.id === variation.id ? 'border-primary bg-primary/10' : 'hover:bg-muted/60'
+                }`}
+              >
+                <span className="block font-medium">{variation.label}</span>
+                <span className="text-xs text-muted-foreground">{formatMoneyExact(variation.amount)}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {tier?.allow_custom_price && (
+        <div>
+          <Label htmlFor="product-amount">Your amount</Label>
+          <div className="relative mt-1.5">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+            <Input
+              id="product-amount"
+              type="number"
+              min="1"
+              step="1"
+              className="pl-7"
+              value={customAmount}
+              onChange={(e) => setCustomAmount(e.target.value)}
+            />
+          </div>
+        </div>
+      )}
+
+      {allowCustom && !tier?.allow_custom_price && (
         <div>
           <Label htmlFor="custom-amount">Or give your own amount</Label>
           <div className="relative mt-1.5">
@@ -129,6 +199,23 @@ export default function CampaignDonate({ campaign }) {
         </div>
       )}
 
+      {offerFeeCover && fee > 0 && (
+        <label className="flex items-start gap-2 rounded-lg border p-3 text-sm cursor-pointer">
+          <input
+            type="checkbox"
+            className="mt-0.5"
+            checked={coverFee}
+            onChange={(e) => setCoverFee(e.target.checked)}
+          />
+          <span>
+            Add {formatMoneyExact(fee)} to cover the processing fee
+            <span className="block text-xs text-muted-foreground">
+              So 100% of your gift reaches the campaign{monthly ? ' — added to every monthly gift' : ''}.
+            </span>
+          </span>
+        </label>
+      )}
+
       <div className="space-y-3">
         <div>
           <Label htmlFor="donor-name">Your name</Label>
@@ -148,18 +235,28 @@ export default function CampaignDonate({ campaign }) {
         </label>
       </div>
 
-      <div className="rounded-lg bg-muted/60 px-3 py-2 flex items-center justify-between text-sm">
-        <span className="text-muted-foreground">{frequency === 'monthly' ? 'Monthly gift' : 'One-time gift'}</span>
-        <span className="font-display font-bold text-base">
-          {amount > 0 ? formatMoneyExact(amount) : '—'}{frequency === 'monthly' ? ' / month' : ''}
-        </span>
+      <div className="rounded-lg bg-muted/60 px-3 py-2 space-y-1 text-sm">
+        <div className="flex items-center justify-between">
+          <span className="text-muted-foreground">{monthly ? 'Monthly gift' : 'One-time gift'}</span>
+          <span>{amount > 0 ? formatMoneyExact(amount) : '—'}</span>
+        </div>
+        {coverFee && fee > 0 && (
+          <div className="flex items-center justify-between">
+            <span className="text-muted-foreground">Processing fee you're covering</span>
+            <span>{formatMoneyExact(fee)}</span>
+          </div>
+        )}
+        <div className="flex items-center justify-between border-t pt-1 font-display font-bold text-base">
+          <span>Total {monthly ? 'each month' : 'today'}</span>
+          <span>{total > 0 ? formatMoneyExact(total) : '—'}</span>
+        </div>
       </div>
 
       {error && <p className="text-sm text-destructive">{error}</p>}
 
       <Button className="w-full h-12 font-medium" onClick={submit} disabled={submitting}>
         {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Heart className="w-4 h-4" />}
-        {submitting ? 'Starting checkout…' : `Give ${amount > 0 ? formatMoneyExact(amount) : ''}`}
+        {submitting ? 'Starting checkout…' : `Give ${total > 0 ? formatMoneyExact(total) : ''}`}
       </Button>
 
       <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">

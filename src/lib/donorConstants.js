@@ -83,3 +83,17 @@ export const activeTiers = (campaign) =>
   (campaign?.donation_products || [])
     .filter((tier) => tier.is_active !== false && Number(tier.amount) > 0)
     .sort((a, b) => (Number(a.display_order) || 0) - (Number(b.display_order) || 0));
+
+// A short price label for a giving option: its range of variations, the amount
+// a supporter names themselves, or its single price.
+export const tierAmountLabel = (tier) => {
+  const amounts = (tier?.variations || [])
+    .filter((variation) => Number(variation.amount) > 0)
+    .map((variation) => Number(variation.amount));
+  if (amounts.length > 1) {
+    return `${formatMoney(Math.min(...amounts))}–${formatMoney(Math.max(...amounts))}`;
+  }
+  if (amounts.length === 1) return formatMoney(amounts[0]);
+  if (tier?.allow_custom_price) return 'You choose';
+  return formatMoney(tier?.amount);
+};

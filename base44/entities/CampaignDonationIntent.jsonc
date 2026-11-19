@@ -29,7 +29,15 @@
     },
     "amount": {
       "type": "number",
-      "description": "Gift amount in CAD, as resolved on the server from the campaign's giving options"
+      "description": "Gift amount in CAD, as resolved on the server from the campaign's giving options \u2014 this is the charitable gift, before any processing fee the supporter covered"
+    },
+    "fee_amount": {
+      "type": "number",
+      "description": "Processing fee in CAD the supporter chose to cover, added on top of the gift"
+    },
+    "charge_amount": {
+      "type": "number",
+      "description": "Total charged in CAD \u2014 the gift plus any processing fee the supporter covered"
     },
     "currency": {
       "type": "string",
@@ -42,6 +50,14 @@
     "product_name": {
       "type": "string",
       "description": "Giving option label, or Custom gift"
+    },
+    "variation_id": {
+      "type": "string",
+      "description": "Price variation of the giving option the supporter picked, when the option has several prices"
+    },
+    "variation_label": {
+      "type": "string",
+      "description": "How the chosen variation reads, e.g. One week of lunches"
     },
     "frequency": {
       "type": "string",

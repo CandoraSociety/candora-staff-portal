@@ -6,6 +6,9 @@ const STRIPE_VERSION = '2025-10-29.clover';
 const CURRENCY = 'cad';
 const MIN_CENTS = 100;
 const MAX_CENTS = 5000000;
+// Card processing fee, used to gross up a gift the supporter offered to cover.
+const FEE_RATE = 0.029;
+const FEE_FIXED_CENTS = 30;
 
 const isEmail = (value) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value);
 
@@ -47,11 +50,30 @@ export default async function (req) {
     let productId = '';
     let productName = 'Custom gift';
     let monthlyAllowed = campaign.allow_monthly !== false;
+    let variationId = '';
+    let variationLabel = '';
 
     if (tier) {
-      cents = Math.round(Number(tier.amount) * 100);
+      const variations = (tier.variations || []).filter((option) => Number(option.amount) > 0);
+      const variation = variations.find((option) => option.id === String(body.variationId || ''));
+
+      if (variation) {
+        cents = Math.round(Number(variation.amount) * 100);
+        variationId = variation.id;
+        variationLabel = variation.label || '';
+      } else if (tier.allow_custom_price) {
+        // The supporter names the amount; the option's own amount is the starting point.
+        cents = Math.round(Number(body.amount) * 100);
+      } else if (variations.length) {
+        return Response.json({ error: 'Choose one of the gift amounts.' }, { status: 400 });
+      } else {
+        cents = Math.round(Number(tier.amount) * 100);
+      }
+
       productId = tier.id;
-      productName = tier.name || 'Campaign gift';
+      productName = variationLabel
+        ? `${tier.name || 'Campaign gift'} — ${variationLabel}`
+        : (tier.name || 'Campaign gift');
       monthlyAllowed = monthlyAllowed && tier.allow_monthly !== false;
     } else {
       if (campaign.allow_custom_amount === false) {
@@ -63,6 +85,13 @@ export default async function (req) {
     if (!Number.isFinite(cents) || cents < MIN_CENTS || cents > MAX_CENTS) {
       return Response.json({ error: 'Enter a gift between $1 and $50,000.' }, { status: 400 });
     }
+
+    // A supporter may cover the card fee so the campaign nets the whole gift.
+    const coverFees = body.coverFees === true && campaign.allow_fee_coverage !== false;
+    const feeCents = coverFees
+      ? Math.max(0, Math.ceil((cents + FEE_FIXED_CENTS) / (1 - FEE_RATE)) - cents)
+      : 0;
+    const totalCents = cents + feeCents;
 
     const frequency = String(body.frequency || 'one_time') === 'monthly' && monthlyAllowed
       ? 'monthly'
@@ -91,9 +120,13 @@ export default async function (req) {
       campaign_name: campaign.name,
       campaign_slug: campaign.slug || '',
       amount,
+      fee_amount: feeCents / 100,
+      charge_amount: totalCents / 100,
       currency: CURRENCY,
       product_id: productId,
       product_name: productName,
+      variation_id: variationId,
+      variation_label: variationLabel,
       frequency,
       donor_name: donorName,
       donor_email: donorEmail,
@@ -111,12 +144,22 @@ export default async function (req) {
     params.set('line_items[0][price_data][currency]', CURRENCY);
     params.set('line_items[0][price_data][unit_amount]', String(cents));
     params.set('line_items[0][price_data][product_data][name]', `${campaign.name} — ${productName}`.slice(0, 120));
+    if (feeCents > 0) {
+      params.set('line_items[1][quantity]', '1');
+      params.set('line_items[1][price_data][currency]', CURRENCY);
+      params.set('line_items[1][price_data][unit_amount]', String(feeCents));
+      params.set('line_items[1][price_data][product_data][name]', 'Processing fee (covered by supporter)');
+    }
     if (frequency === 'monthly') {
       params.set('line_items[0][price_data][recurring][interval]', 'month');
+      if (feeCents > 0) params.set('line_items[1][price_data][recurring][interval]', 'month');
     }
     params.set('metadata[base44_app_id]', appId);
     params.set('metadata[intent_id]', intent.id);
     params.set('metadata[campaign_id]', campaign.id);
+    params.set('metadata[gift_amount]', String(amount));
+    params.set('metadata[fee_amount]', String(feeCents / 100));
+    if (variationId) params.set('metadata[variation_id]', variationId);
     if (tier?.stripe_product_id) params.set('metadata[stripe_product_id]', tier.stripe_product_id);
     if (frequency === 'monthly') {
       if (tier?.stripe_product_id) params.set('subscription_data[metadata][stripe_product_id]', tier.stripe_product_id);

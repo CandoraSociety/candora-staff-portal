@@ -8,7 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Loader2, Package, Pencil, Plus, RefreshCw, Trash2 } from 'lucide-react';
 import DonationProductDialog from '@/components/donors/DonationProductDialog';
-import { formatMoney } from '@/lib/donorConstants';
+import { tierAmountLabel } from '@/lib/donorConstants';
 
 // Every giving option across all campaigns, in one place — the donor portal's
 // catalogue of donation products. Each product is created in Stripe automatically.
@@ -84,9 +84,28 @@ export default function DonationProducts() {
     setSyncing(false);
   };
 
+  // An option's Stripe state covers every price it offers — its variations when
+  // it has them, otherwise its single price.
   const stripeState = (product) => {
-    if (!product.stripe_price_id) return { label: 'Not synced', className: 'bg-muted text-muted-foreground' };
-    if (Math.round(Number(product.stripe_price_amount) * 100) !== Math.round(Number(product.amount) * 100)) {
+    const variations = (product.variations || []).filter((variation) => Number(variation.amount) > 0);
+    const prices = variations.length
+      ? variations.map((variation) => ({
+          priceId: variation.stripe_price_id,
+          priceAmount: variation.stripe_price_amount,
+          amount: variation.amount,
+        }))
+      : [{
+          priceId: product.stripe_price_id,
+          priceAmount: product.stripe_price_amount,
+          amount: product.amount,
+        }];
+
+    if (prices.every((price) => !price.priceId)) {
+      return { label: 'Not synced', className: 'bg-muted text-muted-foreground' };
+    }
+    if (prices.some((price) =>
+      !price.priceId || Math.round(Number(price.priceAmount) * 100) !== Math.round(Number(price.amount) * 100)
+    )) {
       return { label: 'Price changed', className: 'bg-amber-100 text-amber-800' };
     }
     return { label: 'In Stripe', className: 'bg-emerald-100 text-emerald-700' };
@@ -161,7 +180,12 @@ export default function DonationProducts() {
                           {product.campaign_name}
                         </Link>
                       </TableCell>
-                      <TableCell className="text-right text-sm font-medium">{formatMoney(product.amount)}</TableCell>
+                      <TableCell className="text-right text-sm font-medium">
+                        {tierAmountLabel(product)}
+                        {product.allow_custom_price && (
+                          <span className="block text-[11px] font-normal text-muted-foreground">Donor chooses</span>
+                        )}
+                      </TableCell>
                       <TableCell className="text-sm">{product.allow_monthly !== false ? 'Yes' : 'No'}</TableCell>
                       <TableCell className="text-sm">{product.is_active !== false ? 'Shown' : 'Hidden'}</TableCell>
                       <TableCell>

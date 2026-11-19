@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Copy, ExternalLink, Globe, ImagePlus, Sparkles } from 'lucide-react';
-import { activeTiers, formatMoney, publicCampaignUrl, slugify } from '@/lib/donorConstants';
+import { activeTiers, publicCampaignUrl, slugify, tierAmountLabel } from '@/lib/donorConstants';
 import HeroImageAiDialog from '@/components/donors/campaign/HeroImageAiDialog';
 import PublicPageAiCopyDialog from '@/components/donors/campaign/PublicPageAiCopyDialog';
 
@@ -141,7 +141,7 @@ export default function PublicPagePanel({ campaign, onSave, onManageOptions }) {
               <span key={option.id}
                 className="inline-flex items-center gap-2 rounded-full border bg-muted/50 px-3 py-1 text-sm">
                 <span>{option.name}</span>
-                <span className="font-semibold">{formatMoney(option.amount)}</span>
+                <span className="font-semibold">{tierAmountLabel(option)}</span>
               </span>
             ))}
           </div>

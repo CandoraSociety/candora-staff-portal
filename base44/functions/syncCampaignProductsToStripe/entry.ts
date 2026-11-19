@@ -73,23 +73,65 @@ export default async function (req) {
         productId = product.id;
       }
 
-      let priceId = option.stripe_price_id || '';
-      const priceMatches = priceId && Math.round(Number(option.stripe_price_amount) * 100) === cents;
-      if (!priceMatches) {
-        const priceParams = new URLSearchParams();
-        priceParams.set('product', productId);
-        priceParams.set('currency', CURRENCY);
-        priceParams.set('unit_amount', String(cents));
-        priceParams.set('metadata[base44_app_id]', appId);
-        priceParams.set('metadata[campaign_id]', campaign.id);
-        priceParams.set('metadata[option_id]', option.id);
-        const price = await stripeRequest('/prices', 'POST', priceParams);
-
-        if (priceId) {
-          await stripeRequest(`/prices/${priceId}`, 'POST', new URLSearchParams({ active: 'false' }))
-            .catch(() => {});
+      // Each price variation becomes its own price on the same Stripe product.
+      const variations = Array.isArray(option.variations) ? option.variations : [];
+      const syncedVariations = [];
+      for (const variation of variations) {
+        const variationCents = Math.round(Number(variation.amount) * 100);
+        if (!Number.isFinite(variationCents) || variationCents < 100) {
+          syncedVariations.push(variation);
+          continue;
         }
-        priceId = price.id;
+
+        let variationPriceId = variation.stripe_price_id || '';
+        const variationMatches = variationPriceId &&
+          Math.round(Number(variation.stripe_price_amount) * 100) === variationCents;
+        if (!variationMatches) {
+          const variationParams = new URLSearchParams();
+          variationParams.set('product', productId);
+          variationParams.set('currency', CURRENCY);
+          variationParams.set('unit_amount', String(variationCents));
+          if (variation.label) variationParams.set('nickname', String(variation.label).slice(0, 60));
+          variationParams.set('metadata[base44_app_id]', appId);
+          variationParams.set('metadata[campaign_id]', campaign.id);
+          variationParams.set('metadata[option_id]', option.id);
+          variationParams.set('metadata[variation_id]', variation.id);
+          const variationPrice = await stripeRequest('/prices', 'POST', variationParams);
+
+          if (variationPriceId) {
+            await stripeRequest(`/prices/${variationPriceId}`, 'POST', new URLSearchParams({ active: 'false' }))
+              .catch(() => {});
+          }
+          variationPriceId = variationPrice.id;
+        }
+
+        syncedVariations.push({
+          ...variation,
+          stripe_price_id: variationPriceId,
+          stripe_price_amount: Number(variation.amount),
+        });
+      }
+
+      // An option without variations keeps a single price matching its amount.
+      let priceId = option.stripe_price_id || '';
+      if (syncedVariations.length === 0) {
+        const priceMatches = priceId && Math.round(Number(option.stripe_price_amount) * 100) === cents;
+        if (!priceMatches) {
+          const priceParams = new URLSearchParams();
+          priceParams.set('product', productId);
+          priceParams.set('currency', CURRENCY);
+          priceParams.set('unit_amount', String(cents));
+          priceParams.set('metadata[base44_app_id]', appId);
+          priceParams.set('metadata[campaign_id]', campaign.id);
+          priceParams.set('metadata[option_id]', option.id);
+          const price = await stripeRequest('/prices', 'POST', priceParams);
+
+          if (priceId) {
+            await stripeRequest(`/prices/${priceId}`, 'POST', new URLSearchParams({ active: 'false' }))
+              .catch(() => {});
+          }
+          priceId = price.id;
+        }
       }
 
       synced.push({
@@ -97,6 +139,7 @@ export default async function (req) {
         stripe_product_id: productId,
         stripe_price_id: priceId,
         stripe_price_amount: Number(option.amount),
+        ...(syncedVariations.length ? { variations: syncedVariations } : {}),
       });
     }
 

@@ -57,7 +57,8 @@ export default async function (req) {
       const intent = await intentFor(base44, intentId);
       if (!intent || intent.donation_id) return Response.json({ received: true });
 
-      const expected = Math.round(Number(intent.amount) * 100);
+      // The charge may include a processing fee the supporter chose to cover.
+      const expected = Math.round(Number(intent.charge_amount ?? intent.amount) * 100);
       const paid = Number(session.amount_total);
       if (!Number.isFinite(paid) || paid !== expected) {
         console.error('stripeCampaignWebhook: amount mismatch', intent.id, paid, expected);
@@ -72,7 +73,8 @@ export default async function (req) {
         campaignId: intent.campaign_id,
         campaignName: intent.campaign_name,
         productName: intent.product_name,
-        amount: paid / 100,
+        amount: Number(intent.amount) || paid / 100,
+        feeAmount: Number(intent.fee_amount) || 0,
         frequency: intent.frequency,
         donorName: intent.donor_name,
         donorEmail: intent.donor_email,
@@ -127,7 +129,8 @@ export default async function (req) {
         campaignId: intent.campaign_id,
         campaignName: intent.campaign_name,
         productName: intent.product_name,
-        amount: invoice.amount_paid / 100,
+        amount: Number(intent.amount) || invoice.amount_paid / 100,
+        feeAmount: Number(intent.fee_amount) || 0,
         frequency: 'monthly',
         donorName: intent.donor_name,
         donorEmail: intent.donor_email,

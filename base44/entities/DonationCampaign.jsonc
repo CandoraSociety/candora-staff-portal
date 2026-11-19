@@ -79,9 +79,14 @@
       "default": true,
       "description": "Whether supporters may repeat their gift every month"
     },
+    "allow_fee_coverage": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether the giving box offers supporters a checkbox to cover the card processing fee, so the full gift reaches the campaign"
+    },
     "donation_products": {
       "type": "array",
-      "description": "The giving options offered on the campaign page \u2014 e.g. $50 supplies a week of lunches. Each option becomes a line item at checkout and is created as its own product and price in Stripe automatically.",
+      "description": "The giving options offered on the campaign page \u2014 e.g. $50 supplies a week of lunches. Each option becomes a line item at checkout and is created as its own product and price in Stripe automatically. An option can offer several price variations, and can let the supporter name their own amount.",
       "items": {
         "type": "object",
         "properties": {
@@ -99,7 +104,7 @@
           },
           "amount": {
             "type": "number",
-            "description": "Gift amount for this option in CAD"
+            "description": "Gift amount for this option in CAD. When the option has price variations this mirrors the first variation; when the supporter names their own amount it is the starting amount shown on the page."
           },
           "allow_monthly": {
             "type": "boolean",
@@ -110,6 +115,40 @@
             "type": "boolean",
             "default": true,
             "description": "Whether the option shows on the public page"
+          },
+          "allow_custom_price": {
+            "type": "boolean",
+            "default": false,
+            "description": "Whether the supporter may enter their own amount for this option instead of a fixed price"
+          },
+          "variations": {
+            "type": "array",
+            "description": "Different prices for the same product, e.g. One week $25 / One month $90. Each variation becomes its own price in Stripe; the supporter picks one on the public page.",
+            "items": {
+              "type": "object",
+              "properties": {
+                "id": {
+                  "type": "string",
+                  "description": "Stable id of this variation within the option"
+                },
+                "label": {
+                  "type": "string",
+                  "description": "How the variation reads on the page, e.g. One week of lunches"
+                },
+                "amount": {
+                  "type": "number",
+                  "description": "Price of this variation in CAD"
+                },
+                "stripe_price_id": {
+                  "type": "string",
+                  "description": "Stripe price created for this variation"
+                },
+                "stripe_price_amount": {
+                  "type": "number",
+                  "description": "Amount of the Stripe price currently attached \u2014 a change in amount creates a new price"
+                }
+              }
+            }
           },
           "display_order": {
             "type": "number",

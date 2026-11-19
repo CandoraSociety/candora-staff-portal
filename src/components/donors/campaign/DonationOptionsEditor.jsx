@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
 import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react';
+import VariationRows, { cleanVariations } from '@/components/donors/VariationRows';
 
 const blankTier = () => ({
   id: `tier-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
@@ -15,6 +16,8 @@ const blankTier = () => ({
   amount: '',
   allow_monthly: true,
   is_active: true,
+  allow_custom_price: false,
+  variations: [],
 });
 
 // The giving options a campaign offers — each one is a donation "product" the
@@ -23,6 +26,7 @@ export default function DonationOptionsEditor({ campaign, onSave, onSynced }) {
   const [tiers, setTiers] = useState([]);
   const [custom, setCustom] = useState(true);
   const [monthly, setMonthly] = useState(true);
+  const [feeCoverage, setFeeCoverage] = useState(true);
   const [saving, setSaving] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [syncError, setSyncError] = useState('');
@@ -36,6 +40,7 @@ export default function DonationOptionsEditor({ campaign, onSave, onSynced }) {
     );
     setCustom(campaign?.allow_custom_amount !== false);
     setMonthly(campaign?.allow_monthly !== false);
+    setFeeCoverage(campaign?.allow_fee_coverage !== false);
   }, [campaign]);
 
   const set = (index, key, value) =>
@@ -57,17 +62,26 @@ export default function DonationOptionsEditor({ campaign, onSave, onSynced }) {
     await onSave({
       allow_custom_amount: custom,
       allow_monthly: monthly,
+      allow_fee_coverage: feeCoverage,
       donation_products: tiers
-        .filter((tier) => tier.name?.trim() && Number(tier.amount) > 0)
-        .map((tier, index) => ({
-          id: tier.id,
-          name: tier.name.trim(),
-          description: tier.description || '',
-          amount: Number(tier.amount),
-          allow_monthly: tier.allow_monthly !== false,
-          is_active: tier.is_active !== false,
-          display_order: index,
-        })),
+        .filter((tier) => tier.name?.trim() && (
+          Number(tier.amount) > 0 ||
+          (tier.variations || []).some((variation) => Number(variation.amount) > 0)
+        ))
+        .map((tier, index) => {
+          const variations = cleanVariations(tier.variations);
+          return {
+            ...tier,
+            name: tier.name.trim(),
+            description: tier.description || '',
+            amount: variations.length ? variations[0].amount : Number(tier.amount),
+            allow_monthly: tier.allow_monthly !== false,
+            is_active: tier.is_active !== false,
+            allow_custom_price: !!tier.allow_custom_price,
+            variations,
+            display_order: index,
+          };
+        }),
     });
     setSaving(false);
 
@@ -112,11 +126,13 @@ export default function DonationOptionsEditor({ campaign, onSave, onSynced }) {
                     <Input value={tier.name} onChange={(e) => set(index, 'name', e.target.value)}
                       placeholder="e.g. Sponsor a lunch" />
                   </div>
-                  <div>
-                    <Label>Amount (CAD)</Label>
-                    <Input type="number" min="0" step="1" value={tier.amount}
-                      onChange={(e) => set(index, 'amount', e.target.value)} />
-                  </div>
+                  {!(tier.variations || []).some((variation) => Number(variation.amount) > 0) && (
+                    <div>
+                      <Label>Amount (CAD)</Label>
+                      <Input type="number" min="0" step="1" value={tier.amount}
+                        onChange={(e) => set(index, 'amount', e.target.value)} />
+                    </div>
+                  )}
                 </div>
                 <div className="flex flex-col gap-1 pt-5">
                   <Button variant="ghost" size="icon" onClick={() => move(index, -1)} aria-label="Move up">
@@ -131,12 +147,21 @@ export default function DonationOptionsEditor({ campaign, onSave, onSynced }) {
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
+              <VariationRows
+                variations={tier.variations || []}
+                onChange={(next) => set(index, 'variations', next)}
+              />
               <div>
                 <Label>What this gift makes possible</Label>
                 <Textarea rows={2} value={tier.description || ''}
                   onChange={(e) => set(index, 'description', e.target.value)} />
               </div>
               <div className="flex flex-wrap gap-5 text-sm">
+                <label className="flex items-center gap-2">
+                  <input type="checkbox" checked={!!tier.allow_custom_price}
+                    onChange={(e) => set(index, 'allow_custom_price', e.target.checked)} />
+                  Supporter chooses the amount
+                </label>
                 <label className="flex items-center gap-2">
                   <input type="checkbox" checked={tier.allow_monthly !== false}
                     onChange={(e) => set(index, 'allow_monthly', e.target.checked)} />
@@ -147,7 +172,8 @@ export default function DonationOptionsEditor({ campaign, onSave, onSynced }) {
                     onChange={(e) => set(index, 'is_active', e.target.checked)} />
                   Shows on the page
                 </label>
-                {tier.stripe_price_id && (
+                {(tier.stripe_price_id ||
+                  (tier.variations || []).some((variation) => variation.stripe_price_id)) && (
                   <Badge variant="outline" className="text-[11px] font-normal text-emerald-700">In Stripe</Badge>
                 )}
               </div>
@@ -169,6 +195,16 @@ export default function DonationOptionsEditor({ campaign, onSave, onSynced }) {
         <label className="flex items-center gap-2 text-sm">
           <input type="checkbox" checked={monthly} onChange={(e) => setMonthly(e.target.checked)} />
           Offer a monthly gift
+        </label>
+        <label className="flex items-start gap-2 text-sm">
+          <input type="checkbox" className="mt-0.5" checked={feeCoverage}
+            onChange={(e) => setFeeCoverage(e.target.checked)} />
+          <span>
+            Offer to cover the card processing fee
+            <span className="block text-xs text-muted-foreground">
+              Supporters can tick a box to add the fee, so the whole gift reaches the campaign.
+            </span>
+          </span>
         </label>
       </div>
 
