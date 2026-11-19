@@ -88,7 +88,7 @@ export default function EmployerForgotPassword() {
     }
   };
 
-  const brand = { logoUrl, brandText: 'Pathways Employer Portal' };
+  const brand = { logoUrl, staffLogo: false, brandText: 'Pathways Employer Portal' };
 
   if (step === 'done') {
     return (

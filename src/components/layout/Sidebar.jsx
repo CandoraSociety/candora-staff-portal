@@ -87,7 +87,7 @@ export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
             "flex items-center justify-between px-3 h-full",
             collapsed ? "justify-center" : ""
           )}>
-            <Candora360Wordmark size="sm" />
+            <Candora360Wordmark size="sm" staff />
             <Tooltip>
               <TooltipTrigger asChild>
                 <button

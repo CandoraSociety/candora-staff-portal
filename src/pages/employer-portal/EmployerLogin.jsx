@@ -57,6 +57,7 @@ export default function EmployerLogin() {
     <AuthLayout
       icon={LogIn}
       logoUrl={logoUrl}
+      staffLogo={false}
       brandText="Pathways Employer Portal"
       title="Pathways Employer Portal"
       subtitle="Sign in to submit work exposure hours"

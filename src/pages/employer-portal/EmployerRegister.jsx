@@ -93,7 +93,7 @@ export default function EmployerRegister() {
     }
   };
 
-  const brand = { logoUrl, brandText: "Pathways Employer Portal" };
+  const brand = { logoUrl, staffLogo: false, brandText: "Pathways Employer Portal" };
 
   if (loadingEmployer) {
     return (
