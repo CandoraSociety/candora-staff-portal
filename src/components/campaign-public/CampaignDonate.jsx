@@ -36,6 +36,7 @@ export default function CampaignDonate({
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [checkoutUrl, setCheckoutUrl] = useState('');
 
   const tier = tiers.find((option) => option.id === selectedId);
   const variations = (tier?.variations || []).filter((variation) => Number(variation.amount) > 0);
@@ -70,9 +71,11 @@ export default function CampaignDonate({
       ? (variationLabel ? `${tier.name} — ${variationLabel}` : tier.name)
       : 'Custom gift';
 
+    setError('');
+    setCheckoutUrl('');
     setSubmitting(true);
     try {
-      await startCampaignCheckout({
+      const { url } = await startCampaignCheckout({
         slug: campaign.slug,
         campaignId: campaign.id,
         campaignName: campaign.name,
@@ -88,10 +91,12 @@ export default function CampaignDonate({
         message: message.trim(),
         returnPath,
       });
+      setCheckoutUrl(url);
     } catch (err) {
       setError(
         err?.response?.data?.error || err?.message || 'Could not start checkout. Please try again.'
       );
+    } finally {
       setSubmitting(false);
     }
   };
@@ -264,6 +269,18 @@ export default function CampaignDonate({
         {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Heart className="w-4 h-4" />}
         {submitting ? 'Starting checkout…' : `Give ${total > 0 ? formatMoneyExact(total) : ''}`}
       </Button>
+
+      {checkoutUrl && (
+        <a
+          href={checkoutUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 w-full h-11 rounded-md border border-primary/40 bg-primary/5 text-sm font-medium text-foreground hover:bg-primary/10 transition-colors"
+        >
+          <Lock className="w-4 h-4" />
+          Checkout didn't open? Continue securely
+        </a>
+      )}
 
       <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
         <Lock className="w-3.5 h-3.5" />
