@@ -10,6 +10,35 @@
       "type": "string",
       "description": "Active logo URL (used across the app)"
     },
+    "logo_long_form_url": {
+      "type": "string",
+      "description": "Long-form (horizontal) logo used in documents, invoices and emails"
+    },
+    "alternate_logo_urls": {
+      "type": "array",
+      "description": "Up to three alternate logos kept for other uses",
+      "items": {
+        "type": "string"
+      }
+    },
+    "brand_logo_selection": {
+      "type": "object",
+      "description": "Which Brand Assets logo plays each role. Primary feeds the app-wide logo, long form feeds documents, alternates are held for other uses.",
+      "properties": {
+        "primary_asset_id": {
+          "type": "string"
+        },
+        "long_form_asset_id": {
+          "type": "string"
+        },
+        "alternate_asset_ids": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    },
     "logos": {
       "type": "array",
       "description": "Library of all uploaded logos",

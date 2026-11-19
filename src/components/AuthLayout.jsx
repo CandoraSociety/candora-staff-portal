@@ -6,7 +6,7 @@ export default function AuthLayout({ icon: Icon, title, subtitle, footer, childr
       <div className="w-full max-w-md">
         <div className="text-center mb-10">
           {logoUrl ? (
-            <img src={logoUrl} alt="Candora logo" className="h-16 w-16 object-contain mx-auto mb-4 rounded-full" />
+            <img src={logoUrl} alt="Candora logo" className="h-20 w-20 object-contain mx-auto mb-4" />
           ) : (
             <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-primary mb-4">
               <span className="text-primary-foreground font-display font-bold text-xl">C</span>

@@ -60,7 +60,7 @@ export default function GlobalTabBar() {
                 </button>
               )}
               {isActive && (
-                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary" />
+                <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-highlight" />
               )}
             </div>
           );

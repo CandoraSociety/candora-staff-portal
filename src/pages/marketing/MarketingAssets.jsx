@@ -11,8 +11,10 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Upload, Search, Image, FileText, Video, Plus, Trash2, Download, Tag, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
+import BrandLogoLibrary from '@/components/marketing/BrandLogoLibrary';
 
 const ASSET_TYPES = ['logo', 'banner', 'photo', 'video', 'document', 'template', 'icon', 'font', 'other'];
+const GRID_TYPES = ASSET_TYPES.filter(t => t !== 'logo');
 const CATEGORIES = ['brand', 'program', 'event', 'fundraising', 'social_media', 'print', 'web', 'other'];
 
 const TYPE_ICONS = {
@@ -28,7 +30,7 @@ export default function MarketingAssets() {
   const [showForm, setShowForm] = useState(false);
   const [editing, setEditing] = useState(null);
   const [uploading, setUploading] = useState(false);
-  const [form, setForm] = useState({ name: '', asset_type: 'logo', category: 'brand', description: '', tags: '', program_event: '' });
+  const [form, setForm] = useState({ name: '', asset_type: 'photo', category: 'brand', description: '', tags: '', program_event: '' });
 
   const { data: assets = [], isLoading } = useQuery({
     queryKey: ['mkt-assets-all'],
@@ -57,7 +59,7 @@ export default function MarketingAssets() {
     setUploading(false);
   };
 
-  const openNew = () => { setEditing(null); setForm({ name: '', asset_type: 'logo', category: 'brand', description: '', tags: '', program_event: '' }); setShowForm(true); };
+  const openNew = () => { setEditing(null); setForm({ name: '', asset_type: 'photo', category: 'brand', description: '', tags: '', program_event: '' }); setShowForm(true); };
   const openEdit = (a) => { setEditing(a); setForm({ ...a, tags: (a.tags || []).join(', ') }); setShowForm(true); };
   const closeForm = () => { setShowForm(false); setEditing(null); };
 
@@ -67,6 +69,7 @@ export default function MarketingAssets() {
   };
 
   const filtered = assets.filter(a => {
+    if (a.asset_type === 'logo') return false;
     if (filterType && a.asset_type !== filterType) return false;
     if (filterCategory && a.category !== filterCategory) return false;
     if (search && !`${a.name} ${a.description} ${(a.tags || []).join(' ')}`.toLowerCase().includes(search.toLowerCase())) return false;
@@ -85,6 +88,8 @@ export default function MarketingAssets() {
         </Button>
       </div>
 
+      <BrandLogoLibrary />
+
       {/* Filters */}
       <div className="flex flex-wrap gap-3">
         <div className="relative flex-1 min-w-[200px]">
@@ -95,7 +100,7 @@ export default function MarketingAssets() {
           <SelectTrigger className="w-40"><SelectValue placeholder="All Types" /></SelectTrigger>
           <SelectContent>
             <SelectItem value={null}>All Types</SelectItem>
-            {ASSET_TYPES.map(t => <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>)}
+            {GRID_TYPES.map(t => <SelectItem key={t} value={t} className="capitalize">{t}</SelectItem>)}
           </SelectContent>
         </Select>
         <Select value={filterCategory} onValueChange={setFilterCategory}>

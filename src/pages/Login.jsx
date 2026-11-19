@@ -8,6 +8,7 @@ import { LogIn, Mail, Lock, Loader2 } from "lucide-react";
 import AuthLayout from "@/components/AuthLayout";
 import GoogleIcon from "@/components/GoogleIcon";
 import { safeReturnTo } from "@/lib/authReturnTo";
+import { CANDORA_BRAND } from "@/lib/candoraBrand";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -36,6 +37,7 @@ export default function Login() {
   return (
     <AuthLayout
       icon={LogIn}
+      logoUrl={CANDORA_BRAND.logoUrl}
       title="Welcome back"
       subtitle="Use the email address invited to the staff portal"
       footer={

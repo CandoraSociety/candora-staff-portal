@@ -23,11 +23,12 @@ import DashboardNotifications from '@/components/dashboard/DashboardNotification
 import QuickFilesWidget from '@/components/dashboard/QuickFilesWidget';
 import SimpleModeToggle from '@/components/shared/SimpleModeToggle';
 import { useSimpleMode } from '@/lib/useSimpleMode';
+import { useOrgSettings } from '@/lib/useOrgSettings';
 
 import { useTrainingTour } from '@/components/training/TrainingTourProvider';
 import { FolderOpen, Sparkles, Settings, Search, LayoutGrid, Users, Megaphone, FileText, BarChart2, Calendar, Globe, BookOpen, Briefcase, Heart, Star, Layers, Pin, PinOff, Brain, Languages, Activity, Presentation, Mail } from 'lucide-react';
 
-const LOGO_URL = 'https://media.base44.com/images/public/6a249282cb496579542673b7/c6b242905_Candoracirclelogo_noanniversary.png';
+
 
 const ICON_MAP = {
   FolderOpen, LayoutGrid, Users, Megaphone, FileText, BarChart2,
@@ -103,6 +104,7 @@ export default function Dashboard() {
   const queryClient = useQueryClient();
   const { revealedWidget } = useTrainingTour();
   const { simpleMode, setSimpleMode } = useSimpleMode();
+  const { logoUrl } = useOrgSettings();
 
   const { data: cards = [] } = useQuery({
     queryKey: ['portalCards'],
@@ -234,10 +236,10 @@ export default function Dashboard() {
       <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-accent via-accent/90 to-accent-foreground p-12" data-tour="dashboard-hero">
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 right-0 w-96 h-96 bg-primary rounded-full mix-blend-multiply filter blur-3xl"></div>
-          <div className="absolute bottom-0 left-0 w-96 h-96 bg-primary rounded-full mix-blend-multiply filter blur-3xl"></div>
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-highlight rounded-full filter blur-3xl"></div>
         </div>
         <div className="relative z-10 flex items-center gap-8">
-          <img src={LOGO_URL} alt="Candora" className="h-32 w-32 flex-shrink-0 drop-shadow-lg" />
+          <img src={logoUrl} alt="Candora" className="h-32 w-32 flex-shrink-0 object-contain drop-shadow-lg" />
           <div>
             <div className="flex items-start justify-between w-full">
               <div>
