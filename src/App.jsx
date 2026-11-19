@@ -20,6 +20,7 @@ import StaffPortal from '@/pages/portal/StaffPortal';
 import PathwaysPublicIntake from '@/pages/portal/PathwaysPublicIntake';
 import EmpowerUPublicApplication from '@/pages/portal/EmpowerUPublicApplication';
 import SelfRegister from '@/pages/portal/SelfRegister';
+import CampaignPublicPage from '@/pages/portal/CampaignPublicPage';
 import CustomerKiosk from '@/pages/portal/CustomerKiosk';
 import FillableMinutesPublic from '@/pages/board/FillableMinutesPublic';
 
@@ -227,6 +228,7 @@ import DonorDetail from '@/pages/donors/DonorDetail';
 import DonationsPage from '@/pages/donors/Donations';
 import DonationCampaignsPage from '@/pages/donors/Campaigns';
 import DonorReports from '@/pages/donors/DonorReports';
+import CampaignDetail from '@/pages/donors/CampaignDetail';
 
 // Candora Board
 import BoardLayout from '@/components/board/BoardLayout';
@@ -441,6 +443,7 @@ const AuthenticatedApp = () => {
     || location.startsWith('/joblab')
     || location.startsWith('/cafe-menu')
     || location.startsWith('/kiosk')
+    || location.startsWith('/campaign')
     || location.startsWith('/empoweru-apply');
 
   // Only show loading spinner for protected routes, not public auth pages
@@ -475,6 +478,9 @@ const AuthenticatedApp = () => {
 
       {/* Public QR self-registration page — standalone, no auth, no app navigation */}
       <Route path="/self-register" element={<SelfRegister />} />
+
+      {/* Public campaign page — supporters read the appeal and give online, no login */}
+      <Route path="/campaign/:slug" element={<CampaignPublicPage />} />
 
       {/* EmpowerU cohort application form — public link, no login required, no portal access */}
       <Route path="/empoweru-apply/:cohortId" element={<EmpowerUPublicApplication />} />
@@ -903,6 +909,7 @@ const AuthenticatedApp = () => {
           <Route path="/donors/list" element={<DonorsList />} />
           <Route path="/donors/donations" element={<DonationsPage />} />
           <Route path="/donors/campaigns" element={<DonationCampaignsPage />} />
+          <Route path="/donors/campaigns/:id" element={<CampaignDetail />} />
           <Route path="/donors/reports" element={<DonorReports />} />
           <Route path="/donors/:id" element={<DonorDetail />} />
         </Route>

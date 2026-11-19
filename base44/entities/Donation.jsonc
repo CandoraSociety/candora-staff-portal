@@ -32,6 +32,10 @@
     "campaign_name": {
       "type": "string"
     },
+    "product_name": {
+      "type": "string",
+      "description": "Giving option the supporter chose on the campaign page, e.g. Sponsor a lunch"
+    },
     "payment_method": {
       "type": "string",
       "enum": [
@@ -42,6 +46,36 @@
         "online",
         "other"
       ]
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "manual",
+        "online_campaign"
+      ],
+      "default": "manual",
+      "enumColors": [
+        "gray",
+        "blue"
+      ],
+      "description": "manual = recorded by staff; online_campaign = paid by a supporter on a campaign's public page"
+    },
+    "payment_reference": {
+      "type": "string",
+      "description": "Payment provider reference for an online gift, kept for reconciliation"
+    },
+    "donor_email": {
+      "type": "string",
+      "description": "Email the supporter gave at checkout (online gifts)"
+    },
+    "gift_message": {
+      "type": "string",
+      "description": "Note the supporter left with an online gift"
+    },
+    "is_anonymous": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the supporter asked not to be named"
     },
     "receipt_issued": {
       "type": "boolean",
@@ -74,5 +108,54 @@
     "donor_id",
     "amount",
     "donation_date"
-  ]
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
 }

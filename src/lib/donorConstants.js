@@ -63,3 +63,23 @@ export const donorName = (donor) => {
 
 export const labelFor = (list, value) =>
   list.find((item) => item.value === value)?.label || (value ? value.replace(/_/g, ' ') : '—');
+
+// Web address for a campaign's public page — kept lowercase and hyphenated so
+// the link can be shared as-is.
+export const slugify = (value) =>
+  String(value || '')
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .slice(0, 60);
+
+export const publicCampaignUrl = (slug) =>
+  `${typeof window !== 'undefined' ? window.location.origin : ''}/campaign/${slug || ''}`;
+
+// The giving options a campaign actually offers on its page, in display order.
+export const activeTiers = (campaign) =>
+  (campaign?.donation_products || [])
+    .filter((tier) => tier.is_active !== false && Number(tier.amount) > 0)
+    .sort((a, b) => (Number(a.display_order) || 0) - (Number(b.display_order) || 0));

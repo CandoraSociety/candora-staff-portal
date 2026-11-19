@@ -1,15 +1,27 @@
 {
   "name": "DonationCampaign",
   "type": "object",
-  "description": "A fundraising appeal or campaign the donor portal tracks gifts against \u2014 e.g. Winter Warmth Appeal. Gifts point at it by id, so progress updates automatically as donations are recorded.",
+  "description": "A fundraising appeal or campaign the donor portal tracks gifts against \u2014 e.g. Winter Warmth Appeal. Each campaign can publish its own public page with its story, progress and giving options, where supporters give online. Gifts point at it by id, so progress updates automatically as donations are recorded.",
   "properties": {
     "name": {
       "type": "string",
       "description": "Campaign name as donors see it"
     },
+    "slug": {
+      "type": "string",
+      "description": "Web address of the campaign's public page \u2014 the page lives at /campaign/<slug>. Generated from the name when left blank."
+    },
+    "tagline": {
+      "type": "string",
+      "description": "One short line under the campaign title on the public page"
+    },
     "description": {
       "type": "string",
-      "description": "What the campaign raises money for"
+      "description": "What the campaign raises money for (shown in the staff campaign list and at the top of the public page)"
+    },
+    "story": {
+      "type": "string",
+      "description": "The full appeal copy on the public page \u2014 why it matters, who it helps, what a gift makes possible"
     },
     "campaign_type": {
       "type": "string",
@@ -43,6 +55,77 @@
     "owner_name": {
       "type": "string",
       "description": "Staff member running the campaign"
+    },
+    "contact_email": {
+      "type": "string",
+      "description": "Where questions about this campaign go \u2014 shown on the public page"
+    },
+    "hero_image_url": {
+      "type": "string",
+      "description": "Main photo at the top of the public page (publicly stored file URL)"
+    },
+    "public_page_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the campaign's public page is live and can accept online gifts"
+    },
+    "allow_custom_amount": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether supporters may give an amount of their own choosing instead of one of the set options"
+    },
+    "allow_monthly": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether supporters may repeat their gift every month"
+    },
+    "donation_products": {
+      "type": "array",
+      "description": "The giving options offered on the campaign page \u2014 e.g. $50 supplies a week of lunches. Each option becomes a line item at checkout.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Stable id of this option within the campaign"
+          },
+          "name": {
+            "type": "string",
+            "description": "Short label, e.g. Sponsor a lunch"
+          },
+          "description": {
+            "type": "string",
+            "description": "What this gift makes possible"
+          },
+          "amount": {
+            "type": "number",
+            "description": "Gift amount for this option in CAD"
+          },
+          "allow_monthly": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether this option can be repeated monthly"
+          },
+          "is_active": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether the option shows on the public page"
+          },
+          "display_order": {
+            "type": "number",
+            "default": 0,
+            "description": "Position on the page, lowest first"
+          }
+        }
+      }
+    },
+    "thank_you_message": {
+      "type": "string",
+      "description": "Message shown to a supporter after their gift goes through"
+    },
+    "tax_receipt_note": {
+      "type": "string",
+      "description": "Receipt wording shown under the giving options, e.g. Tax receipts are issued for gifts of $20 or more."
     },
     "notes": {
       "type": "string"
