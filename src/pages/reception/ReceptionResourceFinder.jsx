@@ -1,12 +1,13 @@
 import React, { useState, useMemo } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Search, Sparkles, Plus, Pencil, Phone, Mail, Globe, MapPin, Loader2 } from 'lucide-react';
+import { Search, Sparkles, Plus, Pencil, Phone, Mail, Globe, MapPin, Loader2, Printer, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ResourceDialog from '@/components/reception/ResourceDialog';
+import ResourceFinderPrintSheet from '@/components/reception/ResourceFinderPrintSheet';
 import { RESOURCE_CATEGORY_OPTIONS, RESOURCE_CATEGORY_LABELS, RESOURCE_CATEGORY_COLORS } from '@/lib/receptionConstants';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -21,6 +22,9 @@ export default function ReceptionResourceFinder() {
   const [aiSearching, setAiSearching] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
+  // Results removed from the current view only — cleared as soon as a new search starts.
+  const [removedIds, setRemovedIds] = useState([]);
+  const [removedCommunity, setRemovedCommunity] = useState([]);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -37,10 +41,26 @@ export default function ReceptionResourceFinder() {
     });
   }, [activeResources, search, categoryFilter, typeFilter]);
 
-  const displayList = aiResults ? aiResults.map(id => activeResources.find(r => r.id === id)).filter(Boolean) : textFiltered;
+  const displayList = (aiResults ? aiResults.map(id => activeResources.find(r => r.id === id)).filter(Boolean) : textFiltered)
+    .filter(r => !removedIds.includes(r.id));
+  const communityResults = aiCommunity.filter((_, i) => !removedCommunity.includes(i));
+  const hasPrintable = displayList.length > 0 || communityResults.length > 0;
+
+  const resetRemovals = () => { setRemovedIds([]); setRemovedCommunity([]); };
+
+  const handlePrint = () => {
+    document.body.classList.add('resource-printing');
+    const cleanup = () => {
+      document.body.classList.remove('resource-printing');
+      window.removeEventListener('afterprint', cleanup);
+    };
+    window.addEventListener('afterprint', cleanup);
+    window.print();
+  };
 
   const handleAiSearch = async () => {
     if (!aiQuery.trim()) return;
+    resetRemovals();
     setAiSearching(true);
     setAiResults(null);
     setAiCommunity([]);
@@ -97,7 +117,7 @@ export default function ReceptionResourceFinder() {
     }
   };
 
-  const clearAiSearch = () => { setAiResults(null); setAiCommunity([]); setAiReasoning(''); setAiQuery(''); };
+  const clearAiSearch = () => { resetRemovals(); setAiResults(null); setAiCommunity([]); setAiReasoning(''); setAiQuery(''); };
 
   const openNew = () => { setEditing(null); setDialogOpen(true); };
   const openEdit = (r) => { setEditing(r); setDialogOpen(true); };
@@ -107,7 +127,10 @@ export default function ReceptionResourceFinder() {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div><h1 className="text-2xl font-heading font-bold text-foreground">Resource Finder</h1><p className="text-muted-foreground text-sm mt-1">Find internal and external programs &amp; services</p></div>
-        <Button onClick={openNew}><Plus className="h-4 w-4" /> Add Resource</Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={handlePrint} disabled={!hasPrintable}><Printer className="h-4 w-4" /> Print Results</Button>
+          <Button onClick={openNew}><Plus className="h-4 w-4" /> Add Resource</Button>
+        </div>
       </div>
 
       <Card className="border-primary/30 bg-primary/5">
@@ -127,7 +150,7 @@ export default function ReceptionResourceFinder() {
       </Card>
 
       <div className="flex flex-col sm:flex-row gap-2">
-        <div className="relative flex-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Search by name, description, or keyword..." value={search} onChange={(e) => setSearch(e.target.value)} className="pl-9" /></div>
+        <div className="relative flex-1"><Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /><Input placeholder="Search by name, description, or keyword..." value={search} onChange={(e) => { setSearch(e.target.value); resetRemovals(); }} className="pl-9" /></div>
         <Select value={categoryFilter} onValueChange={(v) => { setCategoryFilter(v); clearAiSearch(); }}><SelectTrigger className="w-full sm:w-48"><SelectValue placeholder="All categories" /></SelectTrigger><SelectContent><SelectItem value="all">All categories</SelectItem>{RESOURCE_CATEGORY_OPTIONS.map(c => <SelectItem key={c.value} value={c.value}>{c.icon} {c.label}</SelectItem>)}</SelectContent></Select>
         <Select value={typeFilter} onValueChange={(v) => { setTypeFilter(v); clearAiSearch(); }}><SelectTrigger className="w-full sm:w-36"><SelectValue placeholder="All types" /></SelectTrigger><SelectContent><SelectItem value="all">All types</SelectItem><SelectItem value="internal">Internal</SelectItem><SelectItem value="external">External</SelectItem></SelectContent></Select>
       </div>
@@ -140,12 +163,15 @@ export default function ReceptionResourceFinder() {
             <h2 className="text-lg font-heading font-bold text-foreground">Edmonton Metro Area Resources</h2>
             <span className="text-xs text-muted-foreground">Found via live search</span>
           </div>
-          {aiCommunity.length === 0 ? <Card><CardContent className="p-6 text-center text-muted-foreground text-sm">No community services found for this query. Try rephrasing it.</CardContent></Card> : (
+          {communityResults.length === 0 ? <Card><CardContent className="p-6 text-center text-muted-foreground text-sm">{aiCommunity.length === 0 ? 'No community services found for this query. Try rephrasing it.' : 'All community results removed from this list.'}</CardContent></Card> : (
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              {aiCommunity.map((r, i) => (
-                <Card key={i} className="border-primary/20">
+              {communityResults.map((r, i) => (
+                <Card key={i} className="border-primary/20 relative">
                   <CardContent className="p-4">
-                    <div className="mb-2">
+                    <Button size="icon" variant="ghost" className="absolute top-1.5 right-1.5 h-6 w-6 text-muted-foreground" title="Remove from this list" onClick={() => setRemovedCommunity(prev => [...prev, aiCommunity.indexOf(r)])}>
+                      <X className="h-3.5 w-3.5" />
+                    </Button>
+                    <div className="mb-2 pr-7">
                       <p className="font-medium text-sm text-foreground">{r.name}</p>
                       {r.category && <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary">{r.category}</span>}
                     </div>
@@ -185,6 +211,7 @@ export default function ReceptionResourceFinder() {
                       <span className="text-xs px-2 py-0.5 rounded-full" style={{ backgroundColor: (RESOURCE_CATEGORY_COLORS[r.category] || '#64748b') + '20', color: RESOURCE_CATEGORY_COLORS[r.category] || '#64748b' }}>{RESOURCE_CATEGORY_LABELS[r.category]}</span>
                       <span className={`text-xs px-2 py-0.5 rounded-full ${r.type === 'internal' ? 'bg-blue-100 text-blue-700' : 'bg-gray-100 text-gray-600'}`}>{r.type === 'internal' ? 'Internal' : 'External'}</span>
                       <Button size="icon" variant="ghost" className="h-6 w-6" onClick={() => openEdit(r)}><Pencil className="h-3 w-3" /></Button>
+                      <Button size="icon" variant="ghost" className="h-6 w-6 text-muted-foreground" title="Remove from this list" onClick={() => setRemovedIds(prev => [...prev, r.id])}><X className="h-3 w-3" /></Button>
                     </div>
                   </div>
                   {r.description && <p className="text-sm text-muted-foreground mb-2 line-clamp-2">{r.description}</p>}
@@ -204,6 +231,7 @@ export default function ReceptionResourceFinder() {
         </div>
       )}
       <ResourceDialog open={dialogOpen} onOpenChange={setDialogOpen} resource={editing} onSaved={onSaved} />
+      <ResourceFinderPrintSheet community={communityResults} directory={displayList} query={aiQuery} reasoning={aiReasoning} />
     </div>
   );
 }
