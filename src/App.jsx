@@ -229,6 +229,7 @@ import DonationsPage from '@/pages/donors/Donations';
 import DonationCampaignsPage from '@/pages/donors/Campaigns';
 import DonorReports from '@/pages/donors/DonorReports';
 import CampaignDetail from '@/pages/donors/CampaignDetail';
+import DonationProducts from '@/pages/donors/DonationProducts';
 
 // Candora Board
 import BoardLayout from '@/components/board/BoardLayout';
@@ -910,6 +911,7 @@ const AuthenticatedApp = () => {
           <Route path="/donors/donations" element={<DonationsPage />} />
           <Route path="/donors/campaigns" element={<DonationCampaignsPage />} />
           <Route path="/donors/campaigns/:id" element={<CampaignDetail />} />
+          <Route path="/donors/donation-products" element={<DonationProducts />} />
           <Route path="/donors/reports" element={<DonorReports />} />
           <Route path="/donors/:id" element={<DonorDetail />} />
         </Route>

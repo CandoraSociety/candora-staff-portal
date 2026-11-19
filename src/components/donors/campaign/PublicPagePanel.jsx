@@ -4,13 +4,13 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Copy, ExternalLink, Globe, ImagePlus, Sparkles } from 'lucide-react';
-import { publicCampaignUrl, slugify } from '@/lib/donorConstants';
+import { activeTiers, formatMoney, publicCampaignUrl, slugify } from '@/lib/donorConstants';
 import HeroImageAiDialog from '@/components/donors/campaign/HeroImageAiDialog';
 import PublicPageAiCopyDialog from '@/components/donors/campaign/PublicPageAiCopyDialog';
 
 // Publishes the campaign's own page: its web address, whether it is live, and a
 // link staff can open (or share) to see exactly what supporters see.
-export default function PublicPagePanel({ campaign, onSave }) {
+export default function PublicPagePanel({ campaign, onSave, onManageOptions }) {
   const [slug, setSlug] = useState('');
   const [enabled, setEnabled] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -115,6 +115,36 @@ export default function PublicPagePanel({ campaign, onSave }) {
 
         {campaign?.tagline && (
           <p className="text-sm"><span className="text-muted-foreground">Current tagline:</span> {campaign.tagline}</p>
+        )}
+      </div>
+
+      <div className="rounded-xl border bg-card p-5 space-y-3">
+        <div className="flex items-start justify-between gap-3 flex-wrap">
+          <div>
+            <h2 className="font-display font-bold">Giving options on this page</h2>
+            <p className="text-sm text-muted-foreground mt-1">
+              The donation products supporters pick from. Each one is created in Stripe automatically when saved.
+            </p>
+          </div>
+          {onManageOptions && (
+            <Button variant="outline" size="sm" onClick={onManageOptions}>Manage options</Button>
+          )}
+        </div>
+
+        {activeTiers(campaign).length === 0 ? (
+          <p className="text-sm text-muted-foreground">
+            No options yet — supporters can give any amount they choose.
+          </p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {activeTiers(campaign).map((option) => (
+              <span key={option.id}
+                className="inline-flex items-center gap-2 rounded-full border bg-muted/50 px-3 py-1 text-sm">
+                <span>{option.name}</span>
+                <span className="font-semibold">{formatMoney(option.amount)}</span>
+              </span>
+            ))}
+          </div>
         )}
       </div>
 

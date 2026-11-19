@@ -115,10 +115,14 @@ export default function CampaignDetail() {
           <CampaignProfileForm campaign={campaign} onSave={save} />
         </TabsContent>
         <TabsContent value="options" className="mt-4">
-          <DonationOptionsEditor campaign={campaign} onSave={save} />
+          <DonationOptionsEditor
+            campaign={campaign}
+            onSave={save}
+            onSynced={() => qc.invalidateQueries({ queryKey: ['donation-campaign', id] })}
+          />
         </TabsContent>
         <TabsContent value="page" className="mt-4">
-          <PublicPagePanel campaign={campaign} onSave={save} />
+          <PublicPagePanel campaign={campaign} onSave={save} onManageOptions={() => setTab('options')} />
         </TabsContent>
         <TabsContent value="gifts" className="mt-4">
           <CampaignGiftsList gifts={gifts} />

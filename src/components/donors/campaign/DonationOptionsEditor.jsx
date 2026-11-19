@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -17,11 +19,13 @@ const blankTier = () => ({
 
 // The giving options a campaign offers — each one is a donation "product" the
 // supporter picks on the public page, and the amount that goes to checkout.
-export default function DonationOptionsEditor({ campaign, onSave }) {
+export default function DonationOptionsEditor({ campaign, onSave, onSynced }) {
   const [tiers, setTiers] = useState([]);
   const [custom, setCustom] = useState(true);
   const [monthly, setMonthly] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [syncError, setSyncError] = useState('');
 
   useEffect(() => {
     setTiers(
@@ -49,6 +53,7 @@ export default function DonationOptionsEditor({ campaign, onSave }) {
 
   const submit = async () => {
     setSaving(true);
+    setSyncError('');
     await onSave({
       allow_custom_amount: custom,
       allow_monthly: monthly,
@@ -65,6 +70,19 @@ export default function DonationOptionsEditor({ campaign, onSave }) {
         })),
     });
     setSaving(false);
+
+    // Each saved option is created (or updated) as its own Stripe product.
+    setSyncing(true);
+    try {
+      const response = await base44.functions.invoke('syncCampaignProductsToStripe', {
+        campaign_id: campaign.id,
+      });
+      if (response.data?.error) throw new Error(response.data.error);
+      onSynced?.();
+    } catch (error) {
+      setSyncError(error.response?.data?.error || error.message || 'Could not sync these options with Stripe.');
+    }
+    setSyncing(false);
   };
 
   return (
@@ -74,6 +92,7 @@ export default function DonationOptionsEditor({ campaign, onSave }) {
           <h2 className="font-display font-bold">Giving options</h2>
           <p className="text-sm text-muted-foreground">
             Each option appears as a gift card on the campaign page and becomes the amount at checkout.
+            Saving also creates it as its own product in Stripe, automatically.
           </p>
         </div>
 
@@ -128,6 +147,9 @@ export default function DonationOptionsEditor({ campaign, onSave }) {
                     onChange={(e) => set(index, 'is_active', e.target.checked)} />
                   Shows on the page
                 </label>
+                {tier.stripe_price_id && (
+                  <Badge variant="outline" className="text-[11px] font-normal text-emerald-700">In Stripe</Badge>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -150,8 +172,12 @@ export default function DonationOptionsEditor({ campaign, onSave }) {
         </label>
       </div>
 
-      <div className="flex justify-end">
-        <Button onClick={submit} disabled={saving}>{saving ? 'Saving…' : 'Save giving options'}</Button>
+      <div className="flex flex-wrap items-center justify-end gap-3">
+        {syncError && <p className="text-sm text-destructive">{syncError}</p>}
+        {syncing && !syncError && <p className="text-sm text-muted-foreground">Syncing with Stripe…</p>}
+        <Button onClick={submit} disabled={saving || syncing}>
+          {saving ? 'Saving…' : 'Save giving options'}
+        </Button>
       </div>
     </div>
   );

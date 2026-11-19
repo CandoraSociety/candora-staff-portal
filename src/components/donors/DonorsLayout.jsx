@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import {
-  LayoutDashboard, Users, HandCoins, Target, BarChart3,
+  LayoutDashboard, Users, HandCoins, Target, BarChart3, Package,
   ChevronLeft, ChevronRight, LogOut, Menu
 } from 'lucide-react';
 import LogoutConfirmationDialog from '@/components/auth/LogoutConfirmationDialog';
@@ -12,6 +12,7 @@ const NAV = [
   { label: 'Donors', icon: Users, path: '/donors/list' },
   { label: 'Gifts', icon: HandCoins, path: '/donors/donations' },
   { label: 'Campaigns', icon: Target, path: '/donors/campaigns' },
+  { label: 'Donation products', icon: Package, path: '/donors/donation-products' },
   { label: 'Reports', icon: BarChart3, path: '/donors/reports' },
 ];
 
@@ -26,7 +27,7 @@ export default function DonorsLayout() {
     if (path === '/donors') return location.pathname === '/donors';
     if (path === '/donors/list') {
       return location.pathname === '/donors/list' || /^\/donors\/[^/]+$/.test(location.pathname)
-        && !['donations', 'campaigns', 'reports'].includes(location.pathname.split('/')[2]);
+        && !['donations', 'campaigns', 'reports', 'donation-products'].includes(location.pathname.split('/')[2]);
     }
     return location.pathname === path || location.pathname.startsWith(path + '/');
   };

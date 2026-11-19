@@ -81,7 +81,7 @@
     },
     "donation_products": {
       "type": "array",
-      "description": "The giving options offered on the campaign page \u2014 e.g. $50 supplies a week of lunches. Each option becomes a line item at checkout.",
+      "description": "The giving options offered on the campaign page \u2014 e.g. $50 supplies a week of lunches. Each option becomes a line item at checkout and is created as its own product and price in Stripe automatically.",
       "items": {
         "type": "object",
         "properties": {
@@ -115,6 +115,18 @@
             "type": "number",
             "default": 0,
             "description": "Position on the page, lowest first"
+          },
+          "stripe_product_id": {
+            "type": "string",
+            "description": "Stripe product created for this giving option"
+          },
+          "stripe_price_id": {
+            "type": "string",
+            "description": "Current Stripe price for this giving option"
+          },
+          "stripe_price_amount": {
+            "type": "number",
+            "description": "Amount of the Stripe price currently attached \u2014 a change in amount creates a new price"
           }
         }
       }

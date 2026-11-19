@@ -117,7 +117,9 @@ export default async function (req) {
     params.set('metadata[base44_app_id]', appId);
     params.set('metadata[intent_id]', intent.id);
     params.set('metadata[campaign_id]', campaign.id);
+    if (tier?.stripe_product_id) params.set('metadata[stripe_product_id]', tier.stripe_product_id);
     if (frequency === 'monthly') {
+      if (tier?.stripe_product_id) params.set('subscription_data[metadata][stripe_product_id]', tier.stripe_product_id);
       params.set('subscription_data[metadata][base44_app_id]', appId);
       params.set('subscription_data[metadata][intent_id]', intent.id);
       params.set('subscription_data[metadata][campaign_id]', campaign.id);
