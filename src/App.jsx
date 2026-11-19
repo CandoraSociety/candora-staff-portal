@@ -22,6 +22,7 @@ import EmpowerUPublicApplication from '@/pages/portal/EmpowerUPublicApplication'
 import SelfRegister from '@/pages/portal/SelfRegister';
 import CampaignPublicPage from '@/pages/portal/CampaignPublicPage';
 import GeneralDonationPage from '@/pages/portal/GeneralDonationPage';
+import GiftThankYou from '@/pages/portal/GiftThankYou';
 import CustomerKiosk from '@/pages/portal/CustomerKiosk';
 import FillableMinutesPublic from '@/pages/board/FillableMinutesPublic';
 
@@ -487,6 +488,9 @@ const AuthenticatedApp = () => {
 
       {/* Public general donation page — general fund giving plus every open campaign */}
       <Route path="/donate" element={<GeneralDonationPage />} />
+
+      {/* Where a supporter lands after paying — confirms the gift with Stripe */}
+      <Route path="/donate/thank-you" element={<GiftThankYou />} />
 
       {/* EmpowerU cohort application form — public link, no login required, no portal access */}
       <Route path="/empoweru-apply/:cohortId" element={<EmpowerUPublicApplication />} />

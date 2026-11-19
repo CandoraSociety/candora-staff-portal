@@ -140,7 +140,9 @@ export default async function (req) {
 
     const params = new URLSearchParams();
     params.set('mode', frequency === 'monthly' ? 'subscription' : 'payment');
-    params.set('success_url', `${appUrl}${pagePath}?gift=success&session_id={CHECKOUT_SESSION_ID}`);
+    // Every gift returns to the thank-you page, which confirms the payment with
+    // Stripe before thanking the supporter.
+    params.set('success_url', `${appUrl}/donate/thank-you?session_id={CHECKOUT_SESSION_ID}`);
     params.set('cancel_url', `${appUrl}${pagePath}?gift=cancelled`);
     params.set('customer_email', donorEmail);
     params.set('line_items[0][quantity]', '1');
