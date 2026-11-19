@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PortalCardItem from '@/components/portal/PortalCardItem';
 import { CARD_CATEGORIES } from '@/lib/constants';
+import { hasWebsiteAccess } from '@/lib/websiteManager';
 
 export default function Portal() {
   const { user, access } = useOutletContext();
@@ -28,6 +29,8 @@ export default function Portal() {
       if (!card.is_enabled) return false;
       if (access.isAdmin) return true;
       const moduleId = getModuleIdFromCard(card);
+      // Website Studio is open to the designated website staff, not to a tier
+      if (moduleId === 'website') return hasWebsiteAccess(user?.email, user?.role);
       if (moduleId) return access.canAccessModule(moduleId);
       return access.canAccessCard(card);
     })

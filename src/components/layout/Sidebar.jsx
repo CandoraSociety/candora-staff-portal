@@ -8,10 +8,8 @@ import {
   ShoppingBag, CreditCard, CalendarClock, PlaneTakeoff, ThermometerSun,
   ClipboardList,
   PenTool,
-  GraduationCap,
-  Globe2
+  GraduationCap
 } from 'lucide-react';
-import { hasWebsiteAccess } from '@/lib/websiteManager';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
 import { base44 } from '@/api/base44Client';
@@ -72,7 +70,6 @@ export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });
-  const canManageWebsite = hasWebsiteAccess(currentUser?.email, currentUser?.role);
 
   const isActive = (path) => {
     if (path === '/') return location.pathname === '/';
@@ -120,14 +117,6 @@ export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
           {NAV_ITEMS.map(item => (
             <NavItem key={item.path} item={item} collapsed={collapsed} active={isActive(item.path)} />
           ))}
-
-          {canManageWebsite && (
-            <NavItem
-              item={{ path: '/website', label: 'Website Studio', icon: Globe2 }}
-              collapsed={collapsed}
-              active={isActive('/website')}
-            />
-          )}
 
           <SidebarNavGroup item={PURCHASES} collapsed={collapsed} active={PURCHASES.children.some(c => isActive(c.path))} />
 
