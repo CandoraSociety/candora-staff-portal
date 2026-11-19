@@ -135,7 +135,7 @@ export default function CampaignPublicPage() {
             {brandFooterLines().map((line) => <p key={line}>{line}</p>)}
           </div>
           <p className="text-xs text-sidebar-foreground/50 max-w-xs">
-            Gifts are processed securely. Thank you for supporting {CANDORA_BRAND.legalName}.
+            Gifts are processed securely. Thank you for supporting {CANDORA_BRAND.name}.
           </p>
         </div>
       </footer>

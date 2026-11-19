@@ -1,9 +1,9 @@
 // Candora branding + contact details used on generated invoices and other
 // client-facing documents. Update these values to refine the footer.
 export const CANDORA_BRAND = {
-  name: 'Candora Society',
+  name: 'CANDORA',
   legalName: 'Candora Society',
-  tagline: 'Employment & Community Development',
+  logoUrl: 'https://base44.app/api/apps/6a249282cb496579542673b7/files/mp/public/6a249282cb496579542673b7/8d587672d_Candoracirclelogo_noanniversary.png',
   address: '#262, 3210 118 Avenue NW',
   city: 'Edmonton',
   province: 'Alberta',
