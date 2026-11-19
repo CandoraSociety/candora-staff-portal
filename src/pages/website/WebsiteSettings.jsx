@@ -9,6 +9,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { useToast } from "@/components/ui/use-toast";
 import WebsiteImageField from "@/components/website/WebsiteImageField";
+import NewsFeedStyleCard from "@/components/website/NewsFeedStyleCard";
+import HomePopupCard from "@/components/website/HomePopupCard";
 
 const EMPTY = {
   site_name: "Candora",
@@ -22,6 +24,17 @@ const EMPTY = {
   about_summary: "",
   events_heading: "Upcoming events",
   events_intro: "",
+  news_feed_style: "grid",
+  news_feed_speed: "normal",
+  news_feed_pause_on_hover: true,
+  news_feed_limit: 6,
+  popup_enabled: false,
+  popup_title: "",
+  popup_message: "",
+  popup_image_url: "",
+  popup_button_label: "",
+  popup_button_url: "",
+  popup_frequency: "once_per_session",
   contact_email: "",
   contact_phone: "",
   contact_address: "",
@@ -225,6 +238,10 @@ export default function WebsiteSettings() {
           </div>
         </CardContent>
       </Card>
+
+      <NewsFeedStyleCard form={form} set={set} />
+
+      <HomePopupCard form={form} set={set} />
 
       <Card className="border-border/70">
         <CardContent className="p-6 space-y-4">

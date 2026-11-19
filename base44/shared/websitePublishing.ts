@@ -118,5 +118,23 @@ export function publicSite(settings, fallbackLogo) {
     social_links: Array.isArray(settings.social_links)
       ? settings.social_links.map((link) => ({ label: link.label || '', url: link.url || '' }))
       : [],
+    // How the website renders published news posts.
+    news_feed: {
+      style: settings.news_feed_style || 'grid',
+      speed: settings.news_feed_speed || 'normal',
+      pause_on_hover: settings.news_feed_pause_on_hover !== false,
+      limit: Number(settings.news_feed_limit) || 6,
+    },
+    // The home page pop-up. enabled is always present so the website can check
+    // one field before showing anything.
+    popup: {
+      enabled: !!settings.popup_enabled,
+      title: settings.popup_title || '',
+      message: settings.popup_message || '',
+      image_url: settings.popup_image_url || '',
+      button_label: settings.popup_button_label || '',
+      button_url: settings.popup_button_url || '',
+      frequency: settings.popup_frequency || 'once_per_session',
+    },
   };
 }

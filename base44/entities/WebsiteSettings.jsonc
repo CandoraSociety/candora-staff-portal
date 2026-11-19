@@ -1,7 +1,7 @@
 {
   "name": "WebsiteSettings",
   "type": "object",
-  "description": "Site-wide content for Candora's public website \u2014 the logo, brand line, hero area, contact details and how events are introduced on the home page. Edited only from Website Studio; the separate website app reads it through the public feed.",
+  "description": "Site-wide content for Candora's public website \u2014 the logo, brand line, hero area, news feed style, home page pop-up, contact details and how events are introduced on the home page. Edited only from Website Studio; the separate website app reads it through the public feed.",
   "properties": {
     "site_name": {
       "type": "string",
@@ -46,6 +46,88 @@
     "events_intro": {
       "type": "string",
       "description": "One line shown under the events heading"
+    },
+    "news_feed_style": {
+      "type": "string",
+      "enum": [
+        "grid",
+        "scroll",
+        "fade",
+        "list"
+      ],
+      "enumColors": [
+        "blue",
+        "purple",
+        "yellow",
+        "gray"
+      ],
+      "default": "grid",
+      "description": "How published news posts are shown on the website \u2014 grid of cards, a scrolling row, one post at a time fading in and out, or a simple list."
+    },
+    "news_feed_speed": {
+      "type": "string",
+      "enum": [
+        "slow",
+        "normal",
+        "fast"
+      ],
+      "enumColors": [
+        "gray",
+        "blue",
+        "yellow"
+      ],
+      "default": "normal",
+      "description": "How quickly a scrolling or fading news feed moves"
+    },
+    "news_feed_pause_on_hover": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether the news feed stops moving while a visitor points at it"
+    },
+    "news_feed_limit": {
+      "type": "number",
+      "default": 6,
+      "description": "How many news posts the website shows at once"
+    },
+    "popup_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether a pop-up opens over the website when someone lands on the home page"
+    },
+    "popup_title": {
+      "type": "string",
+      "description": "Headline of the home page pop-up"
+    },
+    "popup_message": {
+      "type": "string",
+      "description": "Body text of the pop-up"
+    },
+    "popup_image_url": {
+      "type": "string",
+      "description": "Optional photo at the top of the pop-up (publicly stored file URL)"
+    },
+    "popup_button_label": {
+      "type": "string",
+      "description": "Optional button label, e.g. Donate now"
+    },
+    "popup_button_url": {
+      "type": "string",
+      "description": "Where the pop-up's button goes \u2014 a page path or an outside link"
+    },
+    "popup_frequency": {
+      "type": "string",
+      "enum": [
+        "every_visit",
+        "once_per_session",
+        "once_per_day"
+      ],
+      "enumColors": [
+        "yellow",
+        "blue",
+        "green"
+      ],
+      "default": "once_per_session",
+      "description": "How often the same visitor sees the pop-up"
     },
     "contact_email": {
       "type": "string"
