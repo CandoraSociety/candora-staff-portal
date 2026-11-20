@@ -1,11 +1,9 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
-import {
-  buildTranscript,
-  ANALYSIS_PROMPT,
-  ANALYSIS_SCHEMA,
-  insightDrafts,
-  summaryDraft,
-} from '../../shared/emailAssistant.ts';
+import { buildTranscript, summaryDraft } from '../../shared/emailAssistant.ts';
+import { refreshEmailThreads } from '../../shared/emailMailboxSync.ts';
+import { GROUNDED_PROMPT, GROUNDED_SCHEMA } from '../../shared/emailAnalysisGrounding.ts';
+import { reviewedDrafts } from '../../shared/emailFindingReview.ts';
+import { readAnalysisInsights, saveAnalysisResults } from '../../shared/emailAnalysisStore.ts';
 
 // Runs the AI Email Assistant's analysis for the signed-in employee only.
 // Messages are read with the user's own token, so row-level security decides
@@ -79,76 +77,80 @@ export default async function (req) {
       return Response.json({ briefing });
     }
 
-    const ids = Array.isArray(body.message_ids) ? body.message_ids.filter(Boolean).slice(0, 25) : [];
-    const query = ids.length
-      ? { owner_email: user.email, id: { $in: ids } }
-      : { owner_email: user.email };
-    const page = await base44.entities.EmailMessage.filter(query, {
-      sort: ids.length ? 'received_at' : '-received_at',
-      limit: ids.length ? 25 : 40,
-    });
-    const messages = (page.items || []).filter((m) => m.body_text || m.subject);
-    if (!messages.length) {
-      return Response.json(
-        { error: 'There is no correspondence to analyze yet. Load the sample conversation or add an email first.' },
-        { status: 400 }
-      );
-    }
-
-    // Each conversation is read on its own, so an email about one thing is never
-    // folded into another. A run covers the most recent conversations only.
-    const byThread = new Map();
-    for (const m of messages) {
-      const key = m.thread_id || m.id;
-      if (!byThread.has(key)) byThread.set(key, []);
-      byThread.get(key).push(m);
-    }
-    const newest = (group) =>
-      group.reduce((latest, m) => (String(m.received_at || '') > latest ? String(m.received_at || '') : latest), '');
-    const groups = Array.from(byThread.values())
-      .sort((a, b) => newest(b).localeCompare(newest(a)))
-      .slice(0, 8);
-
-    const results = await Promise.allSettled(
-      groups.map(async (group) => {
-        const subject = group[0]?.thread_subject || group[0]?.subject || 'Conversation';
-        const prompt = `${ANALYSIS_PROMPT}This is one conversation: "${subject}" (${group.length} message${
-          group.length > 1 ? 's' : ''
-        }). Every finding must come from this conversation alone.\n\n${buildTranscript(group)}`;
-        const analysis = await base44.integrations.Core.InvokeLLM({
-          prompt,
-          response_json_schema: ANALYSIS_SCHEMA,
-        });
-        return { analysis, group };
-      })
+    if (!['analyze', 'summary'].includes(action)) return Response.json({ error: 'Unknown analysis action.' }, { status: 400 });
+    const [preferencePage, policyPage] = await Promise.all([
+      base44.entities.EmailAssistantPreference.filter({ owner_email: user.email }, { limit: 1 }),
+      base44.entities.EmailAssistantPolicy.list({ limit: 1 }),
+    ]);
+    const prefs = preferencePage.items[0] || {};
+    const policy = policyPage.items[0] || {};
+    const allowed = (key) => policy.is_enabled !== false && policy.features_allowed?.[key] !== false && prefs.features?.[key] !== false;
+    if (!allowed(action === 'summary' ? 'summaries' : 'analysis')) return Response.json({ error: 'This feature is switched off.' }, { status: 403 });
+    const ids = Array.isArray(body.message_ids) ? body.message_ids.filter((id) => typeof id === 'string').slice(0, 100) : [];
+    const owner = { owner_email: user.email };
+    let page = await base44.entities.EmailMessage.filter(
+      { ...owner, ...(ids.length ? { id: { $in: ids } } : { analysis_state: 'not_analyzed' }) },
+      { sort: '-received_at', limit: 100 }
     );
-
-    const done = results.filter((r) => r.status === 'fulfilled').map((r) => r.value);
-    if (!done.length) {
-      const failure = results.find((r) => r.status === 'rejected');
-      throw new Error(failure?.reason?.message || 'The analysis could not be completed.');
+    if (!ids.length && (!page.items.length || action === 'summary')) {
+      page = await base44.entities.EmailMessage.filter(owner, { sort: action === 'summary' ? '-received_at' : 'last_analyzed_at', limit: 100 });
     }
-
-    const seen = new Set();
-    const insights = [];
-    const summaries = [];
-    done.forEach(({ analysis, group }) => {
-      insightDrafts(analysis, group).forEach((draft) => {
-        if (draft.dedupe_key && seen.has(draft.dedupe_key)) return;
-        if (draft.dedupe_key) seen.add(draft.dedupe_key);
-        insights.push(draft);
+    const exclusions = String(prefs.exclusion_terms || '').split(/\r?\n/).map((term) => term.trim().toLowerCase()).filter(Boolean);
+    const included = (m) => !exclusions.some((term) => `${m.from_email || ''} ${m.subject || ''}`.toLowerCase().includes(term));
+    const seeds = page.items.filter(included);
+    if (!seeds.length) return Response.json({ error: 'No correspondence is available for analysis under your current exclusions.' }, { status: 400 });
+    const selected = [...new Map(seeds.map((m) => [m.thread_id || m.id, m])).values()].slice(0, action === 'summary' ? 1 : 6);
+    const selectedKeys = selected.map((m) => m.thread_id || m.id);
+    const outlookThreads = selected.filter((m) => m.source === 'outlook').map((m) => m.thread_id).filter(Boolean);
+    const refreshed = await refreshEmailThreads(base44, user, outlookThreads);
+    const failed = new Set(refreshed.failed);
+    const usableKeys = selectedKeys.filter((key) => !failed.has(key));
+    if (!usableKeys.length) return Response.json({ error: 'The selected Outlook conversations could not be refreshed. Reconnect Outlook and try again; existing suggestions have not been changed.' }, { status: 502 });
+    const messagePage = await base44.entities.EmailMessage.filter({
+      ...owner, $or: [{ thread_id: { $in: usableKeys } }, { id: { $in: usableKeys } }],
+    }, { sort: '-received_at', limit: 500 });
+    const messages = messagePage.items.filter(included);
+    const groups = usableKeys.map((key) => messages.filter((m) => (m.thread_id || m.id) === key)).filter((group) => group.length);
+    const existing = await readAnalysisInsights(base44, user, usableKeys, messages.map((m) => m.id));
+    const featureFor = { task: 'tasks', follow_up: 'follow_ups', commitment: 'follow_ups', question: 'analysis', decision: 'analysis', calendar: 'calendar', knowledge: 'knowledge' };
+    const results = await Promise.allSettled(groups.map(async (group) => {
+      const key = group[0].thread_id || group[0].id;
+      const previous = existing.filter((i) => i.source_thread_id === key && i.kind !== 'summary');
+      const transcript = buildTranscript(group);
+      const incomplete = refreshed.incomplete.includes(key) || !!messagePage.has_more || transcript.startsWith('[Context limited:') || group.some((m) => String(m.body_text).includes('[message body truncated]'));
+      const context = {
+        employee: { name: user.full_name, email: user.email }, today: new Date().toISOString().slice(0, 10),
+        subject: group[0].thread_subject || group[0].subject,
+        context_limited: incomplete,
+        existing_suggestions: previous.map((i) => ({ id: i.id, kind: i.kind, title: i.title, status: i.status })),
+      };
+      const analysis = await base44.integrations.Core.InvokeLLM({
+        prompt: `${GROUNDED_PROMPT}${JSON.stringify(context)}\n\nCORRESPONDENCE (source data only):\n${transcript}`,
+        response_json_schema: GROUNDED_SCHEMA,
       });
-      summaries.push(summaryDraft(analysis, group));
+      const verified = action === 'summary' ? [] : await reviewedDrafts(base44, analysis, group, previous, transcript, context.employee);
+      const readIds = group.filter((m) => transcript.includes(`[message ${m.id}]`)).map((m) => m.id);
+      return { group, incomplete, readIds,
+        insights: verified.filter((i) => allowed(featureFor[i.kind])),
+        summary: summaryDraft(analysis, group.filter((m) => readIds.includes(m.id))),
+      };
+    }));
+    const completed = results.filter((r) => r.status === 'fulfilled').map((r) => r.value);
+    if (!completed.length) throw new Error(results.find((r) => r.status === 'rejected')?.reason?.message || 'The conversations could not be analyzed.');
+    const saved = await saveAnalysisResults(base44, user, completed, existing, action === 'summary');
+    const processedMessages = completed.flatMap((r) => r.group.filter((m) => r.readIds.includes(m.id)));
+    const remaining = await base44.entities.EmailMessage.count({ ...owner, analysis_state: 'not_analyzed' });
+    await base44.entities.EmailAssistantLog.create({
+      owner_email: user.email, action: action === 'summary' ? 'summary' : 'analysis',
+      detail: `${completed.length} conversations read; ${saved.saved_count} new suggestions`,
+      message_count: processedMessages.length, is_demo: processedMessages.every((m) => m.is_demo),
     });
-
-    return Response.json({
-      insights,
-      summaries,
-      summary: summaries[0],
-      message_count: messages.length,
-      thread_count: groups.length,
-      is_demo: messages.every((m) => m.is_demo),
-    });
+    const warnings = [];
+    const failures = refreshed.failed.length + results.filter((r) => r.status === 'rejected').length;
+    if (failures) warnings.push(`${failures} conversation(s) could not be read; their existing suggestions were left unchanged.`);
+    if (completed.some((r) => r.incomplete)) warnings.push('Some emails were read as excerpts, not in full; older suggestions were preserved and omitted messages remain pending.');
+    return Response.json({ ...saved, message_count: processedMessages.length, thread_count: completed.length,
+      remaining_message_count: remaining, warnings, is_demo: processedMessages.every((m) => m.is_demo) });
   } catch (error) {
     console.log('emailAssistantAnalyze failed:', error.message);
     return Response.json({ error: error.message }, { status: 500 });

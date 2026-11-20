@@ -20,7 +20,7 @@ function Stat({ label, value, icon: Icon }) {
 }
 
 export default function OverviewTab({
-  messages, insights, prefs, onAnalyze, analyzing, analysisError, onNavigate, onDraft, onSeed, seeding, onSynced,
+  messages, insights, prefs, pendingCount = 0, onAnalyze, analyzing, onNavigate, onDraft, onSeed, seeding, onSynced,
 }) {
   const [thread, setThread] = useState("recent");
 
@@ -33,7 +33,7 @@ export default function OverviewTab({
     return Array.from(map.values());
   }, [messages]);
 
-  const pending = insights.filter((i) => i.status === "suggested" && !isSnoozed(i));
+  const pending = insights.filter((i) => i.status === "suggested" && i.kind !== "summary" && !isSnoozed(i));
   const tasks = insights.filter((i) => i.kind === "task" && i.status === "approved");
   const followUps = insights.filter(
     (i) => ["follow_up", "commitment"].includes(i.kind) && ["approved", "suggested"].includes(i.status)
@@ -54,7 +54,7 @@ export default function OverviewTab({
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <Stat label="To review" value={pending.length} icon={Inbox} />
+        <Stat label="To review" value={pendingCount} icon={Inbox} />
         <Stat label="In your tasks" value={tasks.length} icon={ListChecks} />
         <Stat label="Follow-ups" value={followUps.length} icon={Clock} />
         <Stat label="Summaries" value={summaries.length} icon={FileText} />
@@ -88,7 +88,6 @@ export default function OverviewTab({
             <Sparkles className="w-4 h-4" /> {analyzing ? "Reading…" : "Analyze"}
           </Button>
         </div>
-        {analysisError && <p className="text-sm text-destructive">{analysisError}</p>}
         {messages.length === 0 && (
           <p className="text-xs text-muted-foreground">There is nothing to analyze yet.</p>
         )}

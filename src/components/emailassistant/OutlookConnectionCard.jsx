@@ -32,7 +32,7 @@ export default function OutlookConnectionCard({ onSynced, onSeed, seeding, messa
         setMode(data.mode);
         setMailbox(data.mailbox || "");
         setError("");
-        if (data.imported) onSynced?.();
+        if (data.imported || data.updated) onSynced?.();
       } else {
         setStatus("disconnected");
         setMode(null);

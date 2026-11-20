@@ -1,11 +1,21 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { formatDateTime } from "@/lib/emailAssistant";
+import { useQuery } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
 
 // Shows the original correspondence behind a suggestion, so the employee can
 // always check what was actually said.
 export default function SourceMessagesDialog({ insight, messages, open, onOpenChange }) {
   const ids = insight?.source_message_ids || [];
-  const rows = messages.filter((m) => ids.includes(m.id));
+  const { data: rows = [], isLoading, isFetching, error } = useQuery({
+    queryKey: ["emailSourceMessages", ids],
+    queryFn: async () => {
+      const page = await base44.entities.EmailMessage.filter({ id: { $in: ids } }, { sort: "received_at", limit: 500 });
+      return page.items;
+    },
+    enabled: open && ids.length > 0,
+    placeholderData: messages.filter((m) => ids.includes(m.id)),
+  });
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -13,7 +23,11 @@ export default function SourceMessagesDialog({ insight, messages, open, onOpenCh
         <DialogHeader>
           <DialogTitle className="text-base">Original correspondence</DialogTitle>
         </DialogHeader>
-        {rows.length === 0 ? (
+        {isLoading || (isFetching && rows.length === 0) ? (
+          <p className="text-sm text-muted-foreground">Loading the original emails…</p>
+        ) : error ? (
+          <p role="alert" className="text-sm text-destructive">The original emails could not be loaded. Please reopen this window to try again.</p>
+        ) : rows.length === 0 ? (
           <p className="text-sm text-muted-foreground">
             The original message is no longer available in the assistant. It may have been removed.
           </p>

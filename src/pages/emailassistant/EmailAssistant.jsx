@@ -1,9 +1,10 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Mail, ShieldCheck, AlertCircle, Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { base44 } from "@/api/base44Client";
 import useEmailAssistant from "@/lib/useEmailAssistant";
-import { featureOn, logAction, isSnoozed, allowedAutomation } from "@/lib/emailAssistant";
+import { featureOn, allowedAutomation } from "@/lib/emailAssistant";
+import useEmailAnalysis from "@/lib/useEmailAnalysis";
 import OverviewTab from "@/components/emailassistant/OverviewTab";
 import SuggestedActionsTab from "@/components/emailassistant/SuggestedActionsTab";
 import TasksFollowUpsTab from "@/components/emailassistant/TasksFollowUpsTab";
@@ -17,128 +18,16 @@ import AdminPolicyCard from "@/components/emailassistant/AdminPolicyCard";
 // The AI Email Assistant: a personal tool for each employee. Everything it
 // reads and suggests belongs to that person alone.
 export default function EmailAssistant() {
-  const { user, email, messages, insights, prefs, policy, savePrefs, seedSamples, clearSamples, refresh, isLoading } = useEmailAssistant();
+  const { user, email, messages, insights, pendingCount, prefs, policy, savePrefs, seedSamples, clearSamples, refresh, isLoading } = useEmailAssistant();
   const [tab, setTab] = useState("overview");
-  const [analyzing, setAnalyzing] = useState(false);
-  const [analysisError, setAnalysisError] = useState("");
+  const { analyzing, analysisError, analysisResult, runAnalysis, runSummary } = useEmailAnalysis({
+    user, refresh, onComplete: (nextTab) => nextTab && setTab(nextTab),
+  });
   const [draftOpen, setDraftOpen] = useState(false);
   const [autoState, setAutoState] = useState("");
   const autoRanRef = useRef(false);
 
-  const pendingCount = useMemo(
-    () => insights.filter((i) => i.status === "suggested" && !isSnoozed(i)).length,
-    [insights]
-  );
   const hasSamples = messages.some((m) => m.is_demo);
-
-  const runAnalysis = async (messageIds = []) => {
-    if (!user || analyzing) return;
-    setAnalyzing(true);
-    setAnalysisError("");
-    try {
-      const res = await base44.functions.invoke("emailAssistantAnalyze", {
-        action: "analyze",
-        message_ids: messageIds,
-      });
-      const data = res.data || {};
-      if (data.error) throw new Error(data.error);
-
-      const drafts = [
-        ...(data.insights || []),
-        ...(data.summaries || (data.summary ? [data.summary] : [])),
-      ].filter(Boolean);
-      const existing = new Map(insights.filter((i) => i.dedupe_key).map((i) => [i.dedupe_key, i]));
-      const creates = [];
-      const updates = [];
-
-      drafts.forEach((draft) => {
-        const hit = draft.dedupe_key ? existing.get(draft.dedupe_key) : null;
-        if (hit) {
-          // Same action seen again — refresh the summary, never duplicate the rest.
-          if (hit.kind === "summary" && draft.kind === "summary") {
-            updates.push({
-              id: hit.id,
-              title: draft.title,
-              detail: draft.detail,
-              source_message_ids: draft.source_message_ids,
-            });
-          }
-          return;
-        }
-        creates.push({
-          ...draft,
-          owner_email: email,
-          status: "suggested",
-          is_demo: !!data.is_demo,
-        });
-      });
-
-      if (creates.length) await base44.entities.EmailInsight.bulkCreate(creates);
-      if (updates.length) await base44.entities.EmailInsight.bulkUpdate(updates);
-
-      const analysedIds = messageIds.length ? messageIds : messages.map((m) => m.id);
-      if (analysedIds.length) {
-        await base44.entities.EmailMessage.bulkUpdate(
-          analysedIds.map((id) => ({
-            id,
-            analysis_state: "analyzed",
-            last_analyzed_at: new Date().toISOString(),
-          }))
-        );
-      }
-
-      await logAction(user, "analysis", `${creates.length} new suggestions from ${data.message_count || analysedIds.length} messages`, {
-        message_count: data.message_count || analysedIds.length,
-        is_demo: !!data.is_demo,
-      });
-
-      refresh();
-      if (creates.length) setTab("suggested");
-    } catch (e) {
-      setAnalysisError(e.message || "The analysis could not run just now. Please try again.");
-    } finally {
-      setAnalyzing(false);
-    }
-  };
-
-  const runSummary = async (messageIds = []) => {
-    if (!user || analyzing) return;
-    setAnalyzing(true);
-    setAnalysisError("");
-    try {
-      const res = await base44.functions.invoke("emailAssistantAnalyze", {
-        action: "analyze",
-        message_ids: messageIds,
-      });
-      const data = res.data || {};
-      if (data.error) throw new Error(data.error);
-      const draft = data.summary;
-      if (!draft) throw new Error("No summary came back for that conversation.");
-
-      const existing = insights.find((i) => i.dedupe_key === draft.dedupe_key);
-      if (existing) {
-        await base44.entities.EmailInsight.update(existing.id, {
-          title: draft.title,
-          detail: draft.detail,
-          source_message_ids: draft.source_message_ids,
-        });
-      } else {
-        await base44.entities.EmailInsight.create({
-          ...draft,
-          owner_email: email,
-          status: "suggested",
-          is_demo: !!data.is_demo,
-        });
-      }
-      await logAction(user, "summary", "Conversation summarized", { is_demo: !!data.is_demo });
-      refresh();
-      setTab("summaries");
-    } catch (e) {
-      setAnalysisError(e.message || "The summary could not be written just now.");
-    } finally {
-      setAnalyzing(false);
-    }
-  };
 
   const guard = (featureKey, content) => {
     if (featureOn(featureKey, prefs, policy)) return content;
@@ -165,23 +54,25 @@ export default function EmailAssistant() {
 
     const key = `ea_proactive_${email}`;
     if (sessionStorage.getItem(key)) return;
-    sessionStorage.setItem(key, "1");
     autoRanRef.current = true;
 
     (async () => {
       try {
         setAutoState("checking");
-        await base44.functions.invoke("emailAssistantSyncOutlook", {});
+        const sync = await base44.functions.invoke("emailAssistantSyncOutlook", {});
+        if (sync.data?.error) throw new Error(sync.data.error);
+        refresh();
         const page = await base44.entities.EmailMessage.filter(
           { owner_email: email, analysis_state: "not_analyzed" },
-          { limit: 25 }
+          { sort: "-received_at", limit: 100 }
         );
         const ids = (page.items || []).map((m) => m.id);
         if (!ids.length) return;
         setAutoState("analyzing");
-        await runAnalysis(ids);
+        const result = await runAnalysis(ids);
+        if (result) sessionStorage.setItem(key, "1");
       } catch {
-        // Proactive help is best-effort — a failure never interrupts the page.
+        // Leave the manual controls available; do not retry automatically in a loop.
       } finally {
         setAutoState("");
       }
@@ -244,6 +135,9 @@ export default function EmailAssistant() {
         </div>
       )}
 
+      {analysisError && <p role="alert" className="text-sm text-destructive">{analysisError}</p>}
+      {analysisResult && <p role="status" className="text-sm text-muted-foreground">{analysisResult}</p>}
+
       {hasSamples && (
         <div className="rounded-lg border border-warning/40 bg-warning/10 px-4 py-3 flex flex-wrap items-center justify-between gap-2">
           <p className="text-xs text-foreground">
@@ -280,7 +174,7 @@ export default function EmailAssistant() {
             prefs={prefs}
             onAnalyze={runAnalysis}
             analyzing={analyzing}
-            analysisError={analysisError}
+            pendingCount={pendingCount}
             onNavigate={setTab}
             onDraft={() => setDraftOpen(true)}
             onSeed={() => seedSamples.mutate()}

@@ -33,7 +33,13 @@ export default function useEmailAssistant() {
     enabled: !!email,
   });
 
-  const { data: prefsRecord } = useQuery({
+  const { data: pendingCount = 0 } = useQuery({
+    queryKey: ["emailInsightPendingCount", email],
+    queryFn: () => base44.entities.EmailInsight.count({ owner_email: email, status: "suggested", kind: { $ne: "summary" } }),
+    enabled: !!email,
+  });
+
+  const { data: prefsRecord, isLoading: loadingPrefs } = useQuery({
     queryKey: ["emailAssistantPrefs", email],
     queryFn: () =>
       base44.entities.EmailAssistantPreference
@@ -42,7 +48,7 @@ export default function useEmailAssistant() {
     enabled: !!email,
   });
 
-  const { data: policyRecord } = useQuery({
+  const { data: policyRecord, isLoading: loadingPolicy } = useQuery({
     queryKey: ["emailAssistantPolicy"],
     queryFn: () =>
       base44.entities.EmailAssistantPolicy.list({ limit: 1 }).then((page) => page.items?.[0] || null),
@@ -79,6 +85,7 @@ export default function useEmailAssistant() {
   const refresh = () => {
     queryClient.invalidateQueries({ queryKey: ["emailMessages", email] });
     queryClient.invalidateQueries({ queryKey: ["emailInsights", email] });
+    queryClient.invalidateQueries({ queryKey: ["emailInsightPendingCount", email] });
   };
 
   return {
@@ -86,12 +93,13 @@ export default function useEmailAssistant() {
     email,
     messages,
     insights,
+    pendingCount,
     prefs,
     policy,
     savePrefs,
     seedSamples,
     clearSamples,
     refresh,
-    isLoading: loadingUser || loadingMessages || loadingInsights,
+    isLoading: loadingUser || loadingMessages || loadingInsights || loadingPrefs || loadingPolicy,
   };
 }

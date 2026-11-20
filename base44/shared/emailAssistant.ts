@@ -20,29 +20,26 @@ export type EmailRow = {
 };
 
 // Keeps each message readable for the model without shipping the whole mailbox.
-export function buildTranscript(messages: EmailRow[], maxChars = 16000): string {
-  const parts = messages
-    .slice()
-    .sort((a, b) => String(a.received_at || '').localeCompare(String(b.received_at || '')))
-    .map((m) => {
-      const who = m.direction === 'outbound' ? 'FROM EMPLOYEE' : `FROM ${m.from_name || m.from_email || 'sender'}`;
-      const attachments = (m.attachments || [])
-        .map((a) => `- ${a.name || 'attachment'}${a.summary ? `: ${a.summary}` : ''}`)
-        .join('\n');
-      return [
-        `[message ${m.id}]`,
-        `Date: ${m.received_at || 'unknown'}`,
-        `Subject: ${m.subject || m.thread_subject || '(no subject)'}`,
-        `Direction: ${who}`,
-        m.recipients ? `To: ${m.recipients}` : '',
-        m.body_text ? `Body:\n${m.body_text}` : '(no body text available)',
-        attachments ? `Attachments:\n${attachments}` : '',
-      ]
-        .filter(Boolean)
-        .join('\n');
-    });
-  const text = parts.join('\n\n---\n\n');
-  return text.length > maxChars ? `${text.slice(0, maxChars)}\n\n[transcript truncated]` : text;
+export function buildTranscript(messages: EmailRow[], maxChars = 24000): string {
+  const sorted = messages.slice().sort((a, b) => String(b.received_at || '').localeCompare(String(a.received_at || '')));
+  const parts = [];
+  let budget = maxChars - 200;
+  let limited = false;
+  const allowance = Math.min(10000, Math.max(900, Math.floor(maxChars / Math.min(sorted.length || 1, 8)) - 500));
+  for (const m of sorted) {
+    const header = `[message ${m.id}]\nDate: ${m.received_at || 'unknown'}\nSubject: ${m.subject || m.thread_subject || '(no subject)'}\nFrom: ${m.direction === 'outbound' ? 'EMPLOYEE' : m.from_name || 'sender'} <${m.from_email || ''}>\nRecipients: ${m.recipients || 'unknown'}\n`;
+    // Tracking URLs and invisible preheaders must not crowd out the conversation.
+    const body = String(m.body_text || '').replace(/https?:\/\/[^\s<>]+/g, '[link]').replace(/[\u034f\u200b-\u200f\ufeff]/g, '').replace(/[ \t]+/g, ' ').trim();
+    const room = Math.min(allowance, budget - header.length - 160);
+    if (room < 200) { limited = true; break; }
+    const shortened = body.length > room;
+    const attachments = (m.attachments || []).map((a) => a.name || 'attachment').join(', ');
+    const part = `${header}Body:\n${body.slice(0, room)}${shortened ? '\n[body excerpt; later text omitted]' : ''}${attachments ? `\nAttachments named (contents not read): ${attachments.slice(0, 120)}` : ''}`;
+    parts.unshift(part);
+    budget -= part.length + 8;
+    limited ||= shortened;
+  }
+  return `${limited ? '[Context limited: newest messages prioritized; do not assume omitted replies or text.]\n\n' : ''}${parts.join('\n\n---\n\n')}`;
 }
 
 export const ANALYSIS_SCHEMA = {
