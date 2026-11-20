@@ -218,7 +218,6 @@ import CommunityLunch from '@/pages/food/CommunityLunch';
 import FoodBank from '@/pages/food/FoodBank';
 import FoodInternalPlacements from '@/pages/food/FoodInternalPlacements';
 import FoodSchedule from '@/pages/food/FoodSchedule';
-import FoodAbout from '@/pages/food/FoodAbout';
 import FoodSales from '@/pages/food/FoodSales';
 import CafeDigitalMenu from '@/pages/food/CafeDigitalMenu';
 import CafeMenuDisplay from '@/pages/cafe/CafeMenuDisplay';
@@ -690,7 +689,6 @@ const AuthenticatedApp = () => {
         {/* Food Services - standalone layout */}
         <Route element={<FoodLayout />}>
           <Route path="/food" element={<FoodDashboard />} />
-          <Route path="/food/about" element={<FoodAbout />} />
           <Route path="/food/menu" element={<FoodMenu />} />
           <Route path="/food/orders" element={<FoodOrders />} />
           <Route path="/food/inventory" element={<FoodInventory />} />
