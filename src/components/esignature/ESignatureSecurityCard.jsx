@@ -19,11 +19,15 @@ export default function ESignatureSecurityCard({ user, profile }) {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
+  // A profile can exist before any PIN/password was ever created (saving a
+  // signature creates one). Only ask for a current code when one really exists.
+  const hasAuth = !!profile?.auth_hash;
+
   const handleSave = async () => {
     setError('');
     setSaved(false);
 
-    if (profile) {
+    if (hasAuth) {
       const curHash = await computeAuthHash(profile.auth_salt, currentCode);
       if (curHash !== profile.auth_hash) {
         setError('Current PIN/password is incorrect');
@@ -74,10 +78,10 @@ export default function ESignatureSecurityCard({ user, profile }) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Lock className="w-4 h-4 text-primary" />
-          {profile ? 'Sign-in security' : 'Step 1 — Protect your e-signature'}
+          {hasAuth ? 'Sign-in security' : 'Step 1 — Protect your e-signature'}
         </CardTitle>
         <CardDescription>
-          {profile
+          {hasAuth
             ? 'Change the PIN or password required whenever you sign something with your e-signature.'
             : 'Choose a 4-digit PIN or a password. You will be asked for it every time you sign with your e-signature.'}
         </CardDescription>
@@ -110,7 +114,7 @@ export default function ESignatureSecurityCard({ user, profile }) {
         </div>
 
         <div className="space-y-3 max-w-sm">
-          {profile && (
+          {hasAuth && (
             <div className="space-y-1.5">
               <Label htmlFor="esign-current">Current {isPin ? 'PIN' : 'password'}</Label>
               <Input
@@ -156,7 +160,7 @@ export default function ESignatureSecurityCard({ user, profile }) {
         )}
 
         <Button onClick={handleSave} disabled={saving || !newCode || !confirmCode}>
-          {saving ? 'Saving…' : profile ? 'Update' : 'Save & continue'}
+          {saving ? 'Saving…' : hasAuth ? 'Update' : 'Save & continue'}
         </Button>
       </CardContent>
     </Card>

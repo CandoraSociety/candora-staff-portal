@@ -80,7 +80,7 @@ export default function ESignatureCaptureDialog({ open, onOpenChange, documentRe
           <div className="py-8 flex justify-center">
             <div className="w-6 h-6 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
           </div>
-        ) : !profile ? (
+        ) : !profile?.auth_hash ? (
           <div className="rounded-lg border border-warning/40 bg-warning/10 p-4 space-y-2">
             <p className="flex items-center gap-2 text-sm font-medium">
               <AlertTriangle className="w-4 h-4" /> You haven't set up your e-signature yet.

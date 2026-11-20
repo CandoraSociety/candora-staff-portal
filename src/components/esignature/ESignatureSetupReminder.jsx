@@ -16,7 +16,9 @@ export default function ESignatureSetupReminder() {
     enabled: !!user?.id,
   });
 
-  if (isLoading || profile) return null;
+  // Hide only once a PIN/password actually exists — a profile record alone
+  // (created by saving a signature) is not a completed setup.
+  if (isLoading || profile?.auth_hash) return null;
 
   return (
     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-warning/40 bg-warning/10">
