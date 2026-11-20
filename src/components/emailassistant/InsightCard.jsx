@@ -4,13 +4,14 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Check, Clock, Eye, Pencil, X, CheckCircle2, CalendarDays, ArrowRightLeft,
+  Check, Clock, Eye, Pencil, X, CheckCircle2, CalendarDays, ArrowRightLeft, StickyNote,
 } from "lucide-react";
 import { CERTAINTY_META, KIND_META, formatWhen, isOverdue } from "@/lib/emailAssistant";
 import {
   approveInsight, dismissInsight, markDone, snoozeInsight, saveInsightEdits, convertToTask,
 } from "@/lib/emailAssistantActions";
 import InsightEditDialog from "@/components/emailassistant/InsightEditDialog";
+import InsightNoteDialog from "@/components/emailassistant/InsightNoteDialog";
 import SourceMessagesDialog from "@/components/emailassistant/SourceMessagesDialog";
 
 // One AI finding, with everything the employee needs to accept, adjust or
@@ -22,6 +23,7 @@ export default function InsightCard({ insight, messages, user, prefs, onChanged 
   const [sourceOpen, setSourceOpen] = useState(false);
   const [snoozeOpen, setSnoozeOpen] = useState(false);
   const [snoozeDate, setSnoozeDate] = useState("");
+  const [noteOpen, setNoteOpen] = useState(false);
 
   const meta = KIND_META[insight.kind] || KIND_META.task;
   const certainty = CERTAINTY_META[insight.certainty] || CERTAINTY_META.unclear;
@@ -79,6 +81,12 @@ export default function InsightCard({ insight, messages, user, prefs, onChanged 
         {insight.detail && (
           <p className="text-sm text-muted-foreground mt-1 whitespace-pre-line leading-relaxed">{insight.detail}</p>
         )}
+        {insight.note && (
+          <div className="mt-2 rounded-lg border border-border bg-muted/60 px-3 py-2">
+            <p className="text-[10px] uppercase tracking-wide font-semibold text-muted-foreground">Your note</p>
+            <p className="text-sm text-foreground whitespace-pre-line leading-relaxed mt-0.5">{insight.note}</p>
+          </div>
+        )}
       </div>
 
       <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
@@ -99,9 +107,9 @@ export default function InsightCard({ insight, messages, user, prefs, onChanged 
             <ArrowRightLeft className="w-3.5 h-3.5" /> Make it a task
           </Button>
         )}
-        {insight.status === "approved" && insight.kind === "task" && (
+        {insight.kind === "task" && insight.status !== "done" && (
           <Button size="sm" variant="outline" disabled={busy} onClick={() => run(() => markDone(insight, user))}>
-            <CheckCircle2 className="w-3.5 h-3.5" /> Mark done
+            <CheckCircle2 className="w-3.5 h-3.5" /> Done
           </Button>
         )}
         {["follow_up", "commitment", "question"].includes(insight.kind) && insight.status !== "done" && (
@@ -111,6 +119,9 @@ export default function InsightCard({ insight, messages, user, prefs, onChanged 
         )}
         <Button size="sm" variant="ghost" disabled={busy} onClick={() => setEditOpen(true)}>
           <Pencil className="w-3.5 h-3.5" /> Edit
+        </Button>
+        <Button size="sm" variant="ghost" disabled={busy} onClick={() => setNoteOpen(true)}>
+          <StickyNote className="w-3.5 h-3.5" /> {insight.note ? "Edit note" : "Note"}
         </Button>
         <Button size="sm" variant="ghost" disabled={busy} onClick={openSnooze}>
           <Clock className="w-3.5 h-3.5" /> Snooze
@@ -133,6 +144,12 @@ export default function InsightCard({ insight, messages, user, prefs, onChanged 
           await run(() => saveInsightEdits(insight, patch));
           setEditOpen(false);
         }}
+      />
+      <InsightNoteDialog
+        insight={insight}
+        open={noteOpen}
+        onOpenChange={setNoteOpen}
+        onSave={(note) => run(() => saveInsightEdits(insight, { note }))}
       />
       <SourceMessagesDialog insight={insight} messages={messages} open={sourceOpen} onOpenChange={setSourceOpen} />
 

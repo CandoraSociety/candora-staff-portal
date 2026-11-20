@@ -39,6 +39,10 @@
       "type": "string",
       "description": "Supporting detail \u2014 what the AI read, what it suggests, and any summary text"
     },
+    "note": {
+      "type": "string",
+      "description": "The employee's own note about this suggestion \u2014 what they decided, who they spoke to, anything they want kept with it"
+    },
     "certainty": {
       "type": "string",
       "enum": [
