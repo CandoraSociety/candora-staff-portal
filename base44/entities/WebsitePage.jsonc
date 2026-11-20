@@ -1,7 +1,7 @@
 {
   "name": "WebsitePage",
   "type": "object",
-  "description": "One selection in the website's top menu \u2014 the choices across the top of the home page (Home, About us, Programs, Events, Contact, Get involved) which are also the tabs in Page Content. The separate website app builds its navigation from these records in order, so adding, renaming, reordering or removing one changes the menu itself. Removing a selection archives it instead of deleting it, so it can be put back.",
+  "description": "One selection in the website's top menu \u2014 the choices across the top of the home page (Home, About us, Programs, Contact, Get involved, Sponsor Us) which are also the tabs in Page Content. A selection can also sit inside a dropdown under another one, for example Family & Community under Programs. The separate website app builds its navigation from these records in order, so adding, renaming, reordering, removing or nesting one changes the menu itself. Removing a selection archives it instead of deleting it, so it can be put back.",
   "properties": {
     "label": {
       "type": "string",
@@ -15,10 +15,14 @@
       "type": "string",
       "description": "Web address of the page on the public site, e.g. /about. The home page uses /"
     },
+    "parent_page_key": {
+      "type": "string",
+      "description": "Set when this selection sits inside a dropdown under another menu item \u2014 the page_key of the item it opens from, e.g. programs. Leave blank for a selection that sits directly across the top menu. Only one level of dropdown is supported."
+    },
     "display_order": {
       "type": "number",
       "default": 0,
-      "description": "Position across the top menu, lowest first"
+      "description": "Position across the top menu, lowest first. A selection inside a dropdown uses it for its position within that dropdown."
     },
     "is_home": {
       "type": "boolean",

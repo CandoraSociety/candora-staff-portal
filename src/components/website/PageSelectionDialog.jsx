@@ -5,21 +5,32 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { pageKeyFromLabel } from "@/lib/websitePages";
 
-const EMPTY = { label: "", path: "", display_order: 0, is_visible: true };
+const EMPTY = { label: "", path: "", display_order: 0, is_visible: true, parent_page_key: "" };
 
 // Add a selection to the top menu, or rename one and change where it points.
-export default function PageSelectionDialog({ open, onOpenChange, page, nextOrder, onSave }) {
+// A selection can also be placed inside a dropdown under another one.
+export default function PageSelectionDialog({ open, onOpenChange, page, pages = [], onSave }) {
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
+  // Only a selection that sits across the top menu can hold a dropdown, so the
+  // choices never create a second level.
+  const parentOptions = pages.filter(
+    (entry) => !entry.is_home && entry.id !== page?.id && !entry.parent_page_key
+  );
+  const childrenCount = page
+    ? pages.filter((entry) => entry.parent_page_key === page.page_key).length
+    : 0;
+
   useEffect(() => {
     if (!open) return;
     setError("");
-    setForm(page ? { ...EMPTY, ...page } : { ...EMPTY, display_order: nextOrder });
-  }, [open, page?.id, nextOrder]);
+    setForm(page ? { ...EMPTY, ...page, parent_page_key: page.parent_page_key || "" } : { ...EMPTY });
+  }, [open, page?.id]);
 
   const set = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
 
@@ -41,6 +52,7 @@ export default function PageSelectionDialog({ open, onOpenChange, page, nextOrde
         ...form,
         label,
         page_key: key,
+        parent_page_key: form.parent_page_key || "",
         path: (form.path || "").trim() || (key === "home" ? "/" : `/${key.replace(/_/g, "-")}`),
         display_order: Number(form.display_order) || 0,
         is_home: page ? !!page.is_home : false,
@@ -61,7 +73,8 @@ export default function PageSelectionDialog({ open, onOpenChange, page, nextOrde
             {page ? "Edit page selection" : "Add a page selection"}
           </DialogTitle>
           <DialogDescription>
-            It appears across the top of the website, in this position, and gets its own tab in Page Content.
+            It appears across the top of the website, or inside a dropdown, and gets its own tab in Page
+            Content.
           </DialogDescription>
         </DialogHeader>
 
@@ -80,6 +93,32 @@ export default function PageSelectionDialog({ open, onOpenChange, page, nextOrde
               onChange={(e) => set("label", e.target.value)}
               placeholder="e.g. Winter Festival"
             />
+          </div>
+
+          <div className="space-y-1.5">
+            <Label>Where it sits</Label>
+            <Select
+              value={form.parent_page_key || "top"}
+              onValueChange={(value) => set("parent_page_key", value === "top" ? "" : value)}
+              disabled={childrenCount > 0}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="top">Across the top menu</SelectItem>
+                {parentOptions.map((entry) => (
+                  <SelectItem key={entry.id} value={entry.page_key}>
+                    In a dropdown under {entry.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              {childrenCount > 0
+                ? `This selection holds a dropdown of its own (${childrenCount}), so it stays across the top menu.`
+                : "Choose an item to make this a choice inside its dropdown."}
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

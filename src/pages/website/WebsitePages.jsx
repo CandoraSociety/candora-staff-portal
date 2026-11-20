@@ -165,20 +165,19 @@ export default function WebsitePages() {
     toast({ title: "Selection deleted permanently" });
   };
 
-  // Sets the menu order by hand: the list is renumbered after each move, with
-  // the home page always leading.
+  // Sets the menu order by hand: a selection only moves among the items beside
+  // it, so one inside a dropdown stays inside that dropdown.
   const moveSelection = async (item, direction) => {
-    const index = menuPages.findIndex((entry) => entry.id === item.id);
+    const siblings = menuPages.filter(
+      (entry) => (entry.parent_page_key || "") === (item.parent_page_key || "")
+    );
+    const index = siblings.findIndex((entry) => entry.id === item.id);
     if (index < 0) return;
-    const reordered = [...menuPages];
+    const reordered = [...siblings];
     const [moved] = reordered.splice(index, 1);
     reordered.splice(index + direction, 0, moved);
-    const ordered = [
-      ...reordered.filter((entry) => entry.is_home),
-      ...reordered.filter((entry) => !entry.is_home),
-    ];
     await base44.entities.WebsitePage.bulkUpdate(
-      ordered.map((entry, position) => ({ id: entry.id, display_order: position }))
+      reordered.map((entry, position) => ({ id: entry.id, display_order: position }))
     );
     refreshPages();
   };
@@ -337,7 +336,7 @@ export default function WebsitePages() {
         open={selectionDialogOpen}
         onOpenChange={setSelectionDialogOpen}
         page={editingSelection}
-        nextOrder={menuPages.length}
+        pages={menuPages}
         onSave={saveSelection}
       />
 

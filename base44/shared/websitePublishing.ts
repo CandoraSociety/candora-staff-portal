@@ -109,6 +109,8 @@ export function publicPage(page) {
     path: page.path || (page.page_key === 'home' ? '/' : `/${String(page.page_key || '').replace(/_/g, '-')}`),
     order: Number(page.display_order) || 0,
     is_home: !!page.is_home,
+    // Set when this selection sits inside a dropdown under another one.
+    parent: page.parent_page_key || '',
   };
 }
 

@@ -22,13 +22,44 @@ export function pageKeyFromLabel(label) {
     .slice(0, 40);
 }
 
-// Menu order: the home page leads, then position, then label.
+// Menu order: the home page leads, then position, then label. A selection that
+// sits in a dropdown is placed directly after the item it opens from.
 export function sortPages(pages) {
-  return [...pages].sort((a, b) => {
-    if (!!a.is_home !== !!b.is_home) return a.is_home ? -1 : 1;
-    const order = (Number(a.display_order) || 0) - (Number(b.display_order) || 0);
-    return order || String(a.label || "").localeCompare(String(b.label || ""));
+  const list = [...(pages || [])];
+  const keys = new Set(list.map((page) => page.page_key));
+  const childrenByParent = new Map();
+  const topLevel = [];
+
+  list.forEach((page) => {
+    const parent = page.parent_page_key;
+    if (parent && parent !== page.page_key && keys.has(parent)) {
+      if (!childrenByParent.has(parent)) childrenByParent.set(parent, []);
+      childrenByParent.get(parent).push(page);
+    } else {
+      topLevel.push(page);
+    }
   });
+
+  const byPosition = (a, b) =>
+    (Number(a.display_order) || 0) - (Number(b.display_order) || 0) ||
+    String(a.label || "").localeCompare(String(b.label || ""));
+
+  topLevel.sort((a, b) => {
+    if (!!a.is_home !== !!b.is_home) return a.is_home ? -1 : 1;
+    return byPosition(a, b);
+  });
+
+  const ordered = [];
+  topLevel.forEach((page) => {
+    ordered.push(page);
+    ordered.push(...(childrenByParent.get(page.page_key) || []).sort(byPosition));
+  });
+  return ordered;
+}
+
+// The selections that sit inside the dropdown under one menu item.
+export function dropdownPages(pages, parentKey) {
+  return sortPages(pages).filter((page) => page.parent_page_key === parentKey);
 }
 
 // The selections shown in the menu and as tabs: never an archived one.
