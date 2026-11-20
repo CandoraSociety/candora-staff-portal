@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Plus, Loader2, Pencil, Trash2, Eye, EyeOff, FileText } from "lucide-react";
+import { Plus, Loader2, Pencil, Archive, Eye, EyeOff, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import SectionEditorDialog from "@/components/website/SectionEditorDialog";
+import ArchivedHeadersCard from "@/components/website/ArchivedHeadersCard";
 import { WEBSITE_PAGES, formatWebsiteDate, isScheduledLater } from "@/lib/websiteManager";
 
 export default function WebsitePages() {
@@ -25,7 +26,12 @@ export default function WebsitePages() {
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["website-sections"] });
 
   const pageSections = useMemo(
-    () => sections.filter((section) => section.page === page),
+    () => sections.filter((section) => section.page === page && !section.is_archived),
+    [sections, page]
+  );
+
+  const archivedSections = useMemo(
+    () => sections.filter((section) => section.page === page && section.is_archived),
     [sections, page]
   );
 
@@ -53,11 +59,24 @@ export default function WebsitePages() {
     refresh();
   };
 
-  const remove = async (section) => {
-    if (!window.confirm(`Delete the “${section.heading}” block?`)) return;
+  // Removing a header only archives it — it waits in Archived headers and can
+  // be put back on the page at any time.
+  const archive = async (section) => {
+    await base44.entities.WebsiteSection.update(section.id, { is_archived: true });
+    refresh();
+    toast({ title: "Header archived", description: "Find it in Archived headers to put it back." });
+  };
+
+  const restore = async (section) => {
+    await base44.entities.WebsiteSection.update(section.id, { is_archived: false });
+    refresh();
+    toast({ title: "Header put back on the page" });
+  };
+
+  const deletePermanently = async (section) => {
     await base44.entities.WebsiteSection.delete(section.id);
     refresh();
-    toast({ title: "Content block deleted" });
+    toast({ title: "Header deleted permanently" });
   };
 
   return (
@@ -68,6 +87,7 @@ export default function WebsitePages() {
           <h1 className="font-display text-3xl font-bold text-foreground mt-1">Page Content</h1>
           <p className="text-sm text-muted-foreground mt-2 max-w-2xl">
             Edit the copy inside the website's existing blocks. Layout, styling and page structure stay with the site.
+            Removing a header moves it to the archive, where it can be put back.
           </p>
         </div>
         <Button onClick={openNew} className="self-start sm:self-auto">
@@ -150,10 +170,11 @@ export default function WebsitePages() {
                   <Button
                     size="sm"
                     variant="ghost"
-                    className="text-muted-foreground hover:text-destructive"
-                    onClick={() => remove(section)}
+                    className="text-muted-foreground hover:text-foreground"
+                    onClick={() => archive(section)}
+                    title="Move this header to the archive"
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
+                    <Archive className="w-3.5 h-3.5" /> Remove
                   </Button>
                 </div>
               </div>
@@ -161,6 +182,12 @@ export default function WebsitePages() {
           ))}
         </div>
       )}
+
+      <ArchivedHeadersCard
+        sections={archivedSections}
+        onRestore={restore}
+        onDelete={deletePermanently}
+      />
 
       <SectionEditorDialog
         open={dialogOpen}

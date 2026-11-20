@@ -42,8 +42,10 @@ export default async function (req) {
     // Anything with a scheduled time still in the future is held back, so a
     // change goes live on the website by itself at the moment chosen.
     const now = Date.now();
+    // Archived blocks were removed from their page in Page Content, so they
+    // never reach the website until someone re-adds them.
     const sections = (sectionPage.items || []).filter(
-      (s) => s.is_visible !== false && !scheduledForLater(s, now)
+      (s) => s.is_visible !== false && !s.is_archived && !scheduledForLater(s, now)
     );
     const news = (newsPage.items || []).filter((p) => p.advertise !== false && !scheduledForLater(p, now));
     const publications = (publicationPage.items || []).filter((p) => !scheduledForLater(p, now));

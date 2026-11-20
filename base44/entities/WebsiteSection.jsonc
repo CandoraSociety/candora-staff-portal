@@ -1,7 +1,7 @@
 {
   "name": "WebsiteSection",
   "type": "object",
-  "description": "One bounded block of copy on a page of the public website \u2014 a heading, paragraph, optional image and button. Staff edit the text inside these blocks; the website decides how each block is laid out, so pages stay within the site's design.",
+  "description": "One bounded block of copy on a page of the public website \u2014 a heading, paragraph, optional image and button. Staff edit the text inside these blocks; the website decides how each block is laid out, so pages stay within the site's design. Removing a block archives it instead of deleting it, so it can be put back.",
   "properties": {
     "page": {
       "type": "string",
@@ -56,6 +56,11 @@
       "type": "boolean",
       "default": true,
       "description": "Turn off to keep the block out of the public site without deleting it"
+    },
+    "is_archived": {
+      "type": "boolean",
+      "default": false,
+      "description": "True when the block was removed from its page. An archived block never reaches the public website; it waits in Archived headers in Page Content until it is re-added or deleted permanently."
     },
     "publish_at": {
       "type": "string",
