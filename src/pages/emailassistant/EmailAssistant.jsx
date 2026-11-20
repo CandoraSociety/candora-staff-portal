@@ -1,9 +1,9 @@
-import { useMemo, useState } from "react";
-import { Mail, ShieldCheck, AlertCircle } from "lucide-react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { Mail, ShieldCheck, AlertCircle, Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { base44 } from "@/api/base44Client";
 import useEmailAssistant from "@/lib/useEmailAssistant";
-import { featureOn, logAction, isSnoozed } from "@/lib/emailAssistant";
+import { featureOn, logAction, isSnoozed, allowedAutomation } from "@/lib/emailAssistant";
 import OverviewTab from "@/components/emailassistant/OverviewTab";
 import SuggestedActionsTab from "@/components/emailassistant/SuggestedActionsTab";
 import TasksFollowUpsTab from "@/components/emailassistant/TasksFollowUpsTab";
@@ -22,6 +22,8 @@ export default function EmailAssistant() {
   const [analyzing, setAnalyzing] = useState(false);
   const [analysisError, setAnalysisError] = useState("");
   const [draftOpen, setDraftOpen] = useState(false);
+  const [autoState, setAutoState] = useState("");
+  const autoRanRef = useRef(false);
 
   const pendingCount = useMemo(
     () => insights.filter((i) => i.status === "suggested" && !isSnoozed(i)).length,
@@ -148,6 +150,41 @@ export default function EmailAssistant() {
     );
   };
 
+  // Proactive assistance actually does the work: on opening the assistant it
+  // checks the mailbox for new mail and has suggestions ready before the
+  // employee asks. Once per browser session, and only when there is new mail.
+  useEffect(() => {
+    if (isLoading || autoRanRef.current) return;
+    if (!user || !email) return;
+    if ((prefs?.automation_level || "manual") !== "proactive") return;
+    if (allowedAutomation(policy) !== "proactive") return;
+    if (!featureOn("analysis", prefs, policy)) return;
+
+    const key = `ea_proactive_${email}`;
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, "1");
+    autoRanRef.current = true;
+
+    (async () => {
+      try {
+        setAutoState("checking");
+        await base44.functions.invoke("emailAssistantSyncOutlook", {});
+        const page = await base44.entities.EmailMessage.filter(
+          { owner_email: email, analysis_state: "not_analyzed" },
+          { limit: 25 }
+        );
+        const ids = (page.items || []).map((m) => m.id);
+        if (!ids.length) return;
+        setAutoState("analyzing");
+        await runAnalysis(ids);
+      } catch {
+        // Proactive help is best-effort — a failure never interrupts the page.
+      } finally {
+        setAutoState("");
+      }
+    })();
+  }, [isLoading, user, email, prefs, policy]);
+
   if (isLoading) {
     return (
       <div className="p-6 lg:p-10">
@@ -194,6 +231,15 @@ export default function EmailAssistant() {
           <ShieldCheck className="w-3.5 h-3.5 text-success" /> Only you can see this
         </p>
       </header>
+
+      {autoState && (
+        <div className="rounded-lg border border-border bg-muted/50 px-4 py-2.5 inline-flex items-center gap-2 text-xs text-muted-foreground">
+          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          {autoState === "analyzing"
+            ? "Reading your new mail and preparing suggestions…"
+            : "Checking your mailbox for new mail…"}
+        </div>
+      )}
 
       {hasSamples && (
         <div className="rounded-lg border border-warning/40 bg-warning/10 px-4 py-3 flex flex-wrap items-center justify-between gap-2">

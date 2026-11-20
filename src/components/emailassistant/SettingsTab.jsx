@@ -69,7 +69,7 @@ export default function SettingsTab({ user, prefs, policy, savePrefs, messageCou
             <span>
               <span className="block text-sm font-medium text-foreground">Manual assistance</span>
               <span className="block text-xs text-muted-foreground">
-                The assistant only reads a conversation when you ask it to.
+                The assistant only reads your mail when you ask it to, and never in the background.
               </span>
             </span>
           </label>
@@ -85,7 +85,8 @@ export default function SettingsTab({ user, prefs, policy, savePrefs, messageCou
             <span>
               <span className="block text-sm font-medium text-foreground">Proactive assistance</span>
               <span className="block text-xs text-muted-foreground">
-                Suggestions are prepared for you as correspondence arrives, for your review.
+                Each time you open the assistant it checks your mailbox for new mail, reads it, and has
+                suggestions waiting before you ask. You still approve anything that leaves the assistant.
                 {!policyAllowsProactive && " Not permitted by your organization's policy."}
               </span>
             </span>
