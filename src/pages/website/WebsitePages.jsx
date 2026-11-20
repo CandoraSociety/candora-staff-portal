@@ -6,12 +6,19 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import SectionEditorDialog from "@/components/website/SectionEditorDialog";
 import ArchivedHeadersCard from "@/components/website/ArchivedHeadersCard";
-import { WEBSITE_PAGES, formatWebsiteDate, isScheduledLater } from "@/lib/websiteManager";
+import PageSelectionsCard from "@/components/website/PageSelectionsCard";
+import PageSelectionDialog from "@/components/website/PageSelectionDialog";
+import PageDeleteDialog from "@/components/website/PageDeleteDialog";
+import { activePages, archivedPages } from "@/lib/websitePages";
+import { formatWebsiteDate, isScheduledLater } from "@/lib/websiteManager";
 
 export default function WebsitePages() {
   const [page, setPage] = useState("home");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [selectionDialogOpen, setSelectionDialogOpen] = useState(false);
+  const [editingSelection, setEditingSelection] = useState(null);
+  const [selectionToDelete, setSelectionToDelete] = useState(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -25,14 +32,32 @@ export default function WebsitePages() {
 
   const refresh = () => queryClient.invalidateQueries({ queryKey: ["website-sections"] });
 
+  // The selections across the top of the website — the same set that fills the
+  // tabs on this screen.
+  const { data: pages = [] } = useQuery({
+    queryKey: ["website-pages"],
+    queryFn: () =>
+      base44.entities.WebsitePage.list({ sort: "display_order", limit: 100 }).then((res) => res.items || []),
+  });
+
+  const refreshPages = () => queryClient.invalidateQueries({ queryKey: ["website-pages"] });
+
+  const menuPages = useMemo(() => activePages(pages), [pages]);
+  const archivedSelections = useMemo(() => archivedPages(pages), [pages]);
+
+  // Falls back to the first selection when the chosen page was archived.
+  const currentPage = menuPages.some((item) => item.page_key === page)
+    ? page
+    : menuPages[0]?.page_key || "home";
+
   const pageSections = useMemo(
-    () => sections.filter((section) => section.page === page && !section.is_archived),
-    [sections, page]
+    () => sections.filter((section) => section.page === currentPage && !section.is_archived),
+    [sections, currentPage]
   );
 
   const archivedSections = useMemo(
-    () => sections.filter((section) => section.page === page && section.is_archived),
-    [sections, page]
+    () => sections.filter((section) => section.page === currentPage && section.is_archived),
+    [sections, currentPage]
   );
 
   const openNew = () => {
@@ -79,6 +104,62 @@ export default function WebsitePages() {
     toast({ title: "Header deleted permanently" });
   };
 
+  const openAddSelection = () => {
+    setEditingSelection(null);
+    setSelectionDialogOpen(true);
+  };
+
+  const openEditSelection = (item) => {
+    setEditingSelection(item);
+    setSelectionDialogOpen(true);
+  };
+
+  const saveSelection = async (payload) => {
+    if (editingSelection) {
+      await base44.entities.WebsitePage.update(editingSelection.id, payload);
+    } else {
+      await base44.entities.WebsitePage.create(payload);
+    }
+    refreshPages();
+    toast({ title: editingSelection ? "Selection updated" : "Selection added to the menu" });
+  };
+
+  const archiveSelection = async (item) => {
+    await base44.entities.WebsitePage.update(item.id, { is_archived: true });
+    refreshPages();
+    toast({ title: "Selection archived", description: "Find it under Archived selections to put it back." });
+  };
+
+  const restoreSelection = async (item) => {
+    await base44.entities.WebsitePage.update(item.id, { is_archived: false });
+    refreshPages();
+    toast({ title: "Selection put back in the menu" });
+  };
+
+  const deleteSelectionPermanently = async (item) => {
+    await base44.entities.WebsitePage.delete(item.id);
+    refreshPages();
+    toast({ title: "Selection deleted permanently" });
+  };
+
+  // Sets the menu order by hand: the list is renumbered after each move, with
+  // the home page always leading.
+  const moveSelection = async (item, direction) => {
+    const index = menuPages.findIndex((entry) => entry.id === item.id);
+    if (index < 0) return;
+    const reordered = [...menuPages];
+    const [moved] = reordered.splice(index, 1);
+    reordered.splice(index + direction, 0, moved);
+    const ordered = [
+      ...reordered.filter((entry) => entry.is_home),
+      ...reordered.filter((entry) => !entry.is_home),
+    ];
+    await base44.entities.WebsitePage.bulkUpdate(
+      ordered.map((entry, position) => ({ id: entry.id, display_order: position }))
+    );
+    refreshPages();
+  };
+
   return (
     <div className="p-6 lg:p-10 max-w-5xl mx-auto space-y-6">
       <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
@@ -96,12 +177,12 @@ export default function WebsitePages() {
       </header>
 
       <div className="flex flex-wrap gap-1 p-1 rounded-lg bg-muted/60 w-fit">
-        {WEBSITE_PAGES.map((item) => (
+        {menuPages.map((item) => (
           <button
-            key={item.value}
-            onClick={() => setPage(item.value)}
+            key={item.id}
+            onClick={() => setPage(item.page_key)}
             className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-              page === item.value
+              currentPage === item.page_key
                 ? "bg-card text-foreground shadow-sm"
                 : "text-muted-foreground hover:text-foreground"
             }`}
@@ -183,6 +264,17 @@ export default function WebsitePages() {
         </div>
       )}
 
+      <PageSelectionsCard
+        pages={menuPages}
+        archived={archivedSelections}
+        onAdd={openAddSelection}
+        onEdit={openEditSelection}
+        onArchive={archiveSelection}
+        onMove={moveSelection}
+        onRestore={restoreSelection}
+        onDelete={setSelectionToDelete}
+      />
+
       <ArchivedHeadersCard
         sections={archivedSections}
         onRestore={restore}
@@ -193,7 +285,23 @@ export default function WebsitePages() {
         open={dialogOpen}
         onOpenChange={setDialogOpen}
         section={editing}
+        pages={menuPages}
+        defaultPage={currentPage}
         onSave={saveSection}
+      />
+
+      <PageSelectionDialog
+        open={selectionDialogOpen}
+        onOpenChange={setSelectionDialogOpen}
+        page={editingSelection}
+        nextOrder={menuPages.length}
+        onSave={saveSelection}
+      />
+
+      <PageDeleteDialog
+        target={selectionToDelete}
+        onClose={() => setSelectionToDelete(null)}
+        onConfirm={deleteSelectionPermanently}
       />
     </div>
   );

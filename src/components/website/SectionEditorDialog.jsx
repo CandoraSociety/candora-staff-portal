@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { WEBSITE_PAGES } from "@/lib/websiteManager";
 import WebsiteImageField from "@/components/website/WebsiteImageField";
 import { toDateTimeLocal } from "@/lib/websiteManager";
 
@@ -24,7 +23,7 @@ const EMPTY = {
   publish_at: "",
 };
 
-export default function SectionEditorDialog({ open, onOpenChange, section, onSave }) {
+export default function SectionEditorDialog({ open, onOpenChange, section, pages = [], defaultPage, onSave }) {
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -32,7 +31,11 @@ export default function SectionEditorDialog({ open, onOpenChange, section, onSav
   useEffect(() => {
     if (!open) return;
     setError("");
-    setForm(section ? { ...EMPTY, ...section, publish_at: toDateTimeLocal(section.publish_at) } : EMPTY);
+    setForm(
+      section
+        ? { ...EMPTY, ...section, publish_at: toDateTimeLocal(section.publish_at) }
+        : { ...EMPTY, page: defaultPage || pages[0]?.page_key || "home" }
+    );
   }, [open, section?.id]);
 
   const set = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));
@@ -84,8 +87,8 @@ export default function SectionEditorDialog({ open, onOpenChange, section, onSav
               <Select value={form.page} onValueChange={(v) => set("page", v)}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {WEBSITE_PAGES.map((page) => (
-                    <SelectItem key={page.value} value={page.value}>{page.label}</SelectItem>
+                  {pages.map((page) => (
+                    <SelectItem key={page.page_key} value={page.page_key}>{page.label}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>

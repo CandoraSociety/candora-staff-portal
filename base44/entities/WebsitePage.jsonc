@@ -1,0 +1,92 @@
+{
+  "name": "WebsitePage",
+  "type": "object",
+  "description": "One selection in the website's top menu \u2014 the choices across the top of the home page (Home, About us, Programs, Events, Contact, Get involved) which are also the tabs in Page Content. The separate website app builds its navigation from these records in order, so adding, renaming, reordering or removing one changes the menu itself. Removing a selection archives it instead of deleting it, so it can be put back.",
+  "properties": {
+    "label": {
+      "type": "string",
+      "description": "Wording shown in the top menu and on the tab in Page Content, e.g. About us"
+    },
+    "page_key": {
+      "type": "string",
+      "description": "Stable key for this page, e.g. home or about. Content blocks are attached to it, so it is set once and never changes when the label is edited."
+    },
+    "path": {
+      "type": "string",
+      "description": "Web address of the page on the public site, e.g. /about. The home page uses /"
+    },
+    "display_order": {
+      "type": "number",
+      "default": 0,
+      "description": "Position across the top menu, lowest first"
+    },
+    "is_home": {
+      "type": "boolean",
+      "default": false,
+      "description": "Marks the home page selection. It always leads the menu and cannot be removed."
+    },
+    "is_visible": {
+      "type": "boolean",
+      "default": true,
+      "description": "Turn off to keep the page and its content but take it out of the top menu"
+    },
+    "is_archived": {
+      "type": "boolean",
+      "default": false,
+      "description": "True when the selection was removed from the menu. An archived selection is not sent to the public website; it waits in the archive until it is put back or deleted permanently with the delete code."
+    }
+  },
+  "required": [
+    "label",
+    "page_key"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

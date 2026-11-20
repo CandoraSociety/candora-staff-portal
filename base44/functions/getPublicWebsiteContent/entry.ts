@@ -2,6 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import {
   publicPublication,
   publicNewsPost,
+  publicPage,
   publicSection,
   publicSite,
   scheduledForLater,
@@ -13,9 +14,10 @@ export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
 
-    const [settingsPage, sectionPage, newsPage, publicationPage, orgPage] = await Promise.all([
+    const [settingsPage, sectionPage, pagePage, newsPage, publicationPage, orgPage] = await Promise.all([
       base44.asServiceRole.entities.WebsiteSettings.list({ limit: 1 }),
       base44.asServiceRole.entities.WebsiteSection.list({ sort: 'display_order', limit: 300 }),
+      base44.asServiceRole.entities.WebsitePage.list({ sort: 'display_order', limit: 100 }),
       base44.asServiceRole.entities.WebsiteNewsPost.filter(
         { status: 'published' },
         { sort: '-publish_date', limit: 50 }
@@ -51,9 +53,13 @@ export default async function (req) {
     const publications = (publicationPage.items || []).filter((p) => !scheduledForLater(p, now));
 
     const events = publications.map(publicPublication);
+    // The top menu, in the order set in Page Content. An archived selection is
+    // left out, so removing one takes it off the website's menu.
+    const pages = (pagePage.items || []).filter((p) => p.is_visible !== false && !p.is_archived);
 
     return Response.json({
       site: publicSite(settings, fallbackLogo),
+      pages: pages.map(publicPage),
       sections: sections.map(publicSection),
       news: news.map(publicNewsPost),
       events,
@@ -61,6 +67,7 @@ export default async function (req) {
         events: events.length,
         news: news.length,
         sections: sections.length,
+        pages: pages.length,
       },
       generated_at: new Date().toISOString(),
     });

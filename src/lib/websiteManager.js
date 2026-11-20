@@ -13,15 +13,6 @@ export function hasWebsiteAccess(email, role) {
   return WEBSITE_MANAGER_EMAILS.includes(email.toLowerCase());
 }
 
-export const WEBSITE_PAGES = [
-  { value: 'home', label: 'Home' },
-  { value: 'about', label: 'About us' },
-  { value: 'programs', label: 'Programs' },
-  { value: 'events', label: 'Events' },
-  { value: 'contact', label: 'Contact' },
-  { value: 'get_involved', label: 'Get involved' },
-];
-
 // Turns a stored date into the value a datetime-local field expects.
 export function toDateTimeLocal(value) {
   if (!value) return '';

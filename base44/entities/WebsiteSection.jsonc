@@ -5,23 +5,7 @@
   "properties": {
     "page": {
       "type": "string",
-      "enum": [
-        "home",
-        "about",
-        "programs",
-        "events",
-        "contact",
-        "get_involved"
-      ],
-      "enumColors": [
-        "blue",
-        "purple",
-        "green",
-        "yellow",
-        "pink",
-        "gray"
-      ],
-      "description": "Page of the public website this block belongs to"
+      "description": "Page of the public website this block belongs to \u2014 the page_key of a WebsitePage selection, e.g. home, about, programs, or the key of a page added in Page Content."
     },
     "section_key": {
       "type": "string",

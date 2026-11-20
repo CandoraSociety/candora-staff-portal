@@ -100,6 +100,18 @@ export function publicNewsPost(post) {
   };
 }
 
+// One selection in the website's top menu. The site builds its navigation from
+// these, in the order given, so adding or removing one changes the menu itself.
+export function publicPage(page) {
+  return {
+    key: page.page_key || '',
+    label: page.label || '',
+    path: page.path || (page.page_key === 'home' ? '/' : `/${String(page.page_key || '').replace(/_/g, '-')}`),
+    order: Number(page.display_order) || 0,
+    is_home: !!page.is_home,
+  };
+}
+
 export function publicSection(section) {
   return {
     page: section.page || '',
