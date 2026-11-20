@@ -17,6 +17,7 @@ const MODE_COPY = {
 export default function OutlookConnectionCard({ onSynced, onSeed, seeding, messageCount = 0 }) {
   const [status, setStatus] = useState("loading");
   const [mode, setMode] = useState(null);
+  const [mailbox, setMailbox] = useState("");
   const [error, setError] = useState("");
   const [busy, setBusy] = useState(false);
   const pollRef = useRef(null);
@@ -29,16 +30,19 @@ export default function OutlookConnectionCard({ onSynced, onSeed, seeding, messa
       if (data.connected) {
         setStatus("connected");
         setMode(data.mode);
+        setMailbox(data.mailbox || "");
         setError("");
         if (data.imported) onSynced?.();
       } else {
         setStatus("disconnected");
         setMode(null);
+        setMailbox("");
         setError(data.error || "");
       }
     } catch (e) {
       setStatus("disconnected");
       setMode(null);
+      setMailbox("");
       setError(e.message || "Outlook could not be reached just now.");
     } finally {
       setBusy(false);
@@ -93,10 +97,18 @@ export default function OutlookConnectionCard({ onSynced, onSeed, seeding, messa
       )}
 
       {status === "connected" && (
-        <p className="text-sm text-muted-foreground leading-relaxed inline-flex items-start gap-2">
-          <CheckCircle2 className="w-4 h-4 text-success flex-shrink-0 mt-0.5" />
-          {MODE_COPY[mode] || MODE_COPY.app_only}
-        </p>
+        <div className="space-y-1.5">
+          <p className="text-sm text-foreground inline-flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-success flex-shrink-0" />
+            <span>
+              Linked to{" "}
+              <span className="font-medium break-all">{mailbox || "your work mailbox"}</span>
+            </span>
+          </p>
+          <p className="text-sm text-muted-foreground leading-relaxed pl-6">
+            {MODE_COPY[mode] || MODE_COPY.app_only}
+          </p>
+        </div>
       )}
 
       {status === "disconnected" && (

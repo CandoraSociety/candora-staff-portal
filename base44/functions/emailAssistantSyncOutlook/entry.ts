@@ -87,6 +87,16 @@ Deno.serve(async (req) => {
       }, { status: 200 });
     }
 
+    // Which mailbox this person's assistant is reading — shown in the portal so
+    // it is always clear whose mail is on screen.
+    let mailbox = access.profile?.mail || null;
+    if (!mailbox) {
+      try {
+        const me = await graphRequest(access.accessToken, `${access.basePath}?$select=mail,userPrincipalName`);
+        mailbox = me?.mail || me?.userPrincipalName || null;
+      } catch { /* the address is a nicety, never a reason to fail the sync */ }
+    }
+
     const [inbox, sent] = await Promise.all([
       fetchFolder(access.accessToken, access.basePath, 'inbox', INBOX_LIMIT),
       fetchFolder(access.accessToken, access.basePath, 'sentitems', SENT_LIMIT).catch(() => []),
@@ -116,7 +126,7 @@ Deno.serve(async (req) => {
     return Response.json({
       connected: true,
       mode: access.mode,
-      mailbox: access.profile?.mail || null,
+      mailbox,
       scanned: records.length,
       imported: fresh.length,
       skipped: records.length - fresh.length,
