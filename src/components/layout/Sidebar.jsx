@@ -9,7 +9,12 @@ import {
   ClipboardList,
   PenTool,
   GraduationCap,
-  Mail
+  Mail,
+  UtensilsCrossed,
+  Info,
+  Coffee,
+  Heart,
+  CalendarDays
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
@@ -50,6 +55,19 @@ const TIME_ATTENDANCE = {
     { path: '/time-off/vacation-request', label: 'Vacation / Time-off Request', icon: PlaneTakeoff },
     { path: '/time-off/sick-personal', label: 'Sick Time / Personal Day', icon: ThermometerSun },
     { path: '/time-off/timesheets', label: 'Timesheets', icon: ClipboardList },
+  ],
+};
+
+// Candora Food Services — hover reveals the social enterprise sub-tabs
+const FOOD_SERVICES = {
+  tourId: 'sidebar-food-services',
+  label: 'Candora Food Services',
+  icon: UtensilsCrossed,
+  children: [
+    { path: '/food/about', label: 'About', icon: Info },
+    { path: '/food/catering', label: 'Catering', icon: CalendarDays },
+    { path: '/food/cafe-candeur', label: 'Café Candeur', icon: Coffee },
+    { path: '/food/auntie-bevs', label: "Auntie Bev's", icon: Heart },
   ],
 };
 
@@ -119,6 +137,8 @@ export default function Sidebar({ collapsed, setCollapsed, isAdmin }) {
           {NAV_ITEMS.map(item => (
             <NavItem key={item.path} item={item} collapsed={collapsed} active={isActive(item.path)} />
           ))}
+
+          <SidebarNavGroup item={FOOD_SERVICES} collapsed={collapsed} active={FOOD_SERVICES.children.some(c => isActive(c.path))} />
 
           <SidebarNavGroup item={PURCHASES} collapsed={collapsed} active={PURCHASES.children.some(c => isActive(c.path))} />
 
