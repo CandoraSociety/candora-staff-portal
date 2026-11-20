@@ -148,6 +148,30 @@ export async function completeOrganizerTask(user, taskId) {
   await base44.entities.PersonalOrganizer.update(record.id, { tasks });
 }
 
+// Writes an approved calendar suggestion into the employee's own Week calendar
+// in the organizer — not into Outlook, which is not connected yet.
+export async function addOrganizerEvent(user, { title, date, time, notes }) {
+  const existing = await base44.entities.PersonalOrganizer.filter({ user_email: user.email }, { limit: 1 });
+  const record = existing.items?.[0];
+  const item = {
+    id: crypto.randomUUID(),
+    text: title,
+    scheduled_date: date,
+    time: time || "",
+    done: false,
+    notes: notes || "",
+    status: "scheduled",
+    reminder_sent: false,
+  };
+  const weekly = [...(record?.weekly_plan || []), item];
+  if (record) {
+    await base44.entities.PersonalOrganizer.update(record.id, { weekly_plan: weekly });
+  } else {
+    await base44.entities.PersonalOrganizer.create({ user_email: user.email, weekly_plan: weekly });
+  }
+  return item.id;
+}
+
 export async function logAction(user, action, detail, extra = {}) {
   await base44.entities.EmailAssistantLog.create({
     owner_email: user.email,

@@ -16,6 +16,7 @@ export const GROUNDED_SCHEMA = {
         certainty: { type: 'string', enum: ['confirmed', 'proposed', 'unclear'] },
         priority: { type: 'string', enum: ['low', 'medium', 'high'] },
         due_date: text, date_evidence: text, responsible_name: text, suggested_home: text,
+        date_source: { type: 'string', enum: ['email', 'looked_up', 'unknown'] },
         existing_insight_id: { ...text, description: 'ID of the same existing suggestion, if present. Empty for a genuinely new issue.' },
       },
       required: ['kind', 'title', 'detail', 'message_id', 'evidence_quote', 'why_relevant', 'employee_relation', 'state', 'confidence', 'certainty'],
@@ -31,8 +32,9 @@ The employee's identity, today's date, and existing suggestions are provided sep
 A finding MUST cite a real message_id and a short verbatim contiguous evidence_quote (at least 12 characters) that supports it. No invented questions or speculative next steps. Say why this matters to the employee, not just who mentioned it. If there is no worthwhile action or durable operational information, return findings: []. This is a successful result.
 Exclude promotions, purchase-review requests, generic newsletters, bulk event invitations, social notifications and courtesy/congratulations from action suggestions. An automated notification containing an actual personal request or required account action can still be actionable. Do not turn useful background into a duty to forward, record or research it without an explicit request.
 Return each real-world issue ONCE under its best kind, not the same request repeated as task, commitment, question and follow_up. Acknowledge resolved work in the summary only. For an existing issue, use existing_insight_id even when the wording changes; never reintroduce something the employee approved, completed, dismissed or snoozed as a new suggestion.
-calendar requires the employee's actual attendance/hosting obligation or a personal meeting proposal with an explicit calendar date. Generic invitations, passing mentions, past events and unaccepted marketing invitations are not calendar items. A proposal stays proposed. Never create a calendar entry or send anything.
-Only set due_date (YYYY-MM-DD) when the email states a calendar date; put the exact supporting date phrase in date_evidence. Do not turn today/tonight/next week/Friday into dates. A missing year may be resolved from message chronology only when unambiguous; otherwise omit the date. Do not invent times, venues, urgency, owners or deadlines. A request with no deadline can still be a task.
+calendar is for something this employee is actually attending or hosting: a meeting they accepted, a session they run, a dinner or event they have been asked to. Generic invitations, passing mentions, past events and unaccepted marketing invitations are not calendar items. A proposal stays proposed. Never create a calendar entry or send anything.
+The email does not have to state the date. If it names a specific event whose date you reliably know (an annual gala, a named conference, a scheduled public session), give that date and set date_source "looked_up", putting what the date rests on in date_evidence. Only do this when you can name the event and are confident; if you cannot, set date_source "unknown" and leave due_date empty, but still return the calendar finding. Never guess a plausible-sounding date, and never borrow the date of a different year's edition of the event.
+When the email itself states the date, set date_source "email", put the exact supporting phrase in date_evidence, and set due_date (YYYY-MM-DD). Do not turn today/tonight/next week/Friday into dates. A missing year may be resolved from message chronology only when unambiguous; otherwise omit the date. Do not invent times, venues, urgency, owners or deadlines. A request with no deadline can still be a task.
 summary_detailed: concise current situation, who owns the next step, and whether anything is still needed from the employee. Separate confirmed facts from interpretations. Explicitly say when no action is needed. Do not claim to have read attachments, a calendar, or messages not provided. If context is limited, state that limitation.\n\n`;
 
 const normalize = (value) => String(value || '').normalize('NFKC').replace(/[\u200b-\u200d\ufeff]/g, '').replace(/\s+/g, ' ').trim().toLowerCase();
@@ -63,6 +65,16 @@ function supportedDate(finding, message) {
   return value;
 }
 
+// A date the assistant established from knowledge of a named event rather than
+// from the email. It must still be a real calendar date and say what it rests on.
+function lookedUpDate(finding) {
+  const value = String(finding.due_date || '');
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(value)) return '';
+  const date = new Date(`${value}T12:00:00Z`);
+  if (Number.isNaN(date.getTime()) || date.toISOString().slice(0, 10) !== value) return '';
+  return String(finding.date_evidence || '').trim() ? value : '';
+}
+
 export function groundedDrafts(analysis, messages, existing = []) {
   const byId = new Map(messages.map((m) => [m.id, m]));
   const priorIds = new Set(existing.map((i) => i.id));
@@ -77,16 +89,22 @@ export function groundedDrafts(analysis, messages, existing = []) {
     const relation = finding.employee_relation;
     if (['task', 'commitment'].includes(finding.kind) && relation !== 'responsible') continue;
     if (['follow_up', 'question'].includes(finding.kind) && !['waiting', 'responsible'].includes(relation)) continue;
-    const due = supportedDate(finding, message);
-    if (finding.kind === 'calendar' && (!due || !['attendee', 'responsible'].includes(relation) || due < new Date().toISOString().slice(0, 10))) continue;
+    const lookedUp = finding.kind === 'calendar' && finding.date_source === 'looked_up';
+    const due = lookedUp ? lookedUpDate(finding) : supportedDate(finding, message);
+    if (finding.kind === 'calendar') {
+      if (!['attendee', 'responsible'].includes(relation)) continue;
+      if (due && due < new Date().toISOString().slice(0, 10)) continue;
+    }
     const thread = message.thread_id || message.id;
     const evidenceKey = `${thread}:${hash(normalize(quote))}`;
     if (seen.has(evidenceKey)) continue;
     seen.add(evidenceKey);
     rows.push({
       kind: finding.kind, title: String(finding.title).slice(0, 200),
-      detail: [finding.detail, `Why this matters: ${finding.why_relevant}`, `Email evidence: “${quote}”`].filter(Boolean).join('\n\n'),
-      certainty: ['confirmed', 'proposed', 'unclear'].includes(finding.certainty) ? finding.certainty : 'unclear',
+      detail: [finding.detail,
+        lookedUp && due ? `Date found by the assistant: ${String(finding.date_evidence).trim()}` : '',
+        `Why this matters: ${finding.why_relevant}`, `Email evidence: “${quote}”`].filter(Boolean).join('\n\n'),
+      certainty: lookedUp ? 'proposed' : (['confirmed', 'proposed', 'unclear'].includes(finding.certainty) ? finding.certainty : 'unclear'),
       confidence: finding.confidence, priority: ['low', 'medium', 'high'].includes(finding.priority) ? finding.priority : 'medium',
       ...(due ? { due_date: due } : {}), responsible_name: finding.responsible_name || '',
       suggested_home: finding.kind === 'knowledge' ? finding.suggested_home || '' : '',

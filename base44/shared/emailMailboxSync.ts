@@ -23,7 +23,9 @@ function toRecord(user, msg, direction) {
     from_name: from.name || from.address || '', from_email: from.address || '',
     recipients: [addresses(msg.toRecipients), cc ? `Cc: ${cc}` : ''].filter(Boolean).join('; '),
     direction, received_at: (direction === 'outbound' ? msg.sentDateTime : msg.receivedDateTime) || msg.receivedDateTime || '',
-    body_text: raw.length > 20000 ? `${raw.slice(0, 20000)}\n[message body truncated]` : raw,
+    // The stored field has a hard size limit; long newsletters and threads are
+    // trimmed here and marked so the analysis knows the text is incomplete.
+    body_text: raw.length > 8000 ? `${raw.slice(0, 8000)}\n[message body truncated]` : raw,
     source: 'outlook', is_demo: false,
   };
 }
@@ -52,21 +54,39 @@ async function storeMessages(base44, user, records) {
   return { imported, updated, scanned: deduped.length, skipped: deduped.length - imported - updated };
 }
 
+// How far back the assistant reads the mailbox.
+const WINDOW_DAYS = 14;
+const FOLDERS = [
+  { id: 'inbox', direction: 'inbound', cap: 300 },
+  { id: 'sentitems', direction: 'outbound', cap: 200 },
+];
+
+async function listSince(access, folder, since) {
+  const messages = [];
+  let path = `${access.basePath}/mailFolders/${folder.id}/messages?$filter=${encodeURIComponent(`receivedDateTime ge ${since}`)}&$select=${FIELDS}&$top=50&$orderby=receivedDateTime desc`;
+  while (path && messages.length < folder.cap) {
+    const data = await graphRequest(access.accessToken, path, { headers: HEADERS, signal: AbortSignal.timeout(25000) });
+    messages.push(...(data?.value || []));
+    const next = data?.['@odata.nextLink'];
+    if (next && !next.startsWith('https://graph.microsoft.com/v1.0/')) throw new Error('Unexpected mailbox continuation.');
+    path = next ? next.slice('https://graph.microsoft.com/v1.0'.length) : '';
+  }
+  return messages.slice(0, folder.cap);
+}
+
 export async function syncRecentMail(base44, user) {
   const access = await getMailboxAccess(base44, user);
   if (!access) return { connected: false, error: 'Outlook is not connected for your account yet.' };
   const profile = access.profile || await graphRequest(access.accessToken, `${access.basePath}?$select=mail,userPrincipalName`);
-  const folders = await Promise.allSettled(['inbox', 'sentitems'].map((folder) =>
-    graphRequest(access.accessToken,
-      `${access.basePath}/mailFolders/${folder}/messages?$top=${folder === 'inbox' ? 25 : 10}&$select=${FIELDS}&$orderby=receivedDateTime desc`,
-      { headers: HEADERS, signal: AbortSignal.timeout(20000) })
-  ));
+  const since = new Date(Date.now() - WINDOW_DAYS * 86400000).toISOString();
+  const folders = await Promise.allSettled(FOLDERS.map((folder) => listSince(access, folder, since)));
   if (folders[0].status === 'rejected') throw folders[0].reason;
   const records = folders.flatMap((result, index) => result.status === 'fulfilled'
-    ? (result.value?.value || []).filter((m) => !m.isDraft).map((m) => toRecord(user, m, index ? 'outbound' : 'inbound')) : []);
+    ? result.value.filter((m) => !m.isDraft).map((m) => toRecord(user, m, FOLDERS[index].direction)) : []);
   const stored = await storeMessages(base44, user, records);
   return { connected: true, mode: access.mode, mailbox: profile?.mail || profile?.userPrincipalName || '',
-    ...stored, warnings: folders[1].status === 'rejected' ? ['Sent mail could not be refreshed.'] : [], synced_at: new Date().toISOString() };
+    window_days: WINDOW_DAYS, ...stored,
+    warnings: folders[1].status === 'rejected' ? ['Sent mail could not be refreshed.'] : [], synced_at: new Date().toISOString() };
 }
 
 export async function refreshEmailThreads(base44, user, threadIds) {

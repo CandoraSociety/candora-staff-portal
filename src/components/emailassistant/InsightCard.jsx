@@ -31,6 +31,8 @@ export default function InsightCard({ insight, messages, user, prefs, onChanged 
   const approvalLabel = APPROVAL_LABEL[insight.kind];
   const approvalOutcome = APPROVAL_OUTCOME[insight.kind];
   const canApprove = !!approvalLabel && insight.status !== "approved" && insight.status !== "done";
+  // A calendar entry needs a date before it can be placed on the calendar.
+  const needsDate = insight.kind === "calendar" && !insight.due_date;
 
   const run = async (fn) => {
     setBusy(true);
@@ -100,16 +102,23 @@ export default function InsightCard({ insight, messages, user, prefs, onChanged 
         {insight.source_subject && <span>Email: {insight.source_subject}</span>}
       </div>
 
-      {canApprove && approvalOutcome && (
+      {canApprove && (approvalOutcome || needsDate) && (
         <p className="text-[11px] leading-relaxed text-muted-foreground rounded-lg border border-dashed border-border bg-muted/40 px-3 py-2">
-          <span className="font-semibold text-foreground">If you accept this:</span> {approvalOutcome}
+          <span className="font-semibold text-foreground">If you accept this:</span>{" "}
+          {needsDate
+            ? "no date was found for it yet. Open Edit, add the date, then put it on your calendar."
+            : approvalOutcome}
         </p>
       )}
 
       <div className="flex flex-wrap items-center gap-2 pt-1">
         {canApprove && (
-          <Button size="sm" disabled={busy} onClick={() => run(() => approveInsight(insight, user))}>
-            <Check className="w-3.5 h-3.5" /> {approvalLabel}
+          <Button
+            size="sm"
+            disabled={busy}
+            onClick={() => (needsDate ? setEditOpen(true) : run(() => approveInsight(insight, user)))}
+          >
+            <Check className="w-3.5 h-3.5" /> {needsDate ? "Add a date first" : approvalLabel}
           </Button>
         )}
         {["follow_up", "commitment", "question"].includes(insight.kind) && !insight.linked_task_id && insight.status !== "done" && (

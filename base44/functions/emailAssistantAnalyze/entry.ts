@@ -90,16 +90,16 @@ export default async function (req) {
     const owner = { owner_email: user.email };
     let page = await base44.entities.EmailMessage.filter(
       { ...owner, ...(ids.length ? { id: { $in: ids } } : { analysis_state: 'not_analyzed' }) },
-      { sort: '-received_at', limit: 100 }
+      { sort: '-received_at', limit: 300 }
     );
     if (!ids.length && (!page.items.length || action === 'summary')) {
-      page = await base44.entities.EmailMessage.filter(owner, { sort: action === 'summary' ? '-received_at' : 'last_analyzed_at', limit: 100 });
+      page = await base44.entities.EmailMessage.filter(owner, { sort: action === 'summary' ? '-received_at' : 'last_analyzed_at', limit: 300 });
     }
     const exclusions = String(prefs.exclusion_terms || '').split(/\r?\n/).map((term) => term.trim().toLowerCase()).filter(Boolean);
     const included = (m) => !exclusions.some((term) => `${m.from_email || ''} ${m.subject || ''}`.toLowerCase().includes(term));
     const seeds = page.items.filter(included);
     if (!seeds.length) return Response.json({ error: 'No correspondence is available for analysis under your current exclusions.' }, { status: 400 });
-    const selected = [...new Map(seeds.map((m) => [m.thread_id || m.id, m])).values()].slice(0, action === 'summary' ? 1 : 6);
+    const selected = [...new Map(seeds.map((m) => [m.thread_id || m.id, m])).values()].slice(0, action === 'summary' ? 1 : 10);
     const selectedKeys = selected.map((m) => m.thread_id || m.id);
     const outlookThreads = selected.filter((m) => m.source === 'outlook').map((m) => m.thread_id).filter(Boolean);
     const refreshed = await refreshEmailThreads(base44, user, outlookThreads);

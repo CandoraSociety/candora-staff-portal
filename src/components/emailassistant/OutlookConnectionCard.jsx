@@ -115,7 +115,7 @@ export default function OutlookConnectionCard({ onSynced, onSeed, seeding, messa
         <>
           <p className="text-sm text-muted-foreground leading-relaxed">
             Your Outlook mailbox is not available to the assistant yet. Connect the account you use for work and your
-            recent mail will be read here — nothing is sent or changed without you.
+            last two weeks of mail will be read here — nothing is sent or changed without you.
           </p>
           {error && (
             <p className="text-xs text-muted-foreground inline-flex items-start gap-1.5">

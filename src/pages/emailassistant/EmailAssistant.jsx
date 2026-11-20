@@ -3,7 +3,7 @@ import { Mail, ShieldCheck, AlertCircle, Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { base44 } from "@/api/base44Client";
 import useEmailAssistant from "@/lib/useEmailAssistant";
-import { featureOn, allowedAutomation } from "@/lib/emailAssistant";
+import { featureOn, allowedAutomation, effectiveAutomation } from "@/lib/emailAssistant";
 import useEmailAnalysis from "@/lib/useEmailAnalysis";
 import OverviewTab from "@/components/emailassistant/OverviewTab";
 import SuggestedActionsTab from "@/components/emailassistant/SuggestedActionsTab";
@@ -42,18 +42,16 @@ export default function EmailAssistant() {
     );
   };
 
-  // Proactive assistance actually does the work: on opening the assistant it
-  // checks the mailbox for new mail and has suggestions ready before the
-  // employee asks. Once per browser session, and only when there is new mail.
+  // Proactive assistance actually does the work: each time the assistant is
+  // opened it checks the mailbox, reads anything new, and has suggestions
+  // ready before the employee asks. Once per page load, never in a loop.
   useEffect(() => {
     if (isLoading || autoRanRef.current) return;
     if (!user || !email) return;
-    if ((prefs?.automation_level || "manual") !== "proactive") return;
+    if (prefs?.automation_level !== "proactive") return;
     if (allowedAutomation(policy) !== "proactive") return;
     if (!featureOn("analysis", prefs, policy)) return;
 
-    const key = `ea_proactive_${email}`;
-    if (sessionStorage.getItem(key)) return;
     autoRanRef.current = true;
 
     (async () => {
@@ -67,17 +65,20 @@ export default function EmailAssistant() {
           { sort: "-received_at", limit: 100 }
         );
         const ids = (page.items || []).map((m) => m.id);
-        if (!ids.length) return;
+        if (!ids.length) {
+          setAutoState("current");
+          setTimeout(() => setAutoState(""), 6000);
+          return;
+        }
         setAutoState("analyzing");
-        const result = await runAnalysis(ids);
-        if (result) sessionStorage.setItem(key, "1");
+        await runAnalysis(ids);
+        setAutoState("");
       } catch {
         // Leave the manual controls available; do not retry automatically in a loop.
-      } finally {
         setAutoState("");
       }
     })();
-  }, [isLoading, user, email, prefs, policy]);
+  }, [isLoading, user, email, prefs?.automation_level, policy?.allowed_automation]);
 
   if (isLoading) {
     return (
@@ -120,6 +121,11 @@ export default function EmailAssistant() {
           <p className="text-sm text-muted-foreground mt-1">
             Turn your correspondence into tasks, follow-ups and clear summaries. Private to you.
           </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {effectiveAutomation(prefs, policy) === "proactive"
+              ? "Proactive assistance is on — your last two weeks of mail are checked each time you open this page."
+              : "Manual assistance — nothing is read until you press Analyze."}
+          </p>
         </div>
         <p className="text-xs text-muted-foreground inline-flex items-center gap-1.5 rounded-full border border-border px-3 py-1.5">
           <ShieldCheck className="w-3.5 h-3.5 text-success" /> Only you can see this
@@ -128,9 +134,11 @@ export default function EmailAssistant() {
 
       {autoState && (
         <div className="rounded-lg border border-border bg-muted/50 px-4 py-2.5 inline-flex items-center gap-2 text-xs text-muted-foreground">
-          <Loader2 className="w-3.5 h-3.5 animate-spin" />
+          {autoState !== "current" && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
           {autoState === "analyzing"
             ? "Reading your new mail and preparing suggestions…"
+            : autoState === "current"
+            ? "Proactive check complete — nothing new waiting to be read."
             : "Checking your mailbox for new mail…"}
         </div>
       )}

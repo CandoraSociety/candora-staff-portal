@@ -1,5 +1,5 @@
 import { base44 } from "@/api/base44Client";
-import { addOrganizerTask, completeOrganizerTask, formatWhen, logAction } from "@/lib/emailAssistant";
+import { addOrganizerEvent, addOrganizerTask, completeOrganizerTask, formatWhen, logAction } from "@/lib/emailAssistant";
 
 // Every change an employee makes to a suggestion goes through here, so the
 // approval, the audit record and the task write always happen together.
@@ -8,7 +8,7 @@ const APPROVED_TEXT = {
   task: "Added to your task list",
   follow_up: "Kept on your follow-up list",
   commitment: "Kept on your follow-up list",
-  calendar: "Details ready — add it to your calendar yourself",
+  calendar: "Added to your Week calendar",
   knowledge: "Kept as information for now",
   decision: "Kept as a decision",
   question: "Kept as an open question",
@@ -20,7 +20,7 @@ export const APPROVAL_LABEL = {
   task: "Add to my tasks",
   follow_up: "Keep on my follow-ups",
   commitment: "Keep on my follow-ups",
-  calendar: "Keep these details",
+  calendar: "Add to my calendar",
   knowledge: "Keep as information",
   decision: "Keep as a decision",
   question: "Keep as an open question",
@@ -30,7 +30,7 @@ export const APPROVAL_OUTCOME = {
   task: "This becomes a task in your own list, with the date and priority shown above.",
   follow_up: "This is kept on your follow-up list so you can chase it later.",
   commitment: "This is kept on your follow-up list so you can track who owes what.",
-  calendar: "The date and details are kept for you to add to your calendar yourself — nothing is added automatically.",
+  calendar: "This goes into your own Week calendar on the date shown — nothing is sent or shared.",
   knowledge: "This is kept as information you can look back at.",
   decision: "This is kept on record as a decision.",
   question: "This is kept as an open question to answer later.",
@@ -50,6 +50,16 @@ export async function approveInsight(insight, user) {
       notes: insight.detail,
     });
     patch.linked_task_id = taskId;
+  }
+
+  // Calendar items go into the employee's own Week calendar in the organizer.
+  // A date is required; without one the card asks for a date first.
+  if (insight.kind === "calendar" && insight.due_date) {
+    await addOrganizerEvent(user, {
+      title: insight.title,
+      date: insight.due_date,
+      notes: insight.detail,
+    });
   }
 
   await base44.entities.EmailInsight.update(insight.id, patch);
