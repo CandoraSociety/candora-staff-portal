@@ -3,18 +3,19 @@ import { Outlet, Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import {
   LayoutDashboard, CalendarDays, Coffee, Heart, Soup, ShoppingBasket, GraduationCap,
-  TrendingUp, ChevronLeft, ChevronRight, LogOut, Menu, ExternalLink, Calendar, Monitor
+  TrendingUp, ChevronLeft, ChevronRight, ChevronDown, LogOut, Menu, ExternalLink, Calendar, Info
 } from 'lucide-react';
 import LogoutConfirmationDialog from '@/components/auth/LogoutConfirmationDialog';
 
 const NAV = [
   { label: 'Dashboard', icon: LayoutDashboard, path: '/food' },
   {
-    group: 'Social Enterprise',
+    group: 'Candora Food Services',
+    collapsible: true,
     items: [
-      { label: 'Cafe Candeur', icon: Coffee, path: '/food/cafe-candeur' },
-      { label: 'Digital Menu', icon: Monitor, path: '/food/cafe-candeur/digital-menu' },
+      { label: 'About', icon: Info, path: '/food/about' },
       { label: 'Catering', icon: CalendarDays, path: '/food/catering' },
+      { label: 'Café Candeur', icon: Coffee, path: '/food/cafe-candeur' },
       { label: "Auntie Bev's", icon: Heart, path: '/food/auntie-bevs' },
     ],
   },
@@ -36,6 +37,7 @@ export default function FoodLayout() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [showLogout, setShowLogout] = useState(false);
+  const [openGroups, setOpenGroups] = useState({ 'Candora Food Services': true });
 
   const isActive = (path) => {
     if (path === '/food') return location.pathname === '/food';
@@ -71,18 +73,29 @@ export default function FoodLayout() {
       <nav className="flex-1 py-4 px-2 space-y-1 overflow-y-auto">
         {NAV.map((entry) => {
           if (entry.group) {
+            const open = !entry.collapsible || openGroups[entry.group] !== false;
             return (
               <div key={entry.group} className="pt-3">
                 {collapsed ? (
                   <div className="mx-2 mb-2 border-t border-sidebar-border" />
+                ) : entry.collapsible ? (
+                  <button
+                    onClick={() => setOpenGroups((prev) => ({ ...prev, [entry.group]: !open }))}
+                    className="flex items-center justify-between w-full px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40 hover:text-sidebar-foreground/70 transition-colors"
+                  >
+                    <span>{entry.group}</span>
+                    <ChevronDown className={`w-3 h-3 transition-transform ${open ? '' : '-rotate-90'}`} />
+                  </button>
                 ) : (
                   <div className="px-3 pb-1 text-[10px] font-semibold uppercase tracking-wider text-sidebar-foreground/40">
                     {entry.group}
                   </div>
                 )}
-                <div className="space-y-1">
-                  {entry.items.map((item) => <NavLink key={item.path} {...item} />)}
-                </div>
+                {open && (
+                  <div className="space-y-1">
+                    {entry.items.map((item) => <NavLink key={item.path} {...item} />)}
+                  </div>
+                )}
               </div>
             );
           }
