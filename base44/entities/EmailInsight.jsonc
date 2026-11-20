@@ -1,0 +1,181 @@
+{
+  "name": "EmailInsight",
+  "type": "object",
+  "description": "A suggestion or summary the AI Email Assistant produced from one employee's correspondence \u2014 a possible task, follow-up, calendar event, decision, open question, commitment, knowledge item or conversation summary. Private to the employee: nothing here is visible to supervisors or administrators, and nothing is created in a shared record without the employee approving it.",
+  "properties": {
+    "owner_email": {
+      "type": "string",
+      "description": "Email of the employee this suggestion belongs to"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "task",
+        "follow_up",
+        "calendar",
+        "decision",
+        "question",
+        "commitment",
+        "knowledge",
+        "summary"
+      ],
+      "enumColors": [
+        "blue",
+        "purple",
+        "yellow",
+        "green",
+        "pink",
+        "purple",
+        "gray",
+        "blue"
+      ],
+      "description": "What kind of finding this is \u2014 an action to take, something to chase, a meeting or date, a decision, an unanswered question, a commitment made by someone, information worth keeping, or a conversation summary"
+    },
+    "title": {
+      "type": "string",
+      "description": "Short headline as the employee sees it"
+    },
+    "detail": {
+      "type": "string",
+      "description": "Supporting detail \u2014 what the AI read, what it suggests, and any summary text"
+    },
+    "certainty": {
+      "type": "string",
+      "enum": [
+        "confirmed",
+        "proposed",
+        "unclear"
+      ],
+      "enumColors": [
+        "green",
+        "blue",
+        "yellow"
+      ],
+      "default": "unclear",
+      "description": "confirmed = stated plainly in the correspondence; proposed = offered or tentative; unclear = the AI is unsure and the employee should check the source"
+    },
+    "confidence": {
+      "type": "string",
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ],
+      "enumColors": [
+        "green",
+        "yellow",
+        "red"
+      ],
+      "default": "medium",
+      "description": "How confident the AI is that this finding is real and worth acting on"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "enumColors": [
+        "green",
+        "yellow",
+        "red"
+      ],
+      "default": "medium",
+      "description": "Suggested priority when the correspondence makes it reasonably clear"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the correspondence implies, when one is identifiable"
+    },
+    "responsible_name": {
+      "type": "string",
+      "description": "Person the suggestion names as responsible, when identifiable"
+    },
+    "category": {
+      "type": "string",
+      "description": "Project, department, program or topic the finding relates to, when identifiable"
+    },
+    "suggested_home": {
+      "type": "string",
+      "description": "For knowledge findings \u2014 where inside Candora 360 the information could be recorded, e.g. Grants, Program records, Website Studio"
+    },
+    "source_message_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Messages this finding came from \u2014 the employee can always open the original correspondence"
+    },
+    "source_subject": {
+      "type": "string",
+      "description": "Subject of the source conversation, shown on the card"
+    },
+    "source_thread_id": {
+      "type": "string",
+      "description": "Conversation the finding came from"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "suggested",
+        "approved",
+        "snoozed",
+        "dismissed",
+        "done"
+      ],
+      "enumColors": [
+        "yellow",
+        "green",
+        "blue",
+        "gray",
+        "purple"
+      ],
+      "default": "suggested",
+      "description": "suggested = awaiting the employee's review; approved = accepted into the employee's own task list or accepted as information; snoozed = hidden until a later date; dismissed = not relevant; done = completed"
+    },
+    "snooze_until": {
+      "type": "string",
+      "format": "date",
+      "description": "Date a snoozed suggestion comes back"
+    },
+    "approved_action": {
+      "type": "string",
+      "description": "What approving this did \u2014 e.g. Added to my tasks, Kept as information, Ready to add to your calendar"
+    },
+    "linked_task_id": {
+      "type": "string",
+      "description": "Id of the personal task created from this suggestion, when one was"
+    },
+    "dedupe_key": {
+      "type": "string",
+      "description": "Normalized key used to prevent the same action being suggested twice across messages"
+    },
+    "is_demo": {
+      "type": "boolean",
+      "default": false,
+      "description": "True when the source correspondence is sample data rather than real email"
+    }
+  },
+  "required": [
+    "owner_email",
+    "kind",
+    "title",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

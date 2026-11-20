@@ -54,6 +54,7 @@ import Dashboard from '@/pages/Dashboard';
 import Portal from '@/pages/Portal';
 import WidgetCustomization from '@/pages/WidgetCustomization';
 import MeetingManager from '@/pages/MeetingManager';
+import EmailAssistant from '@/pages/emailassistant/EmailAssistant';
 
 // NexusHR
 import NexusLayout from '@/components/nexushr/NexusLayout';
@@ -577,6 +578,7 @@ const AuthenticatedApp = () => {
           <Route path="/" element={<Dashboard />} />
           <Route path="/portal" element={<Portal />} />
           <Route path="/meeting-manager" element={<MeetingManager />} />
+          <Route path="/email-assistant" element={<EmailAssistant />} />
           <Route path="/widget-customization" element={<WidgetCustomization />} />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/cards" element={<ManageCards />} />

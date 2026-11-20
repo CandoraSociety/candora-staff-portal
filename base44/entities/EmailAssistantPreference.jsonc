@@ -1,0 +1,149 @@
+{
+  "name": "EmailAssistantPreference",
+  "type": "object",
+  "description": "One employee's own settings for the AI Email Assistant \u2014 how much assistance they want, which features are on, their drafting tone and briefing habits. Private to that employee; organizational policy still overrides these choices.",
+  "properties": {
+    "owner_email": {
+      "type": "string",
+      "description": "Email of the employee these settings belong to"
+    },
+    "automation_level": {
+      "type": "string",
+      "enum": [
+        "manual",
+        "proactive"
+      ],
+      "enumColors": [
+        "gray",
+        "blue"
+      ],
+      "default": "manual",
+      "description": "manual = the assistant only works when asked; proactive = it prepares suggestions as correspondence arrives, which the employee still reviews and approves"
+    },
+    "features": {
+      "type": "object",
+      "description": "Which assistant features this employee has switched on",
+      "properties": {
+        "analysis": {
+          "type": "boolean",
+          "default": true
+        },
+        "summaries": {
+          "type": "boolean",
+          "default": true
+        },
+        "drafting": {
+          "type": "boolean",
+          "default": true
+        },
+        "tasks": {
+          "type": "boolean",
+          "default": true
+        },
+        "follow_ups": {
+          "type": "boolean",
+          "default": true
+        },
+        "calendar": {
+          "type": "boolean",
+          "default": true
+        },
+        "knowledge": {
+          "type": "boolean",
+          "default": true
+        },
+        "briefing": {
+          "type": "boolean",
+          "default": true
+        },
+        "chat": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+    "preferred_task_manager": {
+      "type": "string",
+      "enum": [
+        "organizer",
+        "ms_todo",
+        "ms_planner"
+      ],
+      "enumColors": [
+        "green",
+        "blue",
+        "purple"
+      ],
+      "default": "organizer",
+      "description": "Where approved tasks go. 'organizer' is Candora 360's own personal task list; the Microsoft options are held for when that connection is available."
+    },
+    "drafting_tone": {
+      "type": "string",
+      "enum": [
+        "warm_professional",
+        "formal",
+        "concise",
+        "friendly",
+        "direct"
+      ],
+      "default": "warm_professional",
+      "description": "Default tone the assistant uses when writing a draft"
+    },
+    "default_priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high"
+      ],
+      "default": "medium",
+      "description": "Priority given to an approved task when the email did not make one clear"
+    },
+    "briefing_mode": {
+      "type": "string",
+      "enum": [
+        "on_open",
+        "on_request",
+        "off"
+      ],
+      "enumColors": [
+        "blue",
+        "gray",
+        "gray"
+      ],
+      "default": "on_request",
+      "description": "Whether the daily briefing is prepared when the assistant opens, only when asked for, or not at all"
+    },
+    "follow_up_reminder_days": {
+      "type": "number",
+      "default": 3,
+      "description": "How many days after a message before the assistant treats an unanswered thread as a follow-up worth mentioning"
+    },
+    "notify_new_suggestions": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether new suggestions are counted as unread in the assistant's overview"
+    },
+    "exclusion_terms": {
+      "type": "string",
+      "description": "Senders or subject words the assistant must leave out of analysis, one per line"
+    }
+  },
+  "required": [
+    "owner_email"
+  ],
+  "rls": {
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

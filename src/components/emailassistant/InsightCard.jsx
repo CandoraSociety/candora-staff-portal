@@ -1,0 +1,163 @@
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Check, Clock, Eye, Pencil, X, CheckCircle2, CalendarDays, ArrowRightLeft,
+} from "lucide-react";
+import { CERTAINTY_META, KIND_META, formatWhen, isOverdue } from "@/lib/emailAssistant";
+import {
+  approveInsight, dismissInsight, markDone, snoozeInsight, saveInsightEdits, convertToTask,
+} from "@/lib/emailAssistantActions";
+import InsightEditDialog from "@/components/emailassistant/InsightEditDialog";
+import SourceMessagesDialog from "@/components/emailassistant/SourceMessagesDialog";
+
+// One AI finding, with everything the employee needs to accept, adjust or
+// ignore it. Nothing here changes a shared record — it only touches this
+// employee's own task list.
+export default function InsightCard({ insight, messages, user, prefs, onChanged }) {
+  const [busy, setBusy] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [sourceOpen, setSourceOpen] = useState(false);
+  const [snoozeOpen, setSnoozeOpen] = useState(false);
+  const [snoozeDate, setSnoozeDate] = useState("");
+
+  const meta = KIND_META[insight.kind] || KIND_META.task;
+  const certainty = CERTAINTY_META[insight.certainty] || CERTAINTY_META.unclear;
+
+  const run = async (fn) => {
+    setBusy(true);
+    try {
+      await fn();
+      await onChanged?.();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const openSnooze = () => {
+    const d = new Date();
+    d.setDate(d.getDate() + (prefs?.follow_up_reminder_days || 3));
+    setSnoozeDate(d.toISOString().slice(0, 10));
+    setSnoozeOpen(true);
+  };
+
+  return (
+    <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+      <div className="flex flex-wrap items-center gap-2">
+        <span className={`text-[10px] font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full border ${meta.tone}`}>
+          {meta.label}
+        </span>
+        <span className={`text-[11px] ${certainty.tone}`}>{certainty.label}</span>
+        {insight.due_date && (
+          <span className={`text-[11px] inline-flex items-center gap-1 ${isOverdue(insight.due_date) ? "text-destructive font-medium" : "text-muted-foreground"}`}>
+            <CalendarDays className="w-3 h-3" /> {formatWhen(insight.due_date)}
+            {isOverdue(insight.due_date) ? " · overdue" : ""}
+          </span>
+        )}
+        {insight.status === "approved" && (
+          <span className="text-[11px] text-success inline-flex items-center gap-1">
+            <CheckCircle2 className="w-3 h-3" /> {insight.approved_action || "Approved"}
+          </span>
+        )}
+        {insight.status === "snoozed" && insight.snooze_until && (
+          <span className="text-[11px] text-muted-foreground inline-flex items-center gap-1">
+            <Clock className="w-3 h-3" /> Snoozed to {formatWhen(insight.snooze_until)}
+          </span>
+        )}
+        {insight.status === "done" && <span className="text-[11px] text-success">Done</span>}
+        {insight.is_demo && (
+          <span className="text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-warning/15 text-warning">
+            Sample
+          </span>
+        )}
+      </div>
+
+      <div>
+        <p className="font-medium text-sm text-foreground leading-snug">{insight.title}</p>
+        {insight.detail && (
+          <p className="text-sm text-muted-foreground mt-1 whitespace-pre-line leading-relaxed">{insight.detail}</p>
+        )}
+      </div>
+
+      <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+        {insight.responsible_name && <span>Person: {insight.responsible_name}</span>}
+        {insight.category && <span>Area: {insight.category}</span>}
+        {insight.suggested_home && <span>Could live in: {insight.suggested_home}</span>}
+        {insight.source_subject && <span>From: {insight.source_subject}</span>}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2 pt-1">
+        {insight.status !== "approved" && insight.status !== "done" && (
+          <Button size="sm" disabled={busy} onClick={() => run(() => approveInsight(insight, user))}>
+            <Check className="w-3.5 h-3.5" /> {insight.kind === "task" ? "Add to my tasks" : "Approve"}
+          </Button>
+        )}
+        {["follow_up", "commitment", "question"].includes(insight.kind) && !insight.linked_task_id && insight.status !== "done" && (
+          <Button size="sm" variant="outline" disabled={busy} onClick={() => run(() => convertToTask(insight, user, prefs))}>
+            <ArrowRightLeft className="w-3.5 h-3.5" /> Make it a task
+          </Button>
+        )}
+        {insight.status === "approved" && insight.kind === "task" && (
+          <Button size="sm" variant="outline" disabled={busy} onClick={() => run(() => markDone(insight, user))}>
+            <CheckCircle2 className="w-3.5 h-3.5" /> Mark done
+          </Button>
+        )}
+        {["follow_up", "commitment", "question"].includes(insight.kind) && insight.status !== "done" && (
+          <Button size="sm" variant="outline" disabled={busy} onClick={() => run(() => markDone(insight, user))}>
+            <CheckCircle2 className="w-3.5 h-3.5" /> Done
+          </Button>
+        )}
+        <Button size="sm" variant="ghost" disabled={busy} onClick={() => setEditOpen(true)}>
+          <Pencil className="w-3.5 h-3.5" /> Edit
+        </Button>
+        <Button size="sm" variant="ghost" disabled={busy} onClick={openSnooze}>
+          <Clock className="w-3.5 h-3.5" /> Snooze
+        </Button>
+        <Button size="sm" variant="ghost" onClick={() => setSourceOpen(true)}>
+          <Eye className="w-3.5 h-3.5" /> Open email
+        </Button>
+        {insight.status !== "dismissed" && (
+          <Button size="sm" variant="ghost" className="text-muted-foreground" disabled={busy} onClick={() => run(() => dismissInsight(insight, user))}>
+            <X className="w-3.5 h-3.5" /> Not relevant
+          </Button>
+        )}
+      </div>
+
+      <InsightEditDialog
+        insight={insight}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        onSave={async (patch) => {
+          await run(() => saveInsightEdits(insight, patch));
+          setEditOpen(false);
+        }}
+      />
+      <SourceMessagesDialog insight={insight} messages={messages} open={sourceOpen} onOpenChange={setSourceOpen} />
+
+      <Dialog open={snoozeOpen} onOpenChange={setSnoozeOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Remind me later</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-1.5">
+            <Label htmlFor="snooze-date">Bring this back on</Label>
+            <Input id="snooze-date" type="date" value={snoozeDate} onChange={(e) => setSnoozeDate(e.target.value)} />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setSnoozeOpen(false)}>Cancel</Button>
+            <Button
+              onClick={async () => {
+                await run(() => snoozeInsight(insight, user, snoozeDate));
+                setSnoozeOpen(false);
+              }}
+            >
+              Snooze
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}

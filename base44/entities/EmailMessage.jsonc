@@ -1,0 +1,130 @@
+{
+  "name": "EmailMessage",
+  "type": "object",
+  "description": "One piece of correspondence available to a staff member's AI Email Assistant. Records are private to the employee who owns them \u2014 no supervisor or administrator can read them. Today they are filled from labelled sample data or by hand; a future Outlook integration layer will supply real messages through the same fields.",
+  "properties": {
+    "owner_email": {
+      "type": "string",
+      "description": "Email of the employee this message belongs to. The assistant only ever reads messages matching the signed-in user."
+    },
+    "thread_id": {
+      "type": "string",
+      "description": "Identifier grouping messages of the same conversation"
+    },
+    "thread_subject": {
+      "type": "string",
+      "description": "Subject line of the conversation this message belongs to"
+    },
+    "subject": {
+      "type": "string",
+      "description": "Subject line of this message"
+    },
+    "from_name": {
+      "type": "string",
+      "description": "Display name of the sender"
+    },
+    "from_email": {
+      "type": "string",
+      "description": "Email address of the sender"
+    },
+    "recipients": {
+      "type": "string",
+      "description": "Other people on the message, as they appear in the email"
+    },
+    "direction": {
+      "type": "string",
+      "enum": [
+        "inbound",
+        "outbound"
+      ],
+      "enumColors": [
+        "blue",
+        "gray"
+      ],
+      "default": "inbound",
+      "description": "inbound = received by the employee; outbound = sent by the employee"
+    },
+    "received_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the message was sent or received"
+    },
+    "body_text": {
+      "type": "string",
+      "description": "Plain text of the message as supplied by the email layer"
+    },
+    "attachments": {
+      "type": "array",
+      "description": "Attachments named on the message, with a short description where the email layer provides one",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string",
+            "description": "Short description of the attachment's contents, when available"
+          }
+        }
+      }
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "sample",
+        "manual",
+        "outlook"
+      ],
+      "enumColors": [
+        "yellow",
+        "gray",
+        "blue"
+      ],
+      "default": "sample",
+      "description": "Where the message came from \u2014 sample data, typed in by the employee, or the Outlook integration layer once connected"
+    },
+    "is_demo": {
+      "type": "boolean",
+      "default": false,
+      "description": "True for sample correspondence used to try the assistant. Demonstration content is never presented as real email."
+    },
+    "analysis_state": {
+      "type": "string",
+      "enum": [
+        "not_analyzed",
+        "analyzed"
+      ],
+      "enumColors": [
+        "gray",
+        "green"
+      ],
+      "default": "not_analyzed",
+      "description": "Whether this message has been through an AI analysis pass"
+    },
+    "last_analyzed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the assistant last analyzed this message"
+    }
+  },
+  "required": [
+    "owner_email",
+    "subject",
+    "direction"
+  ],
+  "rls": {
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

@@ -8,7 +8,8 @@ import {
   ShoppingBag, CreditCard, CalendarClock, PlaneTakeoff, ThermometerSun,
   ClipboardList,
   PenTool,
-  GraduationCap
+  GraduationCap,
+  Mail
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from '@/components/ui/tooltip';
@@ -23,6 +24,7 @@ const NAV_ITEMS = [
   { path: '/', label: 'Dashboard', icon: LayoutDashboard, adminOnly: false },
   { path: '/portal', label: 'Portals', icon: AppWindow, adminOnly: false },
   { path: '/meeting-manager', label: 'Meetings', icon: Calendar, adminOnly: false },
+  { path: '/email-assistant', label: 'Email Assistant', icon: Mail, adminOnly: false },
   { path: '/widget-customization', label: 'Add functions', icon: LayoutPanelLeft, adminOnly: false },
   { path: '/e-signature', label: 'E-Signature', icon: PenTool, adminOnly: false },
   { path: '/staff-training', label: 'Staff Portal Training', icon: GraduationCap, adminOnly: false },

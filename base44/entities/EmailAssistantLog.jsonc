@@ -1,0 +1,61 @@
+{
+  "name": "EmailAssistantLog",
+  "type": "object",
+  "description": "A record of what the AI Email Assistant did for an employee \u2014 an analysis run, a summary, a draft, a suggestion approved or dismissed. Deliberately holds no email text, so it can support usage and reliability reporting without exposing anyone's correspondence.",
+  "properties": {
+    "owner_email": {
+      "type": "string",
+      "description": "Employee the action was performed for"
+    },
+    "action": {
+      "type": "string",
+      "enum": [
+        "analysis",
+        "summary",
+        "briefing",
+        "draft",
+        "chat",
+        "task_approved",
+        "suggestion_dismissed",
+        "suggestion_snoozed",
+        "follow_up_done"
+      ],
+      "description": "What the assistant did"
+    },
+    "detail": {
+      "type": "string",
+      "description": "Short, non-sensitive description \u2014 e.g. counts of findings, never email contents"
+    },
+    "related_insight_id": {
+      "type": "string",
+      "description": "Suggestion the action concerned, when there was one"
+    },
+    "message_count": {
+      "type": "number",
+      "description": "How many messages the AI processed in this run"
+    },
+    "is_demo": {
+      "type": "boolean",
+      "default": false,
+      "description": "True when the run used sample correspondence"
+    }
+  },
+  "required": [
+    "owner_email",
+    "action"
+  ],
+  "rls": {
+    "read": {
+      "created_by_id": "{{user.id}}"
+    },
+    "create": {
+      "created_by_id": "{{user.id}}"
+    },
+    "update": {
+      "created_by_id": "{{user.id}}"
+    },
+    "delete": {
+      "created_by_id": "{{user.id}}"
+    }
+  }
+}

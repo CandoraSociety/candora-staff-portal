@@ -1,0 +1,106 @@
+{
+  "name": "EmailAssistantPolicy",
+  "type": "object",
+  "description": "The organization's settings for the AI Email Assistant \u2014 which capabilities are allowed at all, the highest level of automation staff may choose, and the processing limits that apply. One record, maintained by administrators; every employee's assistant reads it, and it overrides individual preferences. It never contains anyone's email.",
+  "properties": {
+    "is_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Turn the assistant off organization-wide. Existing personal settings and records are kept."
+    },
+    "allowed_automation": {
+      "type": "string",
+      "enum": [
+        "manual",
+        "proactive"
+      ],
+      "enumColors": [
+        "gray",
+        "blue"
+      ],
+      "default": "proactive",
+      "description": "The highest assistance level employees may choose. 'proactive' lets staff have suggestions prepared automatically for their own review; nothing is ever actioned without their approval."
+    },
+    "features_allowed": {
+      "type": "object",
+      "description": "Capabilities the organization permits. Anything switched off disappears for every employee.",
+      "properties": {
+        "analysis": {
+          "type": "boolean",
+          "default": true
+        },
+        "summaries": {
+          "type": "boolean",
+          "default": true
+        },
+        "drafting": {
+          "type": "boolean",
+          "default": true
+        },
+        "tasks": {
+          "type": "boolean",
+          "default": true
+        },
+        "follow_ups": {
+          "type": "boolean",
+          "default": true
+        },
+        "calendar": {
+          "type": "boolean",
+          "default": true
+        },
+        "knowledge": {
+          "type": "boolean",
+          "default": true
+        },
+        "briefing": {
+          "type": "boolean",
+          "default": true
+        },
+        "chat": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+    "monthly_analysis_limit": {
+      "type": "number",
+      "default": 300,
+      "description": "How many AI analysis runs each employee may make per month. Zero means no limit."
+    },
+    "retention_days": {
+      "type": "number",
+      "default": 90,
+      "description": "How long analyzed correspondence and suggestions are kept before the assistant offers to clear them"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Internal note about the organization's AI email policy, shown to administrators"
+    },
+    "updated_by_name": {
+      "type": "string",
+      "description": "Administrator who last saved these settings"
+    }
+  },
+  "required": [
+    "is_enabled"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
