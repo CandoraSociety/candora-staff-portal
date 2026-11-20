@@ -8,6 +8,7 @@ import SectionEditorDialog from "@/components/website/SectionEditorDialog";
 import PageAiBuilder from "@/components/website/PageAiBuilder";
 import ArchivedHeadersCard from "@/components/website/ArchivedHeadersCard";
 import PageSelectionsCard from "@/components/website/PageSelectionsCard";
+import WebsitePageNavigation from "@/components/website/WebsitePageNavigation";
 import PageSelectionDialog from "@/components/website/PageSelectionDialog";
 import PageDeleteDialog from "@/components/website/PageDeleteDialog";
 import { activePages, archivedPages } from "@/lib/websitePages";
@@ -203,21 +204,7 @@ export default function WebsitePages() {
         </div>
       </header>
 
-      <div className="flex flex-wrap gap-1 p-1 rounded-lg bg-muted/60 w-fit">
-        {menuPages.map((item) => (
-          <button
-            key={item.id}
-            onClick={() => setPage(item.page_key)}
-            className={`px-3 py-1.5 rounded-md text-xs font-medium transition-colors ${
-              currentPage === item.page_key
-                ? "bg-card text-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {item.label}
-          </button>
-        ))}
-      </div>
+      <WebsitePageNavigation pages={menuPages} currentPage={currentPage} onSelect={setPage} />
 
       {isLoading ? (
         <div className="flex items-center justify-center gap-2 py-16 text-sm text-muted-foreground">
