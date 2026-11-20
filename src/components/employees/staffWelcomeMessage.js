@@ -1,4 +1,4 @@
-export const STAFF_LOGIN_URL = 'https://candora-staff-link.base44.app/login';
+export const STAFF_LOGIN_URL = 'https://candora-360.base44.app/login';
 
 export function staffWelcomeMessage(employee) {
   return `Subject: Welcome to Candora 360
