@@ -10,6 +10,7 @@ import ArchivedHeadersCard from "@/components/website/ArchivedHeadersCard";
 import PageSelectionsCard from "@/components/website/PageSelectionsCard";
 import WebsitePageNavigation from "@/components/website/WebsitePageNavigation";
 import PageSelectionDialog from "@/components/website/PageSelectionDialog";
+import DropdownOptionDialog from "@/components/website/DropdownOptionDialog";
 import PageDeleteDialog from "@/components/website/PageDeleteDialog";
 import { activePages, archivedPages } from "@/lib/websitePages";
 import { formatWebsiteDate, isScheduledLater } from "@/lib/websiteManager";
@@ -22,6 +23,8 @@ export default function WebsitePages() {
   const [selectionDialogOpen, setSelectionDialogOpen] = useState(false);
   const [editingSelection, setEditingSelection] = useState(null);
   const [selectionToDelete, setSelectionToDelete] = useState(null);
+  // Which menu item a dropdown choice is being added under, and how.
+  const [dropdownTarget, setDropdownTarget] = useState(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -160,6 +163,17 @@ export default function WebsitePages() {
     });
   };
 
+  const openDropdownOption = (parentPage, mode) => setDropdownTarget({ parent: parentPage, mode });
+
+  // The dialog has already saved the change, so this refreshes the menu and the
+  // blocks, then opens the page that was moved or created.
+  const handleDropdownChanged = ({ title, description, pageKey }) => {
+    refreshPages();
+    refresh();
+    if (pageKey) setPage(pageKey);
+    toast({ title, description });
+  };
+
   const deleteSelectionPermanently = async (item) => {
     await base44.entities.WebsitePage.delete(item.id);
     refreshPages();
@@ -285,6 +299,7 @@ export default function WebsitePages() {
         onEdit={openEditSelection}
         onArchive={archiveSelection}
         onMove={moveSelection}
+        onAddDropdownOption={openDropdownOption}
         onRestore={restoreSelection}
         onDelete={setSelectionToDelete}
       />
@@ -325,6 +340,16 @@ export default function WebsitePages() {
         page={editingSelection}
         pages={menuPages}
         onSave={saveSelection}
+      />
+
+      <DropdownOptionDialog
+        open={!!dropdownTarget}
+        onOpenChange={(open) => !open && setDropdownTarget(null)}
+        parent={dropdownTarget?.parent || null}
+        pages={menuPages}
+        sections={sections}
+        initialMode={dropdownTarget?.mode || "move"}
+        onChanged={handleDropdownChanged}
       />
 
       <PageDeleteDialog

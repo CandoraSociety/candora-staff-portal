@@ -1,6 +1,7 @@
 import { Archive, ChevronDown, ChevronUp, CornerDownRight, Pencil, Plus, RotateCcw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 
 // The selections across the top of the website — the same set that fills the
 // tabs on this screen. A selection can sit inside a dropdown under another one.
@@ -12,6 +13,7 @@ export default function PageSelectionsCard({
   onEdit,
   onArchive,
   onMove,
+  onAddDropdownOption,
   onRestore,
   onDelete,
 }) {
@@ -35,8 +37,9 @@ export default function PageSelectionsCard({
             </div>
             <p className="text-xs text-muted-foreground mt-1 max-w-xl">
               These are the choices across the top of the website, in this order, and the tabs on this screen.
-              An indented selection opens inside a dropdown under the item above it. Removing one moves it to
-              the archive.
+              Use Dropdown to write a new page, move an existing one, or duplicate one inside a dropdown under
+              a menu item. An indented selection opens inside that dropdown. Removing one moves it to the
+              archive.
             </p>
           </div>
           <Button size="sm" variant="outline" onClick={onAdd} className="flex-shrink-0">
@@ -101,6 +104,26 @@ export default function PageSelectionsCard({
                   >
                     <ChevronDown className="w-3.5 h-3.5" />
                   </Button>
+                  {!nested && !page.is_home && (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button size="sm" variant="outline" title={`Add a choice inside a dropdown under ${page.label}`}>
+                          <ChevronDown className="w-3.5 h-3.5" /> Dropdown
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onSelect={() => onAddDropdownOption(page, "new")}>
+                          Write a new page here
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => onAddDropdownOption(page, "move")}>
+                          Move an existing page here
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => onAddDropdownOption(page, "duplicate")}>
+                          Duplicate an existing page here
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  )}
                   <Button size="sm" variant="outline" onClick={() => onEdit(page)}>
                     <Pencil className="w-3.5 h-3.5" /> Edit
                   </Button>
