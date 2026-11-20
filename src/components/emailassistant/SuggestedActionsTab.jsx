@@ -18,8 +18,9 @@ const FILTERS = [
 export default function SuggestedActionsTab({ insights, messages, user, prefs, onChanged, onGoAnalyze }) {
   const [filter, setFilter] = useState("all");
 
+  // Summaries live in the Summaries tab — they are reading material, not an action to approve.
   const pending = insights.filter(
-    (i) => i.status === "suggested" && (!isSnoozed(i))
+    (i) => i.status === "suggested" && i.kind !== "summary" && !isSnoozed(i)
   );
   const rows = pending.filter((i) => filter === "all" || i.kind === filter);
   const counts = pending.reduce((acc, i) => ({ ...acc, [i.kind]: (acc[i.kind] || 0) + 1 }), {});

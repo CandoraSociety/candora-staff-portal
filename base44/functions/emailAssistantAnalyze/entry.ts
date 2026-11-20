@@ -95,19 +95,58 @@ export default async function (req) {
       );
     }
 
-    const analysis = await base44.integrations.Core.InvokeLLM({
-      prompt: `${ANALYSIS_PROMPT}${buildTranscript(messages)}`,
-      response_json_schema: ANALYSIS_SCHEMA,
+    // Each conversation is read on its own, so an email about one thing is never
+    // folded into another. A run covers the most recent conversations only.
+    const byThread = new Map();
+    for (const m of messages) {
+      const key = m.thread_id || m.id;
+      if (!byThread.has(key)) byThread.set(key, []);
+      byThread.get(key).push(m);
+    }
+    const newest = (group) =>
+      group.reduce((latest, m) => (String(m.received_at || '') > latest ? String(m.received_at || '') : latest), '');
+    const groups = Array.from(byThread.values())
+      .sort((a, b) => newest(b).localeCompare(newest(a)))
+      .slice(0, 8);
+
+    const results = await Promise.allSettled(
+      groups.map(async (group) => {
+        const subject = group[0]?.thread_subject || group[0]?.subject || 'Conversation';
+        const prompt = `${ANALYSIS_PROMPT}This is one conversation: "${subject}" (${group.length} message${
+          group.length > 1 ? 's' : ''
+        }). Every finding must come from this conversation alone.\n\n${buildTranscript(group)}`;
+        const analysis = await base44.integrations.Core.InvokeLLM({
+          prompt,
+          response_json_schema: ANALYSIS_SCHEMA,
+        });
+        return { analysis, group };
+      })
+    );
+
+    const done = results.filter((r) => r.status === 'fulfilled').map((r) => r.value);
+    if (!done.length) {
+      const failure = results.find((r) => r.status === 'rejected');
+      throw new Error(failure?.reason?.message || 'The analysis could not be completed.');
+    }
+
+    const seen = new Set();
+    const insights = [];
+    const summaries = [];
+    done.forEach(({ analysis, group }) => {
+      insightDrafts(analysis, group).forEach((draft) => {
+        if (draft.dedupe_key && seen.has(draft.dedupe_key)) return;
+        if (draft.dedupe_key) seen.add(draft.dedupe_key);
+        insights.push(draft);
+      });
+      summaries.push(summaryDraft(analysis, group));
     });
 
-    const insights = insightDrafts(analysis, messages);
-    const summary = summaryDraft(analysis, messages);
-
     return Response.json({
-      analysis,
       insights,
-      summary,
+      summaries,
+      summary: summaries[0],
       message_count: messages.length,
+      thread_count: groups.length,
       is_demo: messages.every((m) => m.is_demo),
     });
   } catch (error) {

@@ -9,6 +9,7 @@ import {
 import { CERTAINTY_META, KIND_META, formatWhen, isOverdue } from "@/lib/emailAssistant";
 import {
   approveInsight, dismissInsight, markDone, snoozeInsight, saveInsightEdits, convertToTask,
+  APPROVAL_LABEL, APPROVAL_OUTCOME,
 } from "@/lib/emailAssistantActions";
 import InsightEditDialog from "@/components/emailassistant/InsightEditDialog";
 import InsightNoteDialog from "@/components/emailassistant/InsightNoteDialog";
@@ -27,6 +28,9 @@ export default function InsightCard({ insight, messages, user, prefs, onChanged 
 
   const meta = KIND_META[insight.kind] || KIND_META.task;
   const certainty = CERTAINTY_META[insight.certainty] || CERTAINTY_META.unclear;
+  const approvalLabel = APPROVAL_LABEL[insight.kind];
+  const approvalOutcome = APPROVAL_OUTCOME[insight.kind];
+  const canApprove = !!approvalLabel && insight.status !== "approved" && insight.status !== "done";
 
   const run = async (fn) => {
     setBusy(true);
@@ -93,13 +97,19 @@ export default function InsightCard({ insight, messages, user, prefs, onChanged 
         {insight.responsible_name && <span>Person: {insight.responsible_name}</span>}
         {insight.category && <span>Area: {insight.category}</span>}
         {insight.suggested_home && <span>Could live in: {insight.suggested_home}</span>}
-        {insight.source_subject && <span>From: {insight.source_subject}</span>}
+        {insight.source_subject && <span>Email: {insight.source_subject}</span>}
       </div>
 
+      {canApprove && approvalOutcome && (
+        <p className="text-[11px] leading-relaxed text-muted-foreground rounded-lg border border-dashed border-border bg-muted/40 px-3 py-2">
+          <span className="font-semibold text-foreground">If you accept this:</span> {approvalOutcome}
+        </p>
+      )}
+
       <div className="flex flex-wrap items-center gap-2 pt-1">
-        {insight.status !== "approved" && insight.status !== "done" && (
+        {canApprove && (
           <Button size="sm" disabled={busy} onClick={() => run(() => approveInsight(insight, user))}>
-            <Check className="w-3.5 h-3.5" /> {insight.kind === "task" ? "Add to my tasks" : "Approve"}
+            <Check className="w-3.5 h-3.5" /> {approvalLabel}
           </Button>
         )}
         {["follow_up", "commitment", "question"].includes(insight.kind) && !insight.linked_task_id && insight.status !== "done" && (

@@ -156,6 +156,8 @@ Rules that matter more than completeness:
 - When you are unsure, say so in the text and mark certainty "unclear" and confidence "low".
 - Keep summaries readable by a busy non-technical colleague. summary_short is two or three sentences; summary_detailed is one to three short paragraphs.
 - For each finding, set message_id to the [message ...] id it came from when you can tell.
+- Every finding must come from a single message of this one conversation. Never merge two separate emails or two different conversations into one finding: if two emails each ask for something, report two separate findings.
+- Write each finding as the concrete next step the employee would take, in their own voice ("Send the signed lease to Kim"), not as a topic.
 - suggested_home is only for knowledge items: name a place inside Candora 360 such as Grants, Program records, Finance, Marketing, Website Studio, Board, or leave it empty.
 
 Correspondence:

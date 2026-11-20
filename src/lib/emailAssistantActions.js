@@ -14,6 +14,28 @@ const APPROVED_TEXT = {
   question: "Kept as an open question",
 };
 
+// What accepting each kind of suggestion actually does, spelled out in the
+// button and above it, so nobody has to guess what "Approve" means.
+export const APPROVAL_LABEL = {
+  task: "Add to my tasks",
+  follow_up: "Keep on my follow-ups",
+  commitment: "Keep on my follow-ups",
+  calendar: "Keep these details",
+  knowledge: "Keep as information",
+  decision: "Keep as a decision",
+  question: "Keep as an open question",
+};
+
+export const APPROVAL_OUTCOME = {
+  task: "This becomes a task in your own list, with the date and priority shown above.",
+  follow_up: "This is kept on your follow-up list so you can chase it later.",
+  commitment: "This is kept on your follow-up list so you can track who owes what.",
+  calendar: "The date and details are kept for you to add to your calendar yourself — nothing is added automatically.",
+  knowledge: "This is kept as information you can look back at.",
+  decision: "This is kept on record as a decision.",
+  question: "This is kept as an open question to answer later.",
+};
+
 export async function approveInsight(insight, user) {
   const patch = {
     status: "approved",

@@ -43,7 +43,10 @@ export default function EmailAssistant() {
       const data = res.data || {};
       if (data.error) throw new Error(data.error);
 
-      const drafts = [...(data.insights || []), data.summary].filter(Boolean);
+      const drafts = [
+        ...(data.insights || []),
+        ...(data.summaries || (data.summary ? [data.summary] : [])),
+      ].filter(Boolean);
       const existing = new Map(insights.filter((i) => i.dedupe_key).map((i) => [i.dedupe_key, i]));
       const creates = [];
       const updates = [];
