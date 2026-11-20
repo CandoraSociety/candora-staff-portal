@@ -11,6 +11,7 @@ import { useToast } from "@/components/ui/use-toast";
 import WebsiteImageField from "@/components/website/WebsiteImageField";
 import NewsFeedStyleCard from "@/components/website/NewsFeedStyleCard";
 import HomePopupCard from "@/components/website/HomePopupCard";
+import WebsiteThemesCard from "@/components/website/WebsiteThemesCard";
 import { toDateTimeLocal } from "@/lib/websiteManager";
 
 const EMPTY = {
@@ -40,6 +41,8 @@ const EMPTY = {
   popup_frequency: "once_per_session",
   popup_starts_at: "",
   popup_ends_at: "",
+  theme_mode: "auto",
+  theme_manual_stage: "none",
   contact_email: "",
   contact_phone: "",
   contact_address: "",
@@ -251,6 +254,8 @@ export default function WebsiteSettings() {
           </div>
         </CardContent>
       </Card>
+
+      <WebsiteThemesCard form={form} set={set} />
 
       <NewsFeedStyleCard form={form} set={set} />
 

@@ -1,7 +1,7 @@
 {
   "name": "WebsiteSettings",
   "type": "object",
-  "description": "Site-wide content for Candora's public website \u2014 the logo, brand line, hero area, news feed style, home page pop-up, contact details and how events are introduced on the home page. Edited only from Website Studio; the separate website app reads it through the public feed.",
+  "description": "Site-wide content for Candora's public website \u2014 the logo, brand line, hero area, seasonal themes, news feed style, home page pop-up, contact details and how events are introduced on the home page. Edited only from Website Studio; the separate website app reads it through the public feed.",
   "properties": {
     "site_name": {
       "type": "string",
@@ -159,6 +159,42 @@
       "type": "string",
       "format": "date-time",
       "description": "Optional moment the pop-up stops showing on the website \u2014 lets an appeal retire itself"
+    },
+    "theme_mode": {
+      "type": "string",
+      "enum": [
+        "auto",
+        "off",
+        "manual"
+      ],
+      "enumColors": [
+        "blue",
+        "gray",
+        "purple"
+      ],
+      "default": "auto",
+      "description": "How the seasonal decoration is chosen. auto = follows the holiday calendar on its own (Halloween from the day after Canadian Thanksgiving, Christmas from December 1, New Year's from December 31, all at Alberta midnight); off = the site stays in its normal colours; manual = one stage pinned for testing or a special occasion."
+    },
+    "theme_manual_stage": {
+      "type": "string",
+      "enum": [
+        "none",
+        "halloween",
+        "christmas",
+        "christmas_day",
+        "new_year_eve",
+        "new_year_day"
+      ],
+      "enumColors": [
+        "gray",
+        "purple",
+        "red",
+        "green",
+        "yellow",
+        "blue"
+      ],
+      "default": "none",
+      "description": "The stage pinned while theme_mode is manual \u2014 the stage to preview or show regardless of the date"
     },
     "contact_email": {
       "type": "string"

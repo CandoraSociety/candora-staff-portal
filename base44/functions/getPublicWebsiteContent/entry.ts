@@ -8,6 +8,7 @@ import {
   scheduledForLater,
   orderMenuPages,
 } from '../../shared/websitePublishing.ts';
+import { resolveTheme } from '../../shared/websiteThemes.ts';
 
 // Public feed for the separate Candora website app. Anyone can read it, so it
 // only ever returns published website content, shaped by the shared allowlist.
@@ -60,6 +61,9 @@ export default async function (req) {
 
     return Response.json({
       site: publicSite(settings, fallbackLogo),
+      // The seasonal decoration the site should wear at this moment — worked
+      // out in Alberta time, so it changes on its own at midnight.
+      theme: resolveTheme(settings, now),
       pages: orderMenuPages(pages).map(publicPage),
       sections: sections.map(publicSection),
       news: news.map(publicNewsPost),
