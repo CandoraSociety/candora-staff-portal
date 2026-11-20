@@ -54,6 +54,18 @@ const NEW_YEAR_PALETTE = {
   ink: '#e0e7ff',
 };
 
+// A stage that swaps the hero photo. Halloween replaces the sunflower in the
+// hero with a carved jack-o'-lantern; every other stage keeps the site's own
+// photo, which is why an empty entry means "leave the hero image alone".
+const STAGE_HERO_IMAGES = {
+  halloween:
+    'https://media.base44.com/images/public/6a249282cb496579542673b7/0df1d58f0_generated_image.png',
+};
+
+function heroImageFor(stageId) {
+  return STAGE_HERO_IMAGES[stageId] || '';
+}
+
 // Every stage the site can be in, in the order they are offered for a manual
 // switch. hero_template replaces {year} with the year being welcomed in.
 export const THEME_STAGES = [
@@ -236,6 +248,8 @@ function buildTheme(stageId, now, source, window) {
     palette: stage.palette,
     // Empty means the website keeps the headline written in Site Settings.
     hero_headline: stage.hero_template ? stage.hero_template.replace('{year}', String(newYear)) : '',
+    // Empty means the website keeps the hero photo written in Site Settings.
+    hero_image_url: heroImageFor(stage.id),
     countdown_to: stage.countdown ? new Date(newYearStart).toISOString() : '',
     fireworks: !!stage.fireworks,
     ends_at: window ? new Date(window.end).toISOString() : '',
@@ -267,6 +281,7 @@ export function publicThemeStages(now = Date.now()) {
       motif: built.motif,
       palette: built.palette,
       hero_headline: built.hero_headline,
+      hero_image_url: built.hero_image_url,
       countdown_to: built.countdown_to,
       fireworks: built.fireworks,
     };

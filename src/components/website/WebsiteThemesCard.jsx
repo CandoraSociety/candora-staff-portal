@@ -148,7 +148,11 @@ export default function WebsiteThemesCard({ form, set }) {
               <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground font-semibold flex items-center gap-1.5">
                 <CalendarClock className="w-3.5 h-3.5" /> Stage preview
               </p>
-              <ThemeStagePreview stage={chosen} fallbackHeadline={form.hero_headline} />
+              <ThemeStagePreview
+                stage={chosen}
+                fallbackHeadline={form.hero_headline}
+                fallbackImage={form.hero_image_url}
+              />
               <p className="text-[11px] text-muted-foreground">
                 How the home page hero looks in this stage. Remember to save your site settings.
               </p>
