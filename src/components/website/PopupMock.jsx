@@ -1,13 +1,22 @@
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// The pop-up card itself, exactly as a visitor sees it. Used both in the small
-// preview and in the full-size preview that opens over the page.
-export default function PopupMock({ form, onClose, className }) {
+// The pop-up card itself, exactly as a visitor sees it. The small preview and the
+// full-size preview render the same card, only larger — same proportions, same
+// layout — so what staff see is what opens on the website.
+export default function PopupMock({ form, onClose, size = "thumb", className }) {
+  const full = size === "full";
+
   return (
-    <div className={cn("relative w-full max-w-xs rounded-xl bg-card shadow-2xl overflow-hidden", className)}>
+    <div
+      className={cn(
+        "relative w-full rounded-2xl bg-card shadow-2xl overflow-hidden",
+        full ? "max-w-md" : "max-w-xs",
+        className
+      )}
+    >
       {form.popup_image_url && (
-        <img src={form.popup_image_url} alt="" className="w-full h-32 object-cover" />
+        <img src={form.popup_image_url} alt="" className="w-full aspect-[16/9] object-cover" />
       )}
 
       {onClose ? (
@@ -15,25 +24,43 @@ export default function PopupMock({ form, onClose, className }) {
           type="button"
           onClick={onClose}
           title="Close pop-up"
-          className="absolute top-2 right-2 rounded-full bg-black/50 p-1 text-white hover:bg-black/70"
+          className={cn(
+            "absolute rounded-full bg-black/50 text-white hover:bg-black/70",
+            full ? "top-3 right-3 p-1.5" : "top-2 right-2 p-1"
+          )}
         >
-          <X className="w-3.5 h-3.5" />
+          <X className={full ? "w-4 h-4" : "w-3 h-3"} />
         </button>
       ) : (
-        <span className="absolute top-2 right-2 rounded-full bg-black/50 p-1 text-white">
-          <X className="w-3 h-3" />
+        <span
+          className={cn(
+            "absolute rounded-full bg-black/50 text-white",
+            full ? "top-3 right-3 p-1.5" : "top-2 right-2 p-1"
+          )}
+        >
+          <X className={full ? "w-4 h-4" : "w-3 h-3"} />
         </span>
       )}
 
-      <div className="p-4 space-y-2">
-        <p className="font-display font-bold text-foreground leading-snug">
+      <div className={full ? "p-6 space-y-3" : "p-4 space-y-2"}>
+        <p
+          className={cn(
+            "font-display font-bold text-foreground leading-snug",
+            full ? "text-2xl" : "text-base"
+          )}
+        >
           {form.popup_title || "Your pop-up title"}
         </p>
-        <p className="text-sm text-muted-foreground whitespace-pre-line">
+        <p className={cn("text-muted-foreground whitespace-pre-line", full ? "text-sm leading-relaxed" : "text-sm")}>
           {form.popup_message || "What the pop-up says to visitors."}
         </p>
         {form.popup_button_label && (
-          <span className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground">
+          <span
+            className={cn(
+              "inline-flex items-center rounded-md bg-primary font-semibold text-primary-foreground",
+              full ? "px-5 py-2.5 text-sm" : "px-3 py-1.5 text-xs"
+            )}
+          >
             {form.popup_button_label}
           </span>
         )}
