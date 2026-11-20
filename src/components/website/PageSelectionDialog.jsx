@@ -29,7 +29,13 @@ export default function PageSelectionDialog({ open, onOpenChange, page, pages = 
   useEffect(() => {
     if (!open) return;
     setError("");
-    setForm(page ? { ...EMPTY, ...page, parent_page_key: page.parent_page_key || "" } : { ...EMPTY });
+    // A new selection lands at the end of the menu, not on top of it.
+    const nextPosition = pages.filter((entry) => !entry.parent_page_key).length;
+    setForm(
+      page
+        ? { ...EMPTY, ...page, parent_page_key: page.parent_page_key || "" }
+        : { ...EMPTY, display_order: nextPosition }
+    );
   }, [open, page?.id]);
 
   const set = (key, value) => setForm((prev) => ({ ...prev, [key]: value }));

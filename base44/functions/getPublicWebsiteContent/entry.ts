@@ -6,6 +6,7 @@ import {
   publicSection,
   publicSite,
   scheduledForLater,
+  orderMenuPages,
 } from '../../shared/websitePublishing.ts';
 
 // Public feed for the separate Candora website app. Anyone can read it, so it
@@ -59,7 +60,7 @@ export default async function (req) {
 
     return Response.json({
       site: publicSite(settings, fallbackLogo),
-      pages: pages.map(publicPage),
+      pages: orderMenuPages(pages).map(publicPage),
       sections: sections.map(publicSection),
       news: news.map(publicNewsPost),
       events,

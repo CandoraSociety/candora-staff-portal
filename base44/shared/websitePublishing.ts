@@ -114,6 +114,36 @@ export function publicPage(page) {
   };
 }
 
+// Menu order: the home page leads, and a selection that sits in a dropdown is
+// placed directly after the item it opens from, so the website can build the
+// whole menu in one pass.
+export function orderMenuPages(pages) {
+  const list = [...(pages || [])];
+  const keys = new Set(list.map((page) => page.page_key));
+  const childrenByParent = new Map<string, any[]>();
+  const topLevel: any[] = [];
+
+  list.forEach((page) => {
+    const parent = page.parent_page_key;
+    if (parent && parent !== page.page_key && keys.has(parent)) {
+      if (!childrenByParent.has(parent)) childrenByParent.set(parent, []);
+      childrenByParent.get(parent)!.push(page);
+    } else {
+      topLevel.push(page);
+    }
+  });
+
+  const byPosition = (a, b) => (Number(a.display_order) || 0) - (Number(b.display_order) || 0);
+  topLevel.sort((a, b) => (!!a.is_home !== !!b.is_home ? (a.is_home ? -1 : 1) : byPosition(a, b)));
+
+  const ordered: any[] = [];
+  topLevel.forEach((page) => {
+    ordered.push(page);
+    ordered.push(...(childrenByParent.get(page.page_key) || []).sort(byPosition));
+  });
+  return ordered;
+}
+
 export function publicSection(section) {
   return {
     page: section.page || '',
