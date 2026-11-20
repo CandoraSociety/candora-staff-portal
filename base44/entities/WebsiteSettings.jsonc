@@ -104,7 +104,28 @@
     },
     "popup_image_url": {
       "type": "string",
-      "description": "Optional photo at the top of the pop-up (publicly stored file URL)"
+      "description": "Photo at the top of the pop-up (publicly stored file URL). Created in Website Studio's AI image creator from the uploaded components, or set by hand."
+    },
+    "popup_background_url": {
+      "type": "string",
+      "description": "Optional photo shown behind the pop-up, dimmed, so the card stands out against it (publicly stored file URL). Empty means a plain dark backdrop."
+    },
+    "popup_components": {
+      "type": "array",
+      "description": "Brand pieces uploaded in Website Studio to be reproduced inside the pop-up image \u2014 the logo, a mark, a photo. Each is passed to the AI image creator as a reference image.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "How the component is labelled in Website Studio"
+          },
+          "url": {
+            "type": "string",
+            "description": "Publicly stored file URL of the component"
+          }
+        }
+      }
     },
     "popup_button_label": {
       "type": "string",

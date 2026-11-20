@@ -33,6 +33,8 @@ const EMPTY = {
   popup_title: "",
   popup_message: "",
   popup_image_url: "",
+  popup_background_url: "",
+  popup_components: [],
   popup_button_label: "",
   popup_button_url: "",
   popup_frequency: "once_per_session",
@@ -68,6 +70,7 @@ export default function WebsiteSettings() {
       ...EMPTY,
       ...settings,
       social_links: Array.isArray(settings.social_links) ? settings.social_links : [],
+      popup_components: Array.isArray(settings.popup_components) ? settings.popup_components : [],
       popup_starts_at: toDateTimeLocal(settings.popup_starts_at),
       popup_ends_at: toDateTimeLocal(settings.popup_ends_at),
     });

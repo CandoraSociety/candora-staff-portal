@@ -152,6 +152,7 @@ export function publicSite(settings, fallbackLogo) {
       title: settings.popup_title || '',
       message: settings.popup_message || '',
       image_url: settings.popup_image_url || '',
+      background_url: settings.popup_background_url || '',
       button_label: settings.popup_button_label || '',
       button_url: settings.popup_button_url || '',
       frequency: settings.popup_frequency || 'once_per_session',

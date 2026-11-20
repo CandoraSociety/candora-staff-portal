@@ -6,6 +6,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import WebsiteImageField from "@/components/website/WebsiteImageField";
 import PopupCampaignSuggestions from "@/components/website/PopupCampaignSuggestions";
+import PopupComponentsField from "@/components/website/PopupComponentsField";
+import PopupAiImage from "@/components/website/PopupAiImage";
+import PopupAiCopy from "@/components/website/PopupAiCopy";
+import PopupPreview from "@/components/website/PopupPreview";
 
 const FREQUENCIES = [
   { value: "every_visit", label: "Every visit" },
@@ -15,6 +19,7 @@ const FREQUENCIES = [
 
 export default function HomePopupCard({ form, set }) {
   const enabled = !!form.popup_enabled;
+  const components = Array.isArray(form.popup_components) ? form.popup_components : [];
 
   return (
     <Card className="border-border/70">
@@ -41,6 +46,15 @@ export default function HomePopupCard({ form, set }) {
           </p>
         ) : (
           <>
+            <PopupAiCopy
+              form={form}
+              onCopy={(copy) => {
+                set("popup_title", copy.popup_title);
+                set("popup_message", copy.popup_message);
+                if (copy.popup_button_label) set("popup_button_label", copy.popup_button_label);
+              }}
+            />
+
             <div className="space-y-1.5">
               <Label htmlFor="popup-title">Title</Label>
               <Input
@@ -62,12 +76,6 @@ export default function HomePopupCard({ form, set }) {
               />
             </div>
 
-            <WebsiteImageField
-              label="Pop-up image (optional)"
-              value={form.popup_image_url}
-              onChange={(url) => set("popup_image_url", url)}
-            />
-
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-1.5">
                 <Label htmlFor="popup-button-label">Button label (optional)</Label>
@@ -87,6 +95,34 @@ export default function HomePopupCard({ form, set }) {
                   placeholder="/donate"
                 />
               </div>
+            </div>
+
+            <div className="rounded-xl border border-border p-4 space-y-4 bg-muted/20">
+              <div>
+                <p className="text-sm font-semibold text-foreground">Background &amp; image</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  The background sits behind the pop-up, dimmed, so the card stands out.
+                </p>
+              </div>
+
+              <WebsiteImageField
+                label="Pop-up background (optional)"
+                value={form.popup_background_url}
+                onChange={(url) => set("popup_background_url", url)}
+                hint="Leave empty for a plain dark backdrop."
+              />
+
+              <PopupComponentsField
+                components={components}
+                onChange={(next) => set("popup_components", next)}
+              />
+
+              <PopupAiImage
+                components={components}
+                imageUrl={form.popup_image_url}
+                title={form.popup_title}
+                onImage={(url) => set("popup_image_url", url)}
+              />
             </div>
 
             <div className="space-y-1.5 max-w-xs">
@@ -136,28 +172,14 @@ export default function HomePopupCard({ form, set }) {
               </p>
             </div>
 
-            <div className="rounded-xl border border-dashed border-border bg-muted/30 p-4">
-              <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground font-semibold mb-3">
+            <div className="space-y-2">
+              <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground font-semibold">
                 Preview
               </p>
-              <div className="mx-auto max-w-sm rounded-xl border border-border bg-card shadow-lg overflow-hidden">
-                {form.popup_image_url && (
-                  <img src={form.popup_image_url} alt="" className="w-full h-28 object-cover" />
-                )}
-                <div className="p-4 space-y-2">
-                  <p className="font-display font-bold text-foreground">
-                    {form.popup_title || "Your pop-up title"}
-                  </p>
-                  <p className="text-sm text-muted-foreground whitespace-pre-line">
-                    {form.popup_message || "What the pop-up says to visitors."}
-                  </p>
-                  {form.popup_button_label && (
-                    <span className="inline-flex items-center rounded-md bg-primary px-3 py-1.5 text-xs font-semibold text-primary-foreground">
-                      {form.popup_button_label}
-                    </span>
-                  )}
-                </div>
-              </div>
+              <PopupPreview form={form} />
+              <p className="text-[11px] text-muted-foreground">
+                This is how it opens over the home page. Remember to save your site settings.
+              </p>
             </div>
           </>
         )}
