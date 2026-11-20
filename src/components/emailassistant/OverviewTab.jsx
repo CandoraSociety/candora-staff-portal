@@ -1,11 +1,11 @@
 import { useMemo, useState } from "react";
 import {
-  Sparkles, Inbox, ListChecks, Clock, FileText, MessageSquare, PenLine, Sun,
-  PlugZap, ArrowRight, Plus,
+  Sparkles, Inbox, ListChecks, Clock, FileText, MessageSquare, PenLine, Sun, ArrowRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { KIND_META, formatWhen, isOverdue, isSnoozed } from "@/lib/emailAssistant";
+import OutlookConnectionCard from "@/components/emailassistant/OutlookConnectionCard";
 
 function Stat({ label, value, icon: Icon }) {
   return (
@@ -20,7 +20,7 @@ function Stat({ label, value, icon: Icon }) {
 }
 
 export default function OverviewTab({
-  messages, insights, prefs, onAnalyze, analyzing, analysisError, onNavigate, onDraft, onSeed, seeding,
+  messages, insights, prefs, onAnalyze, analyzing, analysisError, onNavigate, onDraft, onSeed, seeding, onSynced,
 }) {
   const [thread, setThread] = useState("recent");
 
@@ -60,25 +60,12 @@ export default function OverviewTab({
         <Stat label="Summaries" value={summaries.length} icon={FileText} />
       </div>
 
-      <div className="rounded-xl border border-border bg-card p-5 space-y-3">
-        <div className="flex items-center gap-2">
-          <PlugZap className="w-4 h-4 text-muted-foreground" />
-          <p className="text-sm font-medium text-foreground">Email connection</p>
-          <span className="text-[10px] uppercase tracking-wide px-2 py-0.5 rounded-full bg-muted text-muted-foreground">
-            Not connected
-          </span>
-        </div>
-        <p className="text-sm text-muted-foreground leading-relaxed">
-          Real correspondence will arrive here once the Microsoft 365 / Outlook connection is in place. Until then the
-          assistant can be tried with clearly labelled sample email — everything it finds from samples is marked
-          "Sample", so it is never mistaken for real analysis.
-        </p>
-        {messages.length === 0 && (
-          <Button size="sm" variant="outline" onClick={onSeed} disabled={seeding}>
-            <Plus className="w-3.5 h-3.5" /> {seeding ? "Adding…" : "Load a sample conversation"}
-          </Button>
-        )}
-      </div>
+      <OutlookConnectionCard
+        onSynced={onSynced}
+        onSeed={onSeed}
+        seeding={seeding}
+        messageCount={messages.length}
+      />
 
       <div className="rounded-xl border border-border bg-card p-5 space-y-3">
         <div>

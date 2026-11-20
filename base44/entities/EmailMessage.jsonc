@@ -1,11 +1,15 @@
 {
   "name": "EmailMessage",
   "type": "object",
-  "description": "One piece of correspondence available to a staff member's AI Email Assistant. Records are private to the employee who owns them \u2014 no supervisor or administrator can read them. Today they are filled from labelled sample data or by hand; a future Outlook integration layer will supply real messages through the same fields.",
+  "description": "One piece of correspondence available to a staff member's AI Email Assistant. Records are private to the employee who owns them \u2014 no supervisor or administrator can read them. Messages arrive from the employee's own Outlook mailbox (the same Microsoft 365 connection the Outlook portal uses), from labelled sample data, or by hand.",
   "properties": {
     "owner_email": {
       "type": "string",
       "description": "Email of the employee this message belongs to. The assistant only ever reads messages matching the signed-in user."
+    },
+    "external_id": {
+      "type": "string",
+      "description": "Identifier of the message in the mailbox it came from (the Outlook message id) \u2014 used to avoid importing the same message twice"
     },
     "thread_id": {
       "type": "string",
@@ -82,7 +86,7 @@
         "blue"
       ],
       "default": "sample",
-      "description": "Where the message came from \u2014 sample data, typed in by the employee, or the Outlook integration layer once connected"
+      "description": "Where the message came from \u2014 sample data, typed in by the employee, or their own Outlook mailbox"
     },
     "is_demo": {
       "type": "boolean",

@@ -236,6 +236,7 @@ export default function EmailAssistant() {
             onDraft={() => setDraftOpen(true)}
             onSeed={() => seedSamples.mutate()}
             seeding={seedSamples.isPending}
+            onSynced={refresh}
           />
         </TabsContent>
 
