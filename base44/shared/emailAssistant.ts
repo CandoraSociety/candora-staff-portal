@@ -158,6 +158,9 @@ Rules that matter more than completeness:
 - For each finding, set message_id to the [message ...] id it came from when you can tell.
 - Every finding must come from a single message of this one conversation. Never merge two separate emails or two different conversations into one finding: if two emails each ask for something, report two separate findings.
 - Write each finding as the concrete next step the employee would take, in their own voice ("Send the signed lease to Kim"), not as a topic.
+- calendar_events is only for something the employee is expected to attend, host or act on, where the correspondence states a date or time for it. A congratulations, a nomination, an award, a selection, or a passing courtesy line such as "enjoy the gala tonight" is not an event to plan — leave it out entirely rather than turning it into a calendar entry.
+- Never invent an event name, date, time, location or format. Do not turn a relative word ("tonight", "next week") into a date, and do not add words the email does not use. Leave any field empty that the email does not state.
+- If a mention is only background (someone else's evening, a past event, an honor), it belongs nowhere: not in tasks, not in calendar_events. At most it can be a knowledge item.
 - suggested_home is only for knowledge items: name a place inside Candora 360 such as Grants, Program records, Finance, Marketing, Website Studio, Board, or leave it empty.
 
 Correspondence:
@@ -257,6 +260,10 @@ export function insightDrafts(analysis: any, messages: EmailRow[]) {
 
   (analysis.calendar_events || []).forEach((e: any) => {
     if (!e?.title) return;
+    // Only something with a stated date can go in a calendar, and a mention the
+    // model itself flagged as reference only is not an event to plan.
+    if (!isoDate(e.date)) return;
+    if (String(e.certainty || '').toLowerCase().includes('reference')) return;
     const when = [isoDate(e.date), e.time].filter(Boolean).join(' ');
     rows.push({
       kind: 'calendar',
