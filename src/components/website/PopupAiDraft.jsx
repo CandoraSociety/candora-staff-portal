@@ -17,8 +17,11 @@ export default function PopupAiDraft({ form, set, components, onComponentsChange
   const busy = !!step;
   const hasContent = !!(form.popup_title || form.popup_message || form.popup_image_url);
 
+  const componentNames = components.map((component) => component.name).filter(Boolean);
   const referenceNote = components.length
-    ? " The attached images are the organization's own brand components. Reproduce them faithfully and place them naturally in the composition — never redraw, recolour or restyle a logo."
+    ? ` The attached reference images are this organization's brand components (${componentNames.join(
+        ", "
+      )}) — pieces to set INSIDE the picture, never the picture itself. Build the scene first, then place each component into it small, sharp and undistorted, a logo no wider than about a sixth of the banner, over a calm area. Never return a logo alone on a plain or blurred background.`
     : "";
 
   const apply = async () => {
@@ -57,6 +60,10 @@ Change only what the instruction asks for. Return an empty string for every fiel
 - change_background: true only when the instruction asks for a different background behind the pop-up.
 - background_prompt: a detailed description for that background photograph, no text or lettering.
 If the pop-up is still empty, fill the title, message and button label from the instruction.
+Brand components the image creator can place in the picture: ${
+          componentNames.length ? componentNames.join(", ") : "none"
+        }.
+When the instruction is about how the pop-up looks, plan the whole look: the card image, and — when the pop-up has no background yet — a background that matches it in mood and in the organization's navy #0a0f29 and gold #fccf03 palette.
 Never invent statistics, dollar amounts, dates or program names that were not given to you.`,
         response_json_schema: {
           type: "object",
@@ -103,9 +110,9 @@ Never invent statistics, dollar amounts, dates or program names that were not gi
       if (plan.change_image) {
         setStep("image");
         const { url } = await base44.integrations.Core.GenerateImage({
-          prompt: `Create the image for a small pop-up card on a charity website. ${
-            plan.image_prompt || instruction.trim()
-          } Compose it to read well as a wide banner roughly three times as wide as it is tall, with a clear focal point and no text or lettering.${referenceNote}`,
+          prompt: `Design the wide banner image for the home-page pop-up of a charity website — a finished, art-directed picture of a moment or a place, not a logo on a background.
+The scene: ${plan.image_prompt || instruction.trim()}
+Compose it as a wide 16:9 banner with one clear focal point, keep the subject and any lettering away from the edges so the card's crop never cuts them, and let the mood feel warm and human.${referenceNote}`,
           existing_image_urls: components.map((component) => component.url).filter(Boolean),
         });
         if (url) {
@@ -117,9 +124,9 @@ Never invent statistics, dollar amounts, dates or program names that were not gi
       if (plan.change_background) {
         setStep("background");
         const { url } = await base44.integrations.Core.GenerateImage({
-          prompt: `Create a background photograph that sits behind a pop-up on a charity website, dimmed, so the card in front stands out. ${
-            plan.background_prompt || instruction.trim()
-          } Wide landscape photograph, soft and calm, no text or lettering.`,
+          prompt: `Create the background that sits behind a pop-up on a charity website, shown dimmed so the card in front stands out.
+The scene: ${plan.background_prompt || plan.image_prompt || instruction.trim()}
+A wide 16:9 landscape photograph in deep navy and warm gold tones, soft and calm, with generous open space through the middle where the card sits, and no text or lettering.`,
         });
         if (url) {
           set("popup_background_url", url);
