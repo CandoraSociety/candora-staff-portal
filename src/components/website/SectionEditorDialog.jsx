@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import WebsiteImageField from "@/components/website/WebsiteImageField";
+import SectionAiDraft from "@/components/website/SectionAiDraft";
 import { toDateTimeLocal } from "@/lib/websiteManager";
 
 const EMPTY = {
@@ -23,7 +24,16 @@ const EMPTY = {
   publish_at: "",
 };
 
-export default function SectionEditorDialog({ open, onOpenChange, section, pages = [], defaultPage, onSave }) {
+export default function SectionEditorDialog({
+  open,
+  onOpenChange,
+  section,
+  pages = [],
+  defaultPage,
+  onSave,
+  site,
+  existingHeadings = [],
+}) {
   const [form, setForm] = useState(EMPTY);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -81,6 +91,14 @@ export default function SectionEditorDialog({ open, onOpenChange, section, pages
         )}
 
         <div className="space-y-4">
+          <SectionAiDraft
+            form={form}
+            set={set}
+            pageLabel={pages.find((page) => page.page_key === form.page)?.label || form.page}
+            site={site}
+            existingHeadings={existingHeadings}
+          />
+
           <div className="grid sm:grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label>Page</Label>

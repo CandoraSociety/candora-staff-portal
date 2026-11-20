@@ -1,10 +1,11 @@
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
-import { Plus, Loader2, Pencil, Archive, Eye, EyeOff, FileText } from "lucide-react";
+import { Plus, Loader2, Pencil, Archive, Eye, EyeOff, FileText, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import SectionEditorDialog from "@/components/website/SectionEditorDialog";
+import PageAiBuilder from "@/components/website/PageAiBuilder";
 import ArchivedHeadersCard from "@/components/website/ArchivedHeadersCard";
 import PageSelectionsCard from "@/components/website/PageSelectionsCard";
 import PageSelectionDialog from "@/components/website/PageSelectionDialog";
@@ -16,6 +17,7 @@ export default function WebsitePages() {
   const [page, setPage] = useState("home");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState(null);
+  const [aiBuilderOpen, setAiBuilderOpen] = useState(false);
   const [selectionDialogOpen, setSelectionDialogOpen] = useState(false);
   const [editingSelection, setEditingSelection] = useState(null);
   const [selectionToDelete, setSelectionToDelete] = useState(null);
@@ -41,6 +43,13 @@ export default function WebsitePages() {
   });
 
   const refreshPages = () => queryClient.invalidateQueries({ queryKey: ["website-pages"] });
+
+  // Site-wide wording the AI uses as context when it writes for the website.
+  const { data: site = null } = useQuery({
+    queryKey: ["website-settings"],
+    queryFn: () =>
+      base44.entities.WebsiteSettings.list({ limit: 1 }).then((res) => res.items?.[0] || null),
+  });
 
   const menuPages = useMemo(() => activePages(pages), [pages]);
   const archivedSelections = useMemo(() => archivedPages(pages), [pages]);
@@ -136,6 +145,20 @@ export default function WebsitePages() {
     toast({ title: "Selection put back in the menu" });
   };
 
+  // A page drafted with AI: the blocks (and the page itself, when it is new)
+  // are already saved by the builder, so this only refreshes and reports.
+  const handlePageCreated = ({ pageKey, pageLabel, count, createdPage }) => {
+    refresh();
+    if (createdPage) {
+      refreshPages();
+      setPage(pageKey);
+    }
+    toast({
+      title: createdPage ? `“${pageLabel}” created` : `Added to ${pageLabel}`,
+      description: `${count} block${count === 1 ? "" : "s"} written. Edit any of them, then publish the site.`,
+    });
+  };
+
   const deleteSelectionPermanently = async (item) => {
     await base44.entities.WebsitePage.delete(item.id);
     refreshPages();
@@ -171,9 +194,14 @@ export default function WebsitePages() {
             Removing a header moves it to the archive, where it can be put back.
           </p>
         </div>
-        <Button onClick={openNew} className="self-start sm:self-auto">
-          <Plus className="w-4 h-4" /> Add block
-        </Button>
+        <div className="flex flex-wrap items-center gap-2 self-start sm:self-auto">
+          <Button variant="outline" onClick={() => setAiBuilderOpen(true)}>
+            <Sparkles className="w-4 h-4" /> Build a page with AI
+          </Button>
+          <Button onClick={openNew}>
+            <Plus className="w-4 h-4" /> Add block
+          </Button>
+        </div>
       </header>
 
       <div className="flex flex-wrap gap-1 p-1 rounded-lg bg-muted/60 w-fit">
@@ -288,6 +316,21 @@ export default function WebsitePages() {
         pages={menuPages}
         defaultPage={currentPage}
         onSave={saveSection}
+        site={site}
+        existingHeadings={pageSections
+          .filter((item) => item.id !== editing?.id)
+          .map((item) => item.heading)
+          .filter(Boolean)}
+      />
+
+      <PageAiBuilder
+        open={aiBuilderOpen}
+        onOpenChange={setAiBuilderOpen}
+        pages={menuPages}
+        sections={sections}
+        defaultPage={currentPage}
+        site={site}
+        onCreated={handlePageCreated}
       />
 
       <PageSelectionDialog
