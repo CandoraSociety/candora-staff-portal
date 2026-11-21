@@ -2,6 +2,8 @@ export const COMPONENT_TYPE_OPTIONS = [
   { value: 'kids_gift_shop', label: 'Kids Gift Shop', icon: '🎁', color: '#ef4444' },
   { value: 'santas_village', label: "Santa's Village", icon: '🎅', color: '#22c55e' },
   { value: 'community_lunch', label: 'Christmas Community Lunch', icon: '🍽️', color: '#f59e0b' },
+  { value: 'sleigh_bells_snowflakes', label: 'Sleigh Bells and Snowflakes', icon: '🔔', color: '#3b82f6' },
+  { value: 'donation_drive', label: 'Donation Drive', icon: '💝', color: '#ec4899' },
   { value: 'fundraiser', label: 'Annual Fundraiser', icon: '💰', color: '#8b5cf6' },
   { value: 'other', label: 'Other', icon: '❄️', color: '#3b82f6' },
 ];

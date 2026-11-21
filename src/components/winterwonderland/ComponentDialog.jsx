@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectTrigger, SelectContent, SelectItem, SelectValue } from '@/components/ui/select';
 import { COMPONENT_TYPE_OPTIONS, COMPONENT_STATUS_OPTIONS } from '@/lib/winterFestivalConstants';
 
-export default function ComponentDialog({ open, onClose, onSave, component }) {
+export default function ComponentDialog({ open, onClose, onSave, component, lockType = false }) {
   const [form, setForm] = useState({ name: '', component_type: 'other', description: '', lead_name: '', lead_email: '', location: '', schedule_description: '', status: 'planning', notes: '' });
 
   useEffect(() => {
@@ -30,7 +30,13 @@ export default function ComponentDialog({ open, onClose, onSave, component }) {
         <div className="grid gap-4 py-2">
           <div className="space-y-1.5"><Label>Name</Label><Input value={form.name} onChange={e => setForm(f => ({ ...f, name: e.target.value }))} placeholder="e.g. Kids Gift Shop" /></div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5"><Label>Type</Label><Select value={form.component_type} onValueChange={v => setForm(f => ({ ...f, component_type: v }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{COMPONENT_TYPE_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.icon} {o.label}</SelectItem>)}</SelectContent></Select></div>
+            <div className="space-y-1.5"><Label>Type</Label>
+              {lockType ? (
+                <Input value={COMPONENT_TYPE_OPTIONS.find(o => o.value === form.component_type)?.label || form.component_type} disabled />
+              ) : (
+                <Select value={form.component_type} onValueChange={v => setForm(f => ({ ...f, component_type: v }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{COMPONENT_TYPE_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.icon} {o.label}</SelectItem>)}</SelectContent></Select>
+              )}
+            </div>
             <div className="space-y-1.5"><Label>Status</Label><Select value={form.status} onValueChange={v => setForm(f => ({ ...f, status: v }))}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent>{COMPONENT_STATUS_OPTIONS.map(o => <SelectItem key={o.value} value={o.value}>{o.label}</SelectItem>)}</SelectContent></Select></div>
           </div>
           <div className="grid grid-cols-2 gap-3">

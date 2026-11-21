@@ -399,6 +399,11 @@ import WinterWonderlandDashboard from '@/pages/winterwonderland/WinterWonderland
 import WinterWonderlandComponents from '@/pages/winterwonderland/WinterWonderlandComponents';
 import WinterWonderlandSchedule from '@/pages/winterwonderland/WinterWonderlandSchedule';
 import WinterWonderlandFundraiser from '@/pages/winterwonderland/WinterWonderlandFundraiser';
+import WinterWonderlandKidsGiftShop from '@/pages/winterwonderland/WinterWonderlandKidsGiftShop';
+import WinterWonderlandSantasVillage from '@/pages/winterwonderland/WinterWonderlandSantasVillage';
+import WinterWonderlandSleighBells from '@/pages/winterwonderland/WinterWonderlandSleighBells';
+import WinterWonderlandCommunityLunch from '@/pages/winterwonderland/WinterWonderlandCommunityLunch';
+import WinterWonderlandDonationDrive from '@/pages/winterwonderland/WinterWonderlandDonationDrive';
 import CommunityDashboard from '@/pages/community/CommunityDashboard';
 import CommunityPrograms from '@/pages/community/CommunityPrograms';
 import CommunityProgramDetail from '@/pages/community/CommunityProgramDetail';
@@ -875,6 +880,11 @@ const AuthenticatedApp = () => {
           <Route path="/winter-wonderland/components" element={<WinterWonderlandComponents />} />
           <Route path="/winter-wonderland/schedule" element={<WinterWonderlandSchedule />} />
           <Route path="/winter-wonderland/fundraiser" element={<WinterWonderlandFundraiser />} />
+          <Route path="/winter-wonderland/kids-gift-shop" element={<WinterWonderlandKidsGiftShop />} />
+          <Route path="/winter-wonderland/santas-village" element={<WinterWonderlandSantasVillage />} />
+          <Route path="/winter-wonderland/sleigh-bells" element={<WinterWonderlandSleighBells />} />
+          <Route path="/winter-wonderland/community-lunch" element={<WinterWonderlandCommunityLunch />} />
+          <Route path="/winter-wonderland/donation-drive" element={<WinterWonderlandDonationDrive />} />
         </Route>
 
         {/* LMS (Learning Management System) - standalone layout */}
