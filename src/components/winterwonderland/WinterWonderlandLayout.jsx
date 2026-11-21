@@ -1,6 +1,6 @@
 import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Layers, CalendarDays, Sparkles, Gift, TreePine, Bell, UtensilsCrossed, HeartHandshake, ArrowLeft, Snowflake } from 'lucide-react';
+import { LayoutDashboard, Layers, CalendarDays, Gift, TreePine, Bell, UtensilsCrossed, HeartHandshake, ArrowLeft, Snowflake } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useOrgSettings } from '@/lib/useOrgSettings';
 import EAFloatingWidget from '@/components/ed/EAFloatingWidget';
@@ -14,7 +14,6 @@ const NAV_ITEMS = [
   { path: '/winter-wonderland/donation-drive', label: 'Donation Drive', icon: HeartHandshake },
   { path: '/winter-wonderland/schedule', label: 'Schedule', icon: CalendarDays },
   { path: '/winter-wonderland/components', label: 'Components', icon: Layers },
-  { path: '/winter-wonderland/fundraiser', label: 'Fundraiser', icon: Sparkles },
 ];
 
 export default function WinterWonderlandLayout() {
