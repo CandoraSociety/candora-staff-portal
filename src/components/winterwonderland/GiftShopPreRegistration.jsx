@@ -3,9 +3,9 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download, Plus, ShieldCheck, Users } from 'lucide-react';
+import { Download, Plus, Send, ShieldCheck } from 'lucide-react';
 import GiftShopInviteDialog from '@/components/winterwonderland/GiftShopInviteDialog';
-import GiftShopInviteBulkDialog from '@/components/winterwonderland/GiftShopInviteBulkDialog';
+import GiftShopInviteSendDialog from '@/components/winterwonderland/GiftShopInviteSendDialog';
 import GiftShopInviteRow from '@/components/winterwonderland/GiftShopInviteRow';
 import { inviteLink, inviteDisplayStatus } from '@/lib/giftShopInvites';
 
@@ -15,7 +15,7 @@ import { inviteLink, inviteDisplayStatus } from '@/lib/giftShopInvites';
 export default function GiftShopPreRegistration() {
   const qc = useQueryClient();
   const [singleOpen, setSingleOpen] = useState(false);
-  const [bulkOpen, setBulkOpen] = useState(false);
+  const [sendOpen, setSendOpen] = useState(false);
 
   const { data: invites = [], isLoading } = useQuery({
     queryKey: ['giftShopInvites'],
@@ -65,7 +65,7 @@ export default function GiftShopPreRegistration() {
           </div>
           <div className="flex flex-wrap items-center gap-2 pt-1">
             <Button size="sm" onClick={() => setSingleOpen(true)}><Plus className="h-4 w-4" /> Invite a family</Button>
-            <Button size="sm" variant="outline" onClick={() => setBulkOpen(true)}><Users className="h-4 w-4" /> Add a list</Button>
+            <Button size="sm" variant="outline" onClick={() => setSendOpen(true)}><Send className="h-4 w-4" /> Upload a list &amp; send invites</Button>
             <Button size="sm" variant="outline" onClick={downloadLinks} disabled={!openInvites.length}>
               <Download className="h-4 w-4" /> Download links
             </Button>
@@ -99,7 +99,7 @@ export default function GiftShopPreRegistration() {
       )}
 
       <GiftShopInviteDialog open={singleOpen} onOpenChange={setSingleOpen} onSaved={refresh} />
-      <GiftShopInviteBulkDialog open={bulkOpen} onOpenChange={setBulkOpen} onSaved={refresh} />
+      <GiftShopInviteSendDialog open={sendOpen} onOpenChange={setSendOpen} onSaved={refresh} />
     </div>
   );
 }
