@@ -182,7 +182,7 @@ export default function ProgramsRegistrationView() {
         <div className="space-y-10">
           {/* ===== Kids Gift Shop ===== */}
           <CategorySection title="Kids Gift Shop" portalPath={REG_AREA_PATHS.kids_gift_shop} portalLabel="All registrations" capacityControl={capacityControlFor('kids_gift_shop')}>
-            <ProgramCard title="Kids Gift Shop" subtitle="Register a parent/guardian with their children and pick a time slot (tracked under All Registrations)" isFull={isAreaFull('kids_gift_shop')} onRegister={() => setGiftShopOpen(true)} />
+            <ProgramCard title="Kids Gift Shop" subtitle="Register a child with their guardian, gifts and a shopping time slot (tracked under All Registrations)" isFull={isAreaFull('kids_gift_shop')} onRegister={() => setGiftShopOpen(true)} />
           </CategorySection>
 
           {/* ===== Adult Learning: ELL, Digital Literacy, EmpowerU ===== */}

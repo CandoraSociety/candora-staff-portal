@@ -152,10 +152,34 @@ export const WAITLIST_ACTIONS = {
 };
 
 // Kids Gift Shop time slots — values mirror the ProgramRegistration.time_slot enum.
-export const KIDS_GIFT_SHOP_TIME_SLOTS = [
-  { value: '9:00am-10:30am', label: '9:00 AM – 10:30 AM' },
-  { value: '10:30am-12:00pm', label: '10:30 AM – 12:00 PM' },
-  { value: '1:00pm-2:30pm', label: '1:00 PM – 2:30 PM' },
+// Kids Gift Shop shopping slots — every 15 minutes from 10:30 AM to 2:45 PM.
+// Each slot takes 25 registrations and closes once it is full.
+const KIDS_GIFT_SHOP_SLOT_TIMES = [
+  '10:30', '10:45', '11:00', '11:15', '11:30', '11:45',
+  '12:00', '12:15', '12:30', '12:45',
+  '13:00', '13:15', '13:30', '13:45',
+  '14:00', '14:15', '14:30', '14:45',
+];
+
+const slotLabel = (value) => {
+  const [hour, minute] = value.split(':').map(Number);
+  const suffix = hour >= 12 ? 'PM' : 'AM';
+  const displayHour = hour % 12 === 0 ? 12 : hour % 12;
+  return `${displayHour}:${String(minute).padStart(2, '0')} ${suffix}`;
+};
+
+export const KIDS_GIFT_SHOP_TIME_SLOTS = KIDS_GIFT_SHOP_SLOT_TIMES.map(value => ({ value, label: slotLabel(value) }));
+
+export const KIDS_GIFT_SHOP_SLOT_CAPACITY = 25;
+
+export const KIDS_GIFT_SHOP_AGE_BANDS = [
+  { value: '0-5', label: '0–5' },
+  { value: '6-16', label: '6–16' },
+];
+
+export const KIDS_GIFT_SHOP_GENDERS = [
+  { value: 'female', label: 'Female' },
+  { value: 'male', label: 'Male' },
 ];
 
 export const today = () => new Date().toISOString().split('T')[0];

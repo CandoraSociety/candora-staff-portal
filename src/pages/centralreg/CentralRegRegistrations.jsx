@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import StatusBadge from '@/components/rc/StatusBadge';
 import { useToast } from '@/components/ui/use-toast';
-import { REG_AREA_OPTIONS, REG_AREA_LABELS, REG_AREA_PATHS, AREA_STATUS_OPTIONS, AREA_ENTITIES, AREA_STATUS_LABELS } from '@/lib/centralRegConstants';
+import { REG_AREA_OPTIONS, REG_AREA_LABELS, REG_AREA_PATHS, AREA_STATUS_OPTIONS, AREA_ENTITIES, AREA_STATUS_LABELS, KIDS_GIFT_SHOP_TIME_SLOTS } from '@/lib/centralRegConstants';
 
 // Unified view across every registration store. Each row links back to the
 // entity its own portal uses, so status changes made here show up there too.
@@ -38,8 +38,10 @@ export default function CentralRegRegistrations() {
         key: `r-${r.id}`, area: isKids ? 'kids_gift_shop' : 'reception', id: r.id, name: r.participant_name,
         program: r.program_name, date: r.registration_date, status: r.status,
         detail: isKids ? [
-          r.time_slot,
-          (r.children || []).map(c => `${c.first_name} (${c.age})`).join(', '),
+          r.time_slot ? (KIDS_GIFT_SHOP_TIME_SLOTS.find(s => s.value === r.time_slot)?.label || r.time_slot) : null,
+          r.child_age_band ? `Age ${r.child_age_band}` : null,
+          r.gift_count ? `${r.gift_count} gift${r.gift_count > 1 ? 's' : ''}` : null,
+          (r.children || []).map(c => `${c.first_name} (${c.age})`).join(', ') || null,
         ].filter(Boolean).join(' · ') : null,
       };
     }),
