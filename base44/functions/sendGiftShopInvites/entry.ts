@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
       if (emailKey) seen.add(emailKey);
 
       const token = newToken();
-      const link = `${appUrl}/gift-shop-invite?token=${token}`;
+      const link = `${appUrl}/functions/giftShopInviteForm?token=${token}`;
 
       try {
         await base44.asServiceRole.entities.GiftShopInvite.create({

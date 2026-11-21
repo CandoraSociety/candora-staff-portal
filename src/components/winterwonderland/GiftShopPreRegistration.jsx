@@ -71,7 +71,7 @@ export default function GiftShopPreRegistration() {
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            Copy links from the published app so families open the live page, not the editing preview.
+            Every link opens the standalone pre-registration form, which has no access to any other part of Candora 360.
           </p>
         </CardContent>
       </Card>

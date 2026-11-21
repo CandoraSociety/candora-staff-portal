@@ -9,7 +9,11 @@ export const newInviteToken = () => {
   return raw.replace(/[^a-zA-Z0-9]/g, '');
 };
 
-export const inviteLink = (token) => `${window.location.origin}/gift-shop-invite?token=${token}`;
+// The form lives on its own standalone page, served outside the portal, so the
+// link never opens Candora 360 itself.
+export const PUBLIC_APP_ORIGIN = 'https://candora-360.base44.app';
+
+export const inviteLink = (token) => `${PUBLIC_APP_ORIGIN}/functions/giftShopInviteForm?token=${token}`;
 
 export const INVITE_STATUS_META = {
   invited: { label: 'Link open', className: 'bg-amber-100 text-amber-800' },
