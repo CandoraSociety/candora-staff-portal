@@ -32,11 +32,6 @@
       "default": true,
       "description": "Whether the registrar must approve requests. False = 'Do not require registrar approval to register' (public submissions are registered immediately)"
     },
-    "invite_only": {
-      "type": "boolean",
-      "default": false,
-      "description": "Pre-registration: only personal single-use invitation links work for this program. The shared QR link is refused while this is on."
-    },
     "active_learners_only": {
       "type": "boolean",
       "default": false,

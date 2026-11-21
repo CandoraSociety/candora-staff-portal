@@ -71,19 +71,6 @@
       "type": "string",
       "description": "Notes submitted with the request"
     },
-    "via_invite": {
-      "type": "boolean",
-      "default": false,
-      "description": "True when the request came through a personal pre-registration invitation link rather than the shared QR link"
-    },
-    "invite_batch": {
-      "type": "string",
-      "description": "Label of the invitation batch this request came from, e.g. Winter 2026 pre-registration"
-    },
-    "invite_token": {
-      "type": "string",
-      "description": "The personal invitation link code used for this request"
-    },
     "status": {
       "type": "string",
       "enum": [
