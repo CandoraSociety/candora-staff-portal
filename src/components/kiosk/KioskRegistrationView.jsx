@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { ClipboardCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { DATA_STORAGE_NOTE } from '@/lib/dataPrivacy';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -268,6 +269,8 @@ export default function KioskRegistrationView({ prompt, onRespond, onClose }) {
         </Section>
 
         {error && <p className="text-sm text-destructive">{error}</p>}
+
+        <p className="text-sm text-muted-foreground leading-relaxed">{DATA_STORAGE_NOTE}</p>
 
         <Button onClick={submit} disabled={saving} className="w-full h-16 text-xl font-semibold">
           {saving ? 'Sending…' : 'Send to the front desk'}

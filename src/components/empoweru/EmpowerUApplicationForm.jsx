@@ -6,6 +6,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Eye, Send, AlertCircle } from "lucide-react";
 import { DELIVERY_MODE_LABELS } from "@/lib/empoweruConstants";
 import { formatDate } from "@/lib/dateUtils";
+import DataPrivacyAck from "@/components/privacy/DataPrivacyAck";
 
 export const GENDER_OPTIONS = [
   { value: "female", label: "Female" },
@@ -106,6 +107,7 @@ export default function EmpowerUApplicationForm({ cohort, previewMode = false, s
   const [form, setForm] = useState(() => ({
     application_date: new Date().toISOString().split("T")[0],
     consent_agreed: false,
+    data_storage_agreed: false,
     website: "",
     first_name: prefilledName?.first || "",
     last_name: prefilledName?.last || "",
@@ -133,6 +135,11 @@ export default function EmpowerUApplicationForm({ cohort, previewMode = false, s
     if (previewMode) return;
     if (!form.consent_agreed) {
       setValidationError("Please read and accept the Release of Information agreement (question 1) to submit the application.");
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    if (!form.data_storage_agreed) {
+      setValidationError("Please confirm how your information is stored before submitting the application.");
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
@@ -262,7 +269,11 @@ export default function EmpowerUApplicationForm({ cohort, previewMode = false, s
           {previewMode ? (
             <p className="text-xs text-muted-foreground border-t border-border pt-4">End of preview — the applicant would see a Submit button here.</p>
           ) : (
-            <div className="pt-2">
+            <div className="pt-2 space-y-4">
+              <DataPrivacyAck
+                checked={form.data_storage_agreed}
+                onCheckedChange={v => update("data_storage_agreed", v === true)}
+              />
               <Button type="submit" disabled={submitting} className="w-full h-11 text-base">
                 <Send className="h-4 w-4" />
                 {submitting ? "Submitting..." : "Submit Application"}

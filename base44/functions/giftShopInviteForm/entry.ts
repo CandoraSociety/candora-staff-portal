@@ -22,6 +22,20 @@ export default async function (req) {
       const { payload, values } = readInviteForm(form);
       const token = values.token || queryToken;
 
+      if (!values.data_ack) {
+        const current = token ? await buildPublicInvite(base44.asServiceRole, token) : null;
+        return giftShopHtmlResponse(
+          renderInvitePage({
+            state: current?.state || 'invalid',
+            invite: current?.invite,
+            slots: current?.slots || [],
+            values: { ...values, token },
+            error: 'Please tick the box confirming how your information is stored, then complete registration.',
+          }),
+          400,
+        );
+      }
+
       const result = await redeemGiftShopInvite(base44.asServiceRole, token, payload);
       if (result.ok) {
         return giftShopHtmlResponse(renderSuccessPage(result));

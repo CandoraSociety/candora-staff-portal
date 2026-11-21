@@ -7,6 +7,7 @@ import { Check, Heart, Loader2, Lock } from 'lucide-react';
 import { activeTiers, formatMoneyExact, tierAmountLabel } from '@/lib/donorConstants';
 import { feeToCover } from '@/lib/stripeFees';
 import { PAYMENTS_READY, startCampaignCheckout } from '@/lib/campaignPayments';
+import { DONATION_STORAGE_NOTE } from '@/lib/dataPrivacy';
 
 // The giving box on a campaign's public page. A supporter picks one of the
 // campaign's giving options (and a price variation where there are several, or
@@ -286,6 +287,8 @@ export default function CampaignDonate({
         <Lock className="w-3.5 h-3.5" />
         Secure card payment · {PAYMENTS_READY ? 'processed by Stripe' : 'card giving being set up'}
       </div>
+
+      <p className="text-xs text-muted-foreground leading-relaxed">{DONATION_STORAGE_NOTE}</p>
 
       {campaign.tax_receipt_note && (
         <p className="text-xs text-muted-foreground border-t pt-3">{campaign.tax_receipt_note}</p>

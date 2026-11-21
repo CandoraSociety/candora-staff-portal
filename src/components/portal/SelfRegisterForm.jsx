@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { AlertCircle, Loader2 } from 'lucide-react';
+import DataPrivacyAck from '@/components/privacy/DataPrivacyAck';
 
 // Public self-registration form for one program. Submits a REQUEST (the
 // registrar approves it unless the program is set to auto-approve).
@@ -21,10 +22,11 @@ export default function SelfRegisterForm({ program, onDone }) {
   });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [dataAck, setDataAck] = useState(false);
 
   const update = (f, v) => setForm(p => ({ ...p, [f]: v }));
   const learner = (program.active_learners || []).find(l => l.id === form.learner_id) || null;
-  const canSubmit = restricted ? !!learner : (!!form.first_name && !!form.last_name);
+  const canSubmit = (restricted ? !!learner : (!!form.first_name && !!form.last_name)) && dataAck;
 
   const handleSubmit = async () => {
     if (!canSubmit || saving) return;
@@ -139,6 +141,8 @@ export default function SelfRegisterForm({ program, onDone }) {
           ? 'Submitting this form sends a registration request — our team will review it and follow up with you.'
           : 'Submitting this form registers you for this program right away.'}
       </p>
+
+      <DataPrivacyAck checked={dataAck} onCheckedChange={setDataAck} />
 
       <Button className="w-full" size="lg" onClick={handleSubmit} disabled={!canSubmit || saving}>
         {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}

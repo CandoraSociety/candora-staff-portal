@@ -8,6 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PlusCircle, Trash2, CheckCircle2, Upload, FileText } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { DATA_STORAGE_ACK } from '@/lib/dataPrivacy';
 
 const PROVINCES = ['AB','BC','MB','NB','NL','NS','NT','NU','ON','PE','QC','SK','YT'];
 
@@ -123,6 +124,7 @@ export default function PathwaysPublicIntake() {
   const [consents, setConsents] = useState({
     eligibility: false,
     accurate: false,
+    data_storage: false,
   });
   const [officeUse, setOfficeUse] = useState({
     english_proficiency: false,
@@ -639,6 +641,7 @@ export default function PathwaysPublicIntake() {
               {[
                 { key: 'eligibility', text: 'I understand that following submission of this form I will be assessed for eligibility for participation in the program. Submission of this form does not guarantee acceptance into the Pathways program.' },
                 { key: 'accurate', text: 'I acknowledge that everything in this form is accurate and true to the best of my knowledge.' },
+                { key: 'data_storage', text: DATA_STORAGE_ACK },
               ].map(item => (
                 <div key={item.key} className="flex items-start gap-3">
                   <Checkbox

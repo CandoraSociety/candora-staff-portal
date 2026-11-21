@@ -13,6 +13,14 @@ import {
 } from './giftShopInvites.ts';
 
 export const GIFT_SHOP_CONTACT_EMAIL = 'info@candorasociety.com';
+
+// Kept in step with src/lib/dataPrivacy.js — every Candora form says the same
+// thing about where a family's details are stored.
+const DATA_STORAGE_ACK =
+  'I understand that the information I submit is stored by Base44, the third-party platform that hosts Candora 360. ' +
+  'That data is kept in the United States, is encrypted in transit and at rest, and can be accessed by authorized ' +
+  'Candora staff and, when needed for support or security, by Base44. It is used only to run the Kids Gift Shop, and ' +
+  `I can ask to see, correct or delete it by emailing ${GIFT_SHOP_CONTACT_EMAIL}.`;
 const LOGO_URL = 'https://media.base44.com/images/public/6a249282cb496579542673b7/c7fbd36e2_logo.png';
 
 const AGE_LABELS = { '0-5': '0–5 years', '6-16': '6–16 years' };
@@ -70,6 +78,9 @@ const STYLES = `
   .btn:disabled{opacity:.6;cursor:not-allowed}
   .btn-ghost{background:#fff;color:var(--navy);border:1px solid var(--line);font-weight:600;padding:11px 16px;font-size:14px;border-radius:9px;cursor:pointer}
   .submit{width:100%;margin-top:8px}
+  .privacy{background:#f4f6fb;border:1px solid var(--line);border-radius:10px;padding:14px 16px;margin:16px 0 4px}
+  .privacy label{display:flex;gap:10px;align-items:flex-start;margin:0;font-size:13px;font-weight:400;line-height:1.55;color:var(--muted)}
+  .privacy input{margin:2px 0 0;flex:0 0 auto;width:18px;height:18px;accent-color:var(--navy)}
   .done{text-align:center;padding:34px 20px}
   .done .tick{width:58px;height:58px;border-radius:50%;background:#ecfdf5;color:#047857;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px}
   footer{padding:0 0 40px;text-align:center;color:var(--muted);font-size:13px}
@@ -319,6 +330,13 @@ export function renderInvitePage({ state, invite, slots = [], values = {}, error
           <div class="slots">${slotCards}</div>
         </div>
 
+        <div class="privacy">
+          <label>
+            <input type="checkbox" name="data_ack" value="yes"${values.data_ack ? ' checked' : ''} required />
+            <span>${DATA_STORAGE_ACK}</span>
+          </label>
+        </div>
+
         <button type="submit" class="btn submit">Complete registration</button>
       </form>
     `,
@@ -363,6 +381,7 @@ export function readInviteForm(form) {
       guardian_name: String(form.get('guardian_name') || ''),
       contact: String(form.get('contact') || ''),
       time_slot: String(form.get('time_slot') || ''),
+      data_ack: form.get('data_ack') === 'yes',
       children: values,
     },
   };
