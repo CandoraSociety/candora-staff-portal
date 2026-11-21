@@ -1,6 +1,17 @@
 import { useEffect, useState } from "react";
 import { Snowflake, Clock } from "lucide-react";
-import { cn } from "@/lib/utils";
+
+// The site's own colours, used for the "No theme" stage so the preview always
+// shows the home page the way the website draws it.
+const NORMAL_PALETTE = {
+  surface: "#f2eee5",
+  primary: "#f6d666",
+  secondary: "#e5ddcd",
+  accent: "#2b2de8",
+  ink: "#2c2e43",
+};
+
+const NAV_ITEMS = ["Home", "About", "Programs", "Events", "Get Involved", "Contact", "Donate"];
 
 function useCountdown(target) {
   const [left, setLeft] = useState(0);
@@ -54,44 +65,46 @@ function JackOLantern({ className, style }) {
   );
 }
 
+// The decorations the website lays over the hero for each stage.
 function Ornaments({ motif, accent }) {
   if (motif === "bats_and_pumpkins") {
     return (
       <>
-        <Bat className="absolute top-3 left-4 w-8 h-8 opacity-70" style={{ color: "#0b0714" }} />
-        <Bat className="absolute top-7 left-16 w-5 h-5 opacity-50" style={{ color: "#0b0714" }} />
-        <Bat className="absolute top-4 right-24 w-6 h-6 opacity-45" style={{ color: "#0b0714" }} />
-        <JackOLantern className="absolute bottom-2 right-3 w-12 h-12" />
-        <JackOLantern className="absolute bottom-1 right-14 w-7 h-7 opacity-80" />
+        <Bat className="absolute top-2 left-3 w-7 h-7 opacity-80" style={{ color: "#0b0714" }} />
+        <Bat className="absolute top-8 left-14 w-5 h-5 opacity-60" style={{ color: "#0b0714" }} />
+        <Bat className="absolute top-3 left-1/2 w-6 h-6 opacity-50" style={{ color: "#0b0714" }} />
+        <JackOLantern className="absolute bottom-8 left-4 w-9 h-9" />
+        <JackOLantern className="absolute bottom-8 left-14 w-6 h-6 opacity-80" />
       </>
     );
   }
   if (motif === "snow_and_lights") {
     return (
       <>
-        <Snowflake className="absolute top-4 right-5 w-7 h-7 opacity-70" style={{ color: accent }} />
-        <span className="absolute top-4 left-4 right-16 h-[2px]" style={{ background: accent, opacity: 0.5 }} />
-        {[10, 28, 46, 64, 82].map((left, index) => (
+        <Snowflake className="absolute top-3 left-4 w-6 h-6 opacity-80" style={{ color: accent }} />
+        <Snowflake className="absolute top-9 left-14 w-4 h-4 opacity-60" style={{ color: accent }} />
+        <span className="absolute top-2 left-3 right-3 h-[2px]" style={{ background: accent, opacity: 0.45 }} />
+        {[12, 30, 48, 66, 84].map((left, index) => (
           <span
             key={left}
-            className="absolute w-1.5 h-1.5 rounded-full"
-            style={{ top: 18, left: `${left}%`, background: accent, animationDelay: `${index * 0.3}s` }}
+            className="absolute w-1.5 h-1.5 rounded-full animate-pulse"
+            style={{ top: 6, left: `${left}%`, background: accent, animationDelay: `${index * 0.3}s` }}
           />
         ))}
       </>
     );
   }
   if (motif === "countdown") {
-    return <Clock className="absolute top-4 right-5 w-7 h-7 opacity-60" style={{ color: accent }} />;
+    return <Clock className="absolute top-3 left-4 w-6 h-6 opacity-70" style={{ color: accent }} />;
   }
   if (motif === "fireworks") {
     return (
       <>
         {[
-          { top: "18%", left: "12%", delay: "0s" },
-          { top: "28%", left: "72%", delay: "0.5s" },
-          { top: "62%", left: "28%", delay: "1s" },
-          { top: "52%", left: "84%", delay: "1.4s" },
+          { top: "16%", left: "10%", delay: "0s" },
+          { top: "26%", left: "38%", delay: "0.5s" },
+          { top: "18%", left: "70%", delay: "1s" },
+          { top: "60%", left: "24%", delay: "1.4s" },
         ].map((dot, index) => (
           <span
             key={index}
@@ -105,62 +118,77 @@ function Ornaments({ motif, accent }) {
   return null;
 }
 
-// A small stand-in for the home page hero, drawn in the stage's own colours and
-// with its own hero photo, so a stage can be judged before it is switched on.
-export default function ThemeStagePreview({ stage, fallbackHeadline, fallbackImage }) {
+// A miniature of the website's home page hero, drawn with the real site content
+// (headline, supporting line, button, hero photo, menu bar) in the stage's own
+// colours, so a stage looks here exactly as it does on the site before it is
+// switched on.
+export default function ThemeStagePreview({ stage, site }) {
   const left = useCountdown(stage?.countdown_to);
-  const palette = stage?.palette;
-  const headline = stage?.hero_headline || fallbackHeadline || "Welcome to Candora";
-  const heroImage = stage?.hero_image_url || fallbackImage || "";
+  const palette = stage?.palette || NORMAL_PALETTE;
+  const headline = stage?.hero_headline || site?.hero_headline || "Welcome to Candora";
+  const subheadline = site?.hero_subheadline || "";
+  const ctaLabel = site?.hero_cta_label || "";
+  const heroImage = stage?.hero_image_url || site?.hero_image_url || "";
 
   return (
     <div
-      className={cn(
-        "relative overflow-hidden rounded-xl border p-5 min-h-[150px] flex items-center gap-4",
-        !palette && "bg-muted/40 border-border"
-      )}
-      style={
-        palette
-          ? {
-              background: `linear-gradient(155deg, ${palette.surface} 0%, ${palette.secondary} 100%)`,
-              color: palette.ink,
-              borderColor: palette.secondary,
-            }
-          : undefined
-      }
+      className="relative overflow-hidden rounded-xl border shadow-sm"
+      style={{
+        background: `linear-gradient(155deg, ${palette.surface} 0%, ${palette.secondary} 100%)`,
+        color: palette.ink,
+        borderColor: palette.secondary,
+      }}
     >
-      <Ornaments motif={stage?.motif} accent={palette?.accent} />
+      <Ornaments motif={stage?.motif} accent={palette.accent} />
 
-      <div className="relative space-y-2 min-w-0 flex-1">
-        <p className="text-[10px] uppercase tracking-[0.18em] font-semibold opacity-70">
-          {stage?.label || "No theme"}
-        </p>
-        <p className="font-display text-xl font-bold leading-tight">{headline}</p>
-        {stage?.countdown_to ? (
-          <p
-            className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-semibold tabular-nums"
-            style={{ background: palette?.primary, color: palette?.surface }}
-          >
-            <Clock className="w-3.5 h-3.5" /> {formatLeft(left)}
+      <div className="relative flex items-center gap-3 p-4 pb-3">
+        <div className="min-w-0 flex-1 space-y-1.5">
+          <p className="text-[9px] uppercase tracking-[0.18em] font-semibold opacity-70">
+            {stage?.label || "No theme"}
           </p>
-        ) : (
-          <p className="text-[11px] opacity-70">
-            {stage?.fireworks
-              ? "Fireworks behind the hero"
-              : stage?.hero_image_url
-              ? "Seasonal hero photo replaces the sunflower"
-              : stage?.motif === "none" || !stage?.motif
-              ? "Normal site colours"
-              : "Seasonal decoration across the site"}
-          </p>
+          <p className="font-display text-base font-bold leading-tight">{headline}</p>
+          {subheadline && (
+            <p className="text-[10px] leading-snug opacity-75 line-clamp-2">{subheadline}</p>
+          )}
+          {stage?.countdown_to ? (
+            <p
+              className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-semibold tabular-nums"
+              style={{ background: palette.primary, color: palette.surface }}
+            >
+              <Clock className="w-3 h-3" /> {formatLeft(left)}
+            </p>
+          ) : (
+            ctaLabel && (
+              <span
+                className="inline-flex rounded-md px-2.5 py-1 text-[10px] font-bold"
+                style={{ background: palette.primary, color: palette.surface }}
+              >
+                {ctaLabel}
+              </span>
+            )
+          )}
+        </div>
+
+        {heroImage && (
+          <img
+            src={heroImage}
+            alt=""
+            className="relative shrink-0 h-24 w-24 object-contain drop-shadow-md"
+          />
         )}
       </div>
 
-      {heroImage && (
-        <div className="relative shrink-0 w-20 h-20 rounded-full overflow-hidden ring-2 ring-white/15">
-          <img src={heroImage} alt="" className="w-full h-full object-cover" />
-        </div>
-      )}
+      {/* The site's menu bar, in the stage's own colour */}
+      <div
+        className="relative flex items-center justify-center gap-2.5 px-2 py-1.5"
+        style={{ background: palette.primary, color: palette.surface }}
+      >
+        {NAV_ITEMS.map((item) => (
+          <span key={item} className="text-[8px] font-bold uppercase tracking-wide whitespace-nowrap">
+            {item}
+          </span>
+        ))}
+      </div>
     </div>
   );
 }
