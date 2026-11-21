@@ -1,0 +1,133 @@
+{
+  "name": "WebsiteSeoAudit",
+  "type": "object",
+  "description": "One review the AI ran over the whole public website \u2014 its search and AI-discovery score, the problems worth fixing, the quick wins, and the phrases the site should be found for. Kept so staff can see whether the site is improving between reviews.",
+  "properties": {
+    "score": {
+      "type": "number",
+      "description": "Overall search and AI-discovery score out of 100"
+    },
+    "summary": {
+      "type": "string",
+      "description": "A short plain-language verdict on the site's online presence"
+    },
+    "findings": {
+      "type": "array",
+      "description": "Problems found, worst first",
+      "items": {
+        "type": "object",
+        "properties": {
+          "area": {
+            "type": "string",
+            "description": "What part of the site the problem is in, e.g. Page titles, Home page, Contact details, Structured data"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "high",
+              "medium",
+              "low"
+            ],
+            "description": "high = holding the site back now; medium = worth fixing soon; low = polish"
+          },
+          "issue": {
+            "type": "string",
+            "description": "What is wrong, stated plainly"
+          },
+          "fix": {
+            "type": "string",
+            "description": "Exactly what to change, in one or two steps"
+          }
+        }
+      }
+    },
+    "quick_wins": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Changes that are quick to make and worth doing first"
+    },
+    "keywords": {
+      "type": "array",
+      "description": "Phrases the site should be found for, with the intent behind each",
+      "items": {
+        "type": "object",
+        "properties": {
+          "term": {
+            "type": "string"
+          },
+          "intent": {
+            "type": "string",
+            "description": "What the person searching is trying to do, e.g. find food help, donate, register for a class"
+          },
+          "note": {
+            "type": "string",
+            "description": "Which page the phrase should be used on, or why it matters"
+          }
+        }
+      }
+    },
+    "ai_search_notes": {
+      "type": "string",
+      "description": "How the site currently reads to AI assistants such as ChatGPT or Google's AI answers, and what would help them describe Candora accurately"
+    },
+    "generated_by_name": {
+      "type": "string",
+      "description": "Staff member who ran the review"
+    }
+  },
+  "required": [
+    "score",
+    "summary"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

@@ -1,0 +1,116 @@
+{
+  "name": "WebsiteSeoPage",
+  "type": "object",
+  "description": "Search settings for one page of the public website \u2014 the title and description a search engine or AI assistant shows, the words the page should be found for, its share image and whether it may be indexed. One record per page, matched on page_key (the same key Page Content uses), so writing here never touches the page's copy.",
+  "properties": {
+    "page_key": {
+      "type": "string",
+      "description": "Stable key of the page this record belongs to \u2014 the same page_key used in Page Content, e.g. home, about, programs"
+    },
+    "page_label": {
+      "type": "string",
+      "description": "Page name as staff see it, e.g. About"
+    },
+    "path": {
+      "type": "string",
+      "description": "Web address of the page, e.g. /about"
+    },
+    "meta_title": {
+      "type": "string",
+      "description": "Title shown in search results and browser tabs \u2014 aim for 50-60 characters, ending with the organization name"
+    },
+    "meta_description": {
+      "type": "string",
+      "description": "One or two sentences shown under the title in search results \u2014 aim for 140-160 characters and say what the page offers"
+    },
+    "keywords": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Words and phrases this page should be found for, most important first"
+    },
+    "og_image_url": {
+      "type": "string",
+      "description": "Picture shown when the page is shared on social media or in a message (publicly stored file URL)"
+    },
+    "canonical_path": {
+      "type": "string",
+      "description": "The address search engines should treat as the page's real home, when it differs from path"
+    },
+    "is_indexable": {
+      "type": "boolean",
+      "default": true,
+      "description": "Off hides the page from search engines and AI assistants while keeping it live for visitors"
+    },
+    "ai_score": {
+      "type": "number",
+      "description": "How well this page's search settings scored when the AI last reviewed them, out of 100"
+    },
+    "ai_notes": {
+      "type": "string",
+      "description": "The AI's short explanation of what it wrote and what would improve the page"
+    },
+    "ai_generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the AI last wrote or reviewed this page's search settings"
+    },
+    "updated_by_name": {
+      "type": "string",
+      "description": "Staff member who last saved these settings"
+    }
+  },
+  "required": [
+    "page_key"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

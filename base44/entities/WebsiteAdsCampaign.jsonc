@@ -1,0 +1,219 @@
+{
+  "name": "WebsiteAdsCampaign",
+  "type": "object",
+  "description": "A paid promotion planned in Website Studio \u2014 what it is trying to achieve, the money behind it, the audience, and the ad copy and keywords the AI wrote for it. Planning and approval live here; the campaign is launched and funded from Marketing \u2192 Google Ads, and its status is updated here once it is running.",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Campaign name as staff see it, e.g. Winter Warmth appeal \u2014 search"
+    },
+    "objective": {
+      "type": "string",
+      "enum": [
+        "awareness",
+        "traffic",
+        "leads",
+        "donations",
+        "event_attendance",
+        "program_registration",
+        "recruitment",
+        "other"
+      ],
+      "enumColors": [
+        "blue",
+        "purple",
+        "green",
+        "yellow",
+        "pink",
+        "blue",
+        "gray",
+        "gray"
+      ],
+      "default": "traffic",
+      "description": "What the campaign is for \u2014 this shapes the copy and the words it targets"
+    },
+    "channel": {
+      "type": "string",
+      "enum": [
+        "google_search",
+        "google_display",
+        "google_performance_max",
+        "meta_ads",
+        "other"
+      ],
+      "enumColors": [
+        "blue",
+        "purple",
+        "green",
+        "blue",
+        "gray"
+      ],
+      "default": "google_search",
+      "description": "Where the ads run"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "ready",
+        "live",
+        "paused",
+        "completed"
+      ],
+      "enumColors": [
+        "gray",
+        "blue",
+        "green",
+        "yellow",
+        "purple"
+      ],
+      "default": "draft",
+      "description": "draft = being written; ready = approved and waiting to launch; live = running and spending; paused = stopped for now; completed = finished"
+    },
+    "budget_total": {
+      "type": "number",
+      "description": "Total amount set aside for the campaign"
+    },
+    "budget_daily": {
+      "type": "number",
+      "description": "How much the campaign may spend each day"
+    },
+    "currency": {
+      "type": "string",
+      "default": "CAD"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "audience": {
+      "type": "string",
+      "description": "Who the ads should reach \u2014 the people, the area and what they are looking for"
+    },
+    "offer": {
+      "type": "string",
+      "description": "What the ad is inviting people to do, e.g. give a gift, register for a class, book a catering tasting"
+    },
+    "landing_page": {
+      "type": "string",
+      "description": "The page on the website the ad sends people to"
+    },
+    "keywords": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Search phrases the ads should appear for, most important first"
+    },
+    "negative_keywords": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Phrases to keep the ads away from, so the budget is not spent on the wrong searches"
+    },
+    "headlines": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Short ad headlines the AI wrote \u2014 each kept inside the character limit search ads allow"
+    },
+    "descriptions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Longer ad lines shown under the headline"
+    },
+    "call_to_action": {
+      "type": "string",
+      "description": "The action the ad asks for, e.g. Donate, Register, Book"
+    },
+    "targeting_notes": {
+      "type": "string",
+      "description": "How the campaign should be targeted \u2014 area, language, schedule, audiences to layer on"
+    },
+    "projected_clicks": {
+      "type": "number",
+      "description": "Clicks the budget is expected to buy"
+    },
+    "projected_conversions": {
+      "type": "number",
+      "description": "Actions expected from those clicks \u2014 gifts, registrations, enquiries"
+    },
+    "projected_cost_per_click": {
+      "type": "number",
+      "description": "Expected cost per click in the campaign currency"
+    },
+    "ai_notes": {
+      "type": "string",
+      "description": "The AI's reasoning about the plan and what would make it work better"
+    },
+    "launch_notes": {
+      "type": "string",
+      "description": "What has to be in place before launch \u2014 tracking, budget approval, a finished landing page"
+    },
+    "created_by_name": {
+      "type": "string",
+      "description": "Staff member who planned the campaign"
+    }
+  },
+  "required": [
+    "name",
+    "objective"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

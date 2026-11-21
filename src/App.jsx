@@ -142,6 +142,9 @@ import WebsitePages from '@/pages/website/WebsitePages';
 import WebsiteNews from '@/pages/website/WebsiteNews';
 import WebsiteSettings from '@/pages/website/WebsiteSettings';
 import WebsiteFeed from '@/pages/website/WebsiteFeed';
+import WebsiteSeo from '@/pages/website/WebsiteSeo';
+import WebsiteAds from '@/pages/website/WebsiteAds';
+import WebsitePresence from '@/pages/website/WebsitePresence';
 
 // Candora File Manager
 import FileManagerLayout from '@/components/filemanager/FileManagerLayout';
@@ -915,6 +918,9 @@ const AuthenticatedApp = () => {
           <Route path="/website/events" element={<WebsiteEvents />} />
           <Route path="/website/pages" element={<WebsitePages />} />
           <Route path="/website/news" element={<WebsiteNews />} />
+          <Route path="/website/seo" element={<WebsiteSeo />} />
+          <Route path="/website/ads" element={<WebsiteAds />} />
+          <Route path="/website/presence" element={<WebsitePresence />} />
           <Route path="/website/settings" element={<WebsiteSettings />} />
           <Route path="/website/feed" element={<WebsiteFeed />} />
         </Route>
