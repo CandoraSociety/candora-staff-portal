@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Snowflake, Clock } from "lucide-react";
+import { Snowflake, Clock, Sparkles, RotateCcw } from "lucide-react";
 
 // The site's own colours, used for the "No theme" stage so the preview always
 // shows the home page the way the website draws it.
@@ -123,72 +123,104 @@ function Ornaments({ motif, accent }) {
 // colours, so a stage looks here exactly as it does on the site before it is
 // switched on.
 export default function ThemeStagePreview({ stage, site }) {
+  // A countdown stage has a second half the calendar cannot show here: the
+  // moment the clock reaches zero. This flips the same preview past midnight so
+  // the fireworks and the new-year headline can be seen before December 31.
+  const [atZero, setAtZero] = useState(false);
+  useEffect(() => setAtZero(false), [stage?.id]);
+
   const left = useCountdown(stage?.countdown_to);
+  const celebrating = !!stage?.countdown_to && atZero;
+  const newYear = stage?.countdown_to ? new Date(stage.countdown_to).getUTCFullYear() : null;
+
   const palette = stage?.palette || NORMAL_PALETTE;
-  const headline = stage?.hero_headline || site?.hero_headline || "Welcome to Candora";
+  const headline = celebrating
+    ? `Happy New Year ${newYear}!`
+    : stage?.hero_headline || site?.hero_headline || "Welcome to Candora";
   const subheadline = site?.hero_subheadline || "";
   const ctaLabel = site?.hero_cta_label || "";
   const heroImage = stage?.hero_image_url || site?.hero_image_url || "";
+  const showCountdown = !!stage?.countdown_to && !celebrating;
 
   return (
-    <div
-      className="relative overflow-hidden rounded-xl border shadow-sm"
-      style={{
-        background: `linear-gradient(155deg, ${palette.surface} 0%, ${palette.secondary} 100%)`,
-        color: palette.ink,
-        borderColor: palette.secondary,
-      }}
-    >
-      <Ornaments motif={stage?.motif} accent={palette.accent} />
+    <div className="space-y-2">
+      <div
+        className="relative overflow-hidden rounded-xl border shadow-sm"
+        style={{
+          background: `linear-gradient(155deg, ${palette.surface} 0%, ${palette.secondary} 100%)`,
+          color: palette.ink,
+          borderColor: palette.secondary,
+        }}
+      >
+        <Ornaments motif={celebrating ? "fireworks" : stage?.motif} accent={palette.accent} />
 
-      <div className="relative flex items-center gap-3 p-4 pb-3">
-        <div className="min-w-0 flex-1 space-y-1.5">
-          <p className="text-[9px] uppercase tracking-[0.18em] font-semibold opacity-70">
-            {stage?.label || "No theme"}
-          </p>
-          <p className="font-display text-base font-bold leading-tight">{headline}</p>
-          {subheadline && (
-            <p className="text-[10px] leading-snug opacity-75 line-clamp-2">{subheadline}</p>
-          )}
-          {stage?.countdown_to ? (
-            <p
-              className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-semibold tabular-nums"
-              style={{ background: palette.primary, color: palette.surface }}
-            >
-              <Clock className="w-3 h-3" /> {formatLeft(left)}
+        <div className="relative flex items-center gap-3 p-4 pb-3">
+          <div className="min-w-0 flex-1 space-y-1.5">
+            <p className="text-[9px] uppercase tracking-[0.18em] font-semibold opacity-70">
+              {celebrating ? `${stage.label} — just after midnight` : stage?.label || "No theme"}
             </p>
-          ) : (
-            ctaLabel && (
-              <span
-                className="inline-flex rounded-md px-2.5 py-1 text-[10px] font-bold"
+            <p className="font-display text-base font-bold leading-tight">{headline}</p>
+            {subheadline && (
+              <p className="text-[10px] leading-snug opacity-75 line-clamp-2">{subheadline}</p>
+            )}
+            {showCountdown ? (
+              <p
+                className="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-semibold tabular-nums"
                 style={{ background: palette.primary, color: palette.surface }}
               >
-                {ctaLabel}
-              </span>
-            )
+                <Clock className="w-3 h-3" /> {formatLeft(left)}
+              </p>
+            ) : (
+              ctaLabel && (
+                <span
+                  className="inline-flex rounded-md px-2.5 py-1 text-[10px] font-bold"
+                  style={{ background: palette.primary, color: palette.surface }}
+                >
+                  {ctaLabel}
+                </span>
+              )
+            )}
+          </div>
+
+          {heroImage && (
+            <img
+              src={heroImage}
+              alt=""
+              className="relative shrink-0 h-24 w-24 object-contain drop-shadow-md"
+            />
           )}
         </div>
 
-        {heroImage && (
-          <img
-            src={heroImage}
-            alt=""
-            className="relative shrink-0 h-24 w-24 object-contain drop-shadow-md"
-          />
-        )}
+        {/* The site's menu bar, in the stage's own colour */}
+        <div
+          className="relative flex items-center justify-center gap-2.5 px-2 py-1.5"
+          style={{ background: palette.primary, color: palette.surface }}
+        >
+          {NAV_ITEMS.map((item) => (
+            <span key={item} className="text-[8px] font-bold uppercase tracking-wide whitespace-nowrap">
+              {item}
+            </span>
+          ))}
+        </div>
       </div>
 
-      {/* The site's menu bar, in the stage's own colour */}
-      <div
-        className="relative flex items-center justify-center gap-2.5 px-2 py-1.5"
-        style={{ background: palette.primary, color: palette.surface }}
-      >
-        {NAV_ITEMS.map((item) => (
-          <span key={item} className="text-[8px] font-bold uppercase tracking-wide whitespace-nowrap">
-            {item}
-          </span>
-        ))}
-      </div>
+      {stage?.countdown_to && (
+        <button
+          type="button"
+          onClick={() => setAtZero((value) => !value)}
+          className="w-full inline-flex items-center justify-center gap-1.5 rounded-md border border-border bg-card px-2 py-1.5 text-[11px] font-semibold text-foreground transition-colors hover:bg-muted"
+        >
+          {atZero ? (
+            <>
+              <RotateCcw className="w-3 h-3" /> Back to the countdown
+            </>
+          ) : (
+            <>
+              <Sparkles className="w-3 h-3" /> See the moment it hits zero
+            </>
+          )}
+        </button>
+      )}
     </div>
   );
 }
