@@ -63,7 +63,7 @@ export default function WebsiteThemesCard({ form, set }) {
             <Loader2 className="w-4 h-4 animate-spin" /> Working out the holiday calendar…
           </div>
         ) : (
-          <div className="grid lg:grid-cols-[minmax(0,1fr)_280px] gap-6 items-start">
+          <div className="space-y-5">
             <div className="space-y-4">
               {mode === "auto" && (
                 <>
@@ -145,13 +145,14 @@ export default function WebsiteThemesCard({ form, set }) {
               )}
             </div>
 
-            <div className="space-y-2 lg:sticky lg:top-4">
+            <div className="space-y-2">
               <p className="text-[11px] uppercase tracking-[0.16em] text-muted-foreground font-semibold flex items-center gap-1.5">
                 <CalendarClock className="w-3.5 h-3.5" /> Stage preview
               </p>
               <ThemeStagePreview stage={chosen} site={form} />
               <p className="text-[11px] text-muted-foreground">
-                How the home page hero looks in this stage. Remember to save your site settings.
+                The home page in this stage, drawn with your real logo, hero copy, sunflower and top
+                menu. Remember to save your site settings.
               </p>
             </div>
           </div>
