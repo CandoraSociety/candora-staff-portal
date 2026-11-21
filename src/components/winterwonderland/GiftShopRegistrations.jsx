@@ -3,12 +3,10 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, ExternalLink } from 'lucide-react';
 import KidsGiftShopRegistrationDialog from '@/components/centralreg/KidsGiftShopRegistrationDialog';
 import { KIDS_GIFT_SHOP_TIME_SLOTS, KIDS_GIFT_SHOP_SLOT_CAPACITY } from '@/lib/centralRegConstants';
-
-const slotLabel = (value) => KIDS_GIFT_SHOP_TIME_SLOTS.find(s => s.value === value)?.label || value || 'No slot';
-const genderLabel = (value) => (value === 'female' ? 'F' : value === 'male' ? 'M' : '—');
+import { groupGiftShopFamilies, giftShopSlotLabel as slotLabel, giftShopGiftSummary } from '@/lib/giftShopFamilies';
 
 // Kids Gift Shop registration tab — the children signed up for a shopping slot,
 // with each slot's remaining places.
@@ -31,6 +29,8 @@ export default function GiftShopRegistrations() {
     return acc;
   }, {});
   const openSlots = KIDS_GIFT_SHOP_TIME_SLOTS.filter(s => (counts[s.value] || 0) < KIDS_GIFT_SHOP_SLOT_CAPACITY).length;
+  // Siblings registered by the same guardian into the same slot share one card.
+  const families = groupGiftShopFamilies(active).sort((a, b) => (a.time_slot || '').localeCompare(b.time_slot || ''));
 
   const refresh = () => {
     qc.invalidateQueries({ queryKey: ['kidsGiftShopRegistrations'] });
@@ -65,31 +65,49 @@ export default function GiftShopRegistrations() {
 
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-display font-semibold">Registered children</h2>
-        <Button size="sm" onClick={() => setDialogOpen(true)}><Plus className="h-4 w-4" /> Register a child</Button>
+        <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" onClick={() => window.open('/winter-wonderland/kids-gift-shop/children', '_blank', 'noopener')}>
+            <ExternalLink className="h-3.5 w-3.5" /> Open in new window
+          </Button>
+          <Button size="sm" onClick={() => setDialogOpen(true)}><Plus className="h-4 w-4" /> Register a child</Button>
+        </div>
       </div>
 
       {isLoading ? (
         <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground">Loading registrations…</p></CardContent></Card>
-      ) : registrations.length === 0 ? (
+      ) : families.length === 0 ? (
         <Card><CardContent className="pt-6 text-center space-y-3"><p className="text-sm text-muted-foreground">No children registered for the Kids Gift Shop yet.</p><Button size="sm" onClick={() => setDialogOpen(true)}><Plus className="h-4 w-4" /> Register a child</Button></CardContent></Card>
       ) : (
         <div className="space-y-2">
-          {registrations.map(reg => {
-            const gifts = `${reg.gift_count || 1} gift${(reg.gift_count || 1) > 1 ? 's' : ''} — ${genderLabel(reg.gift_1_gender)}${(reg.gift_count || 1) > 1 ? `, ${genderLabel(reg.gift_2_gender)}` : ''}`;
+          {families.map(family => {
+            const waitlisted = family.children.some(c => c.status === 'waitlisted');
+            const status = waitlisted ? 'waitlisted' : family.children[0].status;
             return (
-              <Card key={reg.id}>
+              <Card key={family.key}>
                 <CardContent className="pt-4 flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="font-medium text-sm">{reg.child_name || reg.participant_name}</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Age {reg.child_age_band || '—'} • {slotLabel(reg.time_slot)}
-                      {reg.registration_date ? ` • ${new Date(reg.registration_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : ''}
+                    <p className="font-medium text-sm">
+                      {family.guardian_name}
+                      {family.children.length > 1 && <span className="text-xs font-normal text-muted-foreground"> · {family.children.length} children</span>}
                     </p>
-                    <p className="text-xs text-muted-foreground">{reg.parent_guardian_name}{reg.parent_guardian_phone ? ` • ${reg.parent_guardian_phone}` : ''}</p>
-                    <p className="text-xs mt-1 text-foreground/80">{gifts}</p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      {slotLabel(family.time_slot)}
+                      {family.guardian_phone ? ` • ${family.guardian_phone}` : ''}
+                    </p>
+                    <div className="mt-2 divide-y">
+                      {family.children.map(child => (
+                        <div key={child.id} className="py-1.5 first:pt-0 last:pb-0">
+                          <p className="text-sm">{child.child_name || child.participant_name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            Age {child.child_age_band || '—'} • {giftShopGiftSummary(child)}
+                            {child.registration_date ? ` • ${new Date(child.registration_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : ''}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${['approved', 'enrolled'].includes(reg.status) ? 'bg-green-100 text-green-700' : reg.status === 'waitlisted' ? 'bg-amber-100 text-amber-700' : 'bg-muted text-muted-foreground'}`}>
-                    {['approved', 'enrolled'].includes(reg.status) ? 'Confirmed' : reg.status === 'waitlisted' ? 'Waitlist' : reg.status}
+                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${['approved', 'enrolled'].includes(status) ? 'bg-green-100 text-green-700' : status === 'waitlisted' ? 'bg-amber-100 text-amber-700' : 'bg-muted text-muted-foreground'}`}>
+                    {['approved', 'enrolled'].includes(status) ? 'Confirmed' : status === 'waitlisted' ? 'Waitlist' : status}
                   </span>
                 </CardContent>
               </Card>
