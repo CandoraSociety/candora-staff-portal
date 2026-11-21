@@ -59,17 +59,16 @@ export function buildSlotAvailability(registrations) {
   });
 }
 
+// Backend functions use the SDK's array form (a second options argument is not
+// supported there), so the gift shop rows are filtered after one page read.
 async function loadRegistrations(base44) {
-  const page = await base44.entities.ProgramRegistration.filter(
-    { program_name: GIFT_SHOP_PROGRAM_NAME },
-    { limit: 1000 },
-  );
-  return page?.items || [];
+  const all = await base44.entities.ProgramRegistration.list('-created_date', 500);
+  return (all || []).filter(r => r.program_name === GIFT_SHOP_PROGRAM_NAME);
 }
 
 export async function findInviteByToken(base44, token) {
-  const page = await base44.entities.GiftShopInvite.filter({ token }, { limit: 1 });
-  return (page?.items || [])[0] || null;
+  const matches = await base44.entities.GiftShopInvite.filter({ token });
+  return (matches || [])[0] || null;
 }
 
 // What the public page is allowed to see. Contact details are never returned —
