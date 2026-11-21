@@ -1,0 +1,141 @@
+{
+  "name": "PreRegInvite",
+  "type": "object",
+  "description": "One personal, single-use pre-registration link for a named participant. The link carries a long random token, opens the public self-registration page for one program, and can only be submitted once \u2014 so a forwarded link cannot register a second person.",
+  "properties": {
+    "token": {
+      "type": "string",
+      "description": "Long random code that makes up the personal link (/self-register?invite=<token>). Unguessable and never reused."
+    },
+    "area": {
+      "type": "string",
+      "enum": [
+        "community",
+        "empoweru",
+        "phac",
+        "ell",
+        "digilit",
+        "frn"
+      ],
+      "description": "Program area the invitation is for"
+    },
+    "program_id": {
+      "type": "string",
+      "description": "Linked program/cohort/course ID (null for name-only programs)"
+    },
+    "program_name": {
+      "type": "string",
+      "description": "Program name the invitation is for"
+    },
+    "first_name": {
+      "type": "string",
+      "description": "First name of the intended recipient (pre-fills the registration form)"
+    },
+    "last_name": {
+      "type": "string",
+      "description": "Last name of the intended recipient"
+    },
+    "email": {
+      "type": "string",
+      "description": "Recipient email, when supplied \u2014 for the staff member's own reference and mail merge"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Recipient phone, when supplied"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "issued",
+        "used",
+        "revoked",
+        "expired"
+      ],
+      "enumColors": [
+        "blue",
+        "green",
+        "gray",
+        "yellow"
+      ],
+      "default": "issued",
+      "description": "issued = link still open; used = the recipient already registered with it; revoked = staff cancelled the link; expired = passed its expiry date"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the link stops working (optional \u2014 a link with no expiry stays open until used or revoked)"
+    },
+    "used_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the recipient submitted their registration"
+    },
+    "request_id": {
+      "type": "string",
+      "description": "The SelfRegRequest created from this invitation"
+    },
+    "batch": {
+      "type": "string",
+      "description": "Label for the group of invitations created together, e.g. Winter 2026 pre-registration"
+    },
+    "created_by_name": {
+      "type": "string",
+      "description": "Staff member who issued the invitation"
+    }
+  },
+  "required": [
+    "token",
+    "area",
+    "first_name",
+    "last_name"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

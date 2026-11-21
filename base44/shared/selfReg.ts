@@ -69,9 +69,38 @@ export function activeEllLearners(learners, classes) {
     .sort((a, b) => a.name.localeCompare(b.name));
 }
 
+// Resolve a personal pre-registration link. Returns { invite } when the link is
+// still open, or { error } explaining why it is not ('not_found' | 'used' |
+// 'revoked' | 'expired'). The link itself is what authorizes an invite-only
+// program, so it is always checked server-side.
+export async function findValidInvite(base44, token) {
+  if (!token || typeof token !== 'string') return { error: 'not_found' };
+  const result = await base44.entities.PreRegInvite.filter({ token });
+  const rows = Array.isArray(result) ? result : (result?.items || []);
+  const invite = rows[0];
+  if (!invite) return { error: 'not_found' };
+  if (invite.status === 'used') return { error: 'used' };
+  if (invite.status === 'revoked') return { error: 'revoked' };
+  if (invite.expires_at && new Date(invite.expires_at).getTime() < Date.now()) return { error: 'expired' };
+  return { invite };
+}
+
 // Build the public catalog of programs with self-registration enabled.
-export async function buildSelfRegCatalog(base44) {
-  const settings = (await base44.entities.SelfRegProgram.list()).filter(s => s.enabled);
+// With `options.invite` (a validated PreRegInvite) the catalog holds just that
+// one program, even when the program is invite-only or not publicly enabled.
+export async function buildSelfRegCatalog(base44, options = {}) {
+  const invite = options.invite || null;
+  const allSettings = await base44.entities.SelfRegProgram.list();
+  const settings = invite
+    ? [matchSettings(allSettings, invite.area, invite.program_id || null, invite.program_name) || {
+        area: invite.area,
+        program_id: invite.program_id || null,
+        program_name: invite.program_name || '',
+        enabled: true,
+        require_approval: true,
+        invite_only: true,
+      }]
+    : allSettings.filter(s => s.enabled && !s.invite_only);
   if (!settings.length) return { programs: [] };
 
   const [communityPrograms, cohorts, phacPrograms, ellClasses, communitySessions, phacSessions, digilitSessions, frnSessions, ellLearners] = await Promise.all([
@@ -97,6 +126,7 @@ export async function buildSelfRegCatalog(base44) {
       schedule: '',
       sessions: [],
       require_approval: s.require_approval !== false,
+      invite_only: !!s.invite_only,
       active_learners_only: false,
       active_learners_expiry: null,
       active_learners: null,
