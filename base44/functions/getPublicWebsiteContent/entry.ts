@@ -62,7 +62,8 @@ export default async function (req) {
     return Response.json({
       site: publicSite(settings, fallbackLogo),
       // The seasonal decoration the site should wear at this moment — worked
-      // out in Alberta time, so it changes on its own at midnight.
+      // out in Alberta time, so it changes on its own at midnight. New Year's
+      // carries its own countdown, which turns into the celebration at zero.
       theme: resolveTheme(settings, now),
       pages: orderMenuPages(pages).map(publicPage),
       sections: sections.map(publicSection),

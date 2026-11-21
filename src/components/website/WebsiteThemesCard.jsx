@@ -97,8 +97,9 @@ export default function WebsiteThemesCard({ form, set }) {
                       ))}
                     </ul>
                     <p className="text-[11px] text-muted-foreground">
-                      Christmas Day swaps the hero headline to "Merry Christmas!" for the day, and
-                      New Year's Eve adds a live countdown to midnight.
+                      Christmas Day swaps the hero headline to "Merry Christmas!" for the day. On New
+                      Year's Eve a live countdown runs to midnight, and the moment it reaches zero the
+                      fireworks and the new-year headline take over.
                     </p>
                   </div>
                 </>

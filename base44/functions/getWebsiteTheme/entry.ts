@@ -9,6 +9,7 @@ import {
 // switched to by hand, the schedule automatic mode follows, and the stage live
 // right now. All of it is worked out in Alberta time on the server, so the
 // Studio and the public website can never disagree about the dates.
+// New Year's is one stage: a countdown that becomes the celebration at midnight.
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);

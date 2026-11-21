@@ -116,29 +116,22 @@ export const THEME_STAGES = [
   {
     id: 'new_year_eve',
     theme: 'new_year',
-    label: "New Year's Eve",
-    description: 'Midnight blues and gold with a live countdown to midnight in Alberta.',
+    label: "New Year's",
+    description:
+      'Midnight blues and gold with a live countdown to midnight in Alberta — the moment it reaches zero, fireworks take over and the hero welcomes the new year.',
     motif: 'countdown',
-    palette: NEW_YEAR_PALETTE,
-    hero_template: '',
-    fireworks: false,
-    countdown: true,
-  },
-  {
-    id: 'new_year_day',
-    theme: 'new_year',
-    label: "New Year's Day",
-    description: 'Animated fireworks behind a hero that welcomes the new year.',
-    motif: 'fireworks',
     palette: NEW_YEAR_PALETTE,
     hero_template: 'Happy New Year {year}!',
     fireworks: true,
-    countdown: false,
+    countdown: true,
   },
 ];
 
+// 'new_year_day' was a stage of its own before the countdown simply carried on
+// past midnight, so a site still pinned to it reads as the New Year's stage.
 function stageById(id) {
-  return THEME_STAGES.find((stage) => stage.id === id) || THEME_STAGES[0];
+  const key = id === 'new_year_day' ? 'new_year_eve' : id;
+  return THEME_STAGES.find((stage) => stage.id === key) || THEME_STAGES[0];
 }
 
 // The windows one calendar year's holiday run occupies. All of them begin and
@@ -177,7 +170,7 @@ export function themeWindows(year) {
       end: albertaInstant(next, 1, 1),
     },
     {
-      id: 'new_year_day',
+      id: 'new_year_eve',
       schedule_label: "New Year's Day",
       start: albertaInstant(next, 1, 1),
       end: albertaInstant(next, 1, 2),
@@ -231,12 +224,16 @@ function nextNewYearStart(now) {
 
 function buildTheme(stageId, now, source, window) {
   const stage = stageById(stageId);
-  const newYearStart = window
-    ? stage.countdown
+  // A countdown stage counts to the midnight that closes its window. The moment
+  // that arrives, the same stage turns into the celebration: fireworks and the
+  // new-year headline, with no switch of theme needed.
+  const midnight = window
+    ? albertaParts(window.start).month === 12
       ? window.end
       : window.start
     : nextNewYearStart(now);
-  const newYear = albertaParts(newYearStart).year;
+  const celebrating = !!stage.countdown && now >= midnight;
+  const newYear = albertaParts(midnight).year;
 
   return {
     id: stage.id,
@@ -244,14 +241,17 @@ function buildTheme(stageId, now, source, window) {
     active: stage.id !== 'none',
     label: stage.label,
     description: stage.description,
-    motif: stage.motif,
+    motif: celebrating ? 'fireworks' : stage.motif,
     palette: stage.palette,
     // Empty means the website keeps the headline written in Site Settings.
-    hero_headline: stage.hero_template ? stage.hero_template.replace('{year}', String(newYear)) : '',
+    hero_headline:
+      stage.hero_template && (!stage.countdown || celebrating)
+        ? stage.hero_template.replace('{year}', String(newYear))
+        : '',
     // Empty means the website keeps the hero photo written in Site Settings.
     hero_image_url: heroImageFor(stage.id),
-    countdown_to: stage.countdown ? new Date(newYearStart).toISOString() : '',
-    fireworks: !!stage.fireworks,
+    countdown_to: stage.countdown && !celebrating ? new Date(midnight).toISOString() : '',
+    fireworks: celebrating,
     ends_at: window ? new Date(window.end).toISOString() : '',
     source,
   };
