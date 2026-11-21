@@ -5,8 +5,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ArrowLeft, Save, Upload, X, FileText } from 'lucide-react';
+import { ArrowLeft, Save, Upload, X } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
+import PrivateFileLink from '@/components/files/PrivateFileLink';
 
 const PROVINCES = ['AB','BC','MB','NB','NL','NS','NT','NU','ON','PE','QC','SK','YT'];
 
@@ -203,8 +204,8 @@ export default function IntakeForm({ client, onSave, onCancel, onSaveAndContinue
     if (!files.length) return;
     setUploading(true);
     for (const file of files) {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file });
-      set('resume_urls', [...form.resume_urls, file_url]);
+      const { file_uri } = await base44.integrations.Core.UploadPrivateFile({ file });
+      set('resume_urls', [...form.resume_urls, file_uri]);
     }
     setUploading(false);
   };
@@ -613,10 +614,7 @@ export default function IntakeForm({ client, onSave, onCancel, onSaveAndContinue
             </div>
             {form.resume_urls.map((url, i) => (
               <div key={i} className="flex items-center gap-2 bg-white border border-slate-200 rounded px-3 py-2">
-                <FileText className="w-4 h-4 text-slate-400 shrink-0" />
-                <a href={url} target="_blank" rel="noreferrer" className="text-sm text-blue-600 hover:underline truncate flex-1">
-                  Document {i + 1}
-                </a>
+                <PrivateFileLink file={url} label={`Document ${i + 1}`} />
                 <button type="button" onClick={() => removeResume(i)} className="text-slate-400 hover:text-red-500">
                   <X className="w-4 h-4" />
                 </button>

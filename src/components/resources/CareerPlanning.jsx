@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Sparkles, User } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ClientPicker from './ClientPicker';
+import { resolveFileUrl } from '@/lib/privateFiles';
 import CareerPlanResults from './CareerPlanResults';
 import {
   deriveClientBackground,
@@ -86,12 +87,16 @@ export default function CareerPlanning() {
         ? `${selectedClient.first_name || ''} ${selectedClient.last_name || ''}`.trim()
         : '';
       const prompt = buildPrompt(background, job, location, !!selectedClient, clientName, hasResume);
+      // Résumés are held privately, so hand the model short-lived links.
+      const resumeLinks = hasResume
+        ? (await Promise.all(resumeUrls.map(u => resolveFileUrl(u)))).filter(Boolean)
+        : [];
       const res = await base44.integrations.Core.InvokeLLM({
         prompt,
         response_json_schema: CAREER_PLAN_SCHEMA,
         add_context_from_internet: true,
         model: 'gemini_3_1_pro',
-        ...(hasResume ? { file_urls: resumeUrls } : {}),
+        ...(resumeLinks.length ? { file_urls: resumeLinks } : {}),
       });
       setResult(res);
     } catch (e) {

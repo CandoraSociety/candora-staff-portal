@@ -145,8 +145,10 @@ export default function PathwaysPublicIntake() {
     setUploading(true);
     try {
       for (const file of files) {
-        const { file_url } = await base44.integrations.Core.UploadFile({ file });
-        setResumeUrls(prev => [...prev, file_url]);
+        // Stored privately: only Pathways staff can open it, and only through a
+        // short-lived link minted in the portal.
+        const { file_uri } = await base44.integrations.Core.UploadPrivateFile({ file });
+        setResumeUrls(prev => [...prev, file_uri]);
       }
     } catch (err) {
       setError('Failed to upload resume. You can skip this step and bring a copy to your appointment.');
@@ -590,13 +592,14 @@ export default function PathwaysPublicIntake() {
                   </span>
                   <input type="file" multiple accept=".pdf,.doc,.docx,.jpg,.jpeg,.png" className="hidden" onChange={handleResumeUpload} />
                 </label>
+                <p className="text-xs text-slate-400 mt-2">
+                  Documents are stored privately. Only Pathways staff can open them.
+                </p>
               </div>
               {resumeUrls.map((url, i) => (
                 <div key={i} className="flex items-center gap-2 bg-white border border-slate-200 rounded px-3 py-2">
                   <FileText className="w-4 h-4 text-slate-400 shrink-0" />
-                  <a href={url} target="_blank" rel="noreferrer" className="text-sm text-blue-600 hover:underline truncate flex-1">
-                    Document {i + 1}
-                  </a>
+                  <span className="text-sm text-slate-600 truncate flex-1">Document {i + 1} — uploaded</span>
                   <button type="button" onClick={() => removeResume(i)} className="text-slate-400 hover:text-red-500">
                     <Trash2 className="w-4 h-4" />
                   </button>
