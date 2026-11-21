@@ -1,0 +1,145 @@
+{
+  "name": "GiftShopInvite",
+  "type": "object",
+  "description": "One private pre-registration invitation for the Kids Gift Shop. Each invited family gets its own unguessable link, tied to the guardian's email or phone and limited to a set number of children. The link can be redeemed once, before its expiry date, and only by someone who can confirm the contact details it was sent to \u2014 so a forwarded link cannot be used by anyone else.",
+  "properties": {
+    "token": {
+      "type": "string",
+      "description": "Unguessable code carried in the invitation link. Generated when the invitation is created and never reused."
+    },
+    "guardian_name": {
+      "type": "string",
+      "description": "Parent or guardian the invitation was addressed to"
+    },
+    "guardian_email": {
+      "type": "string",
+      "description": "Email the invitation was sent to \u2014 one of the two contact details that must be confirmed to use the link"
+    },
+    "guardian_phone": {
+      "type": "string",
+      "description": "Phone number the invitation was sent to \u2014 the other contact detail that can be confirmed to use the link"
+    },
+    "children_allowed": {
+      "type": "number",
+      "default": 3,
+      "description": "How many children this invitation covers (siblings from the same family)"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "invited",
+        "registered",
+        "revoked"
+      ],
+      "enumColors": [
+        "yellow",
+        "green",
+        "red"
+      ],
+      "default": "invited",
+      "description": "invited = link still open; registered = the family used the link; revoked = cancelled by staff"
+    },
+    "expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Moment the link stops working \u2014 set so pre-registration closes before general registration opens"
+    },
+    "used_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the family used the link"
+    },
+    "time_slot": {
+      "type": "string",
+      "description": "Shopping time the family booked (24-hour time, e.g. 10:30)"
+    },
+    "registered_summary": {
+      "type": "string",
+      "description": "Children registered through this invitation, for the staff list"
+    },
+    "registration_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Ids of the Kids Gift Shop registrations created by this invitation"
+    },
+    "sent_via": {
+      "type": "string",
+      "enum": [
+        "email",
+        "text",
+        "printed",
+        "other"
+      ],
+      "enumColors": [
+        "blue",
+        "purple",
+        "gray",
+        "gray"
+      ],
+      "default": "other",
+      "description": "How staff plan to send this invitation, for their own reference"
+    },
+    "notes": {
+      "type": "string"
+    },
+    "created_by_name": {
+      "type": "string",
+      "description": "Staff member who created the invitation"
+    }
+  },
+  "required": [
+    "token",
+    "guardian_name"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
