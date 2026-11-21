@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
+import { syncParticipantToCentralDb } from '../../shared/centralDbSync.ts';
 
 // Creates one private pre-registration invitation per family in an uploaded
 // list and emails each family their own single-use link. Staff must be signed
@@ -10,6 +11,14 @@ const DEFAULT_MESSAGE =
   'Our Kids Gift Shop is back for Winter Wonderland, and as one of the families we work with, yours is invited to choose a shopping time before registration opens to everyone else. Pick a time that works for you, tell us who each child is shopping for, and we will have their name tag waiting at the door.';
 
 const newToken = () => crypto.randomUUID().replace(/[^a-zA-Z0-9]/g, '');
+
+// The list carries one guardian name per family — split it for the Central
+// Database, which keeps a first and last name separately.
+function splitName(full: string) {
+  const parts = String(full || '').trim().split(/\s+/).filter(Boolean);
+  if (parts.length <= 1) return { first_name: parts[0] || '', last_name: '' };
+  return { first_name: parts[0], last_name: parts.slice(1).join(' ') };
+}
 
 function formatDate(value) {
   if (!value) return 'the date shown in this email';
@@ -65,8 +74,9 @@ Deno.serve(async (req) => {
       const token = newToken();
       const link = `${appUrl}/functions/giftShopInviteForm?token=${token}`;
 
+      let invite: any = null;
       try {
-        await base44.asServiceRole.entities.GiftShopInvite.create({
+        invite = await base44.asServiceRole.entities.GiftShopInvite.create({
           token,
           guardian_name: name,
           guardian_email: email || null,
@@ -83,6 +93,31 @@ Deno.serve(async (req) => {
         continue;
       }
 
+      // Link the family to their Central Database profile, or open one for them.
+      const person = splitName(name);
+      let central: any = null;
+      try {
+        central = await syncParticipantToCentralDb(base44, {
+          program: 'kids_gift_shop',
+          linkedId: invite.id,
+          indicator: 'Invited to the Kids Gift Shop pre-registration (Winter Wonderland).',
+          personal: {
+            first_name: person.first_name,
+            last_name: person.last_name,
+            email: email || null,
+            phone: phone || null,
+          },
+        });
+        if (central?.rc_client_id) {
+          await base44.asServiceRole.entities.GiftShopInvite.update(invite.id, {
+            rc_client_id: central.rc_client_id,
+            central_db_status: central.status,
+          });
+        }
+      } catch (error) {
+        console.log(`Central Database link failed for ${name}:`, error.message);
+      }
+
       if (!email) {
         results.push({
           guardian_name: name,
@@ -90,6 +125,7 @@ Deno.serve(async (req) => {
           guardian_phone: phone,
           status: 'no_email',
           link,
+          central_db_status: central?.status || null,
           message: 'No email address on file. Send this link by text or print it for the family.',
         });
         continue;
@@ -117,10 +153,11 @@ Deno.serve(async (req) => {
             guardian_email: email,
             status: 'failed',
             link,
+            central_db_status: central?.status || null,
             message: sent.message || `The email could not be sent (${sent.reason || 'refused'}). Copy the link and send it yourself.`,
           });
         } else {
-          results.push({ guardian_name: name, guardian_email: email, status: 'sent', link });
+          results.push({ guardian_name: name, guardian_email: email, status: 'sent', link, central_db_status: central?.status || null });
         }
       } catch (error) {
         console.log(`Invitation email failed for ${email}:`, error.message);
@@ -129,6 +166,7 @@ Deno.serve(async (req) => {
           guardian_email: email,
           status: 'failed',
           link,
+          central_db_status: central?.status || null,
           message: `${error.message} Copy the link and send it yourself.`,
         });
       }

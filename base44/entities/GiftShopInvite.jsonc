@@ -81,6 +81,22 @@
       "default": "other",
       "description": "How staff plan to send this invitation, for their own reference"
     },
+    "rc_client_id": {
+      "type": "string",
+      "description": "The family's profile in the Candora Central Database \u2014 either an existing file the guardian matched on the uploaded list, or the new file opened for them"
+    },
+    "central_db_status": {
+      "type": "string",
+      "enum": [
+        "linked",
+        "created"
+      ],
+      "enumColors": [
+        "blue",
+        "green"
+      ],
+      "description": "linked = matched an existing Central Database file; created = a new Central Database file was opened for this family"
+    },
     "notes": {
       "type": "string"
     },

@@ -48,6 +48,7 @@ const PROGRAM_META = {
   community: { label: 'Community Programs', color: '#f59e0b' },
   ell: { label: 'English Language Learning', color: '#6366f1' },
   digilit: { label: 'Digital Literacy', color: '#f43f5e' },
+  kids_gift_shop: { label: 'Kids Gift Shop', color: '#0284c7' },
 };
 
 export default function RCClientDetail() {

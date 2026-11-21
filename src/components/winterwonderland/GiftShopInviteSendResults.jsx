@@ -26,6 +26,8 @@ export default function GiftShopInviteSendResults({ results, onDone }) {
   const { toast } = useToast();
   const sent = results.filter(r => r.status === 'sent');
   const needing = results.filter(r => r.status !== 'sent');
+  const linked = results.filter(r => r.central_db_status === 'linked').length;
+  const created = results.filter(r => r.central_db_status === 'created').length;
 
   const copy = async (link) => {
     try {
@@ -48,6 +50,15 @@ export default function GiftShopInviteSendResults({ results, onDone }) {
           <p className="text-2xl font-bold text-amber-900">{needing.length}</p>
         </div>
       </div>
+
+      {(linked > 0 || created > 0) && (
+        <p className="text-xs text-muted-foreground">
+          Central Database:
+          {linked > 0 && <> {linked} {linked === 1 ? 'family' : 'families'} linked to an existing file</>}
+          {linked > 0 && created > 0 && ' ·'}
+          {created > 0 && <> {created} new {created === 1 ? 'file' : 'files'} opened</>}
+        </p>
+      )}
 
       {needing.length > 0 && (
         <div className="space-y-2">

@@ -94,7 +94,7 @@ export async function syncParticipantToCentralDb(base44: any, input: Participati
     return { status: 'linked', rc_client_id: linked.id };
   }
 
-  await rc.create({
+  const created = await rc.create({
     first_name: personal.first_name || '',
     last_name: personal.last_name || '',
     date_of_birth: personal.date_of_birth || null,
@@ -103,5 +103,5 @@ export async function syncParticipantToCentralDb(base44: any, input: Participati
     program_participations: [entry],
     funder_categories: funderCategory ? [funderCategory] : [],
   });
-  return { status: 'created' };
+  return { status: 'created', rc_client_id: created?.id };
 }

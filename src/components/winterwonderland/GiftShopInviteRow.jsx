@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { Check, Copy, Ban } from 'lucide-react';
+import { Check, Copy, Ban, Database } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { inviteLink, inviteDisplayStatus, INVITE_STATUS_META } from '@/lib/giftShopInvites';
 import { KIDS_GIFT_SHOP_TIME_SLOTS } from '@/lib/centralRegConstants';
@@ -47,6 +47,14 @@ export default function GiftShopInviteRow({ invite, onChanged }) {
             <p className="text-xs text-green-700 mt-0.5">
               {invite.registered_summary}
               {invite.time_slot ? ` · ${slotText(invite.time_slot)}` : ''}
+            </p>
+          )}
+          {invite.rc_client_id && (
+            <p className="text-xs text-muted-foreground mt-0.5 flex items-center gap-1">
+              <Database className="h-3 w-3 flex-shrink-0" />
+              {invite.central_db_status === 'created'
+                ? 'New Central Database file opened'
+                : 'Linked to their Central Database file'}
             </p>
           )}
           {open && invite.expires_at && (

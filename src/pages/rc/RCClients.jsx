@@ -31,6 +31,7 @@ const PROGRAM_AREA_OPTIONS = [
   { value: 'community', label: 'Community' },
   { value: 'ell', label: 'ELL' },
   { value: 'digilit', label: 'Digital Literacy' },
+  { value: 'kids_gift_shop', label: 'Kids Gift Shop' },
 ];
 
 const DEMOGRAPHIC_OPTIONS = [
