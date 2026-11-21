@@ -5,14 +5,17 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, ExternalLink } from 'lucide-react';
 import KidsGiftShopRegistrationDialog from '@/components/centralreg/KidsGiftShopRegistrationDialog';
+import GiftShopFamilyCard from '@/components/winterwonderland/GiftShopFamilyCard';
+import GiftShopCheckInDialog from '@/components/winterwonderland/GiftShopCheckInDialog';
 import { KIDS_GIFT_SHOP_TIME_SLOTS, KIDS_GIFT_SHOP_SLOT_CAPACITY } from '@/lib/centralRegConstants';
-import { groupGiftShopFamilies, giftShopSlotLabel as slotLabel, giftShopGiftSummary } from '@/lib/giftShopFamilies';
+import { groupGiftShopFamilies } from '@/lib/giftShopFamilies';
 
 // Kids Gift Shop registration tab — the children signed up for a shopping slot,
 // with each slot's remaining places.
 export default function GiftShopRegistrations() {
   const qc = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [selectedKey, setSelectedKey] = useState(null);
 
   const { data: registrations = [], isLoading } = useQuery({
     queryKey: ['kidsGiftShopRegistrations'],
@@ -79,44 +82,21 @@ export default function GiftShopRegistrations() {
         <Card><CardContent className="pt-6 text-center space-y-3"><p className="text-sm text-muted-foreground">No children registered for the Kids Gift Shop yet.</p><Button size="sm" onClick={() => setDialogOpen(true)}><Plus className="h-4 w-4" /> Register a child</Button></CardContent></Card>
       ) : (
         <div className="space-y-2">
-          {families.map(family => {
-            const waitlisted = family.children.some(c => c.status === 'waitlisted');
-            const status = waitlisted ? 'waitlisted' : family.children[0].status;
-            return (
-              <Card key={family.key}>
-                <CardContent className="pt-4 flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="font-medium text-sm">
-                      {family.guardian_name}
-                      {family.children.length > 1 && <span className="text-xs font-normal text-muted-foreground"> · {family.children.length} children</span>}
-                    </p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      {slotLabel(family.time_slot)}
-                      {family.guardian_phone ? ` • ${family.guardian_phone}` : ''}
-                    </p>
-                    <div className="mt-2 divide-y">
-                      {family.children.map(child => (
-                        <div key={child.id} className="py-1.5 first:pt-0 last:pb-0">
-                          <p className="text-sm">{child.child_name || child.participant_name}</p>
-                          <p className="text-xs text-muted-foreground">
-                            Age {child.child_age_band || '—'} • {giftShopGiftSummary(child)}
-                            {child.registration_date ? ` • ${new Date(child.registration_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : ''}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                  <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${['approved', 'enrolled'].includes(status) ? 'bg-green-100 text-green-700' : status === 'waitlisted' ? 'bg-amber-100 text-amber-700' : 'bg-muted text-muted-foreground'}`}>
-                    {['approved', 'enrolled'].includes(status) ? 'Confirmed' : status === 'waitlisted' ? 'Waitlist' : status}
-                  </span>
-                </CardContent>
-              </Card>
-            );
-          })}
+          <p className="text-xs text-muted-foreground">Tap a registration to sign the children in and print their name tags.</p>
+          {families.map(family => (
+            <GiftShopFamilyCard key={family.key} family={family} onClick={() => setSelectedKey(family.key)} />
+          ))}
         </div>
       )}
 
       <KidsGiftShopRegistrationDialog open={dialogOpen} onOpenChange={setDialogOpen} onSaved={refresh} />
+
+      <GiftShopCheckInDialog
+        family={selectedKey ? families.find(f => f.key === selectedKey) : null}
+        open={!!selectedKey}
+        onOpenChange={(o) => { if (!o) setSelectedKey(null); }}
+        onChanged={refresh}
+      />
     </div>
   );
 }

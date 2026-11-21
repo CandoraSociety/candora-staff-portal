@@ -189,6 +189,20 @@
       ],
       "description": "Selected Kids Gift Shop shopping slot (24-hour time)"
     },
+    "checked_in": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the child has been signed in at the Kids Gift Shop desk on the festival day"
+    },
+    "checked_in_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the child was signed in \u2014 the order of sign-ins sets the name-tag sequence"
+    },
+    "check_in_sequence": {
+      "type": "number",
+      "description": "Name-tag order number, handed out in the order children are signed in"
+    },
     "notes": {
       "type": "string"
     }

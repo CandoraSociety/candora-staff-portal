@@ -4,7 +4,7 @@ import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Printer, RefreshCw, Users } from 'lucide-react';
 import { KIDS_GIFT_SHOP_SLOT_CAPACITY } from '@/lib/centralRegConstants';
-import { groupGiftShopFamilies, giftShopSlotLabel, giftShopGiftSummary } from '@/lib/giftShopFamilies';
+import { groupGiftShopFamilies, giftShopSlotLabel, giftShopTagGifts, giftShopChildFullName } from '@/lib/giftShopFamilies';
 
 const statusPill = (status) => ['approved', 'enrolled'].includes(status)
   ? { label: 'Confirmed', className: 'bg-green-100 text-green-700' }
@@ -57,26 +57,27 @@ export default function GiftShopChildrenWindow() {
           return (
             <div key={family.key} className="rounded-xl border bg-card p-3">
               <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="font-medium text-sm">{family.guardian_name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {giftShopSlotLabel(family.time_slot)}
-                    {family.guardian_phone ? ` · ${family.guardian_phone}` : ''}
-                    {family.children.length > 1 ? ` · ${family.children.length} children` : ''}
-                  </p>
+                <div className="min-w-0 space-y-2">
+                  {family.children.map(child => (
+                    <div key={child.id}>
+                      <p className="font-display font-bold text-base leading-tight flex items-center gap-2">
+                        <span className="truncate">{giftShopChildFullName(child)}</span>
+                        {child.checked_in && (
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-green-600 text-white flex-shrink-0">
+                            #{child.check_in_sequence}
+                          </span>
+                        )}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Age {child.child_age_band || '—'} · {giftShopTagGifts(child)}</p>
+                    </div>
+                  ))}
                 </div>
                 <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${pill.className}`}>{pill.label}</span>
               </div>
-              <div className="mt-2 divide-y">
-                {family.children.map(child => (
-                  <div key={child.id} className="py-1.5 flex items-start justify-between gap-3 text-sm">
-                    <div>
-                      <p>{child.child_name || child.participant_name}</p>
-                      <p className="text-xs text-muted-foreground">Age {child.child_age_band || '—'} · {giftShopGiftSummary(child)}</p>
-                    </div>
-                    <span className="text-xs text-muted-foreground flex-shrink-0">{giftShopSlotLabel(child.time_slot)}</span>
-                  </div>
-                ))}
+              <div className="mt-2 border-t pt-2 text-xs text-muted-foreground">
+                {giftShopSlotLabel(family.time_slot)}
+                {family.guardian_name ? ` · ${family.guardian_name}` : ''}
+                {family.guardian_phone ? ` · ${family.guardian_phone}` : ''}
               </div>
             </div>
           );

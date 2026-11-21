@@ -320,6 +320,27 @@ body.presenter-screen.presenter-chrome [data-tour="global-tabbar"] { display: bl
     padding: 0 !important;
     box-shadow: none !important;
   }
+  /* Kids Gift Shop name tags — print only the sticker sheet */
+  body.giftshop-tag-printing * { visibility: hidden !important; }
+  body.giftshop-tag-printing .giftshop-tag-sheet,
+  body.giftshop-tag-printing .giftshop-tag-sheet * { visibility: visible !important; }
+  body.giftshop-tag-printing .giftshop-tag-sheet {
+    position: absolute !important;
+    inset: 0 !important;
+    width: 100% !important;
+    max-width: none !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    background: #fff !important;
+    border-radius: 0 !important;
+    box-shadow: none !important;
+  }
+  body.giftshop-tag-printing .giftshop-tag {
+    break-inside: avoid !important;
+    page-break-inside: avoid !important;
+    border: 2px solid #111 !important;
+    border-radius: 6px !important;
+  }
   body { 
     background: white !important;
     margin: 0 !important;

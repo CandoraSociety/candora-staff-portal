@@ -3,6 +3,18 @@ import { KIDS_GIFT_SHOP_TIME_SLOTS } from '@/lib/centralRegConstants';
 export const giftShopSlotLabel = (value) => KIDS_GIFT_SHOP_TIME_SLOTS.find(s => s.value === value)?.label || value || 'No slot';
 export const giftShopGenderLabel = (value) => (value === 'female' ? 'F' : value === 'male' ? 'M' : '—');
 
+export const giftShopChildFullName = (reg) => (reg.child_name || reg.participant_name || 'Unnamed child').trim();
+export const giftShopChildFirstName = (reg) => giftShopChildFullName(reg).split(/\s+/)[0] || 'Child';
+
+// "2 gifts (F, M)" — the count plus who each gift is for.
+export const giftShopTagGifts = (reg) => {
+  const count = reg.gift_count || 1;
+  const genders = [reg.gift_1_gender, count > 1 ? reg.gift_2_gender : null]
+    .filter(Boolean)
+    .map(giftShopGenderLabel);
+  return `${count} gift${count > 1 ? 's' : ''}${genders.length ? ` (${genders.join(', ')})` : ''}`;
+};
+
 const familyKey = (r) => [
   (r.parent_guardian_name || r.participant_name || '').trim().toLowerCase(),
   (r.parent_guardian_phone || r.participant_phone || '').trim(),
