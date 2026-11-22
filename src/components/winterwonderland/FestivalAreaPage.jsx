@@ -18,7 +18,7 @@ function StatusPill({ status, options }) {
 
 // One festival area — its component details and its own scheduled events — with
 // any extra tabs the area needs (the Kids Gift Shop adds Registration).
-export default function FestivalAreaPage({ area, extraTabs = [] }) {
+export default function FestivalAreaPage({ area, extraTabs = [], accent }) {
   const { toast } = useToast();
   const qc = useQueryClient();
   const [componentDialog, setComponentDialog] = useState(false);
@@ -137,10 +137,24 @@ export default function FestivalAreaPage({ area, extraTabs = [] }) {
     </>
   );
 
+  // An area may ask for its own brighter treatment: a gradient badge and a gold
+  // highlight on the open tab. Without it the header stays as it always was.
+  const tabTriggerClass = accent
+    ? 'font-semibold data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md'
+    : undefined;
+
   return (
     <div className="space-y-4">
       <div className="flex items-center gap-3">
-        <div className="h-10 w-10 rounded-lg flex items-center justify-center text-xl" style={{ backgroundColor: area.color + '20' }}>{area.emoji}</div>
+        <div
+          className="h-10 w-10 rounded-lg flex items-center justify-center text-xl"
+          style={accent
+            ? {
+                background: `linear-gradient(135deg, ${accent.from}, ${accent.to})`,
+                boxShadow: `inset 0 0 0 1px rgba(255,255,255,0.4), 0 8px 18px -8px ${accent.from}`,
+              }
+            : { backgroundColor: area.color + '20' }}
+        >{area.emoji}</div>
         <div>
           <h1 className="text-2xl font-display font-bold">{area.label}</h1>
           <p className="text-sm text-muted-foreground">{area.blurb}</p>
@@ -149,9 +163,12 @@ export default function FestivalAreaPage({ area, extraTabs = [] }) {
 
       {extraTabs.length > 0 ? (
         <Tabs defaultValue="overview">
-          <TabsList>
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            {extraTabs.map(tab => <TabsTrigger key={tab.value} value={tab.value}>{tab.label}</TabsTrigger>)}
+          <TabsList
+            style={accent ? { background: `linear-gradient(90deg, ${accent.from}24, ${accent.to}2e)` } : undefined}
+            className={accent ? 'border' : undefined}
+          >
+            <TabsTrigger value="overview" className={tabTriggerClass}>Overview</TabsTrigger>
+            {extraTabs.map(tab => <TabsTrigger key={tab.value} value={tab.value} className={tabTriggerClass}>{tab.label}</TabsTrigger>)}
           </TabsList>
           <TabsContent value="overview" className="space-y-4 mt-4">{overview}</TabsContent>
           {extraTabs.map(tab => <TabsContent key={tab.value} value={tab.value} className="mt-4">{tab.content}</TabsContent>)}

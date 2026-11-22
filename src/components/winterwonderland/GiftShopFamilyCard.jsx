@@ -22,7 +22,13 @@ export default function GiftShopFamilyCard({ family, onClick }) {
       role="button"
       tabIndex={0}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick?.(); } }}
-      className="cursor-pointer transition-colors hover:border-primary/50 hover:bg-muted/40"
+      className={`cursor-pointer border-l-4 transition-all hover:shadow-md ${
+        allSignedIn
+          ? 'border-l-emerald-500 border-emerald-200 bg-gradient-to-br from-emerald-50/80 via-white to-white hover:border-emerald-300'
+          : waitlisted
+            ? 'border-l-amber-400 border-amber-200 bg-gradient-to-br from-amber-50/70 via-white to-white hover:border-amber-300'
+            : 'border-l-primary border-rose-200 bg-gradient-to-br from-rose-50/70 via-white to-white hover:border-primary/60'
+      }`}
     >
       <CardContent className="pt-4 space-y-2">
         <div className="flex items-start justify-between gap-3">

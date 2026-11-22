@@ -60,10 +60,12 @@ export default function GiftShopPreRegistration() {
 
   return (
     <div className="space-y-4">
-      <Card>
+      <Card className="border-indigo-200 bg-gradient-to-br from-indigo-50 via-white to-white">
         <CardContent className="pt-5 space-y-2">
           <div className="flex items-start gap-2">
-            <ShieldCheck className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+            <span className="h-6 w-6 rounded-md bg-gradient-to-br from-indigo-500 to-violet-400 flex items-center justify-center flex-shrink-0 shadow-sm">
+              <ShieldCheck className="h-3.5 w-3.5 text-white" />
+            </span>
             <div>
               <p className="text-sm font-semibold">Private pre-registration links</p>
               <p className="text-sm text-muted-foreground">
@@ -90,8 +92,18 @@ export default function GiftShopPreRegistration() {
       </Card>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <Card><CardContent className="pt-5"><p className="text-xs text-muted-foreground">Links still open</p><p className="text-2xl font-bold">{openInvites.length}</p></CardContent></Card>
-        <Card><CardContent className="pt-5"><p className="text-xs text-muted-foreground">Families registered</p><p className="text-2xl font-bold">{registered.length}</p></CardContent></Card>
+        <Card className="border-sky-200 bg-gradient-to-br from-sky-50 via-white to-white">
+          <CardContent className="pt-5">
+            <p className="text-xs font-medium text-sky-700">Links still open</p>
+            <p className="text-2xl font-bold text-sky-700">{openInvites.length}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-white">
+          <CardContent className="pt-5">
+            <p className="text-xs font-medium text-emerald-700">Families registered</p>
+            <p className="text-2xl font-bold text-emerald-700">{registered.length}</p>
+          </CardContent>
+        </Card>
       </div>
 
       {isLoading ? (

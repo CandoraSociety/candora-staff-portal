@@ -24,24 +24,34 @@ export default function GiftShopSignIn({ standalone = false }) {
   return (
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-3">
-        <Card>
+        <Card className="border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-white">
           <CardContent className="pt-5">
-            <p className="text-xs text-muted-foreground flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Signed in</p>
-            <p className="text-2xl font-bold">{signedIn} <span className="text-sm font-medium text-muted-foreground">of {active.length}</span></p>
-            <div className="mt-2 flex items-center gap-4 border-t pt-2">
+            <p className="text-xs font-medium text-emerald-700 flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Signed in</p>
+            <p className="text-2xl font-bold text-emerald-700">{signedIn} <span className="text-sm font-semibold text-emerald-600/80">of {active.length}</span></p>
+            <div className="mt-2 flex items-center gap-4 border-t border-emerald-200/70 pt-2">
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground">Ages 0–5</span>
-                <span className="border-l pl-2 text-base font-bold leading-none">{ageBands['0-5']}</span>
+                <span className="border-l border-emerald-200 pl-2 text-base font-bold leading-none text-pink-600">{ageBands['0-5']}</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground">Ages 6–16</span>
-                <span className="border-l pl-2 text-base font-bold leading-none">{ageBands['6-16']}</span>
+                <span className="border-l border-emerald-200 pl-2 text-base font-bold leading-none text-indigo-600">{ageBands['6-16']}</span>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card><CardContent className="pt-5"><p className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" /> Still to sign in</p><p className="text-2xl font-bold">{waiting}</p></CardContent></Card>
-        <Card><CardContent className="pt-5"><p className="text-xs text-muted-foreground flex items-center gap-1"><Users className="h-3 w-3" /> Families</p><p className="text-2xl font-bold">{families.length}</p></CardContent></Card>
+        <Card className="border-amber-200 bg-gradient-to-br from-amber-50 via-white to-white">
+          <CardContent className="pt-5">
+            <p className="text-xs font-medium text-amber-700 flex items-center gap-1"><Clock className="h-3 w-3" /> Still to sign in</p>
+            <p className="text-2xl font-bold text-amber-700">{waiting}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-indigo-200 bg-gradient-to-br from-indigo-50 via-white to-white">
+          <CardContent className="pt-5">
+            <p className="text-xs font-medium text-indigo-700 flex items-center gap-1"><Users className="h-3 w-3" /> Families</p>
+            <p className="text-2xl font-bold text-indigo-700">{families.length}</p>
+          </CardContent>
+        </Card>
       </div>
 
       <div className="flex items-start justify-between gap-3">

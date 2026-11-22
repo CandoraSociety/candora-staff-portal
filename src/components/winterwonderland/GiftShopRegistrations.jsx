@@ -38,10 +38,12 @@ export default function GiftShopRegistrations() {
 
   return (
     <div className="space-y-4">
-      <Card>
+      <Card className="border-amber-200 bg-gradient-to-br from-amber-50 via-white to-white">
         <CardContent className="pt-5 space-y-2">
           <div className="flex items-start gap-2">
-            <Link2 className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+            <span className="h-6 w-6 rounded-md bg-gradient-to-br from-amber-400 to-yellow-300 flex items-center justify-center flex-shrink-0 shadow-sm">
+              <Link2 className="h-3.5 w-3.5 text-white" />
+            </span>
             <div>
               <p className="text-sm font-semibold">General registration link</p>
               <p className="text-sm text-muted-foreground">
@@ -49,7 +51,7 @@ export default function GiftShopRegistrations() {
               </p>
             </div>
           </div>
-          <p className="text-xs bg-muted rounded px-2 py-1 break-all">{generalLink}</p>
+          <p className="text-xs bg-white/80 border border-amber-200 rounded px-2 py-1 break-all text-amber-900">{generalLink}</p>
           <div className="flex flex-wrap items-center gap-2">
             <Button size="sm" variant="outline" onClick={copyGeneralLink}><Copy className="h-3.5 w-3.5" /> Copy link</Button>
             <Button size="sm" variant="outline" onClick={() => window.open(generalLink, '_blank', 'noopener')}>
@@ -60,24 +62,34 @@ export default function GiftShopRegistrations() {
       </Card>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <Card>
+        <Card className="border-rose-200 bg-gradient-to-br from-rose-50 via-white to-white">
           <CardContent className="pt-5">
-            <p className="text-xs text-muted-foreground">Registrations</p>
-            <p className="text-2xl font-bold">{active.length}</p>
-            <div className="mt-2 flex items-center gap-4 border-t pt-2">
+            <p className="text-xs font-medium text-rose-700">Registrations</p>
+            <p className="text-2xl font-bold text-rose-700">{active.length}</p>
+            <div className="mt-2 flex items-center gap-4 border-t border-rose-200/70 pt-2">
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground">Ages 0–5</span>
-                <span className="border-l pl-2 text-base font-bold leading-none">{ageBands['0-5']}</span>
+                <span className="border-l border-rose-200 pl-2 text-base font-bold leading-none text-pink-600">{ageBands['0-5']}</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground">Ages 6–16</span>
-                <span className="border-l pl-2 text-base font-bold leading-none">{ageBands['6-16']}</span>
+                <span className="border-l border-rose-200 pl-2 text-base font-bold leading-none text-indigo-600">{ageBands['6-16']}</span>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card><CardContent className="pt-5"><p className="text-xs text-muted-foreground">Gifts requested</p><p className="text-2xl font-bold">{giftsRequested}</p></CardContent></Card>
-        <Card><CardContent className="pt-5"><p className="text-xs text-muted-foreground">Slots still open</p><p className="text-2xl font-bold">{openSlots} of {KIDS_GIFT_SHOP_TIME_SLOTS.length}</p></CardContent></Card>
+        <Card className="border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-white">
+          <CardContent className="pt-5">
+            <p className="text-xs font-medium text-emerald-700">Gifts requested</p>
+            <p className="text-2xl font-bold text-emerald-700">{giftsRequested}</p>
+          </CardContent>
+        </Card>
+        <Card className="border-sky-200 bg-gradient-to-br from-sky-50 via-white to-white">
+          <CardContent className="pt-5">
+            <p className="text-xs font-medium text-sky-700">Slots still open</p>
+            <p className="text-2xl font-bold text-sky-700">{openSlots} <span className="text-sm font-semibold text-sky-600/80">of {KIDS_GIFT_SHOP_TIME_SLOTS.length}</span></p>
+          </CardContent>
+        </Card>
       </div>
 
       <div>
@@ -93,10 +105,14 @@ export default function GiftShopRegistrations() {
                 key={s.value}
                 type="button"
                 onClick={() => setSlot(active ? '' : s.value)}
-                className={`rounded-md border px-2 py-1.5 text-left transition-colors ${full ? 'bg-muted' : 'hover:border-primary/50'} ${active ? 'border-primary ring-2 ring-primary/30' : ''}`}
+                className={`rounded-md border px-2 py-1.5 text-left transition-colors ${
+                  full
+                    ? 'border-rose-200 bg-rose-50/80'
+                    : 'border-emerald-200 bg-emerald-50/70 hover:border-emerald-400'
+                } ${active ? 'border-primary bg-primary/10 ring-2 ring-primary/40' : ''}`}
               >
                 <p className="text-xs font-medium">{s.label}</p>
-                <p className={`text-[10px] ${full ? 'text-red-600 font-semibold' : 'text-muted-foreground'}`}>
+                <p className={`text-[10px] font-semibold ${full ? 'text-rose-600' : 'text-emerald-700'}`}>
                   {remaining}
                 </p>
               </button>
