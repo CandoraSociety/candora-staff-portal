@@ -1,10 +1,9 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Download, Printer, X } from 'lucide-react';
+import { Printer, X } from 'lucide-react';
 import { giftShopAgeBandLabel, giftShopChildFirstName, giftShopGuardianName, giftShopSlotLabel, giftShopTagGifts } from '@/lib/giftShopFamilies';
 import { CANDORA_BRAND } from '@/lib/candoraBrand';
-import { downloadGiftShopLabel } from '@/lib/giftShopLabelImage';
 
 // Printable name tag stickers, one per signed-in child: the order number handed
 // out at sign-in, the child's first name, the parent or guardian with them, their
@@ -17,12 +16,6 @@ export default function GiftShopNameTagSheet({ tags, onClose }) {
   const print = () => {
     document.body.classList.add('giftshop-tag-printing');
     window.print();
-  };
-
-  // Label printers such as the NIIMBOT B1 and Phomemo M110 print from their own
-  // app, so each tag is saved as a 50 x 30 mm image to open there instead.
-  const saveLabels = () => {
-    tags.forEach((tag, index) => setTimeout(() => downloadGiftShopLabel(tag), index * 400));
   };
 
   const close = () => {
@@ -44,17 +37,10 @@ export default function GiftShopNameTagSheet({ tags, onClose }) {
             <Printer className="h-3.5 w-3.5" />
             Print {tags.length === 1 ? 'name tag' : `${tags.length} name tags`}
           </Button>
-          <Button size="sm" variant="outline" onClick={saveLabels}>
-            <Download className="h-3.5 w-3.5" />
-            Save label image{tags.length === 1 ? '' : 's'}
-          </Button>
           <Button size="sm" variant="secondary" onClick={close}>
             <X className="h-3.5 w-3.5" /> Done
           </Button>
         </div>
-        <p className="no-print text-xs text-muted-foreground">
-          For a label printer, save the image and open it in the printer's own app — it is sized for a 50 × 30 mm label.
-        </p>
 
         <div className="giftshop-tag-sheet bg-white rounded-xl p-4">
           <p className="no-print text-xs text-muted-foreground mb-3">Kids Gift Shop — name tag stickers</p>
