@@ -291,8 +291,7 @@ export function renderInvitePage({ state, invite, slots = [], values = {}, error
 
       <div class="notice">
         <strong>This link works once</strong>
-        It is for ${escapeHtml(invite?.guardian_name || 'your family')} and covers up to ${maxChildren}
-        ${maxChildren === 1 ? 'child' : 'children'}. To use it, confirm the email address or phone number the invitation was sent to.
+        It is for ${escapeHtml(invite?.guardian_name || 'your family')}. To use it, confirm the email address or phone number the invitation was sent to. Please register only the children in your family who will be shopping with us.
       </div>
 
       ${error ? `<div class="error">${escapeHtml(error)}</div>` : ''}
