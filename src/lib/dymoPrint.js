@@ -4,6 +4,7 @@
 // so the printer's paper size can never be overridden by a remembered sheet size.
 import buildTagLabelXml, { buildGuardianLabelXml } from '@/lib/dymoTagLabel';
 import dymoQrImage from '@/lib/dymoQrImage';
+import { dymoLogoImage } from '@/lib/dymoImage';
 
 // DYMO Connect answers on localhost; newer builds use https, older ones http.
 const SERVICES = ['https://localhost:41951', 'http://localhost:41951'];
@@ -73,8 +74,9 @@ const send = async (target, labelXml, who) => {
 // Each family also gets one tag for the parent or guardian, listing their children.
 export default async function printDymoTags(tags, target, families = []) {
   const qrImages = await Promise.all(tags.map(dymoQrImage));
+  const logoPng = await dymoLogoImage();
   for (let index = 0; index < tags.length; index++) {
-    await send(target, buildTagLabelXml(tags[index], { qrPng: qrImages[index] }), tags[index].child_name || 'this child');
+    await send(target, buildTagLabelXml(tags[index], { qrPng: qrImages[index], logoPng }), tags[index].child_name || 'this child');
   }
   for (const family of families) {
     await send(target, buildGuardianLabelXml(family), family.guardian_name || 'the parent or guardian');

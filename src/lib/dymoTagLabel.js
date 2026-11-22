@@ -14,7 +14,7 @@ const escapeXml = (value) => String(value ?? '').replace(/[<>&"']/g, c => (
   { '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;', "'": '&apos;' }[c]
 ));
 
-const textObject = ({ name, x, y, width, height, size, bold = false, text }) => `
+const textObject = ({ name, x, y, width, height, size, bold = false, align = 'Left', text }) => `
   <ObjectInfo>
     <TextObject>
       <Name>${name}</Name>
@@ -24,7 +24,7 @@ const textObject = ({ name, x, y, width, height, size, bold = false, text }) => 
       <Rotation>Rotation0</Rotation>
       <IsMirrored>False</IsMirrored>
       <IsVariable>False</IsVariable>
-      <HorizontalAlignment>Left</HorizontalAlignment>
+      <HorizontalAlignment>${align}</HorizontalAlignment>
       <VerticalAlignment>Middle</VerticalAlignment>
       <TextFitMode>AlwaysFit</TextFitMode>
       <UseFullFontHeight>True</UseFullFontHeight>
@@ -42,25 +42,34 @@ const textObject = ({ name, x, y, width, height, size, bold = false, text }) => 
     <Bounds X="${x}" Y="${y}" Width="${width}" Height="${height}"/>
   </ObjectInfo>`;
 
-const qrObject = (qrPng) => `
+const imageObject = ({ name, x, y, width, height, png, opaque = true }) => `
   <ObjectInfo>
     <ImageObject>
-      <Name>QRCODE</Name>
+      <Name>${name}</Name>
       <ForeColor Alpha="255" Red="0" Green="0" Blue="0"/>
-      <BackColor Alpha="255" Red="255" Green="255" Blue="255"/>
+      <BackColor Alpha="${opaque ? 255 : 0}" Red="255" Green="255" Blue="255"/>
       <LinkedObjectName></LinkedObjectName>
       <Rotation>Rotation0</Rotation>
       <IsMirrored>False</IsMirrored>
       <IsVariable>False</IsVariable>
-      <Image>${escapeXml(qrPng)}</Image>
+      <Image>${escapeXml(png)}</Image>
       <ScaleMode>Uniform</ScaleMode>
       <BorderWidth>0</BorderWidth>
       <BorderColor Alpha="255" Red="0" Green="0" Blue="0"/>
       <HorizontalAlignment>Center</HorizontalAlignment>
       <VerticalAlignment>Center</VerticalAlignment>
     </ImageObject>
-    <Bounds X="4480" Y="180" Width="1080" Height="1080"/>
+    <Bounds X="${x}" Y="${y}" Width="${width}" Height="${height}"/>
   </ObjectInfo>`;
+
+const qrObject = (qrPng) => imageObject({ name: 'QRCODE', x: 4480, y: 180, width: 1080, height: 1080, png: qrPng });
+
+// The Candora mark and the Kids Gift Shop initials under the QR code, printed
+// large enough to read at a glance on the 2.3 x 4 in label.
+const brandObjects = (logoPng) => [
+  logoPng ? imageObject({ name: 'LOGO', x: 4480, y: 1320, width: 1080, height: 620, png: logoPng, opaque: false }) : '',
+  textObject({ name: 'KGS', x: 4480, y: 1980, width: 1080, height: 420, size: 30, bold: true, align: 'Center', text: 'KGS' }),
+];
 
 const wrapLabel = (objects) => `<?xml version="1.0" encoding="utf-8"?>
 <DieCutLabel Version="8.0" Units="twips">
@@ -72,7 +81,7 @@ const wrapLabel = (objects) => `<?xml version="1.0" encoding="utf-8"?>
   </DrawCommands>${objects.filter(Boolean).join('')}
 </DieCutLabel>`;
 
-export default function buildTagLabelXml(tag, { qrPng } = {}) {
+export default function buildTagLabelXml(tag, { qrPng, logoPng } = {}) {
   const slot = [giftShopSlotLabel(tag.time_slot), giftShopAgeBandLabel(tag.child_age_band)]
     .filter(Boolean).join(' · ');
   const guardian = giftShopGuardianName(tag);
@@ -84,6 +93,7 @@ export default function buildTagLabelXml(tag, { qrPng } = {}) {
     guardian ? textObject({ name: 'GUARDIAN', x: 1140, y: 1460, width: 3250, height: 380, size: 16, text: `Parent/Guardian: ${guardian}` }) : '',
     textObject({ name: 'GIFTS', x: 1140, y: 1900, width: 3250, height: 440, size: 20, bold: true, text: giftShopTagGifts(tag) }),
     qrPng ? qrObject(qrPng) : '',
+    ...brandObjects(logoPng),
   ];
 
   return wrapLabel(objects);
