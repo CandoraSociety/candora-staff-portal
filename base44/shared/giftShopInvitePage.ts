@@ -315,6 +315,9 @@ export function renderInvitePage({ state, invite, slots = [], values = {}, error
           <label>Parent or guardian’s name
             <input type="text" name="guardian_name" value="${escapeHtml(values.guardian_name || invite?.guardian_name || '')}" autocomplete="name" required />
           </label>
+          <label>Parent or guardian’s phone number
+            <input type="tel" name="guardian_phone" value="${escapeHtml(values.guardian_phone || '')}" autocomplete="tel" placeholder="780-555-1234" required />
+          </label>
           <label>Email or phone this invitation was sent to
             <input type="text" name="contact" value="${escapeHtml(values.contact || '')}" autocomplete="email" placeholder="you@example.com or 780-555-1234" required />
           </label>
@@ -391,6 +394,7 @@ export function readInviteForm(form) {
   return {
     payload: {
       guardian_name: String(form.get('guardian_name') || ''),
+      guardian_phone: String(form.get('guardian_phone') || ''),
       contact: String(form.get('contact') || ''),
       time_slot: String(form.get('time_slot') || ''),
       children,
@@ -398,6 +402,7 @@ export function readInviteForm(form) {
     values: {
       token: String(form.get('token') || ''),
       guardian_name: String(form.get('guardian_name') || ''),
+      guardian_phone: String(form.get('guardian_phone') || ''),
       contact: String(form.get('contact') || ''),
       time_slot: String(form.get('time_slot') || ''),
       data_ack: form.get('data_ack') === 'yes',

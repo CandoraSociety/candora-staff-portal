@@ -107,6 +107,9 @@ export async function redeemGiftShopInvite(base44, token, payload) {
   const guardianName = String(payload?.guardian_name || '').trim();
   if (!guardianName) return fail(400, 'Enter the parent or guardian’s name.');
 
+  const guardianPhone = String(payload?.guardian_phone || '').trim();
+  if (!guardianPhone) return fail(400, 'Enter the parent or guardian’s phone number.');
+
   const contact = String(payload?.contact || '').trim();
   if (!contact) return fail(400, 'Enter the email address or phone number this invitation was sent to.');
 
@@ -174,14 +177,14 @@ export async function redeemGiftShopInvite(base44, token, payload) {
       participant_first_name: childParts[0],
       participant_last_name: childLast,
       participant_name: child.child_name,
-      participant_phone: invite.guardian_phone || null,
+      participant_phone: guardianPhone,
       participant_email: invite.guardian_email || null,
       program_portal: 'other',
       program_name: GIFT_SHOP_PROGRAM_NAME,
       registration_date: todayStr(),
       status: 'approved',
       parent_guardian_name: guardianName,
-      parent_guardian_phone: invite.guardian_phone || null,
+      parent_guardian_phone: guardianPhone,
       parent_guardian_email: invite.guardian_email || null,
       child_name: child.child_name,
       child_age_band: child.age_band,
