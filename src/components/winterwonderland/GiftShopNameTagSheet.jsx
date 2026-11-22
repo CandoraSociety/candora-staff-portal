@@ -2,10 +2,11 @@ import React from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Printer, X } from 'lucide-react';
-import { giftShopAgeBandLabel, giftShopChildFirstName, giftShopSlotLabel, giftShopTagGifts } from '@/lib/giftShopFamilies';
+import { giftShopAgeBandLabel, giftShopChildFirstName, giftShopGuardianName, giftShopSlotLabel, giftShopTagGifts } from '@/lib/giftShopFamilies';
 
 // Printable name tag stickers, one per signed-in child: the order number handed
-// out at sign-in, the child's first name, their slot and how many gifts (M/F).
+// out at sign-in, the child's first name, the parent or guardian with them, their
+// slot and how many gifts (M/F).
 // Shown as a dialog on top of sign-in, so staff can print a family's tags
 // without leaving the family they are signing in.
 export default function GiftShopNameTagSheet({ tags, onClose }) {
@@ -60,6 +61,11 @@ export default function GiftShopNameTagSheet({ tags, onClose }) {
                     {giftShopSlotLabel(tag.time_slot)}
                     {tag.child_age_band ? ` · ${giftShopAgeBandLabel(tag.child_age_band)}` : ''}
                   </p>
+                  {giftShopGuardianName(tag) && (
+                    <p className="text-sm font-semibold text-slate-700 break-words">
+                      Parent/Guardian: {giftShopGuardianName(tag)}
+                    </p>
+                  )}
                   <p className="text-base font-bold text-slate-900">{giftShopTagGifts(tag)}</p>
                 </div>
               </div>

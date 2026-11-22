@@ -39,6 +39,10 @@ export const giftShopSlotCounts = (registrations) => (registrations || [])
   }, {});
 
 export const giftShopChildFullName = (reg) => (reg.child_name || reg.participant_name || 'Unnamed child').trim();
+
+// The parent or guardian the child belongs to. At sign-in the adult who brings
+// the child can give their own name, which replaces the registered one.
+export const giftShopGuardianName = (reg) => (reg?.parent_guardian_name || reg?.participant_name || '').trim();
 export const giftShopChildFirstName = (reg) => giftShopChildFullName(reg).split(/\s+/)[0] || 'Child';
 
 // "2 gifts (F, M)" — the count plus who each gift is for.
