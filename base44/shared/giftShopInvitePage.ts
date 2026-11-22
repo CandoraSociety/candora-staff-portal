@@ -78,7 +78,7 @@ const STYLES = `
   .seg input{position:absolute;opacity:0;pointer-events:none}
   .seg label:has(input:checked){border-color:var(--navy);background:#fffbe6;box-shadow:inset 0 0 0 1px var(--navy)}
   .gift-two{display:none}
-  .row:has(input[name$="_gifts"][value="2"]:checked) + .gift-two{display:block}
+  .child-fields:has(input[name$="_gifts"][value="2"]:checked) .gift-two{display:block}
   .child{border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px}
   .child-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
   .child-head span{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--muted)}
@@ -88,8 +88,8 @@ const STYLES = `
   details.child>summary::before{content:'+';font-size:17px;font-weight:700;color:var(--muted);line-height:1}
   details.child[open]>summary::before{content:'–'}
   details.child[open]>summary{border-bottom:1px solid var(--line);margin-bottom:14px}
-  details.child .child-fields{padding:0 14px 14px}
-  details.child .child-fields details.child{margin:12px 0 0}
+  details.child .child-body{padding:0 14px 14px}
+  details.child .child-body details.child{margin:12px 0 0}
   .slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:8px;margin-top:6px}
   .slot{position:relative;display:block;margin:0;border:1px solid var(--line);border-radius:8px;padding:9px 10px;background:#fff;cursor:pointer;font-weight:500}
   .slot input{position:absolute;opacity:0;pointer-events:none}
@@ -158,9 +158,9 @@ function childToggle(index, maxChildren, values) {
   return `
     <details class="child"${value ? ' open' : ''}>
       <summary>Add a child</summary>
-      <div class="child-fields">
+      <div class="child-body">
         <p class="eyebrow" style="margin:0 0 10px">Child ${index}</p>
-        ${childFields(index, value)}
+        <div class="child-fields">${childFields(index, value)}</div>
         ${index < maxChildren ? childToggle(index + 1, maxChildren, values) : ''}
       </div>
     </details>
@@ -169,7 +169,7 @@ function childToggle(index, maxChildren, values) {
 
 function childBlocks(maxChildren, values) {
   return `
-    <div class="child"><div class="child-head"><span>Child 1</span></div>${childFields(1, values?.[0])}</div>
+    <div class="child"><div class="child-head"><span>Child 1</span></div><div class="child-fields">${childFields(1, values?.[0])}</div></div>
     ${maxChildren > 1 ? childToggle(2, maxChildren, values) : ''}
   `;
 }
