@@ -6,6 +6,7 @@ import { FileText, Printer, X } from 'lucide-react';
 import { giftShopAgeBandLabel, giftShopChildFullName, giftShopGiftRows, giftShopGuardianName, giftShopSlotLabel } from '@/lib/giftShopFamilies';
 import GiftShopNameTag from '@/components/winterwonderland/GiftShopNameTag';
 import printGiftShopLabels from '@/lib/printGiftShopLabels';
+import printDymoTags, { findDymoPrinter } from '@/lib/dymoPrint';
 import { CANDORA_BRAND } from '@/lib/candoraBrand';
 import { elfFormLink, newElfToken, qrImageUrl } from '@/lib/giftShopElf';
 
@@ -20,7 +21,16 @@ export default function GiftShopNameTagSheet({ tags, onClose }) {
   const [ready, setReady] = useState(tags || []);
   const [printing, setPrinting] = useState(false);
   const [printError, setPrintError] = useState('');
+  const [dymo, setDymo] = useState(null);
   const gridRef = useRef(null);
+
+  // When DYMO Connect is running, tags go straight to the label printer at the
+  // label's own size. Detection happens on open, so Print stays a single click.
+  useEffect(() => {
+    let alive = true;
+    findDymoPrinter().then(target => { if (alive) setDymo(target); });
+    return () => { alive = false; };
+  }, []);
 
   // Every tag carries its own code, so a volunteer's scan opens that one child.
   // A tag printed before the codes existed is given one on the spot and saved,
@@ -83,9 +93,10 @@ export default function GiftShopNameTagSheet({ tags, onClose }) {
     setPrinting(true);
     setPrintError('');
     try {
-      await printGiftShopLabels(gridRef.current);
+      if (dymo) await printDymoTags(ready, dymo);
+      else await printGiftShopLabels(gridRef.current);
     } catch (error) {
-      setPrintError(`Could not prepare the name tags: ${error.message}`);
+      setPrintError(`Could not print the name tags: ${error.message}`);
     } finally {
       setPrinting(false);
     }
@@ -133,7 +144,9 @@ export default function GiftShopNameTagSheet({ tags, onClose }) {
             Kids Gift Shop — name tag stickers. Elves scan the QR code, enter their name and the desk PIN to see who the child is buying for.
           </p>
           <p className="no-print text-xs text-muted-foreground mb-3">
-            DYMO setup: select the loaded 2.3 × 4 in label, Portrait, Margins None and Scale 100%. The print preview intentionally shows the tag sideways to match the direction of the roll; the sticker reads horizontally.
+            {dymo
+              ? `Printing straight to ${dymo.printer} at the label's own 2.3 × 4 in size — no print dialog.`
+              : 'DYMO Connect is not running, so a print window opens instead: choose the loaded 2.3 × 4 in label, Margins None and Scale 100%.'}
           </p>
           <div ref={gridRef} className="giftshop-tag-grid flex flex-wrap gap-3">
             {ready.map(tag => <GiftShopNameTag key={tag.id} tag={tag} />)}
