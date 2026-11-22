@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { CheckCircle2, Gift } from 'lucide-react';
-import { giftShopChildFullName, giftShopFamilyCompleted, giftShopElfName, giftShopSlotLabel, giftShopTagGifts } from '@/lib/giftShopFamilies';
+import { giftShopChildFullName, giftShopFamilyCompleted, giftShopIsCompleted, giftShopElfName, giftShopSlotLabel, giftShopTagGifts } from '@/lib/giftShopFamilies';
 
 const statusPill = (status) => {
   if (['approved', 'enrolled'].includes(status)) return { label: 'Confirmed', className: 'bg-green-100 text-green-700' };
@@ -21,6 +21,9 @@ export default function GiftShopFamilyCard({ family, onClick }) {
     ? { label: 'Completed', className: 'bg-accent/10 text-accent' }
     : statusPill(waitlisted ? 'waitlisted' : family.children[0].status);
   const allSignedIn = family.children.every(c => c.checked_in);
+  // A family only reads as completed once every child is back, so show how many
+  // are already returned while one is still shopping.
+  const returnedCount = family.children.filter(giftShopIsCompleted).length;
 
   return (
     <Card
@@ -50,6 +53,11 @@ export default function GiftShopFamilyCard({ family, onClick }) {
                       #{child.check_in_sequence}
                     </span>
                   )}
+                  {giftShopIsCompleted(child) && (
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-accent/15 text-accent flex-shrink-0">
+                      Returned
+                    </span>
+                  )}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   Age {child.child_age_band || '—'} • {giftShopTagGifts(child)}
@@ -67,6 +75,10 @@ export default function GiftShopFamilyCard({ family, onClick }) {
           {done ? (
             <span className="text-[10px] font-semibold text-accent flex items-center gap-1 flex-shrink-0">
               <Gift className="h-3 w-3" /> Returned{elfName ? ` · ${elfName}` : ''}
+            </span>
+          ) : returnedCount > 0 ? (
+            <span className="text-[10px] font-semibold text-accent flex items-center gap-1 flex-shrink-0">
+              <Gift className="h-3 w-3" /> {returnedCount} of {family.children.length} returned
             </span>
           ) : allSignedIn ? (
             <span className="text-[10px] font-semibold text-green-700 flex items-center gap-1 flex-shrink-0">

@@ -35,7 +35,13 @@ export default async function (req) {
 
       const reg = await findRegistrationByElfToken(base44.asServiceRole, token);
       if (!reg) return giftShopHtmlResponse(renderElfClosedPage({ state: 'invalid' }), 404);
-      if (reg.completed) return giftShopHtmlResponse(renderElfClosedPage({ state: 'completed', reg }));
+
+      // After one child is returned, the same tag steps to a brother or sister
+      // who is still shopping, so a finished code can still carry on.
+      const goToken = String(form.get('go') || '').trim();
+      if (reg.completed && !goToken) {
+        return giftShopHtmlResponse(renderElfClosedPage({ state: 'completed', reg }));
+      }
 
       if (!elfName) {
         return giftShopHtmlResponse(renderElfPinPage({ token, error: 'Enter your name to continue.' }), 400);
@@ -64,7 +70,6 @@ export default async function (req) {
         );
       };
 
-      const goToken = String(form.get('go') || '').trim();
       if (goToken && goToken !== token) {
         const target = await findRegistrationByElfToken(base44.asServiceRole, goToken);
         if (target?.completed) return giftShopHtmlResponse(renderElfClosedPage({ state: 'completed', reg: target }));
@@ -87,7 +92,13 @@ export default async function (req) {
 
       if (action === 'complete') {
         const updated = await completeElfVisit(base44.asServiceRole, reg, { elfName, ...gifts });
-        return giftShopHtmlResponse(renderElfDonePage({ reg: updated || reg, elfName }));
+        // Any brother or sister still shopping is offered straight away, so a
+        // family is never left half closed out.
+        const family = await findFamilyChildren(base44.asServiceRole, updated || reg);
+        const siblings = family
+          .filter(r => r.elf_token)
+          .map(r => ({ token: r.elf_token, name: r.child_name || r.participant_name || 'Child' }));
+        return giftShopHtmlResponse(renderElfDonePage({ reg: updated || reg, elfName, token, pin, siblings }));
       }
 
       return await renderChild(reg, token);

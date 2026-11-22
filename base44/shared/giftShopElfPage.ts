@@ -310,7 +310,9 @@ export function renderElfChildPage({ reg, token, elfName, pin, error = '', saved
   });
 }
 
-export function renderElfDonePage({ reg, elfName }) {
+export function renderElfDonePage({ reg, elfName, token = '', pin = '', siblings = [] }) {
+  const remaining = (siblings || []).filter(sibling => sibling?.token);
+
   return shell({
     title: 'All done · Kids Gift Shop',
     body: `
@@ -321,6 +323,21 @@ export function renderElfDonePage({ reg, elfName }) {
           ${escapeHtml(reg?.child_name || reg?.participant_name || 'This child')} has been recorded as
           completed and returned to their parent or guardian.
         </p>
+        ${remaining.length ? `
+        <form method="post">
+          <input type="hidden" name="token" value="${escapeHtml(token)}" />
+          <input type="hidden" name="elf_name" value="${escapeHtml(elfName)}" />
+          <input type="hidden" name="pin" value="${escapeHtml(pin)}" />
+          <p class="lede" style="margin-bottom:8px">
+            ${remaining.length === 1
+              ? 'One more child from this family is still shopping.'
+              : `${remaining.length} more children from this family are still shopping.`}
+          </p>
+          ${remaining.map(sibling => `
+          <button type="submit" class="btn" name="go" value="${escapeHtml(sibling.token)}" style="margin-bottom:8px">
+            Help ${escapeHtml(sibling.name)} next ›
+          </button>`).join('')}
+        </form>` : ''}
         <div class="notice" style="text-align:left">
           <strong>What happens next</strong>
           Hand the child back to their parent or guardian. The registration desk can see that this
