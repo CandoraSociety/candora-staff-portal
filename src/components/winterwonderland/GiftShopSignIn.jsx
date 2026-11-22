@@ -28,9 +28,15 @@ export default function GiftShopSignIn({ standalone = false }) {
           <CardContent className="pt-5">
             <p className="text-xs text-muted-foreground flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Signed in</p>
             <p className="text-2xl font-bold">{signedIn} <span className="text-sm font-medium text-muted-foreground">of {active.length}</span></p>
-            <div className="mt-2 flex gap-4 border-t pt-2">
-              <p className="text-xs text-muted-foreground">Ages 0–5 <span className="font-semibold text-foreground">{ageBands['0-5']}</span></p>
-              <p className="text-xs text-muted-foreground">Ages 6–16 <span className="font-semibold text-foreground">{ageBands['6-16']}</span></p>
+            <div className="mt-2 flex items-center gap-4 border-t pt-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Ages 0–5</span>
+                <span className="border-l pl-2 text-base font-bold leading-none">{ageBands['0-5']}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Ages 6–16</span>
+                <span className="border-l pl-2 text-base font-bold leading-none">{ageBands['6-16']}</span>
+              </div>
             </div>
           </CardContent>
         </Card>

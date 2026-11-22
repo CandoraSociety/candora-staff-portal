@@ -34,9 +34,15 @@ export default function GiftShopRegistrations() {
           <CardContent className="pt-5">
             <p className="text-xs text-muted-foreground">Registrations</p>
             <p className="text-2xl font-bold">{active.length}</p>
-            <div className="mt-2 flex gap-4 border-t pt-2">
-              <p className="text-xs text-muted-foreground">Ages 0–5 <span className="font-semibold text-foreground">{ageBands['0-5']}</span></p>
-              <p className="text-xs text-muted-foreground">Ages 6–16 <span className="font-semibold text-foreground">{ageBands['6-16']}</span></p>
+            <div className="mt-2 flex items-center gap-4 border-t pt-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Ages 0–5</span>
+                <span className="border-l pl-2 text-base font-bold leading-none">{ageBands['0-5']}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Ages 6–16</span>
+                <span className="border-l pl-2 text-base font-bold leading-none">{ageBands['6-16']}</span>
+              </div>
             </div>
           </CardContent>
         </Card>
