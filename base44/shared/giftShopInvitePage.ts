@@ -118,13 +118,18 @@ const STYLES = `
 
 function childFields(index, value) {
   const gifts = String(value?.gift_count || '1') === '2' ? '2' : '1';
+  // Only child one's fields are always on screen, so only those can be marked
+  // required for the browser. Everything else is checked on the server, because
+  // a hidden field (a closed child, or gift two with one gift) would block the
+  // form from ever submitting.
+  const req = index === 1 ? ' required' : '';
   return `
       <label>Child’s name
-        <input type="text" name="child_${index}_name" value="${escapeHtml(value?.child_name || '')}" autocomplete="off" />
+        <input type="text" name="child_${index}_name" value="${escapeHtml(value?.child_name || '')}" autocomplete="off"${req} />
       </label>
       <div class="row">
         <label>Age
-          <select name="child_${index}_age">${options(GIFT_SHOP_AGE_BANDS, value?.age_band || '', AGE_LABELS, 'Select age')}</select>
+          <select name="child_${index}_age"${req}>${options(GIFT_SHOP_AGE_BANDS, value?.age_band || '', AGE_LABELS, 'Select age')}</select>
         </label>
         <div class="gifts">
           <span>How many gifts</span>
@@ -137,10 +142,10 @@ function childFields(index, value) {
       <div class="gift-box">
         <span class="gift-label">Gift 1</span>
         <label>The gift is for a…
-          <select name="child_${index}_gift1">${options(GIFT_SHOP_GENDERS, value?.gift_1 || '', GENDER_LABELS, 'Select')}</select>
+          <select name="child_${index}_gift1"${req}>${options(GIFT_SHOP_GENDERS, value?.gift_1 || '', GENDER_LABELS, 'Select')}</select>
         </label>
         <label>Who is the gift for?
-          <select name="child_${index}_gift1_rec">${options(GIFT_SHOP_RECIPIENTS, value?.gift_1_rec || '', RECIPIENT_LABELS, 'Select who the gift is for')}</select>
+          <select name="child_${index}_gift1_rec"${req}>${options(GIFT_SHOP_RECIPIENTS, value?.gift_1_rec || '', RECIPIENT_LABELS, 'Select who the gift is for')}</select>
         </label>
       </div>
       <div class="gift-box gift-two">
@@ -282,7 +287,7 @@ export function renderInvitePage({ state, invite, slots = [], values = {}, error
 
   const slotCards = (slots.length ? slots : []).map(slot => `
     <label class="slot" data-remaining="${Number(slot.remaining) || 0}">
-      <input type="radio" name="time_slot" value="${escapeHtml(slot.value)}"${values.time_slot === slot.value ? ' checked' : ''} />
+      <input type="radio" name="time_slot" value="${escapeHtml(slot.value)}"${values.time_slot === slot.value ? ' checked' : ''} required />
       <span class="time">${escapeHtml(slot.label)}</span>
       <span class="left">${slot.remaining <= 0 ? 'Full' : `${slot.remaining} left`}</span>
     </label>
@@ -302,15 +307,17 @@ export function renderInvitePage({ state, invite, slots = [], values = {}, error
 
       ${error ? `<div class="error">${escapeHtml(error)}</div>` : ''}
 
-      <form method="post" novalidate>
+      <p class="eyebrow" style="margin-bottom:10px">All fields are required.</p>
+
+      <form method="post">
         <input type="hidden" name="token" value="${escapeHtml(values.token || '')}" />
 
         <div class="card">
           <label>Parent or guardian’s name
-            <input type="text" name="guardian_name" value="${escapeHtml(values.guardian_name || invite?.guardian_name || '')}" autocomplete="name" />
+            <input type="text" name="guardian_name" value="${escapeHtml(values.guardian_name || invite?.guardian_name || '')}" autocomplete="name" required />
           </label>
           <label>Email or phone this invitation was sent to
-            <input type="text" name="contact" value="${escapeHtml(values.contact || '')}" autocomplete="email" placeholder="you@example.com or 780-555-1234" />
+            <input type="text" name="contact" value="${escapeHtml(values.contact || '')}" autocomplete="email" placeholder="you@example.com or 780-555-1234" required />
           </label>
           <p class="eyebrow" style="margin:0">Either one works, whichever your invitation came to.</p>
         </div>
@@ -365,8 +372,13 @@ export function readInviteForm(form) {
       gift_1_rec: gift1Rec,
       gift_2_rec: gift2Rec,
     });
-    if (!name) continue;
+    // A block nobody touched is just an unused child slot. A block that has
+    // anything filled in is sent on, even without a name, so the server can
+    // report what is missing instead of quietly dropping the child.
+    const touched = Boolean(name || age || gift1 || gift1Rec || gift2 || gift2Rec || giftCount === 2);
+    if (!touched) continue;
     children.push({
+      child_number: index,
       child_name: name,
       age_band: age,
       gift_count: giftCount,

@@ -130,8 +130,9 @@ export async function redeemGiftShopInvite(base44, token, payload) {
   const children = [];
   for (let index = 0; index < rawChildren.length; index += 1) {
     const child = rawChildren[index] || {};
+    const label = `child ${Number(child.child_number) || index + 1}`;
     const name = String(child.child_name || '').trim();
-    if (!name) return fail(400, `Enter the name for child ${index + 1}.`);
+    if (!name) return fail(400, `Enter the name for ${label}.`);
     const ageBand = String(child.age_band || '');
     if (!GIFT_SHOP_AGE_BANDS.includes(ageBand)) return fail(400, `Select the age for ${name}.`);
     const giftCount = Number(child.gift_count) === 2 ? 2 : 1;
