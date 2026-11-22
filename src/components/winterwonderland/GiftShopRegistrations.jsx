@@ -19,7 +19,9 @@ export default function GiftShopRegistrations() {
   const [selectedKey, setSelectedKey] = useState(null);
   const [slot, setSlot] = useState('');
   const { toast } = useToast();
-  const generalLink = generalRegistrationLink(window.location.origin);
+  // Always the published app's address — never the builder preview's, which
+  // would hand families a link that only works for the builder.
+  const generalLink = generalRegistrationLink();
 
   const copyGeneralLink = async () => {
     await navigator.clipboard.writeText(generalLink);
