@@ -63,9 +63,20 @@ const STYLES = `
   .fact{background:#f4f6fb;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
   .fact span{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);margin-bottom:2px}
   .fact strong{font-size:15px}
-  .gift{border:1px solid var(--line);border-radius:10px;padding:13px 14px 2px;margin-bottom:12px;background:#fbfcfe}
+  .gift{border:1px solid var(--line);border-radius:10px;padding:13px 14px 12px;margin-bottom:12px;background:#fbfcfe}
   .gift .who{margin:0 0 8px;font-size:14px;font-weight:700}
   .gift .who small{display:block;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.14em;color:var(--muted)}
+  .hint{font-weight:400;color:var(--muted)}
+  .picked{margin:0;font-size:17px;font-weight:700;background:#fff;border:1px dashed var(--line);border-radius:9px;padding:11px 12px}
+  .gift-btns{display:flex;gap:18px;margin-top:10px}
+  .link-btn{background:none;border:0;padding:0;font:inherit;font-size:13px;font-weight:800;color:var(--navy);text-decoration:underline;cursor:pointer}
+  .link-btn.danger{color:#b91c1c}
+  .contact{border-top:1px solid var(--line);margin-top:4px;padding-top:14px;margin-bottom:16px}
+  .contact-name{margin:0 0 8px;font-size:19px;font-weight:800;line-height:1.25}
+  .contact-link{display:inline-block;margin:0 14px 6px 0;font-size:15px;font-weight:700;color:var(--navy);text-decoration:none;border-bottom:2px solid var(--gold);padding-bottom:1px}
+  .contact-none{margin:0;font-size:14px;color:var(--muted)}
+  .saved{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;border-radius:10px;padding:12px 14px;font-size:14px;font-weight:700;margin-bottom:14px}
+  .btn-secondary{background:#fff;color:var(--navy);border:2px solid var(--navy);margin-top:4px}
   .elf{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;color:var(--muted);margin-top:6px}
   .done{text-align:center;padding:30px 18px}
   .done .tick{width:58px;height:58px;border-radius:50%;background:#ecfdf5;color:#047857;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;font-size:28px}
@@ -131,7 +142,6 @@ const childCard = (reg) => `
     <div class="order">${escapeHtml(reg.check_in_sequence || '–')}</div>
     <div>
       <p class="child-name">${escapeHtml(reg.child_name || reg.participant_name || 'Child')}</p>
-      <p class="child-sub">${escapeHtml(reg.parent_guardian_name || '')}</p>
     </div>
   </div>
   <div class="facts">
@@ -139,6 +149,25 @@ const childCard = (reg) => `
     <div class="fact"><span>Time slot</span><strong>${escapeHtml(slotLabel(reg.time_slot) || 'Not recorded')}</strong></div>
   </div>
 `;
+
+// Who to hand the child back to, with a tap-to-call number and email.
+const guardianCard = (reg) => {
+  const name = String(reg.parent_guardian_name || '').trim();
+  const phone = String(reg.parent_guardian_phone || reg.participant_phone || '').trim();
+  const email = String(reg.parent_guardian_email || reg.participant_email || '').trim();
+  const links = [
+    phone ? `<a class="contact-link" href="tel:${escapeHtml(phone.replace(/[^0-9+]/g, ''))}">Call ${escapeHtml(phone)}</a>` : '',
+    email ? `<a class="contact-link" href="mailto:${escapeHtml(email)}">Email ${escapeHtml(email)}</a>` : '',
+  ].filter(Boolean).join('');
+
+  return `
+  <div class="contact">
+    <p class="eyebrow">Parent / guardian</p>
+    <p class="contact-name">${escapeHtml(name || 'Not recorded')}</p>
+    ${links || '<p class="contact-none">No phone or email recorded.</p>'}
+  </div>
+`;
+};
 
 export function renderElfPinPage({ token, elfName = '', error = '' }) {
   return shell({
@@ -168,34 +197,58 @@ export function renderElfPinPage({ token, elfName = '', error = '' }) {
   });
 }
 
-export function renderElfChildPage({ reg, token, elfName, pin, error = '' }) {
-  const gifts = elfGiftRows(reg).map(gift => `
-    <div class="gift">
+// One gift: the input while it is being written, then the saved wording locked
+// in place with Change and Remove, so a phone carried in a pocket cannot type
+// over what a volunteer already recorded.
+function elfGiftBlock(gift, editGift) {
+  const head = `
       <p class="who">
         <small>Gift ${gift.index}</small>
         For ${escapeHtml(gift.who)}${gift.gender ? ` (${escapeHtml(gift.gender)})` : ''}
-      </p>
-      <label>What did they pick? <span style="font-weight:400;color:var(--muted)">(optional)</span>
+      </p>`;
+
+  if (gift.value && editGift !== gift.index) {
+    return `
+    <div class="gift">
+      ${head}
+      <p class="picked">${escapeHtml(gift.value)}</p>
+      <div class="gift-btns">
+        <button type="submit" class="link-btn" name="change" value="${gift.index}">Change</button>
+        <button type="submit" class="link-btn danger" name="remove" value="${gift.index}">Remove</button>
+      </div>
+    </div>`;
+  }
+
+  return `
+    <div class="gift">
+      ${head}
+      <label>What did they pick? <span class="hint">(optional)</span>
         <input type="text" name="gift_${gift.index}" value="${escapeHtml(gift.value)}" autocomplete="off" />
       </label>
-    </div>
-  `).join('');
+      ${gift.value ? `<button type="submit" class="link-btn danger" name="remove" value="${gift.index}">Remove this entry</button>` : ''}
+    </div>`;
+}
+
+export function renderElfChildPage({ reg, token, elfName, pin, error = '', saved = '', editGift = 0 }) {
+  const gifts = elfGiftRows(reg).map(gift => elfGiftBlock(gift, editGift)).join('');
 
   return shell({
     title: `${reg.child_name || 'Child'} · Kids Gift Shop`,
     body: `
       <div class="card">
         ${childCard(reg)}
+        ${guardianCard(reg)}
         ${error ? `<div class="error">${escapeHtml(error)}</div>` : ''}
+        ${saved ? `<div class="saved">${escapeHtml(saved)}</div>` : ''}
         <p class="eyebrow">Gifts</p>
-        <p class="lede" style="margin-bottom:12px">Write down what the child picked for each person, if you like.</p>
+        <p class="lede" style="margin-bottom:12px">Write down what the child picked, then save it so it is kept.</p>
         <form method="post">
           <input type="hidden" name="token" value="${escapeHtml(token)}" />
           <input type="hidden" name="elf_name" value="${escapeHtml(elfName)}" />
           <input type="hidden" name="pin" value="${escapeHtml(pin)}" />
-          <input type="hidden" name="action" value="complete" />
           ${gifts}
-          <button type="submit" class="btn">Completed and returned to parent/guardian</button>
+          <button type="submit" class="btn btn-secondary" name="action" value="save">Save gift details</button>
+          <button type="submit" class="btn" name="action" value="complete" style="margin-top:12px">Completed and returned to parent/guardian</button>
         </form>
         <div class="elf">
           <span>Signed in as ${escapeHtml(elfName)}</span>
@@ -248,6 +301,22 @@ export function renderElfClosedPage({ state, reg }) {
       </div>
     `,
   });
+}
+
+// Keeps what the child picked without closing them out, so the wording survives
+// while the volunteer is still walking around with the phone. A gift that was not
+// on the form (still locked) is left exactly as it is.
+export async function saveElfGifts(base44, reg, { gift1, gift2 }) {
+  const patch = {};
+  if (gift1 !== undefined) patch.gift_1_selection = gift1;
+  if (gift2 !== undefined) patch.gift_2_selection = gift2;
+  if (!Object.keys(patch).length) return reg;
+  return await base44.entities.ProgramRegistration.update(reg.id, patch);
+}
+
+export async function clearElfGift(base44, reg, index) {
+  const patch = Number(index) === 2 ? { gift_2_selection: '' } : { gift_1_selection: '' };
+  return await base44.entities.ProgramRegistration.update(reg.id, patch);
 }
 
 // Closes the child out: records who helped them, what they picked, and that they

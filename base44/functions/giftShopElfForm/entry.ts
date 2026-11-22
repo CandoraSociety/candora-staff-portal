@@ -1,8 +1,10 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import {
   ELF_PIN,
+  clearElfGift,
   completeElfVisit,
   findRegistrationByElfToken,
+  saveElfGifts,
   renderElfChildPage,
   renderElfClosedPage,
   renderElfDonePage,
@@ -27,6 +29,8 @@ export default async function (req) {
       const elfName = String(form.get('elf_name') || '').trim();
       const pin = String(form.get('pin') || '').trim();
       const action = String(form.get('action') || 'view');
+      const changeGift = Number(form.get('change') || 0) || 0;
+      const removeGift = Number(form.get('remove') || 0) || 0;
 
       const reg = await findRegistrationByElfToken(base44.asServiceRole, token);
       if (!reg) return giftShopHtmlResponse(renderElfClosedPage({ state: 'invalid' }), 404);
@@ -42,12 +46,33 @@ export default async function (req) {
         );
       }
 
+      // A gift that is still locked has no input on the page, so only the gifts
+      // actually being written are saved.
+      const gifts = {
+        gift1: form.has('gift_1') ? String(form.get('gift_1') || '').trim() : undefined,
+        gift2: form.has('gift_2') ? String(form.get('gift_2') || '').trim() : undefined,
+      };
+
+      if (removeGift) {
+        const updated = await clearElfGift(base44.asServiceRole, reg, removeGift);
+        return giftShopHtmlResponse(
+          renderElfChildPage({ reg: updated || reg, token, elfName, pin, saved: 'That gift detail has been removed.' }),
+        );
+      }
+
+      if (changeGift) {
+        return giftShopHtmlResponse(renderElfChildPage({ reg, token, elfName, pin, editGift: changeGift }));
+      }
+
+      if (action === 'save') {
+        const updated = await saveElfGifts(base44.asServiceRole, reg, gifts);
+        return giftShopHtmlResponse(
+          renderElfChildPage({ reg: updated || reg, token, elfName, pin, saved: 'Gift details saved. You can change them at any time.' }),
+        );
+      }
+
       if (action === 'complete') {
-        const updated = await completeElfVisit(base44.asServiceRole, reg, {
-          elfName,
-          gift1: String(form.get('gift_1') || '').trim(),
-          gift2: String(form.get('gift_2') || '').trim(),
-        });
+        const updated = await completeElfVisit(base44.asServiceRole, reg, { elfName, ...gifts });
         return giftShopHtmlResponse(renderElfDonePage({ reg: updated || reg, elfName }));
       }
 
