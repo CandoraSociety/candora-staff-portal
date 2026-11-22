@@ -3,8 +3,9 @@ import { base44 } from '@/api/base44Client';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { FileText, Printer, X } from 'lucide-react';
-import { giftShopAgeBandLabel, giftShopChildFullName, giftShopGiftRows, giftShopGuardianName, giftShopSlotLabel } from '@/lib/giftShopFamilies';
+import { giftShopAgeBandLabel, giftShopChildFullName, giftShopGiftRows, giftShopGuardianName, giftShopSlotLabel, groupGiftShopFamilies } from '@/lib/giftShopFamilies';
 import GiftShopNameTag from '@/components/winterwonderland/GiftShopNameTag';
+import GiftShopGuardianTag from '@/components/winterwonderland/GiftShopGuardianTag';
 import printGiftShopLabels from '@/lib/printGiftShopLabels';
 import printDymoTags, { findDymoPrinter } from '@/lib/dymoPrint';
 import { CANDORA_BRAND } from '@/lib/candoraBrand';
@@ -22,6 +23,7 @@ export default function GiftShopNameTagSheet({ tags, onClose }) {
   const [printing, setPrinting] = useState(false);
   const [printError, setPrintError] = useState('');
   const [dymo, setDymo] = useState(null);
+  const [families, setFamilies] = useState([]);
   const gridRef = useRef(null);
 
   // When DYMO Connect is running, tags go straight to the label printer at the
@@ -66,6 +68,27 @@ export default function GiftShopNameTagSheet({ tags, onClose }) {
     return () => { cancelled = true; };
   }, [tags]);
 
+  // The parent or guardian's tag lists every child in the family, including any
+  // sibling who is not signing in at this moment.
+  useEffect(() => {
+    const list = tags || [];
+    if (!list.length) {
+      setFamilies([]);
+      return;
+    }
+    const keys = new Set(groupGiftShopFamilies(list).map(family => family.key));
+    let cancelled = false;
+    base44.entities.ProgramRegistration
+      .filter({ program_name: 'Kids Gift Shop' }, { limit: 500 })
+      .then(res => res.items || [])
+      .catch(() => list)
+      .then(all => {
+        if (cancelled) return;
+        setFamilies(groupGiftShopFamilies(all).filter(family => keys.has(family.key)));
+      });
+    return () => { cancelled = true; };
+  }, [tags]);
+
   // Printing waits for the QR codes to finish loading, or they come out blank.
   const printWith = async ({ bodyClass, page, selector }) => {
     await Promise.all(
@@ -93,7 +116,7 @@ export default function GiftShopNameTagSheet({ tags, onClose }) {
     setPrinting(true);
     setPrintError('');
     try {
-      if (dymo) await printDymoTags(ready, dymo);
+      if (dymo) await printDymoTags(ready, dymo, families.length ? families : groupGiftShopFamilies(ready));
       else await printGiftShopLabels(gridRef.current);
     } catch (error) {
       setPrintError(`Could not print the name tags: ${error.message}`);
@@ -117,17 +140,19 @@ export default function GiftShopNameTagSheet({ tags, onClose }) {
 
   if (!open) return null;
 
+  const total = ready.length + families.length;
+
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) close(); }}>
       <DialogContent data-giftshop-tag-dialog className="z-[10050] max-w-3xl">
         <DialogTitle className="no-print font-display text-lg">
-          {ready.length === 1 ? 'Name tag ready' : `${ready.length} name tags ready`}
+          {total === 1 ? 'Name tag ready' : `${total} name tags ready`}
         </DialogTitle>
 
         <div className="no-print flex flex-wrap items-center gap-2">
           <Button size="sm" onClick={print} disabled={printing || ready.some(tag => !tag.elf_token)} aria-busy={printing}>
             <Printer className="h-3.5 w-3.5" />
-            {printing ? 'Preparing print…' : `Print ${ready.length === 1 ? 'name tag' : `${ready.length} name tags`}`}
+            {printing ? 'Preparing print…' : `Print ${total === 1 ? 'name tag' : `${total} name tags`}`}
           </Button>
           <Button size="sm" variant="outline" onClick={printSheet}>
             <FileText className="h-3.5 w-3.5" /> Print paper forms
@@ -150,6 +175,7 @@ export default function GiftShopNameTagSheet({ tags, onClose }) {
           </p>
           <div ref={gridRef} className="giftshop-tag-grid flex flex-wrap gap-3">
             {ready.map(tag => <GiftShopNameTag key={tag.id} tag={tag} />)}
+            {families.map(family => <GiftShopGuardianTag key={family.key} family={family} />)}
           </div>
         </div>
 

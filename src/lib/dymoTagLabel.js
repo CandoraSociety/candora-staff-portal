@@ -4,6 +4,7 @@
 import {
   giftShopAgeBandLabel,
   giftShopChildFirstName,
+  giftShopFamilyChildNames,
   giftShopGuardianName,
   giftShopSlotLabel,
   giftShopTagGifts,
@@ -61,6 +62,16 @@ const qrObject = (qrPng) => `
     <Bounds X="4480" Y="180" Width="1080" Height="1080"/>
   </ObjectInfo>`;
 
+const wrapLabel = (objects) => `<?xml version="1.0" encoding="utf-8"?>
+<DieCutLabel Version="8.0" Units="twips">
+  <PaperOrientation>Landscape</PaperOrientation>
+  <Id>LargeShipping</Id>
+  <PaperName>30256 Shipping</PaperName>
+  <DrawCommands>
+    <RoundRectangle X="0" Y="0" Width="3331" Height="5715" Rx="270" Ry="270"/>
+  </DrawCommands>${objects.filter(Boolean).join('')}
+</DieCutLabel>`;
+
 export default function buildTagLabelXml(tag, { qrPng } = {}) {
   const slot = [giftShopSlotLabel(tag.time_slot), giftShopAgeBandLabel(tag.child_age_band)]
     .filter(Boolean).join(' · ');
@@ -75,13 +86,22 @@ export default function buildTagLabelXml(tag, { qrPng } = {}) {
     qrPng ? qrObject(qrPng) : '',
   ];
 
-  return `<?xml version="1.0" encoding="utf-8"?>
-<DieCutLabel Version="8.0" Units="twips">
-  <PaperOrientation>Landscape</PaperOrientation>
-  <Id>LargeShipping</Id>
-  <PaperName>30256 Shipping</PaperName>
-  <DrawCommands>
-    <RoundRectangle X="0" Y="0" Width="3331" Height="5715" Rx="270" Ry="270"/>
-  </DrawCommands>${objects.filter(Boolean).join('')}
-</DieCutLabel>`;
+  return wrapLabel(objects);
+}
+
+// The parent or guardian's own tag: their name, the shopping slot, and every
+// child they are at the shop with. No QR code — it is for the volunteer to read.
+export function buildGuardianLabelXml(family) {
+  const children = giftShopFamilyChildNames(family);
+
+  const objects = [
+    textObject({ name: 'BADGE', x: 140, y: 200, width: 1600, height: 460, size: 20, bold: true, text: 'FAMILY' }),
+    textObject({ name: 'GUARDIAN_NAME', x: 140, y: 760, width: 5400, height: 960, size: 44, bold: true, text: family.guardian_name || 'Parent / Guardian' }),
+    textObject({ name: 'SLOT', x: 140, y: 1820, width: 5400, height: 380, size: 20, bold: true, text: giftShopSlotLabel(family.time_slot) }),
+    children.length
+      ? textObject({ name: 'KIDS', x: 140, y: 2260, width: 5400, height: 860, size: 22, bold: true, text: children.join('\n') })
+      : '',
+  ];
+
+  return wrapLabel(objects);
 }

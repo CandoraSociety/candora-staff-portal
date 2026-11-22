@@ -50,6 +50,11 @@ export const giftShopAgeBandCounts = (registrations) => (registrations || [])
     return acc;
   }, { '0-5': 0, '6-16': 0 });
 
+// Every child on a family's registration, in the order they were registered —
+// used on the parent or guardian's own tag.
+export const giftShopFamilyChildNames = (family) =>
+  (family?.children || []).map(giftShopChildFullName);
+
 // The parent or guardian the child belongs to. At sign-in the adult who brings
 // the child can give their own name, which replaces the registered one.
 export const giftShopGuardianName = (reg) => (reg?.parent_guardian_name || reg?.participant_name || '').trim();

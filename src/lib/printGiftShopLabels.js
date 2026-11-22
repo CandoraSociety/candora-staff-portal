@@ -17,6 +17,8 @@ const labelStyles = `
   [data-label-name] { font-size: 24pt; line-height: 1; font-weight: 800; overflow-wrap: anywhere; }
   [data-label-slot], [data-label-gifts] { font-size: 10.5pt; font-weight: 700; }
   [data-label-guardian] { font-size: 9pt; font-weight: 600; overflow-wrap: anywhere; }
+  [data-label-badge] { flex: none; font-size: 7pt; font-weight: 900; letter-spacing: 0.12em; line-height: 1.2; text-align: center; border: 1.5pt solid black; border-radius: 3pt; padding: 3pt 2pt; }
+  [data-label-kids] { font-size: 9.5pt; font-weight: 700; overflow-wrap: anywhere; }
   [data-label-code] { flex: none; display: flex; flex-direction: column; align-items: center; gap: 1.5pt; }
   [data-label-qr] { width: 0.85in; height: 0.85in; }
   [data-label-logo] { width: 15pt; height: 15pt; object-fit: contain; }

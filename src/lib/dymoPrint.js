@@ -2,7 +2,7 @@
 // Connect service that runs beside the printer. This is what makes the tag come
 // out at its real 2.3 x 4 in size: the browser print dialog is never involved,
 // so the printer's paper size can never be overridden by a remembered sheet size.
-import buildTagLabelXml from '@/lib/dymoTagLabel';
+import buildTagLabelXml, { buildGuardianLabelXml } from '@/lib/dymoTagLabel';
 import dymoQrImage from '@/lib/dymoQrImage';
 
 // DYMO Connect answers on localhost; newer builds use https, older ones http.
@@ -45,13 +45,13 @@ export async function findDymoPrinter() {
   return null;
 }
 
-const send = async (target, tag, qrPng) => {
+const send = async (target, labelXml, who) => {
   // All four fields are required, including the blank print settings.
   // Match DYMO's own framework encoding (spaces as %20, not +).
   const fields = {
     printerName: target.printer,
     printParamsXml: '',
-    labelXml: buildTagLabelXml(tag, { qrPng }),
+    labelXml,
     labelSetXml: '',
   };
   const body = Object.entries(fields)
@@ -64,15 +64,19 @@ const send = async (target, tag, qrPng) => {
   }, 30000);
   // PrintLabel is a void operation: an empty/null response is normal success.
   if (/^"?false"?$/i.test(answer.trim())) {
-    throw new Error(`DYMO did not accept the name tag for ${tag.child_name || 'this child'}.`);
+    throw new Error(`DYMO did not accept the name tag for ${who}.`);
   }
 };
 
 // Prepare every QR before sending anything, then submit each tag exactly once.
 // Never retry a successful job or silently remove the volunteer's QR code.
-export default async function printDymoTags(tags, target) {
+// Each family also gets one tag for the parent or guardian, listing their children.
+export default async function printDymoTags(tags, target, families = []) {
   const qrImages = await Promise.all(tags.map(dymoQrImage));
   for (let index = 0; index < tags.length; index++) {
-    await send(target, tags[index], qrImages[index]);
+    await send(target, buildTagLabelXml(tags[index], { qrPng: qrImages[index] }), tags[index].child_name || 'this child');
+  }
+  for (const family of families) {
+    await send(target, buildGuardianLabelXml(family), family.guardian_name || 'the parent or guardian');
   }
 }
