@@ -5,6 +5,7 @@ import { Plus, ExternalLink } from 'lucide-react';
 import KidsGiftShopRegistrationDialog from '@/components/centralreg/KidsGiftShopRegistrationDialog';
 import GiftShopFamilyCard from '@/components/winterwonderland/GiftShopFamilyCard';
 import GiftShopCheckInDialog from '@/components/winterwonderland/GiftShopCheckInDialog';
+import GiftShopSlotBoard from '@/components/winterwonderland/GiftShopSlotBoard';
 import { KIDS_GIFT_SHOP_TIME_SLOTS, KIDS_GIFT_SHOP_SLOT_CAPACITY } from '@/lib/centralRegConstants';
 import { groupGiftShopFamilies, giftShopSlotCounts } from '@/lib/giftShopFamilies';
 import { useGiftShopRegistrations } from '@/lib/useGiftShopRegistrations';
@@ -14,6 +15,7 @@ import { useGiftShopRegistrations } from '@/lib/useGiftShopRegistrations';
 export default function GiftShopRegistrations() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedKey, setSelectedKey] = useState(null);
+  const [slot, setSlot] = useState('');
 
   const { data: registrations = [], isLoading, refresh } = useGiftShopRegistrations();
 
@@ -34,17 +36,24 @@ export default function GiftShopRegistrations() {
 
       <div>
         <h2 className="text-lg font-display font-semibold mb-2">Time slots</h2>
+        <p className="text-xs text-muted-foreground mb-2">Tap a time to see only the children booked into it.</p>
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
-          {KIDS_GIFT_SHOP_TIME_SLOTS.map(slot => {
-            const remaining = Math.max(0, KIDS_GIFT_SHOP_SLOT_CAPACITY - (counts[slot.value] || 0));
+          {KIDS_GIFT_SHOP_TIME_SLOTS.map(s => {
+            const remaining = Math.max(0, KIDS_GIFT_SHOP_SLOT_CAPACITY - (counts[s.value] || 0));
             const full = remaining === 0;
+            const active = slot === s.value;
             return (
-              <div key={slot.value} className={`rounded-md border px-2 py-1.5 ${full ? 'bg-muted' : ''}`}>
-                <p className="text-xs font-medium">{slot.label}</p>
+              <button
+                key={s.value}
+                type="button"
+                onClick={() => setSlot(active ? '' : s.value)}
+                className={`rounded-md border px-2 py-1.5 text-left transition-colors ${full ? 'bg-muted' : 'hover:border-primary/50'} ${active ? 'border-primary ring-2 ring-primary/30' : ''}`}
+              >
+                <p className="text-xs font-medium">{s.label}</p>
                 <p className={`text-[10px] ${full ? 'text-red-600 font-semibold' : 'text-muted-foreground'}`}>
                   {remaining}
                 </p>
-              </div>
+              </button>
             );
           })}
         </div>
@@ -67,9 +76,16 @@ export default function GiftShopRegistrations() {
       ) : (
         <div className="space-y-2">
           <p className="text-xs text-muted-foreground">Tap a registration to sign the children in and print their name tags.</p>
-          {families.map(family => (
-            <GiftShopFamilyCard key={family.key} family={family} onClick={() => setSelectedKey(family.key)} />
-          ))}
+          <GiftShopSlotBoard
+            families={families}
+            slot={slot}
+            onSelectSlot={setSlot}
+            hideSlots
+            emptyText="No children registered for this time slot."
+            renderFamily={(family) => (
+              <GiftShopFamilyCard key={family.key} family={family} onClick={() => setSelectedKey(family.key)} />
+            )}
+          />
         </div>
       )}
 

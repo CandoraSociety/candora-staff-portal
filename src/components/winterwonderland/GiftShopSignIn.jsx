@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { CheckCircle2, Clock, ExternalLink, Users } from 'lucide-react';
 import GiftShopFamilyCard from '@/components/winterwonderland/GiftShopFamilyCard';
 import GiftShopCheckInDialog from '@/components/winterwonderland/GiftShopCheckInDialog';
+import GiftShopSlotBoard from '@/components/winterwonderland/GiftShopSlotBoard';
 import { useGiftShopRegistrations } from '@/lib/useGiftShopRegistrations';
 import { groupGiftShopFamilies } from '@/lib/giftShopFamilies';
 
@@ -31,7 +32,7 @@ export default function GiftShopSignIn({ standalone = false }) {
         <div>
           <h2 className="text-lg font-display font-semibold">Sign children in</h2>
           <p className="text-xs text-muted-foreground">
-            Tap a family to sign the children in and print their name tags. Sign-ins update on every screen as they happen.
+            Pick a shopping time, then tap a family to sign the children in and print their name tags. Sign-ins update on every screen as they happen.
           </p>
         </div>
         {!standalone && (
@@ -51,11 +52,12 @@ export default function GiftShopSignIn({ standalone = false }) {
       ) : families.length === 0 ? (
         <Card><CardContent className="pt-6 text-center"><p className="text-sm text-muted-foreground">No children registered for the Kids Gift Shop yet.</p></CardContent></Card>
       ) : (
-        <div className="space-y-2">
-          {families.map(family => (
+        <GiftShopSlotBoard
+          families={families}
+          renderFamily={(family) => (
             <GiftShopFamilyCard key={family.key} family={family} onClick={() => setSelectedKey(family.key)} />
-          ))}
-        </div>
+          )}
+        />
       )}
 
       <GiftShopCheckInDialog
