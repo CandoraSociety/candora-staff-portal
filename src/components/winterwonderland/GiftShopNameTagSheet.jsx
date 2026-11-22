@@ -75,9 +75,12 @@ export default function GiftShopNameTagSheet({ tags, onClose }) {
 
   // Each tag prints on its own DYMO LabelWriter 550 label (4 x 2.3 in), so the
   // page is set to the label size only while the tags are being printed.
+  // The page takes the printer's own paper (the label loaded in the DYMO) turned
+  // landscape, so a 4 x 2.3 in label prints at its real size instead of the
+  // browser falling back to letter and shrinking everything to fit.
   const print = () => printWith({
     bodyClass: 'giftshop-tag-printing',
-    page: '@page { size: 4in 2.3in; margin: 0; }',
+    page: '@page { size: landscape; margin: 0; }',
     selector: '.giftshop-tag-sheet img',
   });
 
@@ -119,6 +122,9 @@ export default function GiftShopNameTagSheet({ tags, onClose }) {
         <div className="giftshop-tag-sheet bg-white rounded-xl p-4">
           <p className="no-print text-xs text-muted-foreground mb-3">
             Kids Gift Shop — name tag stickers. Elves scan the QR code, enter their name and the desk PIN to see who the child is buying for.
+          </p>
+          <p className="no-print text-xs text-muted-foreground mb-3">
+            First print on a new computer: pick the DYMO and its 4 × 2.3 in label, set Margins to None and Scale to 100%. The browser keeps those settings, so later prints come out at the right size.
           </p>
           <div className="giftshop-tag-grid flex flex-wrap gap-3">
             {ready.map(tag => (
