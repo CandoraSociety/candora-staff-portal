@@ -2,7 +2,7 @@ import React from 'react';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Printer, X } from 'lucide-react';
-import { giftShopChildFirstName, giftShopSlotLabel, giftShopTagGifts } from '@/lib/giftShopFamilies';
+import { giftShopAgeBandLabel, giftShopChildFirstName, giftShopSlotLabel, giftShopTagGifts } from '@/lib/giftShopFamilies';
 
 // Printable name tag stickers, one per signed-in child: the order number handed
 // out at sign-in, the child's first name, their slot and how many gifts (M/F).
@@ -56,7 +56,10 @@ export default function GiftShopNameTagSheet({ tags, onClose }) {
                   <p className="text-3xl font-display font-extrabold leading-tight text-slate-900 break-words">
                     {giftShopChildFirstName(tag)}
                   </p>
-                  <p className="text-base font-bold text-slate-900">{giftShopSlotLabel(tag.time_slot)}</p>
+                  <p className="text-base font-bold text-slate-900">
+                    {giftShopSlotLabel(tag.time_slot)}
+                    {tag.child_age_band ? ` · ${giftShopAgeBandLabel(tag.child_age_band)}` : ''}
+                  </p>
                   <p className="text-base font-bold text-slate-900">{giftShopTagGifts(tag)}</p>
                 </div>
               </div>

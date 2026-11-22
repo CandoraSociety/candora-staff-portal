@@ -3,6 +3,11 @@ import { KIDS_GIFT_SHOP_TIME_SLOTS } from '@/lib/centralRegConstants';
 export const giftShopSlotLabel = (value) => KIDS_GIFT_SHOP_TIME_SLOTS.find(s => s.value === value)?.label || value || 'No slot';
 export const giftShopGenderLabel = (value) => (value === 'female' ? 'F' : value === 'male' ? 'M' : '—');
 
+// The age category a child was registered under, as it reads on a name tag.
+export const giftShopAgeBandLabel = (value) => (
+  value === '0-5' ? 'Ages 0–5' : value === '6-16' ? 'Ages 6–16' : ''
+);
+
 const RECIPIENT_LABELS = {
   mother: 'Mother',
   father: 'Father',
