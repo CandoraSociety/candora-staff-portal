@@ -63,28 +63,27 @@ export default function GiftShopNameTagSheet({ tags, onClose }) {
                 key={tag.id}
                 className="giftshop-tag relative w-[4in] h-[2.3in] rounded-lg border-2 border-dashed border-slate-400 px-3 py-2 flex items-center gap-3 bg-white overflow-hidden"
               >
-                <div className="absolute right-2 top-2 text-center">
-                  <img src={CANDORA_BRAND.logoUrl} alt="Candora" className="h-9 w-9 object-contain mx-auto" />
+                <div className="absolute right-2 bottom-2 text-center">
+                  <img src={CANDORA_BRAND.logoUrl} alt="Candora" className="h-8 w-8 object-contain mx-auto" />
                   <p className="text-[9px] font-black tracking-[0.15em] text-slate-700">KGS</p>
                 </div>
-                <div className="text-center flex-shrink-0">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-600">Order</p>
-                  <p className="text-6xl font-black leading-none text-slate-900">{tag.check_in_sequence}</p>
-                </div>
-                <div className="min-w-0 flex-1 space-y-1 border-l-2 border-slate-300 pl-3 pr-10">
-                  <p className="text-4xl font-display font-extrabold leading-none text-slate-900 break-words">
+                <p className="text-7xl font-black leading-none text-slate-900 flex-shrink-0">
+                  {tag.check_in_sequence}
+                </p>
+                <div className="min-w-0 flex-1 space-y-1 border-l-2 border-slate-300 pl-3">
+                  <p className="text-5xl font-display font-extrabold leading-none text-slate-900 break-words">
                     {giftShopChildFirstName(tag)}
                   </p>
-                  <p className="text-sm font-bold text-slate-900">
+                  <p className="text-base font-bold text-slate-900">
                     {giftShopSlotLabel(tag.time_slot)}
                     {tag.child_age_band ? ` · ${giftShopAgeBandLabel(tag.child_age_band)}` : ''}
                   </p>
                   {giftShopGuardianName(tag) && (
-                    <p className="text-xs font-semibold text-slate-700 break-words">
+                    <p className="text-sm font-semibold text-slate-700 break-words pr-10">
                       Parent/Guardian: {giftShopGuardianName(tag)}
                     </p>
                   )}
-                  <p className="text-sm font-bold text-slate-900">{giftShopTagGifts(tag)}</p>
+                  <p className="text-base font-bold text-slate-900 pr-10">{giftShopTagGifts(tag)}</p>
                 </div>
               </div>
             ))}
