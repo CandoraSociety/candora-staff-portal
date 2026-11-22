@@ -10,6 +10,7 @@ import {
   slotLabel,
   GIFT_SHOP_AGE_BANDS,
   GIFT_SHOP_GENDERS,
+  GIFT_SHOP_RECIPIENTS,
 } from './giftShopInvites.ts';
 
 export const GIFT_SHOP_CONTACT_EMAIL = 'info@candorasociety.com';
@@ -25,6 +26,16 @@ const LOGO_URL = 'https://media.base44.com/images/public/6a249282cb496579542673b
 
 const AGE_LABELS = { '0-5': '0–5 years', '6-16': '6–16 years' };
 const GENDER_LABELS = { female: 'Female', male: 'Male' };
+const RECIPIENT_LABELS = {
+  mother: 'Mother',
+  father: 'Father',
+  grandmother: 'Grandmother',
+  grandfather: 'Grandfather',
+  aunt: 'Aunt',
+  uncle: 'Uncle',
+  caregiver: 'Caregiver',
+  other: 'Other',
+};
 
 const escapeHtml = (value) => String(value ?? '')
   .replace(/&/g, '&amp;')
@@ -121,12 +132,18 @@ function childFields(index, value) {
           </div>
         </div>
       </div>
-      <label>Gift one is for
+      <label>Gift one is for a…
         <select name="child_${index}_gift1">${options(GIFT_SHOP_GENDERS, value?.gift_1 || '', GENDER_LABELS, 'Select')}</select>
       </label>
+      <label>Who is gift one for?
+        <select name="child_${index}_gift1_rec">${options(GIFT_SHOP_RECIPIENTS, value?.gift_1_rec || '', RECIPIENT_LABELS, 'Select who the gift is for')}</select>
+      </label>
       <div class="gift-two">
-        <label>Gift two is for
+        <label>Gift two is for a…
           <select name="child_${index}_gift2">${options(GIFT_SHOP_GENDERS, value?.gift_2 || '', GENDER_LABELS, 'Select')}</select>
+        </label>
+        <label>Who is gift two for?
+          <select name="child_${index}_gift2_rec">${options(GIFT_SHOP_RECIPIENTS, value?.gift_2_rec || '', RECIPIENT_LABELS, 'Select who the gift is for')}</select>
         </label>
       </div>
   `;
@@ -323,7 +340,17 @@ export function readInviteForm(form) {
     const giftCount = Number(form.get(`child_${index}_gifts`) || 1);
     const gift1 = String(form.get(`child_${index}_gift1`) || '');
     const gift2 = giftCount === 2 ? String(form.get(`child_${index}_gift2`) || '') : '';
-    values.push({ child_name: name, age_band: age, gift_count: String(giftCount), gift_1: gift1, gift_2: gift2 });
+    const gift1Rec = String(form.get(`child_${index}_gift1_rec`) || '');
+    const gift2Rec = giftCount === 2 ? String(form.get(`child_${index}_gift2_rec`) || '') : '';
+    values.push({
+      child_name: name,
+      age_band: age,
+      gift_count: String(giftCount),
+      gift_1: gift1,
+      gift_2: gift2,
+      gift_1_rec: gift1Rec,
+      gift_2_rec: gift2Rec,
+    });
     if (!name) continue;
     children.push({
       child_name: name,
@@ -331,6 +358,8 @@ export function readInviteForm(form) {
       gift_count: giftCount,
       gift_1_gender: gift1,
       gift_2_gender: giftCount === 2 ? gift2 : null,
+      gift_1_recipient: gift1Rec,
+      gift_2_recipient: giftCount === 2 ? gift2Rec : null,
     });
   }
 

@@ -145,6 +145,54 @@
       ],
       "description": "Who the second gift is for, when the child is shopping for two"
     },
+    "gift_1_recipient": {
+      "type": "string",
+      "enum": [
+        "mother",
+        "father",
+        "grandmother",
+        "grandfather",
+        "aunt",
+        "uncle",
+        "caregiver",
+        "other"
+      ],
+      "enumColors": [
+        "pink",
+        "blue",
+        "pink",
+        "blue",
+        "pink",
+        "blue",
+        "green",
+        "gray"
+      ],
+      "description": "The person the first gift is for \u2014 Mother, Father, Grandmother, Grandfather, Aunt, Uncle, Caregiver or Other"
+    },
+    "gift_2_recipient": {
+      "type": "string",
+      "enum": [
+        "mother",
+        "father",
+        "grandmother",
+        "grandfather",
+        "aunt",
+        "uncle",
+        "caregiver",
+        "other"
+      ],
+      "enumColors": [
+        "pink",
+        "blue",
+        "pink",
+        "blue",
+        "pink",
+        "blue",
+        "green",
+        "gray"
+      ],
+      "description": "The person the second gift is for, when the child is shopping for two"
+    },
     "children": {
       "type": "array",
       "description": "Children registered under this record (legacy Kids Gift Shop records)",

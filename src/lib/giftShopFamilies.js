@@ -3,16 +3,38 @@ import { KIDS_GIFT_SHOP_TIME_SLOTS } from '@/lib/centralRegConstants';
 export const giftShopSlotLabel = (value) => KIDS_GIFT_SHOP_TIME_SLOTS.find(s => s.value === value)?.label || value || 'No slot';
 export const giftShopGenderLabel = (value) => (value === 'female' ? 'F' : value === 'male' ? 'M' : '—');
 
+const RECIPIENT_LABELS = {
+  mother: 'Mother',
+  father: 'Father',
+  grandmother: 'Grandmother',
+  grandfather: 'Grandfather',
+  aunt: 'Aunt',
+  uncle: 'Uncle',
+  caregiver: 'Caregiver',
+  other: 'Other',
+};
+export const giftShopRecipientLabel = (value) => RECIPIENT_LABELS[value] || '';
+
+// "F for Mother" — the gender of the gift plus who it is for.
+const describeGift = (gender, recipient) => {
+  const label = giftShopGenderLabel(gender);
+  const who = giftShopRecipientLabel(recipient);
+  return who ? `${label} for ${who}` : label;
+};
+
 export const giftShopChildFullName = (reg) => (reg.child_name || reg.participant_name || 'Unnamed child').trim();
 export const giftShopChildFirstName = (reg) => giftShopChildFullName(reg).split(/\s+/)[0] || 'Child';
 
 // "2 gifts (F, M)" — the count plus who each gift is for.
 export const giftShopTagGifts = (reg) => {
   const count = reg.gift_count || 1;
-  const genders = [reg.gift_1_gender, count > 1 ? reg.gift_2_gender : null]
-    .filter(Boolean)
-    .map(giftShopGenderLabel);
-  return `${count} gift${count > 1 ? 's' : ''}${genders.length ? ` (${genders.join(', ')})` : ''}`;
+  const gifts = [
+    [reg.gift_1_gender, reg.gift_1_recipient],
+    count > 1 ? [reg.gift_2_gender, reg.gift_2_recipient] : null,
+  ]
+    .filter(gift => gift && (gift[0] || gift[1]))
+    .map(([gender, recipient]) => describeGift(gender, recipient));
+  return `${count} gift${count > 1 ? 's' : ''}${gifts.length ? ` (${gifts.join(', ')})` : ''}`;
 };
 
 const familyKey = (r) => [
@@ -44,5 +66,7 @@ export function groupGiftShopFamilies(registrations) {
 
 export const giftShopGiftSummary = (reg) => {
   const count = reg.gift_count || 1;
-  return `${count} gift${count > 1 ? 's' : ''} — ${giftShopGenderLabel(reg.gift_1_gender)}${count > 1 ? `, ${giftShopGenderLabel(reg.gift_2_gender)}` : ''}`;
+  const first = describeGift(reg.gift_1_gender, reg.gift_1_recipient);
+  const second = count > 1 ? `, ${describeGift(reg.gift_2_gender, reg.gift_2_recipient)}` : '';
+  return `${count} gift${count > 1 ? 's' : ''} — ${first}${second}`;
 };

@@ -14,6 +14,8 @@ export const GIFT_SHOP_SLOT_TIMES = [
 ];
 export const GIFT_SHOP_AGE_BANDS = ['0-5', '6-16'];
 export const GIFT_SHOP_GENDERS = ['female', 'male'];
+// Who each gift is for — the person the child is shopping for.
+export const GIFT_SHOP_RECIPIENTS = ['mother', 'father', 'grandmother', 'grandfather', 'aunt', 'uncle', 'caregiver', 'other'];
 
 export const todayStr = () => new Date().toISOString().split('T')[0];
 
@@ -137,12 +139,18 @@ export async function redeemGiftShopInvite(base44, token, payload) {
     if (!GIFT_SHOP_GENDERS.includes(gift1)) return fail(400, `Select who the first gift is for, for ${name}.`);
     const gift2 = String(child.gift_2_gender || '');
     if (giftCount === 2 && !GIFT_SHOP_GENDERS.includes(gift2)) return fail(400, `Select who the second gift is for, for ${name}.`);
+    const recipient1 = String(child.gift_1_recipient || '');
+    if (!GIFT_SHOP_RECIPIENTS.includes(recipient1)) return fail(400, `Select who the first gift is for (for example Mother or Uncle), for ${name}.`);
+    const recipient2 = String(child.gift_2_recipient || '');
+    if (giftCount === 2 && !GIFT_SHOP_RECIPIENTS.includes(recipient2)) return fail(400, `Select who the second gift is for (for example Mother or Uncle), for ${name}.`);
     children.push({
       child_name: name,
       age_band: ageBand,
       gift_count: giftCount,
       gift_1_gender: gift1,
       gift_2_gender: giftCount === 2 ? gift2 : null,
+      gift_1_recipient: recipient1,
+      gift_2_recipient: giftCount === 2 ? recipient2 : null,
     });
   }
 
@@ -179,6 +187,8 @@ export async function redeemGiftShopInvite(base44, token, payload) {
       gift_count: child.gift_count,
       gift_1_gender: child.gift_1_gender,
       ...(child.gift_2_gender ? { gift_2_gender: child.gift_2_gender } : {}),
+      gift_1_recipient: child.gift_1_recipient,
+      ...(child.gift_2_recipient ? { gift_2_recipient: child.gift_2_recipient } : {}),
       time_slot: timeSlot,
       notes: 'Pre-registration invitation',
     };
