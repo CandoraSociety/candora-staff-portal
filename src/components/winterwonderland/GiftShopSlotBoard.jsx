@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { CheckCircle2, Clock } from 'lucide-react';
 import { KIDS_GIFT_SHOP_TIME_SLOTS } from '@/lib/centralRegConstants';
+import GiftShopSearchInput from '@/components/winterwonderland/GiftShopSearchInput';
+import { filterFamilies } from '@/lib/giftShopSearch';
 
 const countChildren = (families) => families.reduce((n, f) => n + (f.children?.length || 0), 0);
 const allIn = (family) => (family.children || []).every(c => c.checked_in);
@@ -11,6 +13,7 @@ const allIn = (family) => (family.children || []).every(c => c.checked_in);
 // those still to arrive.
 export default function GiftShopSlotBoard({ families, renderFamily, slot: controlledSlot, onSelectSlot, hideSlots = false, emptyText = 'No children registered for this time slot.' }) {
   const [internalSlot, setInternalSlot] = useState('');
+  const [query, setQuery] = useState('');
   const slot = controlledSlot !== undefined ? controlledSlot : internalSlot;
   const setSlot = onSelectSlot || setInternalSlot;
 
@@ -21,12 +24,16 @@ export default function GiftShopSlotBoard({ families, renderFamily, slot: contro
     })
     .filter(s => s.total > 0);
 
-  const shown = slot ? families.filter(f => (f.time_slot || '') === slot) : families;
+  const matching = filterFamilies(families, query);
+  const shown = slot ? matching.filter(f => (f.time_slot || '') === slot) : matching;
   const waiting = shown.filter(f => !allIn(f));
   const signedIn = shown.filter(allIn);
+  const searching = !!query.trim();
 
   return (
     <div className="space-y-4">
+      <GiftShopSearchInput value={query} onChange={setQuery} />
+
       {!hideSlots && (
         <div className="flex flex-wrap gap-2">
           <Button
@@ -54,7 +61,13 @@ export default function GiftShopSlotBoard({ families, renderFamily, slot: contro
       )}
 
       {shown.length === 0 ? (
-        <p className="text-sm text-muted-foreground">{emptyText}</p>
+        <p className="text-sm text-muted-foreground">
+          {searching && matching.length === 0
+            ? `No family matches “${query.trim()}”.`
+            : searching
+              ? `No family in ${slot ? 'this time slot' : 'the list'} matches “${query.trim()}”.`
+              : emptyText}
+        </p>
       ) : (
         <div className="space-y-5">
           {waiting.length > 0 && (

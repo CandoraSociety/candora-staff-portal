@@ -8,7 +8,9 @@ import GiftShopInviteDialog from '@/components/winterwonderland/GiftShopInviteDi
 import GiftShopInviteSendDialog from '@/components/winterwonderland/GiftShopInviteSendDialog';
 import GiftShopEmailInvitesDialog from '@/components/winterwonderland/GiftShopEmailInvitesDialog';
 import GiftShopInviteRow from '@/components/winterwonderland/GiftShopInviteRow';
+import GiftShopSearchInput from '@/components/winterwonderland/GiftShopSearchInput';
 import { inviteLink, inviteDisplayStatus } from '@/lib/giftShopInvites';
+import { filterInvites } from '@/lib/giftShopSearch';
 
 // Pre-registration tab — private, single-use links for the families invited
 // before the general public. A forwarded link cannot be used, because the
@@ -18,6 +20,7 @@ export default function GiftShopPreRegistration() {
   const [singleOpen, setSingleOpen] = useState(false);
   const [sendOpen, setSendOpen] = useState(false);
   const [emailOpen, setEmailOpen] = useState(false);
+  const [query, setQuery] = useState('');
 
   const { data: invites = [], isLoading } = useQuery({
     queryKey: ['giftShopInvites'],
@@ -25,10 +28,11 @@ export default function GiftShopPreRegistration() {
   });
 
   const openInvites = invites.filter(i => inviteDisplayStatus(i) === 'invited');
-  const registered = invites
+  const visible = filterInvites(invites, query);
+  const registered = visible
     .filter(i => i.status === 'registered')
     .sort((a, b) => new Date(b.used_at || b.created_date || 0) - new Date(a.used_at || a.created_date || 0));
-  const waiting = invites
+  const waiting = visible
     .filter(i => i.status !== 'registered')
     .sort((a, b) => {
       const rank = (i) => (inviteDisplayStatus(i) === 'invited' ? 0 : 1);
@@ -101,29 +105,37 @@ export default function GiftShopPreRegistration() {
         </Card>
       ) : (
         <div className="space-y-5">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold">Waiting to register</h3>
-              <span className="text-xs text-muted-foreground">{waiting.length}</span>
-            </div>
-            {waiting.length === 0 ? (
-              <p className="text-sm text-muted-foreground">Every invited family has registered.</p>
-            ) : waiting.map(invite => (
-              <GiftShopInviteRow key={invite.id} invite={invite} onChanged={refresh} />
-            ))}
-          </div>
+          <GiftShopSearchInput value={query} onChange={setQuery} placeholder="Search a guardian or child name, email or phone number" />
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <h3 className="text-sm font-semibold">Registered</h3>
-              <span className="text-xs text-muted-foreground">{registered.length}</span>
-            </div>
-            {registered.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No family has registered through a link yet.</p>
-            ) : registered.map(invite => (
-              <GiftShopInviteRow key={invite.id} invite={invite} onChanged={refresh} />
-            ))}
-          </div>
+          {query.trim() && visible.length === 0 ? (
+            <p className="text-sm text-muted-foreground">No invitation matches “{query.trim()}”.</p>
+          ) : (
+            <>
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold">Waiting to register</h3>
+                  <span className="text-xs text-muted-foreground">{waiting.length}</span>
+                </div>
+                {waiting.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Every invited family has registered.</p>
+                ) : waiting.map(invite => (
+                  <GiftShopInviteRow key={invite.id} invite={invite} onChanged={refresh} />
+                ))}
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold">Registered</h3>
+                  <span className="text-xs text-muted-foreground">{registered.length}</span>
+                </div>
+                {registered.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No family has registered through a link yet.</p>
+                ) : registered.map(invite => (
+                  <GiftShopInviteRow key={invite.id} invite={invite} onChanged={refresh} />
+                ))}
+              </div>
+            </>
+          )}
         </div>
       )}
 
