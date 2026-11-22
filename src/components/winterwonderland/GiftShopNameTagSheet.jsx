@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { FileText, Printer, X } from 'lucide-react';
-import { giftShopAgeBandLabel, giftShopChildFirstName, giftShopChildFullName, giftShopGiftRows, giftShopGuardianName, giftShopSlotLabel, giftShopTagGifts } from '@/lib/giftShopFamilies';
+import { giftShopAgeBandLabel, giftShopChildFullName, giftShopGiftRows, giftShopGuardianName, giftShopSlotLabel } from '@/lib/giftShopFamilies';
+import GiftShopNameTag from '@/components/winterwonderland/GiftShopNameTag';
+import printGiftShopLabels from '@/lib/printGiftShopLabels';
 import { CANDORA_BRAND } from '@/lib/candoraBrand';
 import { elfFormLink, newElfToken, qrImageUrl } from '@/lib/giftShopElf';
 
@@ -16,6 +18,9 @@ import { elfFormLink, newElfToken, qrImageUrl } from '@/lib/giftShopElf';
 export default function GiftShopNameTagSheet({ tags, onClose }) {
   const open = !!tags?.length;
   const [ready, setReady] = useState(tags || []);
+  const [printing, setPrinting] = useState(false);
+  const [printError, setPrintError] = useState('');
+  const gridRef = useRef(null);
 
   // Every tag carries its own code, so a volunteer's scan opens that one child.
   // A tag printed before the codes existed is given one on the spot and saved,
@@ -73,16 +78,18 @@ export default function GiftShopNameTagSheet({ tags, onClose }) {
     window.print();
   };
 
-  // Each tag prints on its own DYMO LabelWriter 550 label (4 x 2.3 in), so the
-  // page is set to the label size only while the tags are being printed.
-  // The page is the label itself (4 x 2.3 in, no margin), so one tag fills one
-  // sticker. The print dialog's paper size must match this — it is chosen once
-  // per printer and the browser remembers it after that.
-  const print = () => printWith({
-    bodyClass: 'giftshop-tag-printing',
-    page: '@page { size: 4in 2.3in; margin: 0; }',
-    selector: '.giftshop-tag-sheet img',
-  });
+  // Use a clean roll-oriented print document instead of printing the dialog.
+  const print = async () => {
+    setPrinting(true);
+    setPrintError('');
+    try {
+      await printGiftShopLabels(gridRef.current);
+    } catch (error) {
+      setPrintError(`Could not prepare the name tags: ${error.message}`);
+    } finally {
+      setPrinting(false);
+    }
+  };
 
   // For anyone who would rather work from paper than scan the tag: the same
   // codes, one row per child, on a normal letter page.
@@ -107,9 +114,9 @@ export default function GiftShopNameTagSheet({ tags, onClose }) {
         </DialogTitle>
 
         <div className="no-print flex flex-wrap items-center gap-2">
-          <Button size="sm" onClick={print}>
+          <Button size="sm" onClick={print} disabled={printing || ready.some(tag => !tag.elf_token)} aria-busy={printing}>
             <Printer className="h-3.5 w-3.5" />
-            Print {ready.length === 1 ? 'name tag' : `${ready.length} name tags`}
+            {printing ? 'Preparing print…' : `Print ${ready.length === 1 ? 'name tag' : `${ready.length} name tags`}`}
           </Button>
           <Button size="sm" variant="outline" onClick={printSheet}>
             <FileText className="h-3.5 w-3.5" /> Print paper forms
@@ -119,50 +126,17 @@ export default function GiftShopNameTagSheet({ tags, onClose }) {
           </Button>
         </div>
 
+        {printError && <p role="alert" className="no-print text-sm text-destructive">{printError}</p>}
+
         <div className="giftshop-tag-sheet bg-white rounded-xl p-4">
           <p className="no-print text-xs text-muted-foreground mb-3">
             Kids Gift Shop — name tag stickers. Elves scan the QR code, enter their name and the desk PIN to see who the child is buying for.
           </p>
           <p className="no-print text-xs text-muted-foreground mb-3">
-            First print on a new computer, in the print window: Printer = the DYMO, Paper size = the 2.3 × 4 in Large Address label, Margins = None, Scale = 100%. The browser remembers these, so later prints come out full size.
+            DYMO setup: select the loaded 2.3 × 4 in label, Portrait, Margins None and Scale 100%. The print preview intentionally shows the tag sideways to match the direction of the roll; the sticker reads horizontally.
           </p>
-          <div className="giftshop-tag-grid flex flex-wrap gap-3">
-            {ready.map(tag => (
-              <div
-                key={tag.id}
-                className="giftshop-tag relative w-[4in] h-[2.3in] rounded-lg border-2 border-dashed border-slate-400 px-3 py-2 flex items-center gap-2 bg-white overflow-hidden"
-              >
-                <p className="text-6xl font-black leading-none text-slate-900 flex-shrink-0">
-                  {tag.check_in_sequence}
-                </p>
-                <div className="min-w-0 flex-1 space-y-1 border-l-2 border-slate-300 pl-2.5">
-                  <p className="text-[2rem] font-display font-extrabold leading-none text-slate-900 break-words">
-                    {giftShopChildFirstName(tag)}
-                  </p>
-                  <p className="text-sm font-bold text-slate-900">
-                    {giftShopSlotLabel(tag.time_slot)}
-                    {tag.child_age_band ? ` · ${giftShopAgeBandLabel(tag.child_age_band)}` : ''}
-                  </p>
-                  {giftShopGuardianName(tag) && (
-                    <p className="text-xs font-semibold text-slate-700 break-words">
-                      Parent/Guardian: {giftShopGuardianName(tag)}
-                    </p>
-                  )}
-                  <p className="text-sm font-bold text-slate-900">{giftShopTagGifts(tag)}</p>
-                </div>
-                <div className="flex flex-col items-center justify-center gap-0.5 flex-shrink-0">
-                  {tag.elf_token && (
-                    <img
-                      src={qrImageUrl(elfFormLink(tag.elf_token))}
-                      alt="Scan to help this child"
-                      className="h-[0.85in] w-[0.85in]"
-                    />
-                  )}
-                  <img src={CANDORA_BRAND.logoUrl} alt="Candora" className="h-5 w-5 object-contain" />
-                  <p className="text-[7px] font-black tracking-[0.15em] text-slate-700">KGS</p>
-                </div>
-              </div>
-            ))}
+          <div ref={gridRef} className="giftshop-tag-grid flex flex-wrap gap-3">
+            {ready.map(tag => <GiftShopNameTag key={tag.id} tag={tag} />)}
           </div>
         </div>
 
