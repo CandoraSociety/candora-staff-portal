@@ -71,6 +71,10 @@ const STYLES = `
   .gift-btns{display:flex;gap:18px;margin-top:10px}
   .link-btn{background:none;border:0;padding:0;font:inherit;font-size:13px;font-weight:800;color:var(--navy);text-decoration:underline;cursor:pointer}
   .link-btn.danger{color:#b91c1c}
+  .sib{display:flex;align-items:center;justify-content:space-between;gap:10px;background:#f4f6fb;border:1px solid var(--line);border-radius:10px;padding:6px 8px;margin:0 0 14px}
+  .sib-btn{width:44px;height:44px;flex:0 0 auto;display:flex;align-items:center;justify-content:center;padding:0;border:1px solid var(--line);border-radius:8px;background:#fff;color:var(--navy);font-size:22px;font-weight:800;line-height:1;cursor:pointer}
+  .sib-off{opacity:.3;cursor:default}
+  .sib-count{flex:1;text-align:center;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
   .contact{border-top:1px solid var(--line);margin-top:4px;padding-top:14px;margin-bottom:16px}
   .contact-name{margin:0 0 8px;font-size:19px;font-weight:800;line-height:1.25}
   .contact-link{display:inline-block;margin:0 14px 6px 0;font-size:15px;font-weight:700;color:var(--navy);text-decoration:none;border-bottom:2px solid var(--gold);padding-bottom:1px}
@@ -120,6 +124,27 @@ export async function findRegistrationByElfToken(base44, token) {
     elf_token: clean,
   });
   return (rows || []).find(r => r.elf_token === clean) || null;
+}
+
+// Siblings are the children of one guardian booked into the same shopping slot,
+// which is how the registration desk groups a family.
+const familyKey = (reg) => [
+  String(reg.parent_guardian_name || reg.participant_name || '').trim().toLowerCase(),
+  String(reg.parent_guardian_phone || reg.participant_phone || '').trim(),
+  reg.time_slot || '',
+].join('|');
+
+// The other children of the same family who are still shopping, in the order they
+// were signed in, so a volunteer can step between siblings from one tag.
+export async function findFamilyChildren(base44, reg) {
+  const rows = await base44.entities.ProgramRegistration.filter({
+    program_name: GIFT_SHOP_PROGRAM_NAME,
+  });
+  const key = familyKey(reg);
+  return (rows || [])
+    .filter(r => r.elf_token && !r.completed && familyKey(r) === key)
+    .sort((a, b) => (a.check_in_sequence || 0) - (b.check_in_sequence || 0)
+      || String(a.child_name || '').localeCompare(String(b.child_name || '')));
 }
 
 // The gifts the child is shopping for, one row each, with whatever an elf has
@@ -229,14 +254,41 @@ function elfGiftBlock(gift, editGift) {
     </div>`;
 }
 
-export function renderElfChildPage({ reg, token, elfName, pin, error = '', saved = '', editGift = 0 }) {
+// Arrows to step between the children of one family, on their own small form so
+// switching never touches the gift notes being written.
+function siblingNav(siblings, token) {
+  if (!siblings || siblings.length < 2) return '';
+  const index = siblings.findIndex(sibling => sibling.token === token);
+  if (index < 0) return '';
+
+  const arrow = (sibling, label, glyph) => (sibling
+    ? `<button type="submit" class="sib-btn" name="go" value="${escapeHtml(sibling.token)}" aria-label="${label}">${glyph}</button>`
+    : `<span class="sib-btn sib-off">${glyph}</span>`);
+
+  return `
+  <div class="sib">
+    ${arrow(siblings[index - 1], 'Previous child', '‹')}
+    <span class="sib-count">Sibling ${index + 1} of ${siblings.length}</span>
+    ${arrow(siblings[index + 1], 'Next child', '›')}
+  </div>`;
+}
+
+export function renderElfChildPage({ reg, token, elfName, pin, error = '', saved = '', editGift = 0, siblings = [] }) {
   const gifts = elfGiftRows(reg).map(gift => elfGiftBlock(gift, editGift)).join('');
+  const nav = siblingNav(siblings, token);
 
   return shell({
     title: `${reg.child_name || 'Child'} · Kids Gift Shop`,
     body: `
       <div class="card">
         ${childCard(reg)}
+        ${nav ? `
+        <form method="post">
+          <input type="hidden" name="token" value="${escapeHtml(token)}" />
+          <input type="hidden" name="elf_name" value="${escapeHtml(elfName)}" />
+          <input type="hidden" name="pin" value="${escapeHtml(pin)}" />
+          ${nav}
+        </form>` : ''}
         ${guardianCard(reg)}
         ${error ? `<div class="error">${escapeHtml(error)}</div>` : ''}
         ${saved ? `<div class="saved">${escapeHtml(saved)}</div>` : ''}

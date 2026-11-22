@@ -3,6 +3,7 @@ import {
   ELF_PIN,
   clearElfGift,
   completeElfVisit,
+  findFamilyChildren,
   findRegistrationByElfToken,
   saveElfGifts,
   renderElfChildPage,
@@ -53,22 +54,35 @@ export default async function (req) {
         gift2: form.has('gift_2') ? String(form.get('gift_2') || '').trim() : undefined,
       };
 
+      // The child's card always carries the arrows to their siblings, so a family
+      // is handled from whichever tag was scanned first.
+      const renderChild = async (targetReg, targetToken, extra = {}) => {
+        const family = await findFamilyChildren(base44.asServiceRole, targetReg);
+        const siblings = family.map(r => ({ token: r.elf_token, name: r.child_name || r.participant_name || 'Child' }));
+        return giftShopHtmlResponse(
+          renderElfChildPage({ reg: targetReg, token: targetToken, elfName, pin, siblings, ...extra }),
+        );
+      };
+
+      const goToken = String(form.get('go') || '').trim();
+      if (goToken && goToken !== token) {
+        const target = await findRegistrationByElfToken(base44.asServiceRole, goToken);
+        if (target?.completed) return giftShopHtmlResponse(renderElfClosedPage({ state: 'completed', reg: target }));
+        if (target) return await renderChild(target, goToken);
+      }
+
       if (removeGift) {
         const updated = await clearElfGift(base44.asServiceRole, reg, removeGift);
-        return giftShopHtmlResponse(
-          renderElfChildPage({ reg: updated || reg, token, elfName, pin, saved: 'That gift detail has been removed.' }),
-        );
+        return await renderChild(updated || reg, token, { saved: 'That gift detail has been removed.' });
       }
 
       if (changeGift) {
-        return giftShopHtmlResponse(renderElfChildPage({ reg, token, elfName, pin, editGift: changeGift }));
+        return await renderChild(reg, token, { editGift: changeGift });
       }
 
       if (action === 'save') {
         const updated = await saveElfGifts(base44.asServiceRole, reg, gifts);
-        return giftShopHtmlResponse(
-          renderElfChildPage({ reg: updated || reg, token, elfName, pin, saved: 'Gift details saved. You can change them at any time.' }),
-        );
+        return await renderChild(updated || reg, token, { saved: 'Gift details saved. You can change them at any time.' });
       }
 
       if (action === 'complete') {
@@ -76,7 +90,7 @@ export default async function (req) {
         return giftShopHtmlResponse(renderElfDonePage({ reg: updated || reg, elfName }));
       }
 
-      return giftShopHtmlResponse(renderElfChildPage({ reg, token, elfName, pin }));
+      return await renderChild(reg, token);
     }
 
     const reg = await findRegistrationByElfToken(base44.asServiceRole, queryToken);
