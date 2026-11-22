@@ -62,13 +62,13 @@ const imageObject = ({ name, x, y, width, height, png, opaque = true }) => `
     <Bounds X="${x}" Y="${y}" Width="${width}" Height="${height}"/>
   </ObjectInfo>`;
 
-const qrObject = (qrPng) => imageObject({ name: 'QRCODE', x: 4480, y: 180, width: 1080, height: 1080, png: qrPng });
+const qrObject = (qrPng) => imageObject({ name: 'QRCODE', x: 4060, y: 110, width: 1600, height: 1600, png: qrPng });
 
-// The Candora mark and the Kids Gift Shop initials under the QR code, printed
-// large enough to read at a glance on the 2.3 x 4 in label.
+// The Candora mark under the QR code and the Kids Gift Shop initials in the
+// footer, printed large enough to read at a glance on the 2.3 x 4 in label.
 const brandObjects = (logoPng) => [
-  logoPng ? imageObject({ name: 'LOGO', x: 4480, y: 1320, width: 1080, height: 620, png: logoPng, opaque: false }) : '',
-  textObject({ name: 'KGS', x: 4480, y: 1980, width: 1080, height: 420, size: 30, bold: true, align: 'Center', text: 'KGS' }),
+  logoPng ? imageObject({ name: 'LOGO', x: 4060, y: 1790, width: 1600, height: 1500, png: logoPng, opaque: false }) : '',
+  textObject({ name: 'KGS', x: 1030, y: 2470, width: 2900, height: 780, size: 60, bold: true, align: 'Center', text: 'KGS' }),
 ];
 
 const wrapLabel = (objects) => `<?xml version="1.0" encoding="utf-8"?>
@@ -88,10 +88,10 @@ export default function buildTagLabelXml(tag, { qrPng, logoPng } = {}) {
 
   const objects = [
     textObject({ name: 'NUMBER', x: 120, y: 180, width: 900, height: 2950, size: 90, bold: true, text: tag.check_in_sequence ?? '' }),
-    textObject({ name: 'CHILD', x: 1140, y: 200, width: 3250, height: 760, size: 42, bold: true, text: giftShopChildFirstName(tag) }),
-    textObject({ name: 'SLOT', x: 1140, y: 1000, width: 3250, height: 420, size: 20, bold: true, text: slot }),
-    guardian ? textObject({ name: 'GUARDIAN', x: 1140, y: 1460, width: 3250, height: 380, size: 16, text: `Parent/Guardian: ${guardian}` }) : '',
-    textObject({ name: 'GIFTS', x: 1140, y: 1900, width: 3250, height: 440, size: 20, bold: true, text: giftShopTagGifts(tag) }),
+    textObject({ name: 'CHILD', x: 1030, y: 170, width: 2900, height: 760, size: 44, bold: true, text: giftShopChildFirstName(tag) }),
+    textObject({ name: 'SLOT', x: 1030, y: 990, width: 2900, height: 400, size: 22, bold: true, text: slot }),
+    guardian ? textObject({ name: 'GUARDIAN', x: 1030, y: 1450, width: 2900, height: 380, size: 17, text: `Parent/Guardian: ${guardian}` }) : '',
+    textObject({ name: 'GIFTS', x: 1030, y: 1870, width: 2900, height: 480, size: 22, bold: true, text: giftShopTagGifts(tag) }),
     qrPng ? qrObject(qrPng) : '',
     ...brandObjects(logoPng),
   ];
