@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { CheckCircle2, Clock, Users } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { CheckCircle2, Clock, ExternalLink, Users } from 'lucide-react';
 import GiftShopFamilyCard from '@/components/winterwonderland/GiftShopFamilyCard';
 import GiftShopCheckInDialog from '@/components/winterwonderland/GiftShopCheckInDialog';
 import { useGiftShopRegistrations } from '@/lib/useGiftShopRegistrations';
@@ -9,7 +10,7 @@ import { groupGiftShopFamilies } from '@/lib/giftShopFamilies';
 // Sign-In tab — the same registration cards, sorted by shopping time, for
 // working the door. Signing a child in here writes to the same registration, so
 // every other area updates with it.
-export default function GiftShopSignIn() {
+export default function GiftShopSignIn({ standalone = false }) {
   const [selectedKey, setSelectedKey] = useState(null);
   const { data: registrations = [], isLoading, refresh } = useGiftShopRegistrations();
 
@@ -26,11 +27,23 @@ export default function GiftShopSignIn() {
         <Card><CardContent className="pt-5"><p className="text-xs text-muted-foreground flex items-center gap-1"><Users className="h-3 w-3" /> Families</p><p className="text-2xl font-bold">{families.length}</p></CardContent></Card>
       </div>
 
-      <div>
-        <h2 className="text-lg font-display font-semibold">Sign children in</h2>
-        <p className="text-xs text-muted-foreground">
-          Tap a family to sign the children in and print their name tags. Sign-ins update on every screen as they happen.
-        </p>
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h2 className="text-lg font-display font-semibold">Sign children in</h2>
+          <p className="text-xs text-muted-foreground">
+            Tap a family to sign the children in and print their name tags. Sign-ins update on every screen as they happen.
+          </p>
+        </div>
+        {!standalone && (
+          <Button
+            size="sm"
+            variant="outline"
+            className="flex-shrink-0"
+            onClick={() => window.open('/winter-wonderland/kids-gift-shop/sign-in', '_blank', 'noopener')}
+          >
+            <ExternalLink className="h-3.5 w-3.5" /> Open in new window
+          </Button>
+        )}
       </div>
 
       {isLoading ? (

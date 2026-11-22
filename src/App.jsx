@@ -406,6 +406,7 @@ import WinterWonderlandSleighBells from '@/pages/winterwonderland/WinterWonderla
 import WinterWonderlandCommunityLunch from '@/pages/winterwonderland/WinterWonderlandCommunityLunch';
 import WinterWonderlandDonationDrive from '@/pages/winterwonderland/WinterWonderlandDonationDrive';
 import GiftShopChildrenWindow from '@/pages/winterwonderland/GiftShopChildrenWindow';
+import GiftShopSignInWindow from '@/pages/winterwonderland/GiftShopSignInWindow';
 import CommunityDashboard from '@/pages/community/CommunityDashboard';
 import CommunityPrograms from '@/pages/community/CommunityPrograms';
 import CommunityProgramDetail from '@/pages/community/CommunityProgramDetail';
@@ -895,6 +896,9 @@ const AuthenticatedApp = () => {
 
         {/* Kids Gift Shop registered children — opens in its own window, no portal chrome */}
         <Route path="/winter-wonderland/kids-gift-shop/children" element={<GiftShopChildrenWindow />} />
+
+        {/* Kids Gift Shop sign-in — opens in its own window, no portal chrome */}
+        <Route path="/winter-wonderland/kids-gift-shop/sign-in" element={<GiftShopSignInWindow />} />
 
         {/* LMS (Learning Management System) - standalone layout */}
         <Route element={<LMSLayout />}>
