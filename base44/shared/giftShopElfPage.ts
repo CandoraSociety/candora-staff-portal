@@ -348,7 +348,7 @@ export function renderElfDonePage({ reg, elfName, token = '', pin = '', siblings
   });
 }
 
-export function renderElfClosedPage({ state, reg }) {
+export function renderElfClosedPage({ state, reg, token = '', elfName = '', pin = '', siblings = [] }) {
   const copy = state === 'completed'
     ? {
       heading: 'This child is already finished',
@@ -361,12 +361,36 @@ export function renderElfClosedPage({ state, reg }) {
       text: 'Scan the QR code printed on the child\'s name tag again, or ask at the registration desk.',
     };
 
+  // A finished tag still carries the rest of the family, so a brother or sister
+  // can be closed out from it without hunting for another sticker.
+  const remaining = state === 'completed' ? (siblings || []).filter(sibling => sibling?.token) : [];
+  const lead = remaining.length === 1
+    ? 'One more child from this family is still shopping.'
+    : `${remaining.length} more children from this family are still shopping.`;
+
   return shell({
     title: `${copy.heading} · Kids Gift Shop`,
     body: `
       <div class="card">
         <h2>${escapeHtml(copy.heading)}</h2>
         <p class="lede">${escapeHtml(copy.text)}</p>
+        ${remaining.length ? (elfName ? `
+        <form method="post">
+          <input type="hidden" name="token" value="${escapeHtml(token)}" />
+          <input type="hidden" name="elf_name" value="${escapeHtml(elfName)}" />
+          <input type="hidden" name="pin" value="${escapeHtml(pin)}" />
+          <p class="lede" style="margin-bottom:8px">${escapeHtml(lead)}</p>
+          ${remaining.map(sibling => `
+          <button type="submit" class="btn" name="go" value="${escapeHtml(sibling.token)}" style="margin-bottom:8px">
+            Help ${escapeHtml(sibling.name)} next ›
+          </button>`).join('')}
+        </form>` : `
+        <p class="lede" style="margin-bottom:8px">${escapeHtml(lead)}</p>
+        ${remaining.map(sibling => `
+        <a class="btn" href="?token=${encodeURIComponent(sibling.token)}"
+           style="text-align:center;text-decoration:none;margin-bottom:8px">
+          Help ${escapeHtml(sibling.name)} next ›
+        </a>`).join('')}`) : ''}
       </div>
     `,
   });

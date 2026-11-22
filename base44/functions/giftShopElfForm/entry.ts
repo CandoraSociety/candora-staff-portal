@@ -36,13 +36,6 @@ export default async function (req) {
       const reg = await findRegistrationByElfToken(base44.asServiceRole, token);
       if (!reg) return giftShopHtmlResponse(renderElfClosedPage({ state: 'invalid' }), 404);
 
-      // After one child is returned, the same tag steps to a brother or sister
-      // who is still shopping, so a finished code can still carry on.
-      const goToken = String(form.get('go') || '').trim();
-      if (reg.completed && !goToken) {
-        return giftShopHtmlResponse(renderElfClosedPage({ state: 'completed', reg }));
-      }
-
       if (!elfName) {
         return giftShopHtmlResponse(renderElfPinPage({ token, error: 'Enter your name to continue.' }), 400);
       }
@@ -51,6 +44,38 @@ export default async function (req) {
           renderElfPinPage({ token, elfName, error: 'That desk PIN is not right. Please check it and try again.' }),
           403,
         );
+      }
+
+      // Brothers and sisters who are still shopping, so a family can be finished
+      // from whichever of its tags is in hand.
+      const siblingsFor = async (source) => {
+        const family = await findFamilyChildren(base44.asServiceRole, source);
+        return family
+          .filter(r => r.elf_token)
+          .map(r => ({ token: r.elf_token, name: r.child_name || r.participant_name || 'Child' }));
+      };
+
+      const goToken = String(form.get('go') || '').trim();
+      if (goToken && goToken !== token) {
+        const target = await findRegistrationByElfToken(base44.asServiceRole, goToken);
+        if (target?.completed) {
+          return giftShopHtmlResponse(renderElfClosedPage({
+            state: 'completed', reg: target, token: goToken, elfName, pin, siblings: await siblingsFor(target),
+          }));
+        }
+        if (target) {
+          return giftShopHtmlResponse(renderElfChildPage({
+            reg: target, token: goToken, elfName, pin, siblings: await siblingsFor(target),
+          }));
+        }
+      }
+
+      // A child already returned still offers the rest of the family, so a
+      // finished tag can be used to close out a brother or sister.
+      if (reg.completed) {
+        return giftShopHtmlResponse(renderElfClosedPage({
+          state: 'completed', reg, token, elfName, pin, siblings: await siblingsFor(reg),
+        }));
       }
 
       // A gift that is still locked has no input on the page, so only the gifts
@@ -62,19 +87,11 @@ export default async function (req) {
 
       // The child's card always carries the arrows to their siblings, so a family
       // is handled from whichever tag was scanned first.
-      const renderChild = async (targetReg, targetToken, extra = {}) => {
-        const family = await findFamilyChildren(base44.asServiceRole, targetReg);
-        const siblings = family.map(r => ({ token: r.elf_token, name: r.child_name || r.participant_name || 'Child' }));
-        return giftShopHtmlResponse(
-          renderElfChildPage({ reg: targetReg, token: targetToken, elfName, pin, siblings, ...extra }),
-        );
-      };
-
-      if (goToken && goToken !== token) {
-        const target = await findRegistrationByElfToken(base44.asServiceRole, goToken);
-        if (target?.completed) return giftShopHtmlResponse(renderElfClosedPage({ state: 'completed', reg: target }));
-        if (target) return await renderChild(target, goToken);
-      }
+      const renderChild = async (targetReg, targetToken, extra = {}) => giftShopHtmlResponse(
+        renderElfChildPage({
+          reg: targetReg, token: targetToken, elfName, pin, siblings: await siblingsFor(targetReg), ...extra,
+        }),
+      );
 
       if (removeGift) {
         const updated = await clearElfGift(base44.asServiceRole, reg, removeGift);
@@ -94,10 +111,7 @@ export default async function (req) {
         const updated = await completeElfVisit(base44.asServiceRole, reg, { elfName, ...gifts });
         // Any brother or sister still shopping is offered straight away, so a
         // family is never left half closed out.
-        const family = await findFamilyChildren(base44.asServiceRole, updated || reg);
-        const siblings = family
-          .filter(r => r.elf_token)
-          .map(r => ({ token: r.elf_token, name: r.child_name || r.participant_name || 'Child' }));
+        const siblings = await siblingsFor(updated || reg);
         return giftShopHtmlResponse(renderElfDonePage({ reg: updated || reg, elfName, token, pin, siblings }));
       }
 
@@ -106,7 +120,15 @@ export default async function (req) {
 
     const reg = await findRegistrationByElfToken(base44.asServiceRole, queryToken);
     if (!reg) return giftShopHtmlResponse(renderElfClosedPage({ state: 'invalid' }), 404);
-    if (reg.completed) return giftShopHtmlResponse(renderElfClosedPage({ state: 'completed', reg }));
+    if (reg.completed) {
+      // Re-scanning a finished tag still shows the family's other children, so a
+      // volunteer is never stuck after closing one child out.
+      const family = await findFamilyChildren(base44.asServiceRole, reg);
+      const siblings = family
+        .filter(r => r.elf_token)
+        .map(r => ({ token: r.elf_token, name: r.child_name || r.participant_name || 'Child' }));
+      return giftShopHtmlResponse(renderElfClosedPage({ state: 'completed', reg, siblings }));
+    }
     return giftShopHtmlResponse(renderElfPinPage({ token: queryToken }));
   } catch (error) {
     console.log('giftShopElfForm failed:', error.message);
