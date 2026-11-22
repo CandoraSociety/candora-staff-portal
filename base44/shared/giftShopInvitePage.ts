@@ -267,8 +267,7 @@ function successPage({ children = [], time_label: timeLabel }) {
         </p>
         <div class="notice" style="text-align:left;margin:18px 0 0">
           <strong>On the day</strong>
-          Come to the Kids Gift Shop registration desk and sign in every child who is participating. There is no name tag
-          waiting at the door — each child is signed in at the desk before they shop.
+          Come to the Kids Gift Shop registration desk and sign in every child who is participating.
         </div>
         <div class="notice" style="text-align:left;margin:12px 0 0">
           <strong>Please arrive on time</strong>
