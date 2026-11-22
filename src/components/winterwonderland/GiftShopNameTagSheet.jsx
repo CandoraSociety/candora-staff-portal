@@ -17,7 +17,7 @@ export default function GiftShopNameTagSheet({ tags, onClose }) {
   // page is set to the label size only while this sheet is being printed.
   const print = () => {
     const pageStyle = document.createElement('style');
-    pageStyle.textContent = '@page { size: 2.3in 4in; margin: 0; }';
+    pageStyle.textContent = '@page { size: 4in 2.3in; margin: 0; }';
     document.head.appendChild(pageStyle);
 
     const cleanup = () => {
@@ -57,24 +57,24 @@ export default function GiftShopNameTagSheet({ tags, onClose }) {
 
         <div className="giftshop-tag-sheet bg-white rounded-xl p-4">
           <p className="no-print text-xs text-muted-foreground mb-3">Kids Gift Shop — name tag stickers</p>
-          <div className="giftshop-tag-grid grid gap-3 sm:grid-cols-2">
+          <div className="giftshop-tag-grid flex flex-wrap gap-3">
             {tags.map(tag => (
               <div
                 key={tag.id}
-                className="giftshop-tag relative w-[2.3in] h-[4in] rounded-lg border-2 border-dashed border-slate-400 px-2 py-3 flex flex-col items-center justify-between text-center bg-white overflow-hidden"
+                className="giftshop-tag relative w-[4in] h-[2.3in] rounded-lg border-2 border-dashed border-slate-400 px-3 py-2 flex items-center gap-3 bg-white overflow-hidden"
               >
-                <div className="flex items-center gap-1">
-                  <img src={CANDORA_BRAND.logoUrl} alt="Candora" className="h-6 w-6 object-contain" />
-                  <p className="text-[9px] font-black tracking-[0.15em] text-slate-700">KGS</p>
+                <div className="absolute right-2 top-2 text-center">
+                  <img src={CANDORA_BRAND.logoUrl} alt="Candora" className="h-7 w-7 object-contain mx-auto" />
+                  <p className="text-[8px] font-black tracking-[0.15em] text-slate-700">KGS</p>
                 </div>
-                <div className="w-full">
+                <div className="text-center flex-shrink-0">
                   <p className="text-[8px] font-bold uppercase tracking-[0.2em] text-slate-600">Order</p>
-                  <p className="text-[44px] font-black leading-none text-slate-900">{tag.check_in_sequence}</p>
+                  <p className="text-5xl font-black leading-none text-slate-900">{tag.check_in_sequence}</p>
                 </div>
-                <p className="w-full px-1 text-[26px] font-display font-extrabold leading-[1.05] text-slate-900 break-words">
-                  {giftShopChildFirstName(tag)}
-                </p>
-                <div className="w-full space-y-0.5 border-t border-slate-300 pt-1">
+                <div className="min-w-0 flex-1 space-y-0.5 border-l-2 border-slate-300 pl-3 pr-10">
+                  <p className="text-2xl font-display font-extrabold leading-tight text-slate-900 break-words">
+                    {giftShopChildFirstName(tag)}
+                  </p>
                   <p className="text-[11px] font-bold text-slate-900">
                     {giftShopSlotLabel(tag.time_slot)}
                     {tag.child_age_band ? ` · ${giftShopAgeBandLabel(tag.child_age_band)}` : ''}
