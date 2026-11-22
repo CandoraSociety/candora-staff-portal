@@ -13,8 +13,21 @@ import { CANDORA_BRAND } from '@/lib/candoraBrand';
 export default function GiftShopNameTagSheet({ tags, onClose }) {
   const open = !!tags?.length;
 
+  // Each tag prints on its own DYMO LabelWriter 550 label (2.3 x 4 in), so the
+  // page is set to the label size only while this sheet is being printed.
   const print = () => {
+    const pageStyle = document.createElement('style');
+    pageStyle.textContent = '@page { size: 2.3in 4in; margin: 0; }';
+    document.head.appendChild(pageStyle);
+
+    const cleanup = () => {
+      document.body.classList.remove('giftshop-tag-printing');
+      pageStyle.remove();
+      window.removeEventListener('afterprint', cleanup);
+    };
+
     document.body.classList.add('giftshop-tag-printing');
+    window.addEventListener('afterprint', cleanup);
     window.print();
   };
 
@@ -44,34 +57,34 @@ export default function GiftShopNameTagSheet({ tags, onClose }) {
 
         <div className="giftshop-tag-sheet bg-white rounded-xl p-4">
           <p className="no-print text-xs text-muted-foreground mb-3">Kids Gift Shop — name tag stickers</p>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="giftshop-tag-grid grid gap-3 sm:grid-cols-2">
             {tags.map(tag => (
               <div
                 key={tag.id}
-                className="giftshop-tag relative rounded-lg border-2 border-dashed border-slate-400 p-4 flex items-center gap-4"
+                className="giftshop-tag relative w-[2.3in] h-[4in] rounded-lg border-2 border-dashed border-slate-400 px-2 py-3 flex flex-col items-center justify-between text-center bg-white overflow-hidden"
               >
-                <div className="absolute right-3 top-3 text-center">
-                  <img src={CANDORA_BRAND.logoUrl} alt="Candora" className="h-10 w-10 object-contain mx-auto" />
-                  <p className="text-[10px] font-black tracking-[0.15em] text-slate-700">KGS</p>
+                <div className="flex items-center gap-1">
+                  <img src={CANDORA_BRAND.logoUrl} alt="Candora" className="h-6 w-6 object-contain" />
+                  <p className="text-[9px] font-black tracking-[0.15em] text-slate-700">KGS</p>
                 </div>
-                <div className="text-center flex-shrink-0">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-600">Order</p>
-                  <p className="text-6xl font-black leading-none text-slate-900">{tag.check_in_sequence}</p>
+                <div className="w-full">
+                  <p className="text-[8px] font-bold uppercase tracking-[0.2em] text-slate-600">Order</p>
+                  <p className="text-[44px] font-black leading-none text-slate-900">{tag.check_in_sequence}</p>
                 </div>
-                <div className="min-w-0 flex-1 border-l-2 border-slate-300 pl-4 pr-12 space-y-1">
-                  <p className="text-3xl font-display font-extrabold leading-tight text-slate-900 break-words">
-                    {giftShopChildFirstName(tag)}
-                  </p>
-                  <p className="text-base font-bold text-slate-900">
+                <p className="w-full px-1 text-[26px] font-display font-extrabold leading-[1.05] text-slate-900 break-words">
+                  {giftShopChildFirstName(tag)}
+                </p>
+                <div className="w-full space-y-0.5 border-t border-slate-300 pt-1">
+                  <p className="text-[11px] font-bold text-slate-900">
                     {giftShopSlotLabel(tag.time_slot)}
                     {tag.child_age_band ? ` · ${giftShopAgeBandLabel(tag.child_age_band)}` : ''}
                   </p>
                   {giftShopGuardianName(tag) && (
-                    <p className="text-sm font-semibold text-slate-700 break-words">
+                    <p className="text-[10px] font-semibold text-slate-700 break-words">
                       Parent/Guardian: {giftShopGuardianName(tag)}
                     </p>
                   )}
-                  <p className="text-base font-bold text-slate-900">{giftShopTagGifts(tag)}</p>
+                  <p className="text-[11px] font-bold text-slate-900">{giftShopTagGifts(tag)}</p>
                 </div>
               </div>
             ))}

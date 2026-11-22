@@ -351,11 +351,25 @@ body.presenter-screen.presenter-chrome [data-tour="global-tabbar"] { display: bl
     border-radius: 0 !important;
     box-shadow: none !important;
   }
+  /* One tag per DYMO LabelWriter 550 label (2.3 x 4 in) — the page size is set
+     while the tag sheet is printing, so each sticker fills one label. */
+  body.giftshop-tag-printing .giftshop-tag-grid {
+    display: block !important;
+  }
   body.giftshop-tag-printing .giftshop-tag {
+    width: 2.28in !important;
+    height: 3.97in !important;
+    margin: 0 !important;
+    border: none !important;
+    border-radius: 0 !important;
     break-inside: avoid !important;
     page-break-inside: avoid !important;
-    border: 2px solid #111 !important;
-    border-radius: 6px !important;
+    break-after: page !important;
+    page-break-after: always !important;
+  }
+  body.giftshop-tag-printing .giftshop-tag:last-child {
+    break-after: auto !important;
+    page-break-after: auto !important;
   }
   body { 
     background: white !important;
