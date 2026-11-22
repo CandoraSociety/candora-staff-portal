@@ -3,6 +3,7 @@
 // out at its real 2.3 x 4 in size: the browser print dialog is never involved,
 // so the printer's paper size can never be overridden by a remembered sheet size.
 import buildTagLabelXml from '@/lib/dymoTagLabel';
+import dymoQrImage from '@/lib/dymoQrImage';
 
 // DYMO Connect answers on localhost; newer builds use https, older ones http.
 const SERVICES = ['https://localhost:41951', 'http://localhost:41951'];
@@ -13,8 +14,13 @@ const callService = async (base, path, init = {}, timeout = 5000) => {
   const timer = setTimeout(() => controller.abort(), timeout);
   try {
     const response = await fetch(`${base}${PRINT_PATH}${path}`, { ...init, signal: controller.signal });
-    if (!response.ok) throw new Error(`DYMO service answered ${response.status}`);
-    return await response.text();
+    const answer = await response.text();
+    if (!response.ok) {
+      const detail = new DOMParser().parseFromString(answer, 'text/html').body.textContent
+        ?.replace(/\s+/g, ' ').trim().slice(0, 500);
+      throw new Error(`DYMO service answered ${response.status}${detail ? `: ${detail}` : ''}`);
+    }
+    return answer;
   } finally {
     clearTimeout(timer);
   }
@@ -39,27 +45,34 @@ export async function findDymoPrinter() {
   return null;
 }
 
-const send = async (target, tag, includeQr) => {
-  const body = new URLSearchParams({
+const send = async (target, tag, qrPng) => {
+  // All four fields are required, including the blank print settings.
+  // Match DYMO's own framework encoding (spaces as %20, not +).
+  const fields = {
     printerName: target.printer,
-    labelXml: buildTagLabelXml(tag, { includeQr }),
+    printParamsXml: '',
+    labelXml: buildTagLabelXml(tag, { qrPng }),
     labelSetXml: '',
-  });
+  };
+  const body = Object.entries(fields)
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+    .join('&');
   const answer = await callService(target.base, '/PrintLabel', {
     method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: body.toString(),
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8' },
+    body,
   }, 30000);
-  return answer.trim().toLowerCase().includes('true');
+  // PrintLabel is a void operation: an empty/null response is normal success.
+  if (/^"?false"?$/i.test(answer.trim())) {
+    throw new Error(`DYMO did not accept the name tag for ${tag.child_name || 'this child'}.`);
+  }
 };
 
-// One label per child, in the order they were signed in.
+// Prepare every QR before sending anything, then submit each tag exactly once.
+// Never retry a successful job or silently remove the volunteer's QR code.
 export default async function printDymoTags(tags, target) {
-  for (const tag of tags) {
-    let printed = await send(target, tag, true);
-    // A printer that refuses the QR code still gets the tag, so nobody is left
-    // without one — the paper form covers the scan.
-    if (!printed) printed = await send(target, tag, false);
-    if (!printed) throw new Error(`The label printer would not print ${tag.child_name || 'this tag'}.`);
+  const qrImages = await Promise.all(tags.map(dymoQrImage));
+  for (let index = 0; index < tags.length; index++) {
+    await send(target, tags[index], qrImages[index]);
   }
 }
