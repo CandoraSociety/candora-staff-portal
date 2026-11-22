@@ -2,7 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import {
   buildPublicInvite,
   redeemGiftShopInvite,
-  renderInvitePage,
+  renderGiftShopForm,
   renderSuccessPage,
   readInviteForm,
   giftShopHtmlResponse,
@@ -25,7 +25,7 @@ export default async function (req) {
       if (!values.data_ack) {
         const current = token ? await buildPublicInvite(base44.asServiceRole, token) : null;
         return giftShopHtmlResponse(
-          renderInvitePage({
+          renderGiftShopForm({
             state: current?.state || 'invalid',
             invite: current?.invite,
             slots: current?.slots || [],
@@ -43,7 +43,7 @@ export default async function (req) {
 
       const current = token ? await buildPublicInvite(base44.asServiceRole, token) : null;
       return giftShopHtmlResponse(
-        renderInvitePage({
+        renderGiftShopForm({
           state: current?.state || 'invalid',
           invite: current?.invite,
           slots: current?.slots || [],
@@ -56,7 +56,7 @@ export default async function (req) {
 
     const data = queryToken ? await buildPublicInvite(base44.asServiceRole, queryToken) : null;
     return giftShopHtmlResponse(
-      renderInvitePage({
+      renderGiftShopForm({
         state: data?.state || 'invalid',
         invite: data?.invite,
         slots: data?.slots || [],
@@ -65,6 +65,6 @@ export default async function (req) {
     );
   } catch (error) {
     console.log('giftShopInviteForm failed:', error.message);
-    return giftShopHtmlResponse(renderInvitePage({ state: 'invalid' }), 500);
+    return giftShopHtmlResponse(renderGiftShopForm({ state: 'invalid' }), 500);
   }
 }

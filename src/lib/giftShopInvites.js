@@ -15,6 +15,12 @@ export const PUBLIC_APP_ORIGIN = 'https://candora-360.base44.app';
 
 export const inviteLink = (token) => `${PUBLIC_APP_ORIGIN}/functions/giftShopInviteForm?token=${token}`;
 
+// The general registration form — the same page with no invitation attached.
+// Anyone can open it, as often as their family needs, until December 9th or
+// until every shopping time is full.
+export const generalRegistrationLink = (origin) =>
+  `${origin || PUBLIC_APP_ORIGIN}/functions/giftShopRegistration`;
+
 export const INVITE_STATUS_META = {
   invited: { label: 'Link open', className: 'bg-amber-100 text-amber-800' },
   registered: { label: 'Registered', className: 'bg-green-100 text-green-800' },

@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, ExternalLink } from 'lucide-react';
+import { Plus, ExternalLink, Copy, Link2 } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
+import { generalRegistrationLink } from '@/lib/giftShopInvites';
 import KidsGiftShopRegistrationDialog from '@/components/centralreg/KidsGiftShopRegistrationDialog';
 import GiftShopFamilyCard from '@/components/winterwonderland/GiftShopFamilyCard';
 import GiftShopCheckInDialog from '@/components/winterwonderland/GiftShopCheckInDialog';
@@ -16,6 +18,13 @@ export default function GiftShopRegistrations() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedKey, setSelectedKey] = useState(null);
   const [slot, setSlot] = useState('');
+  const { toast } = useToast();
+  const generalLink = generalRegistrationLink(window.location.origin);
+
+  const copyGeneralLink = async () => {
+    await navigator.clipboard.writeText(generalLink);
+    toast({ title: 'Link copied', description: 'Paste it wherever you want to share it.' });
+  };
 
   const { data: registrations = [], isLoading, refresh } = useGiftShopRegistrations();
 
@@ -29,6 +38,27 @@ export default function GiftShopRegistrations() {
 
   return (
     <div className="space-y-4">
+      <Card>
+        <CardContent className="pt-5 space-y-2">
+          <div className="flex items-start gap-2">
+            <Link2 className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="text-sm font-semibold">General registration link</p>
+              <p className="text-sm text-muted-foreground">
+                Open to everyone — share it however you like. It closes on December 9th, or as soon as every shopping time is full.
+              </p>
+            </div>
+          </div>
+          <p className="text-xs bg-muted rounded px-2 py-1 break-all">{generalLink}</p>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button size="sm" variant="outline" onClick={copyGeneralLink}><Copy className="h-3.5 w-3.5" /> Copy link</Button>
+            <Button size="sm" variant="outline" onClick={() => window.open(generalLink, '_blank', 'noopener')}>
+              <ExternalLink className="h-3.5 w-3.5" /> Open form
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid gap-3 sm:grid-cols-3">
         <Card>
           <CardContent className="pt-5">

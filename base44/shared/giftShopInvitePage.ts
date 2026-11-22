@@ -6,11 +6,15 @@
 
 import {
   buildPublicInvite,
+  buildPublicGeneral,
   redeemGiftShopInvite,
+  redeemGeneralRegistration,
   slotLabel,
   GIFT_SHOP_AGE_BANDS,
   GIFT_SHOP_GENDERS,
   GIFT_SHOP_RECIPIENTS,
+  GIFT_SHOP_GENERAL_MAX_CHILDREN,
+  GIFT_SHOP_GENERAL_CLOSES_LABEL,
 } from './giftShopInvites.ts';
 
 export const GIFT_SHOP_CONTACT_EMAIL = 'info@candorasociety.com';
@@ -185,7 +189,8 @@ function childBlocks(maxChildren, values) {
   `;
 }
 
-function shell({ title, body, maxChildren = 1 }) {
+function shell({ title, body, maxChildren = 1, mode = 'invite' }) {
+  const general = mode === 'general';
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -201,7 +206,7 @@ function shell({ title, body, maxChildren = 1 }) {
       <img src="${LOGO_URL}" alt="Candora" />
       <div>
         <h1>Kids Gift Shop</h1>
-        <p>Winter Wonderland · Pre-registration</p>
+        <p>Winter Wonderland · ${general ? 'Registration' : 'Pre-registration'}</p>
       </div>
     </div>
   </header>
@@ -209,14 +214,42 @@ function shell({ title, body, maxChildren = 1 }) {
     ${body}
   </main>
   <footer>
-    Questions, or trouble with your link? Email
+    ${general ? 'Questions? Email' : 'Questions, or trouble with your link? Email'}
     <a href="mailto:${GIFT_SHOP_CONTACT_EMAIL}">${GIFT_SHOP_CONTACT_EMAIL}</a>
   </footer>
 </body>
 </html>`;
 }
 
-function closedPage(state) {
+function closedPage(state, mode = 'invite') {
+  if (mode === 'general') {
+    const generalCopy = {
+      expired: {
+        heading: 'Registration has closed',
+        text: `Registration for the Kids Gift Shop closed on ${GIFT_SHOP_GENERAL_CLOSES_LABEL}. Email us and we will let you know what is still available.`,
+      },
+      full: {
+        heading: 'Every shopping time is full',
+        text: 'All of the Kids Gift Shop shopping times are now taken. Email us and we will let you know if a place opens up.',
+      },
+    }[state] || {
+      heading: 'Registration is not open right now',
+      text: 'Email us and we will let you know when registration is available.',
+    };
+
+    return shell({
+      mode,
+      title: `${generalCopy.heading} · Kids Gift Shop`,
+      body: `
+      <div class="card">
+        <h2>${escapeHtml(generalCopy.heading)}</h2>
+        <p class="lede">${escapeHtml(generalCopy.text)}</p>
+        <a class="btn" href="mailto:${GIFT_SHOP_CONTACT_EMAIL}">Email the office</a>
+      </div>
+    `,
+    });
+  }
+
   const copy = {
     registered: {
       heading: 'This invitation has already been used',
@@ -278,10 +311,13 @@ function successPage({ children = [], time_label: timeLabel }) {
   });
 }
 
-export function renderInvitePage({ state, invite, slots = [], values = {}, error = '' }) {
-  if (state !== 'open') return closedPage(state);
+export function renderGiftShopForm({ mode = 'invite', state, invite, slots = [], values = {}, error = '' }) {
+  if (state !== 'open') return closedPage(state, mode);
 
-  const maxChildren = Math.min(Math.max(Number(invite?.children_allowed) || 3, 1), 6);
+  const general = mode === 'general';
+  const maxChildren = general
+    ? Math.min(Math.max(Number(invite?.max_children) || GIFT_SHOP_GENERAL_MAX_CHILDREN, 1), 6)
+    : Math.min(Math.max(Number(invite?.children_allowed) || 3, 1), 6);
   const blocks = childBlocks(maxChildren, values.children);
 
   const slotCards = (slots.length ? slots : []).map(slot => `
@@ -292,26 +328,21 @@ export function renderInvitePage({ state, invite, slots = [], values = {}, error
     </label>
   `).join('');
 
-  return shell({
-    title: 'Book a shopping time · Kids Gift Shop',
-    maxChildren,
-    body: `
-      <h2>Book a shopping time</h2>
-      <p class="lede">Each child picks out a gift for someone special. Choose a time and we will have everything ready.</p>
-
-      <div class="notice">
-        <strong>This link works once</strong>
-        It is for ${escapeHtml(invite?.guardian_name || 'your family')}. To use it, confirm the email address or phone number the invitation was sent to. Please register only the children in your family who will be shopping with us.
-      </div>
-
-      ${error ? `<div class="error">${escapeHtml(error)}</div>` : ''}
-
-      <p class="eyebrow" style="margin-bottom:10px">All fields are required.</p>
-
-      <form method="post">
-        <input type="hidden" name="token" value="${escapeHtml(values.token || '')}" />
-
-        <div class="card">
+  // The general form has no invitation to confirm, so it asks for an email
+  // address instead of the contact the link was sent to.
+  const guardianCard = general
+    ? `        <div class="card">
+          <label>Parent or guardian’s name
+            <input type="text" name="guardian_name" value="${escapeHtml(values.guardian_name || '')}" autocomplete="name" required />
+          </label>
+          <label>Parent or guardian’s phone number
+            <input type="tel" name="guardian_phone" value="${escapeHtml(values.guardian_phone || '')}" autocomplete="tel" placeholder="780-555-1234" required />
+          </label>
+          <label>Email address <span style="font-weight:400;color:var(--muted)">(optional)</span>
+            <input type="email" name="guardian_email" value="${escapeHtml(values.guardian_email || '')}" autocomplete="email" placeholder="you@example.com" />
+          </label>
+        </div>`
+    : `        <div class="card">
           <label>Parent or guardian’s name
             <input type="text" name="guardian_name" value="${escapeHtml(values.guardian_name || invite?.guardian_name || '')}" autocomplete="name" required />
           </label>
@@ -322,7 +353,31 @@ export function renderInvitePage({ state, invite, slots = [], values = {}, error
             <input type="text" name="contact" value="${escapeHtml(values.contact || '')}" autocomplete="email" placeholder="you@example.com or 780-555-1234" required />
           </label>
           <p class="eyebrow" style="margin:0">Either one works, whichever your invitation came to.</p>
-        </div>
+        </div>`;
+
+  return shell({
+    mode,
+    title: general ? 'Register · Kids Gift Shop' : 'Book a shopping time · Kids Gift Shop',
+    maxChildren,
+    body: `
+      <h2>${general ? 'Register for the Kids Gift Shop' : 'Book a shopping time'}</h2>
+      <p class="lede">${general
+        ? 'Each child picks out a gift for someone special. Choose a shopping time that works for your family and we will have everything ready.'
+        : 'Each child picks out a gift for someone special. Choose a time and we will have everything ready.'}</p>
+
+      ${general ? '' : `<div class="notice">
+        <strong>This link works once</strong>
+        It is for ${escapeHtml(invite?.guardian_name || 'your family')}. To use it, confirm the email address or phone number the invitation was sent to. Please register only the children in your family who will be shopping with us.
+      </div>`}
+
+      ${error ? `<div class="error">${escapeHtml(error)}</div>` : ''}
+
+      ${general ? '' : '<p class="eyebrow" style="margin-bottom:10px">All fields are required.</p>'}
+
+      <form method="post">
+        ${general ? '' : `<input type="hidden" name="token" value="${escapeHtml(values.token || '')}" />`}
+
+${guardianCard}
 
         <div class="card">
           <p class="eyebrow">Children</p>
@@ -395,6 +450,7 @@ export function readInviteForm(form) {
     payload: {
       guardian_name: String(form.get('guardian_name') || ''),
       guardian_phone: String(form.get('guardian_phone') || ''),
+      guardian_email: String(form.get('guardian_email') || ''),
       contact: String(form.get('contact') || ''),
       time_slot: String(form.get('time_slot') || ''),
       children,
@@ -403,6 +459,7 @@ export function readInviteForm(form) {
       token: String(form.get('token') || ''),
       guardian_name: String(form.get('guardian_name') || ''),
       guardian_phone: String(form.get('guardian_phone') || ''),
+      guardian_email: String(form.get('guardian_email') || ''),
       contact: String(form.get('contact') || ''),
       time_slot: String(form.get('time_slot') || ''),
       data_ack: form.get('data_ack') === 'yes',
@@ -421,3 +478,4 @@ export const giftShopHtmlResponse = (html, status = 200) => new Response(html, {
 });
 
 export { buildPublicInvite, redeemGiftShopInvite, slotLabel };
+export { buildPublicGeneral, redeemGeneralRegistration };

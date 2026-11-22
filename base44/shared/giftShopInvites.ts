@@ -17,6 +17,13 @@ export const GIFT_SHOP_GENDERS = ['female', 'male'];
 // Who each gift is for — the person the child is shopping for.
 export const GIFT_SHOP_RECIPIENTS = ['mother', 'father', 'grandmother', 'grandfather', 'aunt', 'uncle', 'caregiver', 'other'];
 
+// The general registration link is open to the public — no invitation, no
+// contact match, no single use. It closes on December 9th, or as soon as every
+// shopping time is full, whichever comes first.
+export const GIFT_SHOP_GENERAL_MAX_CHILDREN = 6;
+export const GIFT_SHOP_GENERAL_CLOSES_AT = '2026-12-09T23:59:59-07:00';
+export const GIFT_SHOP_GENERAL_CLOSES_LABEL = 'December 9th';
+
 export const todayStr = () => new Date().toISOString().split('T')[0];
 
 export function slotLabel(value) {
@@ -95,6 +102,76 @@ export async function buildPublicInvite(base44, token) {
 
 const fail = (status, message) => ({ ok: false, status, message });
 
+// Every child on any Kids Gift Shop form is checked the same way, whichever
+// link the family came through.
+export function parseChildren(rawChildren, max, overMessage) {
+  const list = Array.isArray(rawChildren) ? rawChildren : [];
+  if (!list.length) return fail(400, 'Add at least one child.');
+  if (list.length > max) return fail(400, overMessage || `This form covers up to ${max} children.`);
+
+  const children = [];
+  for (let index = 0; index < list.length; index += 1) {
+    const child = list[index] || {};
+    const label = `child ${Number(child.child_number) || index + 1}`;
+    const name = String(child.child_name || '').trim();
+    if (!name) return fail(400, `Enter the name for ${label}.`);
+    const ageBand = String(child.age_band || '');
+    if (!GIFT_SHOP_AGE_BANDS.includes(ageBand)) return fail(400, `Select the age for ${name}.`);
+    const giftCount = Number(child.gift_count) === 2 ? 2 : 1;
+    const gift1 = String(child.gift_1_gender || '');
+    if (!GIFT_SHOP_GENDERS.includes(gift1)) return fail(400, `Select who the first gift is for, for ${name}.`);
+    const gift2 = String(child.gift_2_gender || '');
+    if (giftCount === 2 && !GIFT_SHOP_GENDERS.includes(gift2)) return fail(400, `Select who the second gift is for, for ${name}.`);
+    const recipient1 = String(child.gift_1_recipient || '');
+    if (!GIFT_SHOP_RECIPIENTS.includes(recipient1)) return fail(400, `Select who the first gift is for (for example Mother or Uncle), for ${name}.`);
+    const recipient2 = String(child.gift_2_recipient || '');
+    if (giftCount === 2 && !GIFT_SHOP_RECIPIENTS.includes(recipient2)) return fail(400, `Select who the second gift is for (for example Mother or Uncle), for ${name}.`);
+    children.push({
+      child_name: name,
+      age_band: ageBand,
+      gift_count: giftCount,
+      gift_1_gender: gift1,
+      gift_2_gender: giftCount === 2 ? gift2 : null,
+      gift_1_recipient: recipient1,
+      gift_2_recipient: giftCount === 2 ? recipient2 : null,
+    });
+  }
+  return { ok: true, children };
+}
+
+function registrationRecords({ guardianName, guardianPhone, guardianEmail, children, timeSlot, notes }) {
+  const guardianParts = guardianName.split(/\s+/);
+  const guardianLast = guardianParts.length > 1 ? guardianParts[guardianParts.length - 1] : '';
+
+  return children.map(child => {
+    const childParts = child.child_name.split(/\s+/);
+    const childLast = childParts.slice(1).join(' ') || guardianLast;
+    return {
+      participant_first_name: childParts[0],
+      participant_last_name: childLast,
+      participant_name: child.child_name,
+      participant_phone: guardianPhone,
+      participant_email: guardianEmail || null,
+      program_portal: 'other',
+      program_name: GIFT_SHOP_PROGRAM_NAME,
+      registration_date: todayStr(),
+      status: 'approved',
+      parent_guardian_name: guardianName,
+      parent_guardian_phone: guardianPhone,
+      parent_guardian_email: guardianEmail || null,
+      child_name: child.child_name,
+      child_age_band: child.age_band,
+      gift_count: child.gift_count,
+      gift_1_gender: child.gift_1_gender,
+      ...(child.gift_2_gender ? { gift_2_gender: child.gift_2_gender } : {}),
+      gift_1_recipient: child.gift_1_recipient,
+      ...(child.gift_2_recipient ? { gift_2_recipient: child.gift_2_recipient } : {}),
+      time_slot: timeSlot,
+      notes,
+    };
+  });
+}
+
 export async function redeemGiftShopInvite(base44, token, payload) {
   const invite = await findInviteByToken(base44, token);
   if (!invite) return fail(404, 'This invitation link was not recognised. Please call the office.');
@@ -126,37 +203,9 @@ export async function redeemGiftShopInvite(base44, token, payload) {
   }
 
   const allowed = Number(invite.children_allowed) || 3;
-  const rawChildren = Array.isArray(payload?.children) ? payload.children : [];
-  if (!rawChildren.length) return fail(400, 'Add at least one child.');
-  if (rawChildren.length > allowed) return fail(400, `This invitation covers up to ${allowed} children.`);
-
-  const children = [];
-  for (let index = 0; index < rawChildren.length; index += 1) {
-    const child = rawChildren[index] || {};
-    const label = `child ${Number(child.child_number) || index + 1}`;
-    const name = String(child.child_name || '').trim();
-    if (!name) return fail(400, `Enter the name for ${label}.`);
-    const ageBand = String(child.age_band || '');
-    if (!GIFT_SHOP_AGE_BANDS.includes(ageBand)) return fail(400, `Select the age for ${name}.`);
-    const giftCount = Number(child.gift_count) === 2 ? 2 : 1;
-    const gift1 = String(child.gift_1_gender || '');
-    if (!GIFT_SHOP_GENDERS.includes(gift1)) return fail(400, `Select who the first gift is for, for ${name}.`);
-    const gift2 = String(child.gift_2_gender || '');
-    if (giftCount === 2 && !GIFT_SHOP_GENDERS.includes(gift2)) return fail(400, `Select who the second gift is for, for ${name}.`);
-    const recipient1 = String(child.gift_1_recipient || '');
-    if (!GIFT_SHOP_RECIPIENTS.includes(recipient1)) return fail(400, `Select who the first gift is for (for example Mother or Uncle), for ${name}.`);
-    const recipient2 = String(child.gift_2_recipient || '');
-    if (giftCount === 2 && !GIFT_SHOP_RECIPIENTS.includes(recipient2)) return fail(400, `Select who the second gift is for (for example Mother or Uncle), for ${name}.`);
-    children.push({
-      child_name: name,
-      age_band: ageBand,
-      gift_count: giftCount,
-      gift_1_gender: gift1,
-      gift_2_gender: giftCount === 2 ? gift2 : null,
-      gift_1_recipient: recipient1,
-      gift_2_recipient: giftCount === 2 ? recipient2 : null,
-    });
-  }
+  const parsed = parseChildren(payload?.children, allowed, `This invitation covers up to ${allowed} children.`);
+  if (!parsed.ok) return parsed;
+  const children = parsed.children;
 
   const timeSlot = String(payload?.time_slot || '');
   if (!GIFT_SHOP_SLOT_TIMES.includes(timeSlot)) return fail(400, 'Choose a shopping time.');
@@ -167,35 +216,13 @@ export async function redeemGiftShopInvite(base44, token, payload) {
     return fail(409, `That time no longer has enough places left (${Math.max(0, GIFT_SHOP_SLOT_CAPACITY - taken)} remaining). Please choose another time.`);
   }
 
-  const guardianParts = guardianName.split(/\s+/);
-  const guardianLast = guardianParts.length > 1 ? guardianParts[guardianParts.length - 1] : '';
-
-  const records = children.map(child => {
-    const childParts = child.child_name.split(/\s+/);
-    const childLast = childParts.slice(1).join(' ') || guardianLast;
-    return {
-      participant_first_name: childParts[0],
-      participant_last_name: childLast,
-      participant_name: child.child_name,
-      participant_phone: guardianPhone,
-      participant_email: invite.guardian_email || null,
-      program_portal: 'other',
-      program_name: GIFT_SHOP_PROGRAM_NAME,
-      registration_date: todayStr(),
-      status: 'approved',
-      parent_guardian_name: guardianName,
-      parent_guardian_phone: guardianPhone,
-      parent_guardian_email: invite.guardian_email || null,
-      child_name: child.child_name,
-      child_age_band: child.age_band,
-      gift_count: child.gift_count,
-      gift_1_gender: child.gift_1_gender,
-      ...(child.gift_2_gender ? { gift_2_gender: child.gift_2_gender } : {}),
-      gift_1_recipient: child.gift_1_recipient,
-      ...(child.gift_2_recipient ? { gift_2_recipient: child.gift_2_recipient } : {}),
-      time_slot: timeSlot,
-      notes: 'Pre-registration invitation',
-    };
+  const records = registrationRecords({
+    guardianName,
+    guardianPhone,
+    guardianEmail: invite.guardian_email || null,
+    children,
+    timeSlot,
+    notes: 'Pre-registration invitation',
   });
 
   const created = await base44.entities.ProgramRegistration.bulkCreate(records);
@@ -207,6 +234,78 @@ export async function redeemGiftShopInvite(base44, token, payload) {
     registered_summary: children.map(c => c.child_name).join(', '),
     registration_ids: (created || []).map(r => r.id).filter(Boolean),
   });
+
+  return {
+    ok: true,
+    state: 'registered',
+    children: children.map(c => c.child_name),
+    time_slot: timeSlot,
+    time_label: slotLabel(timeSlot),
+  };
+}
+
+// ---- General public registration ----
+
+// What the general form is allowed to see: whether it is still open, and the
+// places left in each shopping time. It closes on December 9th, or as soon as
+// every shopping time is full.
+export async function buildPublicGeneral(base44, now) {
+  const at = now || new Date();
+  const slots = buildSlotAvailability(await loadRegistrations(base44));
+  const closed = at.getTime() > new Date(GIFT_SHOP_GENERAL_CLOSES_AT).getTime();
+  const full = slots.every(slot => slot.remaining === 0);
+  return {
+    state: closed ? 'expired' : full ? 'full' : 'open',
+    slots: closed || full ? [] : slots,
+    max_children: GIFT_SHOP_GENERAL_MAX_CHILDREN,
+    closes_at: GIFT_SHOP_GENERAL_CLOSES_AT,
+    closes_label: GIFT_SHOP_GENERAL_CLOSES_LABEL,
+  };
+}
+
+// The general form has no invitation to check: anyone may use it, as often as
+// their family needs. Only the closing date and the slot capacity limit it.
+export async function redeemGeneralRegistration(base44, payload) {
+  if (Date.now() > new Date(GIFT_SHOP_GENERAL_CLOSES_AT).getTime()) {
+    return fail(410, 'Registration for the Kids Gift Shop has closed. Please email the office.');
+  }
+
+  const guardianName = String(payload?.guardian_name || '').trim();
+  if (!guardianName) return fail(400, 'Enter the parent or guardian’s name.');
+
+  const guardianPhone = String(payload?.guardian_phone || '').trim();
+  if (!guardianPhone) return fail(400, 'Enter the parent or guardian’s phone number.');
+
+  const guardianEmail = String(payload?.guardian_email || '').trim();
+
+  const parsed = parseChildren(payload?.children, GIFT_SHOP_GENERAL_MAX_CHILDREN);
+  if (!parsed.ok) return parsed;
+  const children = parsed.children;
+
+  const timeSlot = String(payload?.time_slot || '');
+  if (!GIFT_SHOP_SLOT_TIMES.includes(timeSlot)) return fail(400, 'Choose a shopping time.');
+
+  const registrations = await loadRegistrations(base44);
+  const availability = buildSlotAvailability(registrations);
+  if (availability.every(slot => slot.remaining === 0)) {
+    return fail(409, 'Every shopping time is now full. Please email the office and we will let you know if a place opens up.');
+  }
+
+  const taken = countsBySlot(registrations)[timeSlot] || 0;
+  if (taken + children.length > GIFT_SHOP_SLOT_CAPACITY) {
+    return fail(409, `That time no longer has enough places left (${Math.max(0, GIFT_SHOP_SLOT_CAPACITY - taken)} remaining). Please choose another time.`);
+  }
+
+  const records = registrationRecords({
+    guardianName,
+    guardianPhone,
+    guardianEmail,
+    children,
+    timeSlot,
+    notes: 'General registration',
+  });
+
+  await base44.entities.ProgramRegistration.bulkCreate(records);
 
   return {
     ok: true,
