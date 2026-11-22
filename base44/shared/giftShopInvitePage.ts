@@ -60,6 +60,14 @@ const STYLES = `
   input[type=text],input[type=email],input[type=tel],select{width:100%;margin-top:6px;padding:11px 12px;font-size:16px;font-family:inherit;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:8px}
   input:focus,select:focus{outline:2px solid var(--gold);outline-offset:1px;border-color:var(--gold)}
   .row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  .gifts{margin-bottom:14px}
+  .gifts>span{display:block;font-size:13px;font-weight:600;margin-bottom:6px}
+  .seg{display:flex;gap:8px}
+  .seg label{flex:1;margin:0;position:relative;display:block;text-align:center;border:1px solid var(--line);border-radius:8px;padding:10px 8px;background:#fff;cursor:pointer;font-size:14px;font-weight:600}
+  .seg input{position:absolute;opacity:0;pointer-events:none}
+  .seg label:has(input:checked){border-color:var(--navy);background:#fffbe6;box-shadow:inset 0 0 0 1px var(--navy)}
+  .gift-two{display:none}
+  .row:has(input[name$="_gifts"][value="2"]:checked) + .gift-two{display:block}
   .child{border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px}
   .child-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
   .child-head span{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--muted)}
@@ -70,6 +78,7 @@ const STYLES = `
   details.child[open]>summary::before{content:'–'}
   details.child[open]>summary{border-bottom:1px solid var(--line);margin-bottom:14px}
   details.child .child-fields{padding:0 14px 14px}
+  details.child .child-fields details.child{margin:12px 0 0}
   .slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:8px;margin-top:6px}
   .slot{position:relative;display:block;margin:0;border:1px solid var(--line);border-radius:8px;padding:9px 10px;background:#fff;cursor:pointer;font-weight:500}
   .slot input{position:absolute;opacity:0;pointer-events:none}
@@ -94,12 +103,9 @@ const STYLES = `
   @media (max-width:420px){.row{grid-template-columns:1fr}}
 `;
 
-// Child one is always on the page. Every further child sits behind a plain
-// <details> toggle, so adding a child works with no JavaScript at all — the
-// page is served with scripts switched off.
-function childBlock(index, value) {
-  const gifts = String(value?.gift_count || '1');
-  const fields = `
+function childFields(index, value) {
+  const gifts = String(value?.gift_count || '1') === '2' ? '2' : '1';
+  return `
       <label>Child’s name
         <input type="text" name="child_${index}_name" value="${escapeHtml(value?.child_name || '')}" autocomplete="off" />
       </label>
@@ -107,32 +113,47 @@ function childBlock(index, value) {
         <label>Age
           <select name="child_${index}_age">${options(GIFT_SHOP_AGE_BANDS, value?.age_band || '', AGE_LABELS, 'Select age')}</select>
         </label>
-        <label>How many gifts
-          <select name="child_${index}_gifts">
-            <option value="1"${gifts !== '2' ? ' selected' : ''}>1 gift</option>
-            <option value="2"${gifts === '2' ? ' selected' : ''}>2 gifts</option>
-          </select>
-        </label>
+        <div class="gifts">
+          <span>How many gifts</span>
+          <div class="seg">
+            <label><input type="radio" name="child_${index}_gifts" value="1"${gifts === '1' ? ' checked' : ''} /><span>1 gift</span></label>
+            <label><input type="radio" name="child_${index}_gifts" value="2"${gifts === '2' ? ' checked' : ''} /><span>2 gifts</span></label>
+          </div>
+        </div>
       </div>
-      <div class="row">
-        <label>Gift one is for
-          <select name="child_${index}_gift1">${options(GIFT_SHOP_GENDERS, value?.gift_1 || '', GENDER_LABELS, 'Select')}</select>
-        </label>
+      <label>Gift one is for
+        <select name="child_${index}_gift1">${options(GIFT_SHOP_GENDERS, value?.gift_1 || '', GENDER_LABELS, 'Select')}</select>
+      </label>
+      <div class="gift-two">
         <label>Gift two is for
           <select name="child_${index}_gift2">${options(GIFT_SHOP_GENDERS, value?.gift_2 || '', GENDER_LABELS, 'Select')}</select>
         </label>
       </div>
   `;
+}
 
-  if (index === 1) {
-    return `<div class="child"><div class="child-head"><span>Child 1</span></div>${fields}</div>`;
-  }
-
+// Child one is always on the page. A single "Add a child" toggle sits under it,
+// and each one you open carries the next one inside it — so the button can be
+// pressed once per extra child, up to the number the invitation covers. It is
+// all plain <details>, so it works with no JavaScript at all.
+function childToggle(index, maxChildren, values) {
+  const value = values?.[index - 1];
   return `
     <details class="child"${value ? ' open' : ''}>
-      <summary>Add child ${index}</summary>
-      <div class="child-fields">${fields}</div>
+      <summary>Add a child</summary>
+      <div class="child-fields">
+        <p class="eyebrow" style="margin:0 0 10px">Child ${index}</p>
+        ${childFields(index, value)}
+        ${index < maxChildren ? childToggle(index + 1, maxChildren, values) : ''}
+      </div>
     </details>
+  `;
+}
+
+function childBlocks(maxChildren, values) {
+  return `
+    <div class="child"><div class="child-head"><span>Child 1</span></div>${childFields(1, values?.[0])}</div>
+    ${maxChildren > 1 ? childToggle(2, maxChildren, values) : ''}
   `;
 }
 
@@ -225,7 +246,7 @@ export function renderInvitePage({ state, invite, slots = [], values = {}, error
   if (state !== 'open') return closedPage(state);
 
   const maxChildren = Math.min(Math.max(Number(invite?.children_allowed) || 3, 1), 6);
-  const blocks = Array.from({ length: maxChildren }, (_, i) => childBlock(i + 1, values.children?.[i])).join('');
+  const blocks = childBlocks(maxChildren, values.children);
 
   const slotCards = (slots.length ? slots : []).map(slot => `
     <label class="slot" data-remaining="${Number(slot.remaining) || 0}">
