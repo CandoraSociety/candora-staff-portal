@@ -193,6 +193,14 @@
       ],
       "description": "The person the second gift is for, when the child is shopping for two"
     },
+    "gift_1_selection": {
+      "type": "string",
+      "description": "The gift an elf typed in for the first gift on the child's tag form (optional)"
+    },
+    "gift_2_selection": {
+      "type": "string",
+      "description": "The gift an elf typed in for the second gift on the child's tag form (optional)"
+    },
     "children": {
       "type": "array",
       "description": "Children registered under this record (legacy Kids Gift Shop records)",
@@ -250,6 +258,24 @@
     "check_in_sequence": {
       "type": "number",
       "description": "Name-tag order number, handed out in the order children are signed in"
+    },
+    "elf_token": {
+      "type": "string",
+      "description": "Unguessable code printed as the QR code on the child's name tag. It opens the volunteer's form for that one child, and only after the desk PIN is entered."
+    },
+    "completed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the child finished shopping and was returned to their parent or guardian \u2014 set from the volunteer's tag form"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the child was returned to their parent or guardian"
+    },
+    "completed_by_elf": {
+      "type": "string",
+      "description": "Name of the volunteer (elf) who helped the child and returned them"
     },
     "notes": {
       "type": "string"

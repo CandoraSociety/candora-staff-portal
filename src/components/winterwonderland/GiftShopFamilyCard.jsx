@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { CheckCircle2 } from 'lucide-react';
-import { giftShopChildFullName, giftShopSlotLabel, giftShopTagGifts } from '@/lib/giftShopFamilies';
+import { CheckCircle2, Gift } from 'lucide-react';
+import { giftShopChildFullName, giftShopFamilyCompleted, giftShopElfName, giftShopSlotLabel, giftShopTagGifts } from '@/lib/giftShopFamilies';
 
 const statusPill = (status) => {
   if (['approved', 'enrolled'].includes(status)) return { label: 'Confirmed', className: 'bg-green-100 text-green-700' };
@@ -13,7 +13,13 @@ const statusPill = (status) => {
 // underneath. Clicking it opens sign-in and editing for that family.
 export default function GiftShopFamilyCard({ family, onClick }) {
   const waitlisted = family.children.some(c => c.status === 'waitlisted');
-  const pill = statusPill(waitlisted ? 'waitlisted' : family.children[0].status);
+  // An elf closed the children out from the tag form: they finished shopping and
+  // went back to their parent or guardian.
+  const done = giftShopFamilyCompleted(family);
+  const elfName = family.children.map(giftShopElfName).find(Boolean) || '';
+  const pill = done
+    ? { label: 'Completed', className: 'bg-accent/10 text-accent' }
+    : statusPill(waitlisted ? 'waitlisted' : family.children[0].status);
   const allSignedIn = family.children.every(c => c.checked_in);
 
   return (
@@ -23,7 +29,9 @@ export default function GiftShopFamilyCard({ family, onClick }) {
       tabIndex={0}
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick?.(); } }}
       className={`cursor-pointer border-l-4 transition-all hover:shadow-md ${
-        allSignedIn
+        done
+          ? 'border-l-accent border-accent/25 bg-gradient-to-br from-accent/10 via-card to-card hover:border-accent/50'
+          : allSignedIn
           ? 'border-l-highlight border-highlight/25 bg-gradient-to-br from-highlight/10 via-card to-card hover:border-highlight/50'
           : waitlisted
             ? 'border-l-muted-foreground/40 border-border bg-gradient-to-br from-muted/60 via-card to-card hover:border-muted-foreground/40'
@@ -56,7 +64,11 @@ export default function GiftShopFamilyCard({ family, onClick }) {
             {giftShopSlotLabel(family.time_slot)} • {family.guardian_name}
             {family.guardian_phone ? ` • ${family.guardian_phone}` : ''}
           </p>
-          {allSignedIn ? (
+          {done ? (
+            <span className="text-[10px] font-semibold text-accent flex items-center gap-1 flex-shrink-0">
+              <Gift className="h-3 w-3" /> Returned{elfName ? ` · ${elfName}` : ''}
+            </span>
+          ) : allSignedIn ? (
             <span className="text-[10px] font-semibold text-green-700 flex items-center gap-1 flex-shrink-0">
               <CheckCircle2 className="h-3 w-3" /> Signed in
             </span>

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Clock } from 'lucide-react';
+import { CheckCircle2, Clock, Gift } from 'lucide-react';
 import { KIDS_GIFT_SHOP_TIME_SLOTS } from '@/lib/centralRegConstants';
 import GiftShopSearchInput from '@/components/winterwonderland/GiftShopSearchInput';
 import { filterFamilies } from '@/lib/giftShopSearch';
+import { giftShopFamilyCompleted } from '@/lib/giftShopFamilies';
 
 const countChildren = (families) => families.reduce((n, f) => n + (f.children?.length || 0), 0);
 const allIn = (family) => (family.children || []).every(c => c.checked_in);
@@ -26,8 +27,11 @@ export default function GiftShopSlotBoard({ families, renderFamily, slot: contro
 
   const matching = filterFamilies(families, query);
   const shown = slot ? matching.filter(f => (f.time_slot || '') === slot) : matching;
-  const waiting = shown.filter(f => !allIn(f));
-  const signedIn = shown.filter(allIn);
+  // Children an elf has closed out are finished and go to their own section, so
+  // the desk can see at a glance who is still shopping.
+  const completed = shown.filter(giftShopFamilyCompleted);
+  const waiting = shown.filter(f => !allIn(f) && !giftShopFamilyCompleted(f));
+  const signedIn = shown.filter(f => allIn(f) && !giftShopFamilyCompleted(f));
   const searching = !!query.trim();
 
   return (
@@ -87,6 +91,16 @@ export default function GiftShopSlotBoard({ families, renderFamily, slot: contro
                 <span className="text-xs font-normal text-muted-foreground">({countChildren(signedIn)})</span>
               </h3>
               {signedIn.map(renderFamily)}
+            </section>
+          )}
+
+          {completed.length > 0 && (
+            <section className="space-y-2">
+              <h3 className="flex items-center gap-1.5 text-sm font-display font-semibold text-accent">
+                <Gift className="h-4 w-4" /> Completed
+                <span className="text-xs font-normal text-muted-foreground">({countChildren(completed)})</span>
+              </h3>
+              {completed.map(renderFamily)}
             </section>
           )}
         </div>

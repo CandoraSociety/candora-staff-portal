@@ -67,6 +67,13 @@ export const giftShopTagGifts = (reg) => {
   return `${count} gift${count > 1 ? 's' : ''}${gifts.length ? ` (${gifts.join(', ')})` : ''}`;
 };
 
+// A child is completed once an elf closes them out on the tag form: they have
+// finished shopping and gone back to their parent or guardian.
+export const giftShopIsCompleted = (reg) => Boolean(reg?.completed);
+export const giftShopFamilyCompleted = (family) =>
+  (family?.children || []).length > 0 && family.children.every(giftShopIsCompleted);
+export const giftShopElfName = (reg) => (reg?.completed_by_elf || '').trim();
+
 const familyKey = (r) => [
   (r.parent_guardian_name || r.participant_name || '').trim().toLowerCase(),
   (r.parent_guardian_phone || r.participant_phone || '').trim(),
