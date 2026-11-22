@@ -376,8 +376,9 @@ body.presenter-screen.presenter-chrome [data-tour="global-tabbar"] { display: bl
     break-after: auto !important;
     page-break-after: auto !important;
   }
-  /* Kids Gift Shop QR sheet — the same codes on a normal letter page, for
-     anyone who would rather work from paper than scan the child's tag. */
+  /* Kids Gift Shop QR sheet — a proper letter-page roster for anyone who would
+     rather work from paper than scan the child's tag. Sized in points so the
+     type reads at its real printed size on 8.5 x 11. */
   body.giftshop-elf-printing #root { display: none !important; }
   body.giftshop-elf-printing * { visibility: hidden !important; }
   body.giftshop-elf-printing .giftshop-elf-sheet,
@@ -396,69 +397,116 @@ body.presenter-screen.presenter-chrome [data-tour="global-tabbar"] { display: bl
     background: #fff !important;
     padding: 0 !important;
   }
+  /* The sticker sheet takes up no room on the paper version. */
+  body.giftshop-elf-printing .giftshop-tag-sheet { display: none !important; }
   body.giftshop-elf-printing .giftshop-elf-sheet {
     display: block !important;
     width: 100% !important;
     background: #fff !important;
-    color: #0a0f29 !important;
+    color: #080c21 !important;
+    font-family: 'Inter', Helvetica, Arial, sans-serif;
   }
   body.giftshop-elf-printing .giftshop-elf-head {
     display: flex !important;
     align-items: center;
-    gap: 12px;
-    border-bottom: 3px solid #fccf03;
-    padding-bottom: 10px;
-    margin-bottom: 14px;
+    gap: 14pt;
+    border-bottom: 2.5pt solid #fccf03;
+    padding-bottom: 8pt;
   }
   body.giftshop-elf-printing .giftshop-elf-head img {
-    height: 40px !important;
+    height: 0.7in !important;
     width: auto !important;
   }
   body.giftshop-elf-printing .giftshop-elf-title {
     margin: 0;
-    font-size: 17px;
+    font-family: 'Nunito', Arial, sans-serif;
+    font-size: 19pt;
     font-weight: 800;
+    line-height: 1.15;
   }
   body.giftshop-elf-printing .giftshop-elf-sub {
-    margin: 2px 0 0;
-    font-size: 11px;
+    margin: 3pt 0 0;
+    font-size: 10.5pt;
     color: #626784;
   }
-  body.giftshop-elf-printing .giftshop-elf-row {
-    display: flex !important;
-    align-items: center;
-    gap: 14px;
-    border: 1px solid #dadce7;
-    border-radius: 10px;
-    padding: 10px 12px;
-    margin-bottom: 10px;
+  body.giftshop-elf-printing .giftshop-elf-instructions {
+    margin: 12pt 0 14pt;
+    padding: 9pt 12pt;
+    border: 1pt solid #dadce7;
+    border-radius: 6pt;
+    background: #f9fafb;
+  }
+  body.giftshop-elf-printing .giftshop-elf-instructions-title {
+    margin: 0 0 4pt;
+    font-size: 9pt;
+    font-weight: 800;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: #0a0f29;
+  }
+  body.giftshop-elf-printing .giftshop-elf-instructions ol {
+    margin: 0;
+    padding-left: 15pt;
+    font-size: 10.5pt;
+    line-height: 1.45;
+  }
+  body.giftshop-elf-printing .giftshop-elf-instructions li {
+    margin-bottom: 2pt;
+  }
+  body.giftshop-elf-printing .giftshop-elf-table {
+    width: 100% !important;
+    border-collapse: collapse;
+    font-size: 10.5pt;
+  }
+  body.giftshop-elf-printing .giftshop-elf-table thead th {
+    padding: 0 8pt 5pt;
+    text-align: left;
+    font-size: 8pt;
+    font-weight: 700;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+    color: #626784;
+    border-bottom: 1pt solid #dadce7;
+  }
+  body.giftshop-elf-printing .giftshop-elf-table td {
+    padding: 9pt 8pt;
+    vertical-align: top;
+    border-bottom: 1pt solid #dadce7;
+  }
+  body.giftshop-elf-printing .giftshop-elf-table tr {
     break-inside: avoid !important;
     page-break-inside: avoid !important;
   }
-  body.giftshop-elf-printing .giftshop-elf-row img {
-    height: 1.1in !important;
-    width: 1.1in !important;
-    flex: 0 0 auto;
+  body.giftshop-elf-printing .giftshop-elf-col-order { width: 0.55in; }
+  body.giftshop-elf-printing .giftshop-elf-col-qr { width: 1.05in; }
+  body.giftshop-elf-printing .giftshop-elf-col-time { width: 1.05in; white-space: nowrap; }
+  body.giftshop-elf-printing .giftshop-elf-col-qr img {
+    display: block;
+    width: 0.85in !important;
+    height: 0.85in !important;
   }
   body.giftshop-elf-printing .giftshop-elf-order {
     margin: 0;
-    font-size: 26px;
+    font-size: 18pt;
     font-weight: 900;
     line-height: 1;
+    color: #0a0f29;
   }
   body.giftshop-elf-printing .giftshop-elf-name {
-    margin: 2px 0;
-    font-size: 16px;
+    margin: 0;
+    font-size: 13pt;
     font-weight: 800;
+    line-height: 1.2;
   }
   body.giftshop-elf-printing .giftshop-elf-meta {
-    margin: 0;
-    font-size: 11px;
+    margin: 2pt 0 0;
+    font-size: 10pt;
+    line-height: 1.35;
     color: #080c21;
   }
   body.giftshop-elf-printing .giftshop-elf-link {
-    margin: 3px 0 0;
-    font-size: 8px;
+    margin: 3pt 0 0;
+    font-size: 7.5pt;
     font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
     color: #626784;
     word-break: break-all;

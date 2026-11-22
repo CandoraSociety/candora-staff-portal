@@ -160,38 +160,68 @@ export default function GiftShopNameTagSheet({ tags, onClose }) {
           </div>
         </div>
 
-        {/* Optional paper version of the same codes — hidden on screen, shown
-            instead of the tags when "Print QR sheet" is used. */}
+        {/* Paper version of the same codes — hidden on screen, laid out as a
+            letter-page roster when "Print QR sheet" is used. */}
         <div className="giftshop-elf-sheet">
           <div className="giftshop-elf-head">
             <img src={CANDORA_BRAND.logoUrl} alt="Candora" />
             <div>
-              <p className="giftshop-elf-title">Kids Gift Shop — Elf QR codes</p>
+              <p className="giftshop-elf-title">Kids Gift Shop — Volunteer QR Codes</p>
               <p className="giftshop-elf-sub">
-                Scan a code, enter your name and the desk PIN, then close the child out when they are returned to their parent or guardian.
+                {ready.length} {ready.length === 1 ? 'child' : 'children'} signed in · Candora Winter Wonderland
               </p>
             </div>
           </div>
-          {ready.map(tag => (
-            <div key={tag.id} className="giftshop-elf-row">
-              {tag.elf_token && (
-                <img src={qrImageUrl(elfFormLink(tag.elf_token), 400)} alt={`QR code for ${giftShopChildFirstName(tag)}`} />
-              )}
-              <div className="giftshop-elf-body">
-                <p className="giftshop-elf-order">{tag.check_in_sequence}</p>
-                <p className="giftshop-elf-name">{giftShopChildFirstName(tag)}</p>
-                <p className="giftshop-elf-meta">
-                  {giftShopSlotLabel(tag.time_slot)}
-                  {tag.child_age_band ? ` · ${giftShopAgeBandLabel(tag.child_age_band)}` : ''}
-                  {` · ${giftShopTagGifts(tag)}`}
-                </p>
-                {giftShopGuardianName(tag) && (
-                  <p className="giftshop-elf-meta">Parent/Guardian: {giftShopGuardianName(tag)}</p>
-                )}
-                {tag.elf_token && <p className="giftshop-elf-link">{elfFormLink(tag.elf_token)}</p>}
-              </div>
-            </div>
-          ))}
+
+          <div className="giftshop-elf-instructions">
+            <p className="giftshop-elf-instructions-title">How to use this sheet</p>
+            <ol>
+              <li>Scan a child's QR code with your phone camera.</li>
+              <li>Enter your name and the desk PIN.</li>
+              <li>Write down who the child is buying for, then close the child out when they are returned to their parent or guardian.</li>
+            </ol>
+          </div>
+
+          <table className="giftshop-elf-table">
+            <thead>
+              <tr>
+                <th className="giftshop-elf-col-order">Order</th>
+                <th className="giftshop-elf-col-qr">Code</th>
+                <th>Child</th>
+                <th className="giftshop-elf-col-time">Time</th>
+                <th>Parent / guardian</th>
+              </tr>
+            </thead>
+            <tbody>
+              {ready.map(tag => (
+                <tr key={tag.id}>
+                  <td className="giftshop-elf-col-order">
+                    <p className="giftshop-elf-order">{tag.check_in_sequence}</p>
+                  </td>
+                  <td className="giftshop-elf-col-qr">
+                    {tag.elf_token && (
+                      <img src={qrImageUrl(elfFormLink(tag.elf_token), 400)} alt={`QR code for ${giftShopChildFirstName(tag)}`} />
+                    )}
+                  </td>
+                  <td>
+                    <p className="giftshop-elf-name">{giftShopChildFirstName(tag)}</p>
+                    <p className="giftshop-elf-meta">
+                      {tag.child_age_band ? `${giftShopAgeBandLabel(tag.child_age_band)} · ` : ''}
+                      {giftShopTagGifts(tag)}
+                    </p>
+                    {tag.elf_token && <p className="giftshop-elf-link">{elfFormLink(tag.elf_token)}</p>}
+                  </td>
+                  <td className="giftshop-elf-col-time">{giftShopSlotLabel(tag.time_slot)}</td>
+                  <td>
+                    <p className="giftshop-elf-meta">{giftShopGuardianName(tag) || '—'}</p>
+                    {tag.parent_guardian_phone && (
+                      <p className="giftshop-elf-meta">{tag.parent_guardian_phone}</p>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       </DialogContent>
     </Dialog>
