@@ -24,11 +24,18 @@ export default function GiftShopSignIn({ standalone = false }) {
   return (
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-3">
-        <Card><CardContent className="pt-5"><p className="text-xs text-muted-foreground flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Signed in</p><p className="text-2xl font-bold">{signedIn} <span className="text-sm font-medium text-muted-foreground">of {active.length}</span></p></CardContent></Card>
+        <Card>
+          <CardContent className="pt-5">
+            <p className="text-xs text-muted-foreground flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Signed in</p>
+            <p className="text-2xl font-bold">{signedIn} <span className="text-sm font-medium text-muted-foreground">of {active.length}</span></p>
+            <div className="mt-2 flex gap-4 border-t pt-2">
+              <p className="text-xs text-muted-foreground">Ages 0–5 <span className="font-semibold text-foreground">{ageBands['0-5']}</span></p>
+              <p className="text-xs text-muted-foreground">Ages 6–16 <span className="font-semibold text-foreground">{ageBands['6-16']}</span></p>
+            </div>
+          </CardContent>
+        </Card>
         <Card><CardContent className="pt-5"><p className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" /> Still to sign in</p><p className="text-2xl font-bold">{waiting}</p></CardContent></Card>
         <Card><CardContent className="pt-5"><p className="text-xs text-muted-foreground flex items-center gap-1"><Users className="h-3 w-3" /> Families</p><p className="text-2xl font-bold">{families.length}</p></CardContent></Card>
-        <Card><CardContent className="pt-5"><p className="text-xs text-muted-foreground">Ages 0–5</p><p className="text-2xl font-bold">{ageBands['0-5']}</p></CardContent></Card>
-        <Card><CardContent className="pt-5"><p className="text-xs text-muted-foreground">Ages 6–16</p><p className="text-2xl font-bold">{ageBands['6-16']}</p></CardContent></Card>
       </div>
 
       <div className="flex items-start justify-between gap-3">

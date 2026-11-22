@@ -30,9 +30,16 @@ export default function GiftShopRegistrations() {
   return (
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-3">
-        <Card><CardContent className="pt-5"><p className="text-xs text-muted-foreground">Registrations</p><p className="text-2xl font-bold">{active.length}</p></CardContent></Card>
-        <Card><CardContent className="pt-5"><p className="text-xs text-muted-foreground">Ages 0–5</p><p className="text-2xl font-bold">{ageBands['0-5']}</p></CardContent></Card>
-        <Card><CardContent className="pt-5"><p className="text-xs text-muted-foreground">Ages 6–16</p><p className="text-2xl font-bold">{ageBands['6-16']}</p></CardContent></Card>
+        <Card>
+          <CardContent className="pt-5">
+            <p className="text-xs text-muted-foreground">Registrations</p>
+            <p className="text-2xl font-bold">{active.length}</p>
+            <div className="mt-2 flex gap-4 border-t pt-2">
+              <p className="text-xs text-muted-foreground">Ages 0–5 <span className="font-semibold text-foreground">{ageBands['0-5']}</span></p>
+              <p className="text-xs text-muted-foreground">Ages 6–16 <span className="font-semibold text-foreground">{ageBands['6-16']}</span></p>
+            </div>
+          </CardContent>
+        </Card>
         <Card><CardContent className="pt-5"><p className="text-xs text-muted-foreground">Gifts requested</p><p className="text-2xl font-bold">{giftsRequested}</p></CardContent></Card>
         <Card><CardContent className="pt-5"><p className="text-xs text-muted-foreground">Slots still open</p><p className="text-2xl font-bold">{openSlots} of {KIDS_GIFT_SHOP_TIME_SLOTS.length}</p></CardContent></Card>
       </div>
