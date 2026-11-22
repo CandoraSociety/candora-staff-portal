@@ -3,6 +3,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Printer, X } from 'lucide-react';
 import { giftShopAgeBandLabel, giftShopChildFirstName, giftShopGuardianName, giftShopSlotLabel, giftShopTagGifts } from '@/lib/giftShopFamilies';
+import { CANDORA_BRAND } from '@/lib/candoraBrand';
 
 // Printable name tag stickers, one per signed-in child: the order number handed
 // out at sign-in, the child's first name, the parent or guardian with them, their
@@ -47,13 +48,17 @@ export default function GiftShopNameTagSheet({ tags, onClose }) {
             {tags.map(tag => (
               <div
                 key={tag.id}
-                className="giftshop-tag rounded-lg border-2 border-dashed border-slate-400 p-4 flex items-center gap-4"
+                className="giftshop-tag relative rounded-lg border-2 border-dashed border-slate-400 p-4 flex items-center gap-4"
               >
+                <div className="absolute right-3 top-3 text-center">
+                  <img src={CANDORA_BRAND.logoUrl} alt="Candora" className="h-10 w-10 object-contain mx-auto" />
+                  <p className="text-[10px] font-black tracking-[0.15em] text-slate-700">KGS</p>
+                </div>
                 <div className="text-center flex-shrink-0">
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-600">Order</p>
                   <p className="text-6xl font-black leading-none text-slate-900">{tag.check_in_sequence}</p>
                 </div>
-                <div className="min-w-0 border-l-2 border-slate-300 pl-4 space-y-1">
+                <div className="min-w-0 flex-1 border-l-2 border-slate-300 pl-4 pr-12 space-y-1">
                   <p className="text-3xl font-display font-extrabold leading-tight text-slate-900 break-words">
                     {giftShopChildFirstName(tag)}
                   </p>
