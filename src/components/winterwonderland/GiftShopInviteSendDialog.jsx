@@ -12,7 +12,7 @@ import GiftShopInviteListInput from '@/components/winterwonderland/GiftShopInvit
 import GiftShopInviteSendResults from '@/components/winterwonderland/GiftShopInviteSendResults';
 
 const DEFAULT_MESSAGE =
-  'Our Kids Gift Shop is back for Winter Wonderland, and as one of the families we work with, yours is invited to choose a shopping time before registration opens to everyone else. Pick a time that works for you, tell us who each child is shopping for, and we will have their name tag waiting at the door.';
+  'Our Kids Gift Shop is back for Winter Wonderland, and as one of the families we work with, yours is invited to choose a shopping time before registration opens to everyone else. The shop runs on Saturday, December 12th at Riverview Crossing Shopping Centre. Pick a time that works for you and tell us who each child is shopping for — on the day, please come to the Kids Gift Shop registration desk and sign in every child who is participating.';
 
 const CHUNK_SIZE = 15;
 

@@ -251,9 +251,18 @@ function successPage({ children = [], time_label: timeLabel }) {
         <div class="tick">✓</div>
         <h2>You’re registered</h2>
         <p class="lede">
-          ${escapeHtml(names)} ${children.length > 1 ? 'are' : 'is'} booked for ${escapeHtml(timeLabel || '')}.
-          Bring this confirmation with you on the day and a name tag will be ready at the desk.
+          ${escapeHtml(names)} ${children.length > 1 ? 'are' : 'is'} booked for ${escapeHtml(timeLabel || '')} on
+          Saturday, December 12th at Riverview Crossing Shopping Centre.
         </p>
+        <div class="notice" style="text-align:left;margin:18px 0 0">
+          <strong>On the day</strong>
+          Come to the Kids Gift Shop registration desk and sign in every child who is participating. There is no name tag
+          waiting at the door — each child is signed in at the desk before they shop.
+        </div>
+        <div class="notice" style="text-align:left;margin:12px 0 0">
+          <strong>Please arrive on time</strong>
+          If your family does not arrive within your scheduled time slot, we may not be able to accommodate you.
+        </div>
       </div>
     `,
   });
