@@ -18,6 +18,9 @@ export default function GiftShopCheckInDialog({ family, open, onOpenChange, onCh
 
   const children = family?.children || [];
   const pending = children.filter(c => !c.checked_in);
+  const signedIn = children
+    .filter(c => c.checked_in)
+    .sort((a, b) => (a.check_in_sequence || 0) - (b.check_in_sequence || 0));
 
   const confirm = async (targets) => {
     if (!targets.length) return;
@@ -58,6 +61,12 @@ export default function GiftShopCheckInDialog({ family, open, onOpenChange, onCh
               {family ? `${giftShopSlotLabel(family.time_slot)} • ${family.guardian_name}${family.guardian_phone ? ` • ${family.guardian_phone}` : ''}` : ''}
             </DialogDescription>
           </DialogHeader>
+
+          {signedIn.length > 1 && (
+            <Button variant="outline" size="sm" className="w-full" onClick={() => setTags(signedIn)}>
+              <Printer className="h-3.5 w-3.5" /> Print all {signedIn.length} name tags
+            </Button>
+          )}
 
           <div className="space-y-2">
             {children.map(child => (
