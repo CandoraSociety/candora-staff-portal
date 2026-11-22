@@ -35,8 +35,9 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const families = Array.isArray(body.families) ? body.families : [];
-    if (!families.length) {
-      return Response.json({ error: 'No families were in the list.' }, { status: 400 });
+    const inviteIds = Array.isArray(body.invite_ids) ? body.invite_ids.filter(Boolean) : [];
+    if (!families.length && !inviteIds.length) {
+      return Response.json({ error: 'No families or invitations were supplied.' }, { status: 400 });
     }
 
     const appUrl = (req.headers.get('X-Base44-App-Url') || FALLBACK_APP_URL).replace(/\/+$/, '');
@@ -47,12 +48,53 @@ Deno.serve(async (req) => {
     const results = [];
     const seen = new Set();
 
-    for (const family of families) {
-      const name = String(family?.guardian_name || '').trim();
-      const email = String(family?.guardian_email || '').trim();
-      const phone = String(family?.guardian_phone || '').trim();
-      const requested = Number(family?.children_allowed);
-      const childrenAllowed = requested > 0 ? Math.min(6, requested) : 3;
+    // Two ways in: a fresh list, where each family gets a new link, or
+    // invitations already in the list, where the existing link is reused and
+    // only the email goes out.
+    const queue: any[] = [];
+    if (inviteIds.length) {
+      const found = await Promise.all(
+        inviteIds.map((id: string) => base44.asServiceRole.entities.GiftShopInvite.get(id).catch(() => null)),
+      );
+      for (const invite of found) {
+        if (!invite) continue;
+        const closed = invite.status !== 'invited'
+          || (invite.expires_at && new Date(invite.expires_at).getTime() < Date.now());
+        if (closed) {
+          results.push({
+            guardian_name: invite.guardian_name,
+            guardian_email: invite.guardian_email || '',
+            status: 'skipped',
+            message: 'This invitation is no longer open.',
+          });
+          continue;
+        }
+        const allowed = Number(invite.children_allowed);
+        queue.push({
+          existing: invite,
+          name: String(invite.guardian_name || '').trim(),
+          email: String(invite.guardian_email || '').trim(),
+          phone: String(invite.guardian_phone || '').trim(),
+          childrenAllowed: allowed > 0 ? Math.min(6, allowed) : 3,
+          token: invite.token,
+        });
+      }
+    } else {
+      for (const family of families) {
+        const requested = Number(family?.children_allowed);
+        queue.push({
+          existing: null,
+          name: String(family?.guardian_name || '').trim(),
+          email: String(family?.guardian_email || '').trim(),
+          phone: String(family?.guardian_phone || '').trim(),
+          childrenAllowed: requested > 0 ? Math.min(6, requested) : 3,
+          token: null,
+        });
+      }
+    }
+
+    for (const entry of queue) {
+      const { existing, name, email, phone, childrenAllowed } = entry;
 
       if (!name || (!email && !phone)) {
         results.push({
@@ -71,51 +113,57 @@ Deno.serve(async (req) => {
       }
       if (emailKey) seen.add(emailKey);
 
-      const token = newToken();
+      const token = existing?.token || newToken();
       const link = `${appUrl}/functions/giftShopInviteForm?token=${token}`;
 
-      let invite: any = null;
-      try {
-        invite = await base44.asServiceRole.entities.GiftShopInvite.create({
-          token,
-          guardian_name: name,
-          guardian_email: email || null,
-          guardian_phone: phone || null,
-          children_allowed: childrenAllowed,
-          status: 'invited',
-          expires_at: expiresAt,
-          sent_via: email ? 'email' : 'other',
-          created_by_name: user.full_name || user.email || '',
-        });
-      } catch (error) {
-        console.log(`Invitation record failed for ${name}:`, error.message);
-        results.push({ guardian_name: name, guardian_email: email, status: 'failed', message: `Could not save the invitation: ${error.message}` });
-        continue;
+      let invite: any = existing || null;
+      if (!existing) {
+        try {
+          invite = await base44.asServiceRole.entities.GiftShopInvite.create({
+            token,
+            guardian_name: name,
+            guardian_email: email || null,
+            guardian_phone: phone || null,
+            children_allowed: childrenAllowed,
+            status: 'invited',
+            expires_at: expiresAt,
+            sent_via: email ? 'email' : 'other',
+            created_by_name: user.full_name || user.email || '',
+          });
+        } catch (error) {
+          console.log(`Invitation record failed for ${name}:`, error.message);
+          results.push({ guardian_name: name, guardian_email: email, status: 'failed', message: `Could not save the invitation: ${error.message}` });
+          continue;
+        }
       }
 
-      // Link the family to their Central Database profile, or open one for them.
-      const person = splitName(name);
+      // A family from a fresh list is linked to their Central Database profile,
+      // or has one opened for them. Invitations already in the list were linked
+      // when they were created, so they are left as they are.
       let central: any = null;
-      try {
-        central = await syncParticipantToCentralDb(base44, {
-          program: 'kids_gift_shop',
-          linkedId: invite.id,
-          indicator: 'Invited to the Kids Gift Shop pre-registration (Winter Wonderland).',
-          personal: {
-            first_name: person.first_name,
-            last_name: person.last_name,
-            email: email || null,
-            phone: phone || null,
-          },
-        });
-        if (central?.rc_client_id) {
-          await base44.asServiceRole.entities.GiftShopInvite.update(invite.id, {
-            rc_client_id: central.rc_client_id,
-            central_db_status: central.status,
+      if (!existing) {
+        const person = splitName(name);
+        try {
+          central = await syncParticipantToCentralDb(base44, {
+            program: 'kids_gift_shop',
+            linkedId: invite.id,
+            indicator: 'Invited to the Kids Gift Shop pre-registration (Winter Wonderland).',
+            personal: {
+              first_name: person.first_name,
+              last_name: person.last_name,
+              email: email || null,
+              phone: phone || null,
+            },
           });
+          if (central?.rc_client_id) {
+            await base44.asServiceRole.entities.GiftShopInvite.update(invite.id, {
+              rc_client_id: central.rc_client_id,
+              central_db_status: central.status,
+            });
+          }
+        } catch (error) {
+          console.log(`Central Database link failed for ${name}:`, error.message);
         }
-      } catch (error) {
-        console.log(`Central Database link failed for ${name}:`, error.message);
       }
 
       if (!email) {
@@ -138,7 +186,7 @@ Deno.serve(async (req) => {
           variables: {
             guardian_name: name,
             children_allowed: String(childrenAllowed),
-            expires_on: formatDate(expiresOn),
+            expires_on: formatDate(existing?.expires_at ? existing.expires_at.slice(0, 10) : expiresOn),
             custom_message: message,
             invite_link: link,
             contact_email: CONTACT_EMAIL,
@@ -157,6 +205,9 @@ Deno.serve(async (req) => {
             message: sent.message || `The email could not be sent (${sent.reason || 'refused'}). Copy the link and send it yourself.`,
           });
         } else {
+          if (existing) {
+            await base44.asServiceRole.entities.GiftShopInvite.update(existing.id, { sent_via: 'email' });
+          }
           results.push({ guardian_name: name, guardian_email: email, status: 'sent', link, central_db_status: central?.status || null });
         }
       } catch (error) {
