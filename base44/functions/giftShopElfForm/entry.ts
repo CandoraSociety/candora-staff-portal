@@ -6,10 +6,12 @@ import {
   findFamilyChildren,
   findRegistrationByElfToken,
   saveElfGifts,
+  renderElfBeginPage,
   renderElfChildPage,
   renderElfClosedPage,
   renderElfDonePage,
   renderElfPinPage,
+  startElfShopping,
   giftShopHtmlResponse,
 } from '../../shared/giftShopElfPage.ts';
 
@@ -56,6 +58,7 @@ export default async function (req) {
       };
 
       const goToken = String(form.get('go') || '').trim();
+      let active = reg;
       if (goToken && goToken !== token) {
         const target = await findRegistrationByElfToken(base44.asServiceRole, goToken);
         if (target?.completed) {
@@ -63,19 +66,25 @@ export default async function (req) {
             state: 'completed', reg: target, token: goToken, elfName, pin, siblings: await siblingsFor(target),
           }));
         }
-        if (target) {
-          return giftShopHtmlResponse(renderElfChildPage({
-            reg: target, token: goToken, elfName, pin, siblings: await siblingsFor(target),
-          }));
-        }
+        if (target) active = target;
       }
+      const activeToken = active.elf_token || token;
 
       // A child already returned still offers the rest of the family, so a
       // finished tag can be used to close out a brother or sister.
-      if (reg.completed) {
+      if (active.completed) {
         return giftShopHtmlResponse(renderElfClosedPage({
-          state: 'completed', reg, token, elfName, pin, siblings: await siblingsFor(reg),
+          state: 'completed', reg: active, token: activeToken, elfName, pin, siblings: await siblingsFor(active),
         }));
+      }
+
+      // The gift form only opens once the volunteer has begun shopping, so the
+      // desk knows which children are out with an elf.
+      if (!active.shopping_started_at) {
+        if (action !== 'begin') {
+          return giftShopHtmlResponse(renderElfBeginPage({ reg: active, token: activeToken, elfName, pin }));
+        }
+        active = await startElfShopping(base44.asServiceRole, active) || active;
       }
 
       // A gift that is still locked has no input on the page, so only the gifts
@@ -94,28 +103,28 @@ export default async function (req) {
       );
 
       if (removeGift) {
-        const updated = await clearElfGift(base44.asServiceRole, reg, removeGift);
-        return await renderChild(updated || reg, token, { saved: 'That gift detail has been removed.' });
+        const updated = await clearElfGift(base44.asServiceRole, active, removeGift);
+        return await renderChild(updated || active, activeToken, { saved: 'That gift detail has been removed.' });
       }
 
       if (changeGift) {
-        return await renderChild(reg, token, { editGift: changeGift });
+        return await renderChild(active, activeToken, { editGift: changeGift });
       }
 
       if (action === 'save') {
-        const updated = await saveElfGifts(base44.asServiceRole, reg, gifts);
-        return await renderChild(updated || reg, token, { saved: 'Gift details saved. You can change them at any time.' });
+        const updated = await saveElfGifts(base44.asServiceRole, active, gifts);
+        return await renderChild(updated || active, activeToken, { saved: 'Gift details saved. You can change them at any time.' });
       }
 
       if (action === 'complete') {
-        const updated = await completeElfVisit(base44.asServiceRole, reg, { elfName, ...gifts });
+        const updated = await completeElfVisit(base44.asServiceRole, active, { elfName, ...gifts });
         // Any brother or sister still shopping is offered straight away, so a
         // family is never left half closed out.
-        const siblings = await siblingsFor(updated || reg);
-        return giftShopHtmlResponse(renderElfDonePage({ reg: updated || reg, elfName, token, pin, siblings }));
+        const siblings = await siblingsFor(updated || active);
+        return giftShopHtmlResponse(renderElfDonePage({ reg: updated || active, elfName, token: activeToken, pin, siblings }));
       }
 
-      return await renderChild(reg, token);
+      return await renderChild(active, activeToken);
     }
 
     const reg = await findRegistrationByElfToken(base44.asServiceRole, queryToken);

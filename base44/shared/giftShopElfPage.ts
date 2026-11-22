@@ -310,6 +310,58 @@ export function renderElfChildPage({ reg, token, elfName, pin, error = '', saved
   });
 }
 
+// A volunteer starts the shopping trip before the gift form opens, so the
+// registration desk can see which children are out shopping with an elf.
+export function renderElfBeginPage({ reg, token, elfName, pin }) {
+  const first = String(reg.child_name || reg.participant_name || 'this child').trim().split(/\s+/)[0];
+
+  return shell({
+    title: `${reg.child_name || 'Child'} · Kids Gift Shop`,
+    body: `
+      <div class="card">
+        ${childCard(reg)}
+        ${guardianCard(reg)}
+        <p class="lede">Press Begin shopping when you are ready to walk around with ${escapeHtml(first)}.</p>
+        <form method="post">
+          <input type="hidden" name="token" value="${escapeHtml(token)}" />
+          <input type="hidden" name="elf_name" value="${escapeHtml(elfName)}" />
+          <input type="hidden" name="pin" value="${escapeHtml(pin)}" />
+          <button type="submit" class="btn" name="action" value="begin">Begin shopping</button>
+        </form>
+        <div class="notice">
+          <strong>What this does</strong>
+          It marks ${escapeHtml(first)} — and any brothers or sisters signed in with them — as Shopping on the
+          registration desk's screen. Press Completed and returned when they are back with their parent or guardian.
+        </div>
+        <div class="elf">
+          <span>Signed in as ${escapeHtml(elfName)}</span>
+        </div>
+      </div>
+    `,
+  });
+}
+
+// Marks the child, and the siblings signed in with them, as shopping. Children
+// already out shopping or already returned are left exactly as they are.
+export async function startElfShopping(base44, reg) {
+  const now = new Date().toISOString();
+  if (reg?.shopping_started_at) return reg;
+
+  const family = await findFamilyChildren(base44, reg);
+  const targets = [reg, ...family]
+    .filter((child, index, all) => child?.id && all.findIndex(other => other?.id === child.id) === index)
+    .filter(child => !child.completed && (child.id === reg.id || child.checked_in))
+    .filter(child => !child.shopping_started_at);
+
+  if (targets.length) {
+    await base44.entities.ProgramRegistration.bulkUpdate(
+      targets.map(child => ({ id: child.id, shopping_started_at: now })),
+    );
+  }
+
+  return { ...reg, shopping_started_at: now };
+}
+
 export function renderElfDonePage({ reg, elfName, token = '', pin = '', siblings = [] }) {
   const remaining = (siblings || []).filter(sibling => sibling?.token);
 

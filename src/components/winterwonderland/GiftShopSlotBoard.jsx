@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Clock, Gift } from 'lucide-react';
+import { CheckCircle2, Clock, Gift, ShoppingBag } from 'lucide-react';
 import { KIDS_GIFT_SHOP_TIME_SLOTS } from '@/lib/centralRegConstants';
 import GiftShopSearchInput from '@/components/winterwonderland/GiftShopSearchInput';
 import { filterFamilies } from '@/lib/giftShopSearch';
-import { giftShopFamilyCompleted } from '@/lib/giftShopFamilies';
+import { giftShopFamilyCompleted, giftShopFamilyShopping } from '@/lib/giftShopFamilies';
 
 const countChildren = (families) => families.reduce((n, f) => n + (f.children?.length || 0), 0);
 const allIn = (family) => (family.children || []).every(c => c.checked_in);
@@ -29,9 +29,12 @@ export default function GiftShopSlotBoard({ families, renderFamily, slot: contro
   const shown = slot ? matching.filter(f => (f.time_slot || '') === slot) : matching;
   // Children an elf has closed out are finished and go to their own section, so
   // the desk can see at a glance who is still shopping.
+  // An elf has begun shopping with the family but not yet returned them, so the
+  // desk can see who is out on the floor right now.
+  const shopping = shown.filter(f => !giftShopFamilyCompleted(f) && giftShopFamilyShopping(f));
   const completed = shown.filter(giftShopFamilyCompleted);
-  const waiting = shown.filter(f => !allIn(f) && !giftShopFamilyCompleted(f));
-  const signedIn = shown.filter(f => allIn(f) && !giftShopFamilyCompleted(f));
+  const waiting = shown.filter(f => !allIn(f) && !giftShopFamilyCompleted(f) && !giftShopFamilyShopping(f));
+  const signedIn = shown.filter(f => allIn(f) && !giftShopFamilyCompleted(f) && !giftShopFamilyShopping(f));
   const searching = !!query.trim();
 
   return (
@@ -91,6 +94,16 @@ export default function GiftShopSlotBoard({ families, renderFamily, slot: contro
                 <span className="text-xs font-normal text-muted-foreground">({countChildren(signedIn)})</span>
               </h3>
               {signedIn.map(renderFamily)}
+            </section>
+          )}
+
+          {shopping.length > 0 && (
+            <section className="space-y-2">
+              <h3 className="flex items-center gap-1.5 text-sm font-display font-semibold text-highlight">
+                <ShoppingBag className="h-4 w-4" /> Shopping
+                <span className="text-xs font-normal text-muted-foreground">({countChildren(shopping)})</span>
+              </h3>
+              {shopping.map(renderFamily)}
             </section>
           )}
 

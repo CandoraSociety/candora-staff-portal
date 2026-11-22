@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { CheckCircle2, Gift } from 'lucide-react';
-import { giftShopChildFullName, giftShopFamilyCompleted, giftShopIsCompleted, giftShopElfName, giftShopSlotLabel, giftShopTagGifts } from '@/lib/giftShopFamilies';
+import { CheckCircle2, Gift, ShoppingBag } from 'lucide-react';
+import { giftShopChildFullName, giftShopFamilyCompleted, giftShopFamilyShopping, giftShopIsCompleted, giftShopIsShopping, giftShopElfName, giftShopSlotLabel, giftShopTagGifts } from '@/lib/giftShopFamilies';
 
 const statusPill = (status) => {
   if (['approved', 'enrolled'].includes(status)) return { label: 'Confirmed', className: 'bg-green-100 text-green-700' };
@@ -16,10 +16,15 @@ export default function GiftShopFamilyCard({ family, onClick }) {
   // An elf closed the children out from the tag form: they finished shopping and
   // went back to their parent or guardian.
   const done = giftShopFamilyCompleted(family);
+  // An elf pressed Begin shopping on the tag form, so the children are out on the
+  // floor with them.
+  const shopping = !done && giftShopFamilyShopping(family);
   const elfName = family.children.map(giftShopElfName).find(Boolean) || '';
   const pill = done
     ? { label: 'Completed', className: 'bg-accent/10 text-accent' }
-    : statusPill(waitlisted ? 'waitlisted' : family.children[0].status);
+    : shopping
+      ? { label: 'Shopping', className: 'bg-highlight/15 text-highlight' }
+      : statusPill(waitlisted ? 'waitlisted' : family.children[0].status);
   const allSignedIn = family.children.every(c => c.checked_in);
   // A family only reads as completed once every child is back, so show how many
   // are already returned while one is still shopping.
@@ -53,6 +58,11 @@ export default function GiftShopFamilyCard({ family, onClick }) {
                       #{child.check_in_sequence}
                     </span>
                   )}
+                  {giftShopIsShopping(child) && (
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-highlight/15 text-highlight flex-shrink-0">
+                      Shopping
+                    </span>
+                  )}
                   {giftShopIsCompleted(child) && (
                     <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-accent/15 text-accent flex-shrink-0">
                       Returned
@@ -79,6 +89,10 @@ export default function GiftShopFamilyCard({ family, onClick }) {
           ) : returnedCount > 0 ? (
             <span className="text-[10px] font-semibold text-accent flex items-center gap-1 flex-shrink-0">
               <Gift className="h-3 w-3" /> {returnedCount} of {family.children.length} returned
+            </span>
+          ) : shopping ? (
+            <span className="text-[10px] font-semibold text-highlight flex items-center gap-1 flex-shrink-0">
+              <ShoppingBag className="h-3 w-3" /> Out shopping
             </span>
           ) : allSignedIn ? (
             <span className="text-[10px] font-semibold text-green-700 flex items-center gap-1 flex-shrink-0">

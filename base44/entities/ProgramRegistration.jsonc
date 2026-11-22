@@ -259,6 +259,11 @@
       "type": "number",
       "description": "Name-tag order number, handed out in the order children are signed in"
     },
+    "shopping_started_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When a volunteer pressed Begin shopping on the child's tag form \u2014 puts the child in the Shopping section until they are returned to their parent or guardian"
+    },
     "elf_token": {
       "type": "string",
       "description": "Unguessable code printed as the QR code on the child's name tag. It opens the volunteer's form for that one child, and only after the desk PIN is entered."

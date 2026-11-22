@@ -81,6 +81,12 @@ export const giftShopTagGifts = (reg) => {
   return `${count} gift${count > 1 ? 's' : ''}${gifts.length ? ` (${gifts.join(', ')})` : ''}`;
 };
 
+// A child is shopping once an elf pressed Begin shopping on their tag form and
+// has not yet returned them to their parent or guardian.
+export const giftShopIsShopping = (reg) => Boolean(reg?.shopping_started_at) && !reg?.completed;
+export const giftShopFamilyShopping = (family) =>
+  (family?.children || []).some(giftShopIsShopping);
+
 // A child is completed once an elf closes them out on the tag form: they have
 // finished shopping and gone back to their parent or guardian.
 export const giftShopIsCompleted = (reg) => Boolean(reg?.completed);
