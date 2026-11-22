@@ -7,7 +7,7 @@ import GiftShopFamilyCard from '@/components/winterwonderland/GiftShopFamilyCard
 import GiftShopCheckInDialog from '@/components/winterwonderland/GiftShopCheckInDialog';
 import GiftShopSlotBoard from '@/components/winterwonderland/GiftShopSlotBoard';
 import { KIDS_GIFT_SHOP_TIME_SLOTS, KIDS_GIFT_SHOP_SLOT_CAPACITY } from '@/lib/centralRegConstants';
-import { groupGiftShopFamilies, giftShopSlotCounts } from '@/lib/giftShopFamilies';
+import { groupGiftShopFamilies, giftShopSlotCounts, giftShopAgeBandCounts } from '@/lib/giftShopFamilies';
 import { useGiftShopRegistrations } from '@/lib/useGiftShopRegistrations';
 
 // Kids Gift Shop registration tab — the children signed up for a shopping slot,
@@ -22,6 +22,7 @@ export default function GiftShopRegistrations() {
   const active = registrations.filter(r => !['declined', 'withdrawn'].includes(r.status));
   const giftsRequested = active.reduce((sum, r) => sum + (r.gift_count || 1), 0);
   const counts = giftShopSlotCounts(active);
+  const ageBands = giftShopAgeBandCounts(active);
   const openSlots = KIDS_GIFT_SHOP_TIME_SLOTS.filter(s => (counts[s.value] || 0) < KIDS_GIFT_SHOP_SLOT_CAPACITY).length;
   // Siblings registered by the same guardian into the same slot share one card.
   const families = groupGiftShopFamilies(active).sort((a, b) => (a.time_slot || '').localeCompare(b.time_slot || ''));
@@ -30,6 +31,8 @@ export default function GiftShopRegistrations() {
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-3">
         <Card><CardContent className="pt-5"><p className="text-xs text-muted-foreground">Registrations</p><p className="text-2xl font-bold">{active.length}</p></CardContent></Card>
+        <Card><CardContent className="pt-5"><p className="text-xs text-muted-foreground">Ages 0–5</p><p className="text-2xl font-bold">{ageBands['0-5']}</p></CardContent></Card>
+        <Card><CardContent className="pt-5"><p className="text-xs text-muted-foreground">Ages 6–16</p><p className="text-2xl font-bold">{ageBands['6-16']}</p></CardContent></Card>
         <Card><CardContent className="pt-5"><p className="text-xs text-muted-foreground">Gifts requested</p><p className="text-2xl font-bold">{giftsRequested}</p></CardContent></Card>
         <Card><CardContent className="pt-5"><p className="text-xs text-muted-foreground">Slots still open</p><p className="text-2xl font-bold">{openSlots} of {KIDS_GIFT_SHOP_TIME_SLOTS.length}</p></CardContent></Card>
       </div>

@@ -40,6 +40,16 @@ export const giftShopSlotCounts = (registrations) => (registrations || [])
 
 export const giftShopChildFullName = (reg) => (reg.child_name || reg.participant_name || 'Unnamed child').trim();
 
+// How many registered children fall into each age band, so the dashboard shows
+// the split at a glance. Children with no band recorded are not counted.
+export const giftShopAgeBandCounts = (registrations) => (registrations || [])
+  .reduce((acc, r) => {
+    if (r.child_age_band === '0-5' || r.child_age_band === '6-16') {
+      acc[r.child_age_band] = (acc[r.child_age_band] || 0) + 1;
+    }
+    return acc;
+  }, { '0-5': 0, '6-16': 0 });
+
 // The parent or guardian the child belongs to. At sign-in the adult who brings
 // the child can give their own name, which replaces the registered one.
 export const giftShopGuardianName = (reg) => (reg?.parent_guardian_name || reg?.participant_name || '').trim();

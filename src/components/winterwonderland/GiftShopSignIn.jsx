@@ -6,7 +6,7 @@ import GiftShopFamilyCard from '@/components/winterwonderland/GiftShopFamilyCard
 import GiftShopCheckInDialog from '@/components/winterwonderland/GiftShopCheckInDialog';
 import GiftShopSlotBoard from '@/components/winterwonderland/GiftShopSlotBoard';
 import { useGiftShopRegistrations } from '@/lib/useGiftShopRegistrations';
-import { groupGiftShopFamilies } from '@/lib/giftShopFamilies';
+import { groupGiftShopFamilies, giftShopAgeBandCounts } from '@/lib/giftShopFamilies';
 
 // Sign-In tab — the same registration cards, sorted by shopping time, for
 // working the door. Signing a child in here writes to the same registration, so
@@ -19,6 +19,7 @@ export default function GiftShopSignIn({ standalone = false }) {
   const families = groupGiftShopFamilies(active).sort((a, b) => (a.time_slot || '').localeCompare(b.time_slot || ''));
   const signedIn = active.filter(r => r.checked_in).length;
   const waiting = active.length - signedIn;
+  const ageBands = giftShopAgeBandCounts(active);
 
   return (
     <div className="space-y-4">
@@ -26,6 +27,8 @@ export default function GiftShopSignIn({ standalone = false }) {
         <Card><CardContent className="pt-5"><p className="text-xs text-muted-foreground flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Signed in</p><p className="text-2xl font-bold">{signedIn} <span className="text-sm font-medium text-muted-foreground">of {active.length}</span></p></CardContent></Card>
         <Card><CardContent className="pt-5"><p className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" /> Still to sign in</p><p className="text-2xl font-bold">{waiting}</p></CardContent></Card>
         <Card><CardContent className="pt-5"><p className="text-xs text-muted-foreground flex items-center gap-1"><Users className="h-3 w-3" /> Families</p><p className="text-2xl font-bold">{families.length}</p></CardContent></Card>
+        <Card><CardContent className="pt-5"><p className="text-xs text-muted-foreground">Ages 0–5</p><p className="text-2xl font-bold">{ageBands['0-5']}</p></CardContent></Card>
+        <Card><CardContent className="pt-5"><p className="text-xs text-muted-foreground">Ages 6–16</p><p className="text-2xl font-bold">{ageBands['6-16']}</p></CardContent></Card>
       </div>
 
       <div className="flex items-start justify-between gap-3">
