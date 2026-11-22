@@ -8,7 +8,7 @@ export default function WinterWonderlandKidsGiftShop() {
   return (
     <FestivalAreaPage
       area={FESTIVAL_AREAS.kidsGiftShop}
-      accent={{ from: '#ef4444', to: '#fccf03' }}
+      accent={{ from: '#102070', to: '#fccf03' }}
       extraTabs={[
         { value: 'registration', label: 'Registration', content: <GiftShopRegistrations /> },
         { value: 'signin', label: 'Sign-In', content: <GiftShopSignIn /> },

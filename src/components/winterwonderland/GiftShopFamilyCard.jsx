@@ -24,10 +24,10 @@ export default function GiftShopFamilyCard({ family, onClick }) {
       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onClick?.(); } }}
       className={`cursor-pointer border-l-4 transition-all hover:shadow-md ${
         allSignedIn
-          ? 'border-l-emerald-500 border-emerald-200 bg-gradient-to-br from-emerald-50/80 via-white to-white hover:border-emerald-300'
+          ? 'border-l-highlight border-highlight/25 bg-gradient-to-br from-highlight/10 via-card to-card hover:border-highlight/50'
           : waitlisted
-            ? 'border-l-amber-400 border-amber-200 bg-gradient-to-br from-amber-50/70 via-white to-white hover:border-amber-300'
-            : 'border-l-primary border-rose-200 bg-gradient-to-br from-rose-50/70 via-white to-white hover:border-primary/60'
+            ? 'border-l-muted-foreground/40 border-border bg-gradient-to-br from-muted/60 via-card to-card hover:border-muted-foreground/40'
+            : 'border-l-primary border-primary/30 bg-gradient-to-br from-primary/10 via-card to-card hover:border-primary/60'
       }`}
     >
       <CardContent className="pt-4 space-y-2">

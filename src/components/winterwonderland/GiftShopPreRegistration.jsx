@@ -60,10 +60,10 @@ export default function GiftShopPreRegistration() {
 
   return (
     <div className="space-y-4">
-      <Card className="border-indigo-200 bg-gradient-to-br from-indigo-50 via-white to-white">
+      <Card className="border-accent/25 bg-gradient-to-br from-accent/10 via-card to-card">
         <CardContent className="pt-5 space-y-2">
           <div className="flex items-start gap-2">
-            <span className="h-6 w-6 rounded-md bg-gradient-to-br from-indigo-500 to-violet-400 flex items-center justify-center flex-shrink-0 shadow-sm">
+            <span className="h-6 w-6 rounded-md bg-gradient-to-br from-accent to-highlight flex items-center justify-center flex-shrink-0 shadow-sm">
               <ShieldCheck className="h-3.5 w-3.5 text-white" />
             </span>
             <div>
@@ -92,16 +92,16 @@ export default function GiftShopPreRegistration() {
       </Card>
 
       <div className="grid gap-3 sm:grid-cols-2">
-        <Card className="border-sky-200 bg-gradient-to-br from-sky-50 via-white to-white">
+        <Card className="border-primary/40 bg-gradient-to-br from-primary/10 via-card to-card">
           <CardContent className="pt-5">
-            <p className="text-xs font-medium text-sky-700">Links still open</p>
-            <p className="text-2xl font-bold text-sky-700">{openInvites.length}</p>
+            <p className="text-xs font-medium text-accent">Links still open</p>
+            <p className="text-2xl font-bold text-accent">{openInvites.length}</p>
           </CardContent>
         </Card>
-        <Card className="border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-white">
+        <Card className="border-highlight/30 bg-gradient-to-br from-highlight/10 via-card to-card">
           <CardContent className="pt-5">
-            <p className="text-xs font-medium text-emerald-700">Families registered</p>
-            <p className="text-2xl font-bold text-emerald-700">{registered.length}</p>
+            <p className="text-xs font-medium text-highlight">Families registered</p>
+            <p className="text-2xl font-bold text-highlight">{registered.length}</p>
           </CardContent>
         </Card>
       </div>

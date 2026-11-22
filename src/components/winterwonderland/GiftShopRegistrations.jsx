@@ -38,10 +38,10 @@ export default function GiftShopRegistrations() {
 
   return (
     <div className="space-y-4">
-      <Card className="border-amber-200 bg-gradient-to-br from-amber-50 via-white to-white">
+      <Card className="border-primary/40 bg-gradient-to-br from-primary/10 via-card to-card">
         <CardContent className="pt-5 space-y-2">
           <div className="flex items-start gap-2">
-            <span className="h-6 w-6 rounded-md bg-gradient-to-br from-amber-400 to-yellow-300 flex items-center justify-center flex-shrink-0 shadow-sm">
+            <span className="h-6 w-6 rounded-md bg-gradient-to-br from-accent to-highlight flex items-center justify-center flex-shrink-0 shadow-sm">
               <Link2 className="h-3.5 w-3.5 text-white" />
             </span>
             <div>
@@ -51,7 +51,7 @@ export default function GiftShopRegistrations() {
               </p>
             </div>
           </div>
-          <p className="text-xs bg-white/80 border border-amber-200 rounded px-2 py-1 break-all text-amber-900">{generalLink}</p>
+          <p className="text-xs bg-card border border-primary/30 rounded px-2 py-1 break-all text-accent">{generalLink}</p>
           <div className="flex flex-wrap items-center gap-2">
             <Button size="sm" variant="outline" onClick={copyGeneralLink}><Copy className="h-3.5 w-3.5" /> Copy link</Button>
             <Button size="sm" variant="outline" onClick={() => window.open(generalLink, '_blank', 'noopener')}>
@@ -62,32 +62,32 @@ export default function GiftShopRegistrations() {
       </Card>
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <Card className="border-rose-200 bg-gradient-to-br from-rose-50 via-white to-white">
+        <Card className="border-primary/40 bg-gradient-to-br from-primary/10 via-card to-card">
           <CardContent className="pt-5">
-            <p className="text-xs font-medium text-rose-700">Registrations</p>
-            <p className="text-2xl font-bold text-rose-700">{active.length}</p>
-            <div className="mt-2 flex items-center gap-4 border-t border-rose-200/70 pt-2">
+            <p className="text-xs font-medium text-accent">Registrations</p>
+            <p className="text-2xl font-bold text-accent">{active.length}</p>
+            <div className="mt-2 flex items-center gap-4 border-t border-primary/30 pt-2">
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground">Ages 0–5</span>
-                <span className="border-l border-rose-200 pl-2 text-base font-bold leading-none text-pink-600">{ageBands['0-5']}</span>
+                <span className="border-l border-primary/40 pl-2 text-base font-bold leading-none text-accent">{ageBands['0-5']}</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground">Ages 6–16</span>
-                <span className="border-l border-rose-200 pl-2 text-base font-bold leading-none text-indigo-600">{ageBands['6-16']}</span>
+                <span className="border-l border-primary/40 pl-2 text-base font-bold leading-none text-highlight">{ageBands['6-16']}</span>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-white">
+        <Card className="border-highlight/30 bg-gradient-to-br from-highlight/10 via-card to-card">
           <CardContent className="pt-5">
-            <p className="text-xs font-medium text-emerald-700">Gifts requested</p>
-            <p className="text-2xl font-bold text-emerald-700">{giftsRequested}</p>
+            <p className="text-xs font-medium text-highlight">Gifts requested</p>
+            <p className="text-2xl font-bold text-highlight">{giftsRequested}</p>
           </CardContent>
         </Card>
-        <Card className="border-sky-200 bg-gradient-to-br from-sky-50 via-white to-white">
+        <Card className="border-accent/25 bg-gradient-to-br from-accent/10 via-card to-card">
           <CardContent className="pt-5">
-            <p className="text-xs font-medium text-sky-700">Slots still open</p>
-            <p className="text-2xl font-bold text-sky-700">{openSlots} <span className="text-sm font-semibold text-sky-600/80">of {KIDS_GIFT_SHOP_TIME_SLOTS.length}</span></p>
+            <p className="text-xs font-medium text-accent">Slots still open</p>
+            <p className="text-2xl font-bold text-accent">{openSlots} <span className="text-sm font-semibold text-accent/70">of {KIDS_GIFT_SHOP_TIME_SLOTS.length}</span></p>
           </CardContent>
         </Card>
       </div>
@@ -107,12 +107,12 @@ export default function GiftShopRegistrations() {
                 onClick={() => setSlot(active ? '' : s.value)}
                 className={`rounded-md border px-2 py-1.5 text-left transition-colors ${
                   full
-                    ? 'border-rose-200 bg-rose-50/80'
-                    : 'border-emerald-200 bg-emerald-50/70 hover:border-emerald-400'
-                } ${active ? 'border-primary bg-primary/10 ring-2 ring-primary/40' : ''}`}
+                    ? 'border-destructive/30 bg-destructive/5'
+                    : 'border-primary/40 bg-primary/5 hover:border-primary'
+                } ${active ? 'border-primary bg-primary/15 ring-2 ring-primary/40' : ''}`}
               >
                 <p className="text-xs font-medium">{s.label}</p>
-                <p className={`text-[10px] font-semibold ${full ? 'text-rose-600' : 'text-emerald-700'}`}>
+                <p className={`text-[10px] font-semibold ${full ? 'text-destructive' : 'text-accent'}`}>
                   {remaining}
                 </p>
               </button>

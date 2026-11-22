@@ -24,32 +24,32 @@ export default function GiftShopSignIn({ standalone = false }) {
   return (
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-3">
-        <Card className="border-emerald-200 bg-gradient-to-br from-emerald-50 via-white to-white">
+        <Card className="border-highlight/30 bg-gradient-to-br from-highlight/10 via-card to-card">
           <CardContent className="pt-5">
-            <p className="text-xs font-medium text-emerald-700 flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Signed in</p>
-            <p className="text-2xl font-bold text-emerald-700">{signedIn} <span className="text-sm font-semibold text-emerald-600/80">of {active.length}</span></p>
-            <div className="mt-2 flex items-center gap-4 border-t border-emerald-200/70 pt-2">
+            <p className="text-xs font-medium text-highlight flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Signed in</p>
+            <p className="text-2xl font-bold text-highlight">{signedIn} <span className="text-sm font-semibold text-highlight/70">of {active.length}</span></p>
+            <div className="mt-2 flex items-center gap-4 border-t border-highlight/30 pt-2">
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground">Ages 0–5</span>
-                <span className="border-l border-emerald-200 pl-2 text-base font-bold leading-none text-pink-600">{ageBands['0-5']}</span>
+                <span className="border-l border-highlight/40 pl-2 text-base font-bold leading-none text-accent">{ageBands['0-5']}</span>
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground">Ages 6–16</span>
-                <span className="border-l border-emerald-200 pl-2 text-base font-bold leading-none text-indigo-600">{ageBands['6-16']}</span>
+                <span className="border-l border-highlight/40 pl-2 text-base font-bold leading-none text-highlight">{ageBands['6-16']}</span>
               </div>
             </div>
           </CardContent>
         </Card>
-        <Card className="border-amber-200 bg-gradient-to-br from-amber-50 via-white to-white">
+        <Card className="border-primary/40 bg-gradient-to-br from-primary/10 via-card to-card">
           <CardContent className="pt-5">
-            <p className="text-xs font-medium text-amber-700 flex items-center gap-1"><Clock className="h-3 w-3" /> Still to sign in</p>
-            <p className="text-2xl font-bold text-amber-700">{waiting}</p>
+            <p className="text-xs font-medium text-accent flex items-center gap-1"><Clock className="h-3 w-3" /> Still to sign in</p>
+            <p className="text-2xl font-bold text-accent">{waiting}</p>
           </CardContent>
         </Card>
-        <Card className="border-indigo-200 bg-gradient-to-br from-indigo-50 via-white to-white">
+        <Card className="border-accent/25 bg-gradient-to-br from-accent/10 via-card to-card">
           <CardContent className="pt-5">
-            <p className="text-xs font-medium text-indigo-700 flex items-center gap-1"><Users className="h-3 w-3" /> Families</p>
-            <p className="text-2xl font-bold text-indigo-700">{families.length}</p>
+            <p className="text-xs font-medium text-accent flex items-center gap-1"><Users className="h-3 w-3" /> Families</p>
+            <p className="text-2xl font-bold text-accent">{families.length}</p>
           </CardContent>
         </Card>
       </div>
