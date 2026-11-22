@@ -15,11 +15,13 @@ const RECIPIENT_LABELS = {
 };
 export const giftShopRecipientLabel = (value) => RECIPIENT_LABELS[value] || '';
 
-// "F for Mother" — the gender of the gift plus who it is for.
+// The person a gift is for. A named recipient already says the gender, so only
+// a caregiver keeps it: "Caregiver (F)". With no recipient the gender stands alone.
 const describeGift = (gender, recipient) => {
   const label = giftShopGenderLabel(gender);
   const who = giftShopRecipientLabel(recipient);
-  return who ? `${label} for ${who}` : label;
+  if (!who) return label;
+  return recipient === 'caregiver' ? `${who} (${label})` : who;
 };
 
 export const giftShopChildFullName = (reg) => (reg.child_name || reg.participant_name || 'Unnamed child').trim();
