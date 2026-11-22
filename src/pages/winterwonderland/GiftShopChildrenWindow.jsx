@@ -1,10 +1,9 @@
 import React from 'react';
-import { useQuery } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Printer, RefreshCw, Users } from 'lucide-react';
 import { KIDS_GIFT_SHOP_SLOT_CAPACITY } from '@/lib/centralRegConstants';
 import { groupGiftShopFamilies, giftShopSlotLabel, giftShopTagGifts, giftShopChildFullName } from '@/lib/giftShopFamilies';
+import { useGiftShopRegistrations } from '@/lib/useGiftShopRegistrations';
 
 const statusPill = (status) => ['approved', 'enrolled'].includes(status)
   ? { label: 'Confirmed', className: 'bg-green-100 text-green-700' }
@@ -15,13 +14,7 @@ const statusPill = (status) => ['approved', 'enrolled'].includes(status)
 // Registered children, opened in its own window from the Kids Gift Shop tab —
 // a clean check-in list with each family's children together.
 export default function GiftShopChildrenWindow() {
-  const { data: registrations = [], isLoading, refetch, isFetching } = useQuery({
-    queryKey: ['kidsGiftShopRegistrations'],
-    queryFn: () => base44.entities.ProgramRegistration.filter(
-      { program_name: 'Kids Gift Shop' },
-      { sort: 'time_slot', limit: 500 }
-    ).then(res => res.items || []),
-  });
+  const { data: registrations = [], isLoading, refetch, isFetching } = useGiftShopRegistrations();
 
   const active = registrations.filter(r => !['declined', 'withdrawn'].includes(r.status));
   const families = groupGiftShopFamilies(active).sort((a, b) => (a.time_slot || '').localeCompare(b.time_slot || ''));

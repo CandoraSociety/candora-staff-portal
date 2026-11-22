@@ -1,5 +1,6 @@
 import FestivalAreaPage from '@/components/winterwonderland/FestivalAreaPage';
 import GiftShopRegistrations from '@/components/winterwonderland/GiftShopRegistrations';
+import GiftShopSignIn from '@/components/winterwonderland/GiftShopSignIn';
 import GiftShopPreRegistration from '@/components/winterwonderland/GiftShopPreRegistration';
 import { FESTIVAL_AREAS } from '@/lib/winterFestivalAreas';
 
@@ -9,6 +10,7 @@ export default function WinterWonderlandKidsGiftShop() {
       area={FESTIVAL_AREAS.kidsGiftShop}
       extraTabs={[
         { value: 'registration', label: 'Registration', content: <GiftShopRegistrations /> },
+        { value: 'signin', label: 'Sign-In', content: <GiftShopSignIn /> },
         { value: 'preregistration', label: 'Pre-registration links', content: <GiftShopPreRegistration /> },
       ]}
     />

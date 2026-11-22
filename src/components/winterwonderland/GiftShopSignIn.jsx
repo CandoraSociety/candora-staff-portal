@@ -1,0 +1,56 @@
+import React, { useState } from 'react';
+import { Card, CardContent } from '@/components/ui/card';
+import { CheckCircle2, Clock, Users } from 'lucide-react';
+import GiftShopFamilyCard from '@/components/winterwonderland/GiftShopFamilyCard';
+import GiftShopCheckInDialog from '@/components/winterwonderland/GiftShopCheckInDialog';
+import { useGiftShopRegistrations } from '@/lib/useGiftShopRegistrations';
+import { groupGiftShopFamilies } from '@/lib/giftShopFamilies';
+
+// Sign-In tab — the same registration cards, sorted by shopping time, for
+// working the door. Signing a child in here writes to the same registration, so
+// every other area updates with it.
+export default function GiftShopSignIn() {
+  const [selectedKey, setSelectedKey] = useState(null);
+  const { data: registrations = [], isLoading, refresh } = useGiftShopRegistrations();
+
+  const active = registrations.filter(r => !['declined', 'withdrawn'].includes(r.status));
+  const families = groupGiftShopFamilies(active).sort((a, b) => (a.time_slot || '').localeCompare(b.time_slot || ''));
+  const signedIn = active.filter(r => r.checked_in).length;
+  const waiting = active.length - signedIn;
+
+  return (
+    <div className="space-y-4">
+      <div className="grid gap-3 sm:grid-cols-3">
+        <Card><CardContent className="pt-5"><p className="text-xs text-muted-foreground flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Signed in</p><p className="text-2xl font-bold">{signedIn} <span className="text-sm font-medium text-muted-foreground">of {active.length}</span></p></CardContent></Card>
+        <Card><CardContent className="pt-5"><p className="text-xs text-muted-foreground flex items-center gap-1"><Clock className="h-3 w-3" /> Still to sign in</p><p className="text-2xl font-bold">{waiting}</p></CardContent></Card>
+        <Card><CardContent className="pt-5"><p className="text-xs text-muted-foreground flex items-center gap-1"><Users className="h-3 w-3" /> Families</p><p className="text-2xl font-bold">{families.length}</p></CardContent></Card>
+      </div>
+
+      <div>
+        <h2 className="text-lg font-display font-semibold">Sign children in</h2>
+        <p className="text-xs text-muted-foreground">
+          Tap a family to sign the children in and print their name tags. Sign-ins update on every screen as they happen.
+        </p>
+      </div>
+
+      {isLoading ? (
+        <Card><CardContent className="pt-6"><p className="text-sm text-muted-foreground">Loading registrations…</p></CardContent></Card>
+      ) : families.length === 0 ? (
+        <Card><CardContent className="pt-6 text-center"><p className="text-sm text-muted-foreground">No children registered for the Kids Gift Shop yet.</p></CardContent></Card>
+      ) : (
+        <div className="space-y-2">
+          {families.map(family => (
+            <GiftShopFamilyCard key={family.key} family={family} onClick={() => setSelectedKey(family.key)} />
+          ))}
+        </div>
+      )}
+
+      <GiftShopCheckInDialog
+        family={selectedKey ? families.find(f => f.key === selectedKey) : null}
+        open={!!selectedKey}
+        onOpenChange={(o) => { if (!o) setSelectedKey(null); }}
+        onChanged={refresh}
+      />
+    </div>
+  );
+}

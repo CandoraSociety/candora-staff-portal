@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, ExternalLink } from 'lucide-react';
@@ -9,21 +7,15 @@ import GiftShopFamilyCard from '@/components/winterwonderland/GiftShopFamilyCard
 import GiftShopCheckInDialog from '@/components/winterwonderland/GiftShopCheckInDialog';
 import { KIDS_GIFT_SHOP_TIME_SLOTS, KIDS_GIFT_SHOP_SLOT_CAPACITY } from '@/lib/centralRegConstants';
 import { groupGiftShopFamilies } from '@/lib/giftShopFamilies';
+import { useGiftShopRegistrations } from '@/lib/useGiftShopRegistrations';
 
 // Kids Gift Shop registration tab — the children signed up for a shopping slot,
 // with each slot's remaining places.
 export default function GiftShopRegistrations() {
-  const qc = useQueryClient();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedKey, setSelectedKey] = useState(null);
 
-  const { data: registrations = [], isLoading } = useQuery({
-    queryKey: ['kidsGiftShopRegistrations'],
-    queryFn: () => base44.entities.ProgramRegistration.filter(
-      { program_name: 'Kids Gift Shop' },
-      { sort: '-created_date', limit: 500 }
-    ).then(res => res.items || []),
-  });
+  const { data: registrations = [], isLoading, refresh } = useGiftShopRegistrations();
 
   const active = registrations.filter(r => !['declined', 'withdrawn'].includes(r.status));
   const giftsRequested = active.reduce((sum, r) => sum + (r.gift_count || 1), 0);
@@ -34,11 +26,6 @@ export default function GiftShopRegistrations() {
   const openSlots = KIDS_GIFT_SHOP_TIME_SLOTS.filter(s => (counts[s.value] || 0) < KIDS_GIFT_SHOP_SLOT_CAPACITY).length;
   // Siblings registered by the same guardian into the same slot share one card.
   const families = groupGiftShopFamilies(active).sort((a, b) => (a.time_slot || '').localeCompare(b.time_slot || ''));
-
-  const refresh = () => {
-    qc.invalidateQueries({ queryKey: ['kidsGiftShopRegistrations'] });
-    qc.invalidateQueries({ queryKey: ['kgsSlotCounts'] });
-  };
 
   return (
     <div className="space-y-4">
