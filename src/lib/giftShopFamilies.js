@@ -55,6 +55,20 @@ export const giftShopAgeBandCounts = (registrations) => (registrations || [])
 export const giftShopGuardianName = (reg) => (reg?.parent_guardian_name || reg?.participant_name || '').trim();
 export const giftShopChildFirstName = (reg) => giftShopChildFullName(reg).split(/\s+/)[0] || 'Child';
 
+// The gifts a child is shopping for, one row each — the same rows the volunteer's
+// tag form shows, so a printed form can ask for the same thing by hand.
+export const giftShopGiftRows = (reg) => {
+  const count = Number(reg?.gift_count) === 2 ? 2 : 1;
+  const row = (index, recipient, gender) => ({
+    index,
+    who: giftShopRecipientLabel(recipient) || 'Someone special',
+    gender: gender === 'female' ? 'F' : gender === 'male' ? 'M' : '',
+  });
+  const rows = [row(1, reg?.gift_1_recipient, reg?.gift_1_gender)];
+  if (count === 2) rows.push(row(2, reg?.gift_2_recipient, reg?.gift_2_gender));
+  return rows;
+};
+
 // "2 gifts (F, M)" — the count plus who each gift is for.
 export const giftShopTagGifts = (reg) => {
   const count = reg.gift_count || 1;

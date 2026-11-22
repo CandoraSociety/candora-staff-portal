@@ -3,7 +3,7 @@ import { base44 } from '@/api/base44Client';
 import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { FileText, Printer, X } from 'lucide-react';
-import { giftShopAgeBandLabel, giftShopChildFirstName, giftShopGuardianName, giftShopSlotLabel, giftShopTagGifts } from '@/lib/giftShopFamilies';
+import { giftShopAgeBandLabel, giftShopChildFirstName, giftShopChildFullName, giftShopGiftRows, giftShopGuardianName, giftShopSlotLabel, giftShopTagGifts } from '@/lib/giftShopFamilies';
 import { CANDORA_BRAND } from '@/lib/candoraBrand';
 import { elfFormLink, newElfToken, qrImageUrl } from '@/lib/giftShopElf';
 
@@ -109,7 +109,7 @@ export default function GiftShopNameTagSheet({ tags, onClose }) {
             Print {ready.length === 1 ? 'name tag' : `${ready.length} name tags`}
           </Button>
           <Button size="sm" variant="outline" onClick={printSheet}>
-            <FileText className="h-3.5 w-3.5" /> Print QR sheet
+            <FileText className="h-3.5 w-3.5" /> Print paper forms
           </Button>
           <Button size="sm" variant="secondary" onClick={close}>
             <X className="h-3.5 w-3.5" /> Done
@@ -160,68 +160,87 @@ export default function GiftShopNameTagSheet({ tags, onClose }) {
           </div>
         </div>
 
-        {/* Paper version of the same codes — hidden on screen, laid out as a
-            letter-page roster when "Print QR sheet" is used. */}
+        {/* Paper version of the volunteer's form — hidden on screen, printed as
+            one letter-page form per child for elves who would rather work by hand. */}
         <div className="giftshop-elf-sheet">
           <div className="giftshop-elf-head">
             <img src={CANDORA_BRAND.logoUrl} alt="Candora" />
             <div>
-              <p className="giftshop-elf-title">Kids Gift Shop — Volunteer QR Codes</p>
+              <p className="giftshop-elf-title">Kids Gift Shop — Elf paper forms</p>
               <p className="giftshop-elf-sub">
-                {ready.length} {ready.length === 1 ? 'child' : 'children'} signed in · Candora Winter Wonderland
+                {ready.length} {ready.length === 1 ? 'child' : 'children'} · One form per child · Candora Winter Wonderland
               </p>
             </div>
           </div>
 
           <div className="giftshop-elf-instructions">
-            <p className="giftshop-elf-instructions-title">How to use this sheet</p>
+            <p className="giftshop-elf-instructions-title">How to fill in this form</p>
             <ol>
-              <li>Scan a child's QR code with your phone camera.</li>
-              <li>Enter your name and the desk PIN.</li>
-              <li>Write down who the child is buying for, then close the child out when they are returned to their parent or guardian.</li>
+              <li>Write what the child picked on the line under each gift.</li>
+              <li>Tick the box when the child is returned to their parent or guardian.</li>
+              <li>Write your name, then hand the form to the registration desk.</li>
             </ol>
+            <p className="giftshop-elf-note">
+              The QR code opens the same form on a phone, for anyone who would rather tap than write.
+            </p>
           </div>
 
-          <table className="giftshop-elf-table">
-            <thead>
-              <tr>
-                <th className="giftshop-elf-col-order">Order</th>
-                <th className="giftshop-elf-col-qr">Code</th>
-                <th>Child</th>
-                <th className="giftshop-elf-col-time">Time</th>
-                <th>Parent / guardian</th>
-              </tr>
-            </thead>
-            <tbody>
-              {ready.map(tag => (
-                <tr key={tag.id}>
-                  <td className="giftshop-elf-col-order">
-                    <p className="giftshop-elf-order">{tag.check_in_sequence}</p>
-                  </td>
-                  <td className="giftshop-elf-col-qr">
-                    {tag.elf_token && (
-                      <img src={qrImageUrl(elfFormLink(tag.elf_token), 400)} alt={`QR code for ${giftShopChildFirstName(tag)}`} />
-                    )}
-                  </td>
-                  <td>
-                    <p className="giftshop-elf-name">{giftShopChildFirstName(tag)}</p>
+          <div className="giftshop-elf-forms">
+            {ready.map(tag => (
+              <div key={tag.id} className="giftshop-elf-form">
+                <div className="giftshop-elf-form-top">
+                  <div className="giftshop-elf-order-box">{tag.check_in_sequence || '–'}</div>
+                  <div className="giftshop-elf-ident">
+                    <p className="giftshop-elf-name">{giftShopChildFullName(tag)}</p>
                     <p className="giftshop-elf-meta">
-                      {tag.child_age_band ? `${giftShopAgeBandLabel(tag.child_age_band)} · ` : ''}
-                      {giftShopTagGifts(tag)}
+                      {[
+                        tag.child_age_band ? giftShopAgeBandLabel(tag.child_age_band) : '',
+                        giftShopSlotLabel(tag.time_slot),
+                      ].filter(Boolean).join(' · ')}
                     </p>
-                    {tag.elf_token && <p className="giftshop-elf-link">{elfFormLink(tag.elf_token)}</p>}
-                  </td>
-                  <td className="giftshop-elf-col-time">{giftShopSlotLabel(tag.time_slot)}</td>
-                  <td>
-                    <p className="giftshop-elf-meta">{giftShopGuardianName(tag) || '—'}</p>
-                    {tag.parent_guardian_phone && (
-                      <p className="giftshop-elf-meta">{tag.parent_guardian_phone}</p>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  </div>
+                  {tag.elf_token && (
+                    <img
+                      className="giftshop-elf-qr"
+                      src={qrImageUrl(elfFormLink(tag.elf_token), 400)}
+                      alt={`QR code for ${giftShopChildFullName(tag)}`}
+                    />
+                  )}
+                </div>
+
+                <div className="giftshop-elf-guardian">
+                  <span className="giftshop-elf-label">Parent / guardian</span>
+                  <p className="giftshop-elf-guardian-name">{giftShopGuardianName(tag) || 'Not recorded'}</p>
+                  {(tag.parent_guardian_phone || tag.parent_guardian_email) && (
+                    <p className="giftshop-elf-meta">
+                      {[tag.parent_guardian_phone, tag.parent_guardian_email].filter(Boolean).join(' · ')}
+                    </p>
+                  )}
+                </div>
+
+                <div className="giftshop-elf-gifts">
+                  <span className="giftshop-elf-label">What did they pick?</span>
+                  {giftShopGiftRows(tag).map(gift => (
+                    <div key={gift.index} className="giftshop-elf-gift">
+                      <p className="giftshop-elf-gift-who">
+                        Gift {gift.index} — For {gift.who}{gift.gender ? ` (${gift.gender})` : ''}
+                      </p>
+                      <div className="giftshop-elf-write-line" />
+                    </div>
+                  ))}
+                </div>
+
+                <div className="giftshop-elf-signoff">
+                  <p className="giftshop-elf-return">
+                    <span className="giftshop-elf-box" />Returned to parent / guardian
+                  </p>
+                  <p className="giftshop-elf-elfname">
+                    Elf name <span className="giftshop-elf-sign-line" />
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       </DialogContent>
     </Dialog>
