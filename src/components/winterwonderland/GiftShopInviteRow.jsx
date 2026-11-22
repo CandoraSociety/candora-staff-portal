@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { Check, Copy, Ban, Database } from 'lucide-react';
+import { Check, Copy, Ban, Database, MailCheck } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { inviteLink, inviteDisplayStatus, INVITE_STATUS_META } from '@/lib/giftShopInvites';
 import { KIDS_GIFT_SHOP_TIME_SLOTS } from '@/lib/centralRegConstants';
@@ -40,9 +40,13 @@ export default function GiftShopInviteRow({ invite, onChanged }) {
           <p className="font-medium text-sm truncate">{invite.guardian_name}</p>
           <p className="text-xs text-muted-foreground truncate">
             {[invite.guardian_email, invite.guardian_phone].filter(Boolean).join(' · ') || 'No contact details'}
-            {' · '}
-            {invite.children_allowed || 3} {Number(invite.children_allowed) === 1 ? 'child' : 'children'}
           </p>
+          {invite.emailed_at && (
+            <p className="text-xs text-blue-700 mt-0.5 flex items-center gap-1">
+              <MailCheck className="h-3 w-3 flex-shrink-0" />
+              Emailed {new Date(invite.emailed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            </p>
+          )}
           {status === 'registered' && invite.registered_summary && (
             <p className="text-xs text-green-700 mt-0.5">
               {invite.registered_summary}

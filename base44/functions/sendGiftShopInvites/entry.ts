@@ -205,9 +205,10 @@ Deno.serve(async (req) => {
             message: sent.message || `The email could not be sent (${sent.reason || 'refused'}). Copy the link and send it yourself.`,
           });
         } else {
-          if (existing) {
-            await base44.asServiceRole.entities.GiftShopInvite.update(existing.id, { sent_via: 'email' });
-          }
+          await base44.asServiceRole.entities.GiftShopInvite.update(invite.id, {
+            sent_via: 'email',
+            emailed_at: new Date().toISOString(),
+          });
           results.push({ guardian_name: name, guardian_email: email, status: 'sent', link, central_db_status: central?.status || null });
         }
       } catch (error) {

@@ -63,7 +63,13 @@ const STYLES = `
   .child{border:1px solid var(--line);border-radius:10px;padding:14px;margin-bottom:12px}
   .child-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
   .child-head span{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--muted)}
-  .linkbtn{background:none;border:0;padding:0;font:inherit;font-size:13px;color:#991b1b;cursor:pointer;text-decoration:underline}
+  details.child{padding:0}
+  details.child>summary{list-style:none;cursor:pointer;padding:13px 14px;font-size:14px;font-weight:600;color:var(--navy);display:flex;align-items:center;gap:9px}
+  details.child>summary::-webkit-details-marker{display:none}
+  details.child>summary::before{content:'+';font-size:17px;font-weight:700;color:var(--muted);line-height:1}
+  details.child[open]>summary::before{content:'–'}
+  details.child[open]>summary{border-bottom:1px solid var(--line);margin-bottom:14px}
+  details.child .child-fields{padding:0 14px 14px}
   .slots{display:grid;grid-template-columns:repeat(auto-fill,minmax(98px,1fr));gap:8px;margin-top:6px}
   .slot{position:relative;display:block;margin:0;border:1px solid var(--line);border-radius:8px;padding:9px 10px;background:#fff;cursor:pointer;font-weight:500}
   .slot input{position:absolute;opacity:0;pointer-events:none}
@@ -88,79 +94,12 @@ const STYLES = `
   @media (max-width:420px){.row{grid-template-columns:1fr}}
 `;
 
-const SCRIPT = `
-(function(){
-  var blocks = Array.prototype.slice.call(document.querySelectorAll('[data-child]'));
-  var maxChildren = Number(document.body.getAttribute('data-max-children') || 1);
-  var addBtn = document.getElementById('add-child');
-  var slots = Array.prototype.slice.call(document.querySelectorAll('[data-remaining]'));
-
-  function visible(){ return blocks.filter(function(b){ return !b.hidden; }); }
-
-  function syncSlots(){
-    var count = visible().length;
-    slots.forEach(function(label){
-      var input = label.querySelector('input');
-      var blocked = Number(label.getAttribute('data-remaining') || 0) < count;
-      input.disabled = blocked;
-      label.classList.toggle('is-full', blocked);
-      if (blocked) input.checked = false;
-    });
-  }
-
-  function sync(){
-    var shown = visible().length;
-    blocks.forEach(function(block, index){
-      var remove = block.querySelector('.js-remove');
-      if (remove) remove.hidden = index === 0 || block.hidden;
-    });
-    if (addBtn) addBtn.hidden = shown >= maxChildren;
-    syncSlots();
-  }
-
-  blocks.forEach(function(block){
-    var gifts = block.querySelector('.js-gifts');
-    var gift2 = block.querySelector('.js-gift2');
-    if (gifts && gift2) {
-      var syncGift = function(){
-        var two = gifts.value === '2';
-        gift2.disabled = !two;
-        if (!two) gift2.value = '';
-      };
-      gifts.addEventListener('change', syncGift);
-      syncGift();
-    }
-    var remove = block.querySelector('.js-remove');
-    if (remove) remove.addEventListener('click', function(){
-      block.hidden = true;
-      Array.prototype.forEach.call(block.querySelectorAll('input,select'), function(field){
-        if (field.type !== 'hidden') field.value = '';
-      });
-      sync();
-    });
-  });
-
-  if (addBtn) addBtn.addEventListener('click', function(){
-    var next = blocks.filter(function(b){ return b.hidden; })[0];
-    if (!next) return;
-    next.hidden = false;
-    sync();
-    var first = next.querySelector('input[type=text]');
-    if (first) first.focus();
-  });
-
-  sync();
-})();
-`;
-
-function childBlock(index, value, maxChildren) {
+// Child one is always on the page. Every further child sits behind a plain
+// <details> toggle, so adding a child works with no JavaScript at all — the
+// page is served with scripts switched off.
+function childBlock(index, value) {
   const gifts = String(value?.gift_count || '1');
-  return `
-    <div class="child" data-child="${index}"${index > 1 && !value ? ' hidden' : ''}>
-      <div class="child-head">
-        <span>Child ${index}</span>
-        <button type="button" class="linkbtn js-remove" hidden>Remove</button>
-      </div>
+  const fields = `
       <label>Child’s name
         <input type="text" name="child_${index}_name" value="${escapeHtml(value?.child_name || '')}" autocomplete="off" />
       </label>
@@ -169,7 +108,7 @@ function childBlock(index, value, maxChildren) {
           <select name="child_${index}_age">${options(GIFT_SHOP_AGE_BANDS, value?.age_band || '', AGE_LABELS, 'Select age')}</select>
         </label>
         <label>How many gifts
-          <select name="child_${index}_gifts" class="js-gifts">
+          <select name="child_${index}_gifts">
             <option value="1"${gifts !== '2' ? ' selected' : ''}>1 gift</option>
             <option value="2"${gifts === '2' ? ' selected' : ''}>2 gifts</option>
           </select>
@@ -180,14 +119,24 @@ function childBlock(index, value, maxChildren) {
           <select name="child_${index}_gift1">${options(GIFT_SHOP_GENDERS, value?.gift_1 || '', GENDER_LABELS, 'Select')}</select>
         </label>
         <label>Gift two is for
-          <select name="child_${index}_gift2" class="js-gift2">${options(GIFT_SHOP_GENDERS, value?.gift_2 || '', GENDER_LABELS, 'Select')}</select>
+          <select name="child_${index}_gift2">${options(GIFT_SHOP_GENDERS, value?.gift_2 || '', GENDER_LABELS, 'Select')}</select>
         </label>
       </div>
-    </div>
+  `;
+
+  if (index === 1) {
+    return `<div class="child"><div class="child-head"><span>Child 1</span></div>${fields}</div>`;
+  }
+
+  return `
+    <details class="child"${value ? ' open' : ''}>
+      <summary>Add child ${index}</summary>
+      <div class="child-fields">${fields}</div>
+    </details>
   `;
 }
 
-function shell({ title, body, maxChildren = 1, includeScript = false }) {
+function shell({ title, body, maxChildren = 1 }) {
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -214,7 +163,6 @@ function shell({ title, body, maxChildren = 1, includeScript = false }) {
     Questions, or trouble with your link? Email
     <a href="mailto:${GIFT_SHOP_CONTACT_EMAIL}">${GIFT_SHOP_CONTACT_EMAIL}</a>
   </footer>
-  ${includeScript ? `<script>${SCRIPT}</script>` : ''}
 </body>
 </html>`;
 }
@@ -277,7 +225,7 @@ export function renderInvitePage({ state, invite, slots = [], values = {}, error
   if (state !== 'open') return closedPage(state);
 
   const maxChildren = Math.min(Math.max(Number(invite?.children_allowed) || 3, 1), 6);
-  const blocks = Array.from({ length: maxChildren }, (_, i) => childBlock(i + 1, values.children?.[i], maxChildren)).join('');
+  const blocks = Array.from({ length: maxChildren }, (_, i) => childBlock(i + 1, values.children?.[i])).join('');
 
   const slotCards = (slots.length ? slots : []).map(slot => `
     <label class="slot" data-remaining="${Number(slot.remaining) || 0}">
@@ -290,7 +238,6 @@ export function renderInvitePage({ state, invite, slots = [], values = {}, error
   return shell({
     title: 'Book a shopping time · Kids Gift Shop',
     maxChildren,
-    includeScript: true,
     body: `
       <h2>Book a shopping time</h2>
       <p class="lede">Each child picks out a gift for someone special. Choose a time and we will have everything ready.</p>
@@ -320,9 +267,6 @@ export function renderInvitePage({ state, invite, slots = [], values = {}, error
           <p class="eyebrow">Children</p>
           <p class="lede" style="margin-bottom:14px">Add each child coming to shop.</p>
           ${blocks}
-          <div class="actions">
-            <button type="button" class="btn-ghost" id="add-child"${maxChildren === 1 ? ' hidden' : ''}>Add another child</button>
-          </div>
         </div>
 
         <div class="card">

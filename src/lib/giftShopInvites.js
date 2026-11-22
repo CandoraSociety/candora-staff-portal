@@ -29,10 +29,12 @@ export const inviteDisplayStatus = (invite) => {
   return invite?.status || 'invited';
 };
 
+// Pre-registration closes on December 1, when registration opens to everyone
+// else. Once that date has passed, the next December 1 is used.
 export const defaultExpiryDate = () => {
-  const date = new Date();
-  date.setDate(date.getDate() + 30);
-  return date.toISOString().split('T')[0];
+  const now = new Date();
+  const year = now.getMonth() === 11 && now.getDate() > 1 ? now.getFullYear() + 1 : now.getFullYear();
+  return `${year}-12-01`;
 };
 
 // Bulk paste: one family per line — name, email, phone, children (children optional).

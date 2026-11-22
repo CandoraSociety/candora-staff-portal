@@ -22,7 +22,7 @@
     "children_allowed": {
       "type": "number",
       "default": 3,
-      "description": "How many children this invitation covers (siblings from the same family)"
+      "description": "How many children this invitation covers (siblings from the same family). The family says how many children they are registering on the form itself, up to this many."
     },
     "status": {
       "type": "string",
@@ -42,12 +42,17 @@
     "expires_at": {
       "type": "string",
       "format": "date-time",
-      "description": "Moment the link stops working \u2014 set so pre-registration closes before general registration opens"
+      "description": "Moment the link stops working \u2014 pre-registration closes on December 1, before general registration opens"
     },
     "used_at": {
       "type": "string",
       "format": "date-time",
       "description": "When the family used the link"
+    },
+    "emailed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the invitation email was last sent successfully \u2014 shown on the staff card so it is clear which families have been emailed"
     },
     "time_slot": {
       "type": "string",
@@ -79,7 +84,7 @@
         "gray"
       ],
       "default": "other",
-      "description": "How staff plan to send this invitation, for their own reference"
+      "description": "How the invitation was sent, for staff reference"
     },
     "rc_client_id": {
       "type": "string",

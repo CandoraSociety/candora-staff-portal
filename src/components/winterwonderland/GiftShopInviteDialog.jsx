@@ -4,7 +4,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { newInviteToken, defaultExpiryDate } from '@/lib/giftShopInvites';
 
@@ -12,10 +11,12 @@ const emptyForm = () => ({
   guardian_name: '',
   guardian_email: '',
   guardian_phone: '',
-  children_allowed: '3',
   expiry_date: defaultExpiryDate(),
-  sent_via: 'email',
 });
+
+// The family says how many children they are registering on the form itself, so
+// the link simply allows up to the form's maximum.
+const CHILDREN_ALLOWED = 6;
 
 // Creates one private pre-registration invitation. The family's own email or
 // phone is what unlocks the link, so at least one of the two is required.
@@ -51,10 +52,10 @@ export default function GiftShopInviteDialog({ open, onOpenChange, onSaved }) {
         guardian_name: form.guardian_name.trim(),
         guardian_email: form.guardian_email.trim(),
         guardian_phone: form.guardian_phone.trim(),
-        children_allowed: Number(form.children_allowed) || 3,
+        children_allowed: CHILDREN_ALLOWED,
         status: 'invited',
         expires_at: new Date(`${form.expiry_date}T23:59:59`).toISOString(),
-        sent_via: form.sent_via,
+        sent_via: 'email',
         created_by_name: me?.full_name || '',
       });
       toast({ title: 'Invitation created', description: 'Copy the link and send it to the family.' });
@@ -92,32 +93,10 @@ export default function GiftShopInviteDialog({ open, onOpenChange, onSaved }) {
               <Input value={form.guardian_phone} onChange={e => set('guardian_phone', e.target.value)} />
             </div>
           </div>
-          <div className="grid grid-cols-3 gap-3">
-            <div className="space-y-1.5">
-              <Label>Children</Label>
-              <Select value={form.children_allowed} onValueChange={v => set('children_allowed', v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {[1, 2, 3, 4, 5, 6].map(n => <SelectItem key={n} value={String(n)}>{n}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-1.5">
-              <Label>Link expires</Label>
-              <Input type="date" value={form.expiry_date} onChange={e => set('expiry_date', e.target.value)} />
-            </div>
-            <div className="space-y-1.5">
-              <Label>Sending by</Label>
-              <Select value={form.sent_via} onValueChange={v => set('sent_via', v)}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="email">Email</SelectItem>
-                  <SelectItem value="text">Text</SelectItem>
-                  <SelectItem value="printed">Printed</SelectItem>
-                  <SelectItem value="other">Other</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="space-y-1.5">
+            <Label>Link expires</Label>
+            <Input type="date" value={form.expiry_date} onChange={e => set('expiry_date', e.target.value)} className="w-48" />
+            <p className="text-xs text-muted-foreground">Pre-registration closes on December 1. The family chooses how many children they register.</p>
           </div>
         </div>
 
