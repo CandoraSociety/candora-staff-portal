@@ -285,10 +285,10 @@ export function renderInvitePage({ state, invite, slots = [], values = {}, error
   const blocks = childBlocks(maxChildren, values.children);
 
   const slotCards = (slots.length ? slots : []).map(slot => `
-    <label class="slot" data-remaining="${Number(slot.remaining) || 0}">
-      <input type="radio" name="time_slot" value="${escapeHtml(slot.value)}"${values.time_slot === slot.value ? ' checked' : ''} required />
+    <label class="slot${Number(slot.remaining) > 0 ? '' : ' is-full'}" data-remaining="${Number(slot.remaining) || 0}">
+      <input type="radio" name="time_slot" value="${escapeHtml(slot.value)}"${values.time_slot === slot.value ? ' checked' : ''}${Number(slot.remaining) > 0 ? '' : ' disabled'} required />
       <span class="time">${escapeHtml(slot.label)}</span>
-      <span class="left">${slot.remaining <= 0 ? 'Full' : `${slot.remaining} left`}</span>
+      <span class="left">${slot.remaining}</span>
     </label>
   `).join('');
 
@@ -328,7 +328,7 @@ export function renderInvitePage({ state, invite, slots = [], values = {}, error
         </div>
 
         <div class="card">
-          <p class="eyebrow">Shopping time</p>
+          <p class="eyebrow">Shopping time · places left</p>
           <div class="slots">${slotCards}</div>
         </div>
 

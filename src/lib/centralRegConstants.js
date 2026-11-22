@@ -182,4 +182,16 @@ export const KIDS_GIFT_SHOP_GENDERS = [
   { value: 'male', label: 'Male' },
 ];
 
+// Who each gift is for — the same list the pre-registration link offers.
+export const KIDS_GIFT_SHOP_RECIPIENTS = [
+  { value: 'mother', label: 'Mother' },
+  { value: 'father', label: 'Father' },
+  { value: 'grandmother', label: 'Grandmother' },
+  { value: 'grandfather', label: 'Grandfather' },
+  { value: 'aunt', label: 'Aunt' },
+  { value: 'uncle', label: 'Uncle' },
+  { value: 'caregiver', label: 'Caregiver' },
+  { value: 'other', label: 'Other' },
+];
+
 export const today = () => new Date().toISOString().split('T')[0];

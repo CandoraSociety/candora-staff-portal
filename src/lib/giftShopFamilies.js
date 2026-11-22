@@ -29,6 +29,15 @@ const describeGift = (gender, recipient) => {
   return recipient === 'caregiver' ? `${who} (${label})` : who;
 };
 
+// How many places each shopping slot has taken. Every live registration counts,
+// whichever way it came in — a pre-registration link or the front desk.
+export const giftShopSlotCounts = (registrations) => (registrations || [])
+  .filter(r => !['declined', 'withdrawn'].includes(r.status))
+  .reduce((acc, r) => {
+    if (r.time_slot) acc[r.time_slot] = (acc[r.time_slot] || 0) + 1;
+    return acc;
+  }, {});
+
 export const giftShopChildFullName = (reg) => (reg.child_name || reg.participant_name || 'Unnamed child').trim();
 export const giftShopChildFirstName = (reg) => giftShopChildFullName(reg).split(/\s+/)[0] || 'Child';
 

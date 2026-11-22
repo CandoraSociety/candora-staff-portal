@@ -6,7 +6,7 @@ import KidsGiftShopRegistrationDialog from '@/components/centralreg/KidsGiftShop
 import GiftShopFamilyCard from '@/components/winterwonderland/GiftShopFamilyCard';
 import GiftShopCheckInDialog from '@/components/winterwonderland/GiftShopCheckInDialog';
 import { KIDS_GIFT_SHOP_TIME_SLOTS, KIDS_GIFT_SHOP_SLOT_CAPACITY } from '@/lib/centralRegConstants';
-import { groupGiftShopFamilies } from '@/lib/giftShopFamilies';
+import { groupGiftShopFamilies, giftShopSlotCounts } from '@/lib/giftShopFamilies';
 import { useGiftShopRegistrations } from '@/lib/useGiftShopRegistrations';
 
 // Kids Gift Shop registration tab — the children signed up for a shopping slot,
@@ -19,10 +19,7 @@ export default function GiftShopRegistrations() {
 
   const active = registrations.filter(r => !['declined', 'withdrawn'].includes(r.status));
   const giftsRequested = active.reduce((sum, r) => sum + (r.gift_count || 1), 0);
-  const counts = active.reduce((acc, r) => {
-    if (r.time_slot) acc[r.time_slot] = (acc[r.time_slot] || 0) + 1;
-    return acc;
-  }, {});
+  const counts = giftShopSlotCounts(active);
   const openSlots = KIDS_GIFT_SHOP_TIME_SLOTS.filter(s => (counts[s.value] || 0) < KIDS_GIFT_SHOP_SLOT_CAPACITY).length;
   // Siblings registered by the same guardian into the same slot share one card.
   const families = groupGiftShopFamilies(active).sort((a, b) => (a.time_slot || '').localeCompare(b.time_slot || ''));
@@ -39,13 +36,13 @@ export default function GiftShopRegistrations() {
         <h2 className="text-lg font-display font-semibold mb-2">Time slots</h2>
         <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
           {KIDS_GIFT_SHOP_TIME_SLOTS.map(slot => {
-            const taken = counts[slot.value] || 0;
-            const full = taken >= KIDS_GIFT_SHOP_SLOT_CAPACITY;
+            const remaining = Math.max(0, KIDS_GIFT_SHOP_SLOT_CAPACITY - (counts[slot.value] || 0));
+            const full = remaining === 0;
             return (
               <div key={slot.value} className={`rounded-md border px-2 py-1.5 ${full ? 'bg-muted' : ''}`}>
                 <p className="text-xs font-medium">{slot.label}</p>
                 <p className={`text-[10px] ${full ? 'text-red-600 font-semibold' : 'text-muted-foreground'}`}>
-                  {full ? 'Full' : `${taken}/${KIDS_GIFT_SHOP_SLOT_CAPACITY}`}
+                  {remaining}
                 </p>
               </div>
             );

@@ -7,7 +7,10 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
-import { KIDS_GIFT_SHOP_TIME_SLOTS, KIDS_GIFT_SHOP_AGE_BANDS, KIDS_GIFT_SHOP_GENDERS } from '@/lib/centralRegConstants';
+import GiftFields from '@/components/centralreg/GiftShopGiftFields';
+import { KIDS_GIFT_SHOP_TIME_SLOTS, KIDS_GIFT_SHOP_SLOT_CAPACITY, KIDS_GIFT_SHOP_AGE_BANDS } from '@/lib/centralRegConstants';
+import { giftShopSlotCounts } from '@/lib/giftShopFamilies';
+import { useGiftShopRegistrations } from '@/lib/useGiftShopRegistrations';
 
 const toForm = (reg) => ({
   guardian_name: reg?.parent_guardian_name || '',
@@ -17,21 +20,27 @@ const toForm = (reg) => ({
   age_band: reg?.child_age_band || '',
   gift_count: String(reg?.gift_count || 1),
   gift_1: reg?.gift_1_gender || '',
+  gift_1_rec: reg?.gift_1_recipient || '',
   gift_2: reg?.gift_2_gender || '',
+  gift_2_rec: reg?.gift_2_recipient || '',
   time_slot: reg?.time_slot || '',
 });
 
 // Edit one child's Kids Gift Shop registration — guardian details, the child,
-// gifts and the shopping slot.
+// who each gift is for, and the shopping slot.
 export default function GiftShopRegistrationEditDialog({ registration, open, onOpenChange, onSaved }) {
   const { toast } = useToast();
   const [form, setForm] = useState(toForm(registration));
   const [saving, setSaving] = useState(false);
 
+  const { data: registrations = [], refresh } = useGiftShopRegistrations();
+  const counts = giftShopSlotCounts(registrations);
+
   useEffect(() => {
     if (open) {
       setForm(toForm(registration));
       setSaving(false);
+      refresh();
     }
   }, [open, registration?.id]);
 
@@ -41,8 +50,18 @@ export default function GiftShopRegistrationEditDialog({ registration, open, onO
     if (!form.child_name.trim()) return toast({ title: "The child's name is required", variant: 'destructive' });
     if (!form.age_band) return toast({ title: 'Select the age', variant: 'destructive' });
     if (!form.gift_1) return toast({ title: 'Select who gift one is for', variant: 'destructive' });
+    if (!form.gift_1_rec) return toast({ title: 'Select who the first gift is for (for example Mother or Uncle)', variant: 'destructive' });
     if (form.gift_count === '2' && !form.gift_2) return toast({ title: 'Select who gift two is for', variant: 'destructive' });
+    if (form.gift_count === '2' && !form.gift_2_rec) return toast({ title: 'Select who the second gift is for (for example Mother or Uncle)', variant: 'destructive' });
     if (!form.time_slot) return toast({ title: 'Select a time slot', variant: 'destructive' });
+
+    // Moving this child into a different slot needs a place there.
+    if (form.time_slot !== registration?.time_slot) {
+      const taken = counts[form.time_slot] || 0;
+      if (taken + 1 > KIDS_GIFT_SHOP_SLOT_CAPACITY) {
+        return toast({ title: 'That time slot is full', description: 'Choose another slot.', variant: 'destructive' });
+      }
+    }
 
     const childName = form.child_name.trim();
     const childParts = childName.split(/\s+/);
@@ -66,9 +85,12 @@ export default function GiftShopRegistrationEditDialog({ registration, open, onO
         gift_count: Number(form.gift_count),
         gift_1_gender: form.gift_1,
         gift_2_gender: form.gift_count === '2' ? form.gift_2 : null,
+        gift_1_recipient: form.gift_1_rec,
+        gift_2_recipient: form.gift_count === '2' ? form.gift_2_rec : null,
         time_slot: form.time_slot,
       });
       toast({ title: 'Registration updated' });
+      refresh();
       onSaved?.();
       onOpenChange(false);
     } catch (err) {
@@ -89,7 +111,7 @@ export default function GiftShopRegistrationEditDialog({ registration, open, onO
         <div className="space-y-4">
           <div className="space-y-3">
             <p className="text-sm font-semibold">Child</p>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1.5"><Label>Child's name *</Label><Input value={form.child_name} onChange={e => set('child_name', e.target.value)} /></div>
               <div className="space-y-1.5">
                 <Label>Age *</Label>
@@ -98,33 +120,32 @@ export default function GiftShopRegistrationEditDialog({ registration, open, onO
                   <SelectContent>{KIDS_GIFT_SHOP_AGE_BANDS.map(a => <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>)}</SelectContent>
                 </Select>
               </div>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
               <div className="space-y-1.5">
-                <Label>Gifts *</Label>
+                <Label>How many gifts *</Label>
                 <Select value={form.gift_count} onValueChange={v => set('gift_count', v)}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="1">1</SelectItem>
-                    <SelectItem value="2">2</SelectItem>
+                    <SelectItem value="1">1 gift</SelectItem>
+                    <SelectItem value="2">2 gifts</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-1.5">
-                <Label>Gift one *</Label>
-                <Select value={form.gift_1} onValueChange={v => set('gift_1', v)}>
-                  <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                  <SelectContent>{KIDS_GIFT_SHOP_GENDERS.map(g => <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-1.5">
-                <Label>Gift two{form.gift_count === '2' ? ' *' : ''}</Label>
-                <Select value={form.gift_2} onValueChange={v => set('gift_2', v)} disabled={form.gift_count !== '2'}>
-                  <SelectTrigger><SelectValue placeholder={form.gift_count === '2' ? 'Select' : '—'} /></SelectTrigger>
-                  <SelectContent>{KIDS_GIFT_SHOP_GENDERS.map(g => <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>)}</SelectContent>
-                </Select>
-              </div>
             </div>
+            <GiftFields
+              title="Gift 1"
+              gender={form.gift_1}
+              recipient={form.gift_1_rec}
+              onGender={v => set('gift_1', v)}
+              onRecipient={v => set('gift_1_rec', v)}
+            />
+            <GiftFields
+              title="Gift 2"
+              gender={form.gift_2}
+              recipient={form.gift_2_rec}
+              onGender={v => set('gift_2', v)}
+              onRecipient={v => set('gift_2_rec', v)}
+              disabled={form.gift_count !== '2'}
+            />
           </div>
 
           <div className="space-y-3">
@@ -137,21 +158,35 @@ export default function GiftShopRegistrationEditDialog({ registration, open, onO
           </div>
 
           <div className="space-y-2">
-            <p className="text-sm font-semibold">Time slot *</p>
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-semibold">Time slot *</p>
+              <p className="text-xs text-muted-foreground">Places left</p>
+            </div>
             <div className="grid grid-cols-4 gap-2">
-              {KIDS_GIFT_SHOP_TIME_SLOTS.map(slot => (
-                <button
-                  key={slot.value}
-                  type="button"
-                  onClick={() => set('time_slot', slot.value)}
-                  className={cn(
-                    'rounded-md border px-2 py-1.5 text-xs font-medium transition-colors',
-                    form.time_slot === slot.value ? 'border-primary bg-primary/10' : 'hover:bg-muted'
-                  )}
-                >
-                  {slot.label}
-                </button>
-              ))}
+              {KIDS_GIFT_SHOP_TIME_SLOTS.map(slot => {
+                const remaining = Math.max(0, KIDS_GIFT_SHOP_SLOT_CAPACITY - (counts[slot.value] || 0));
+                const isCurrent = form.time_slot === slot.value;
+                const unavailable = !isCurrent && remaining < 1;
+                return (
+                  <button
+                    key={slot.value}
+                    type="button"
+                    disabled={unavailable}
+                    onClick={() => set('time_slot', slot.value)}
+                    className={cn(
+                      'rounded-md border px-2 py-1.5 text-xs font-medium transition-colors',
+                      unavailable
+                        ? 'bg-muted text-muted-foreground/60 cursor-not-allowed line-through'
+                        : isCurrent
+                          ? 'border-primary bg-primary/10'
+                          : 'hover:bg-muted'
+                    )}
+                  >
+                    <span className="block">{slot.label}</span>
+                    <span className="block text-[10px] text-muted-foreground">{remaining}</span>
+                  </button>
+                );
+              })}
             </div>
           </div>
         </div>

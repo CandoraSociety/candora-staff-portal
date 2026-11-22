@@ -61,11 +61,11 @@ export function buildSlotAvailability(registrations) {
   });
 }
 
-// Backend functions use the SDK's array form (a second options argument is not
-// supported there), so the gift shop rows are filtered after one page read.
+// Only the gift shop's own rows, asked for by name — so places already taken
+// (from another invitation or from the front desk) always count against the slot.
 async function loadRegistrations(base44) {
-  const all = await base44.entities.ProgramRegistration.list('-created_date', 500);
-  return (all || []).filter(r => r.program_name === GIFT_SHOP_PROGRAM_NAME);
+  const rows = await base44.entities.ProgramRegistration.filter({ program_name: GIFT_SHOP_PROGRAM_NAME });
+  return (rows || []).filter(r => r.program_name === GIFT_SHOP_PROGRAM_NAME);
 }
 
 export async function findInviteByToken(base44, token) {

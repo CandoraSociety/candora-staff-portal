@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -9,49 +8,50 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { Plus, Trash2 } from 'lucide-react';
+import GiftFields from '@/components/centralreg/GiftShopGiftFields';
 import {
   KIDS_GIFT_SHOP_TIME_SLOTS,
   KIDS_GIFT_SHOP_SLOT_CAPACITY,
   KIDS_GIFT_SHOP_AGE_BANDS,
-  KIDS_GIFT_SHOP_GENDERS,
   today,
 } from '@/lib/centralRegConstants';
+import { giftShopSlotCounts } from '@/lib/giftShopFamilies';
+import { useGiftShopRegistrations } from '@/lib/useGiftShopRegistrations';
 
 let childKey = 0;
-const emptyChild = () => ({ key: `c${++childKey}`, child_name: '', age_band: '', gift_count: '1', gift_1: '', gift_2: '' });
+const emptyChild = () => ({
+  key: `c${++childKey}`,
+  child_name: '',
+  age_band: '',
+  gift_count: '1',
+  gift_1: '',
+  gift_1_rec: '',
+  gift_2: '',
+  gift_2_rec: '',
+});
 const emptyForm = () => ({ guardian_name: '', guardian_phone: '', guardian_email: '', time_slot: '', children: [emptyChild()] });
 
-const countsBySlot = (registrations) => registrations
-  .filter(r => !['declined', 'withdrawn'].includes(r.status))
-  .reduce((acc, r) => {
-    if (r.time_slot) acc[r.time_slot] = (acc[r.time_slot] || 0) + 1;
-    return acc;
-  }, {});
-
 // Kids Gift Shop registration — one guardian, one or more children (same family),
-// each with their age band, how many gifts and for whom, and one shared shopping
-// slot. A slot holds 25 registrations and closes itself once it is full.
+// each with their age band, how many gifts and who each gift is for, and one
+// shared shopping slot. A slot holds 25 registrations and closes itself once it
+// is full.
 export default function KidsGiftShopRegistrationDialog({ open, onOpenChange, onSaved }) {
   const { toast } = useToast();
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
 
-  const { data: existing = [], refetch } = useQuery({
-    queryKey: ['kgsSlotCounts'],
-    queryFn: () => base44.entities.ProgramRegistration
-      .filter({ program_name: 'Kids Gift Shop' }, { limit: 500 })
-      .then(res => res.items || []),
-    enabled: open,
-  });
+  // The same live registration list the rest of the gift shop uses, so places
+  // taken through a pre-registration link are already counted here.
+  const { data: existing = [], refresh } = useGiftShopRegistrations();
 
-  const counts = countsBySlot(existing);
+  const counts = giftShopSlotCounts(existing);
   const placesNeeded = form.children.length;
 
   useEffect(() => {
     if (open) {
       setForm(emptyForm());
       setSaving(false);
-      refetch();
+      refresh();
     }
   }, [open]);
 
@@ -71,7 +71,9 @@ export default function KidsGiftShopRegistrationDialog({ open, onOpenChange, onS
       if (!child.child_name.trim()) return toast({ title: `${label}name is required`, variant: 'destructive' });
       if (!child.age_band) return toast({ title: `${label}select the age`, variant: 'destructive' });
       if (!child.gift_1) return toast({ title: `${label}select who gift one is for`, variant: 'destructive' });
+      if (!child.gift_1_rec) return toast({ title: `${label}select who the first gift is for (for example Mother or Uncle)`, variant: 'destructive' });
       if (child.gift_count === '2' && !child.gift_2) return toast({ title: `${label}select who gift two is for`, variant: 'destructive' });
+      if (child.gift_count === '2' && !child.gift_2_rec) return toast({ title: `${label}select who the second gift is for (for example Mother or Uncle)`, variant: 'destructive' });
     }
     if (!form.time_slot) return toast({ title: 'Select a time slot', variant: 'destructive' });
 
@@ -81,14 +83,14 @@ export default function KidsGiftShopRegistrationDialog({ open, onOpenChange, onS
       const slotRegistrations = await base44.entities.ProgramRegistration
         .filter({ program_name: 'Kids Gift Shop', time_slot: form.time_slot }, { limit: 100 })
         .then(res => res.items || []);
-      const taken = countsBySlot(slotRegistrations)[form.time_slot] || 0;
+      const taken = giftShopSlotCounts(slotRegistrations)[form.time_slot] || 0;
       if (taken + placesNeeded > KIDS_GIFT_SHOP_SLOT_CAPACITY) {
         toast({
           title: 'That time slot does not have enough places left',
           description: `${KIDS_GIFT_SHOP_SLOT_CAPACITY - taken} of ${placesNeeded} places available. Choose another slot.`,
           variant: 'destructive',
         });
-        refetch();
+        refresh();
         setSaving(false);
         return;
       }
@@ -117,6 +119,8 @@ export default function KidsGiftShopRegistrationDialog({ open, onOpenChange, onS
           gift_count: Number(child.gift_count),
           gift_1_gender: child.gift_1,
           gift_2_gender: child.gift_count === '2' ? child.gift_2 : undefined,
+          gift_1_recipient: child.gift_1_rec,
+          gift_2_recipient: child.gift_count === '2' ? child.gift_2_rec : undefined,
           time_slot: form.time_slot,
         };
       });
@@ -127,6 +131,7 @@ export default function KidsGiftShopRegistrationDialog({ open, onOpenChange, onS
         title: records.length > 1 ? `${records.length} children registered` : 'Registration saved',
         description: `${guardianName} — ${KIDS_GIFT_SHOP_TIME_SLOTS.find(s => s.value === form.time_slot)?.label}`,
       });
+      refresh();
       onSaved?.();
       onOpenChange(false);
     } catch (err) {
@@ -174,7 +179,7 @@ export default function KidsGiftShopRegistrationDialog({ open, onOpenChange, onS
                       </Button>
                     )}
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-3 gap-3">
                     <div className="space-y-1.5"><Label>Child's name *</Label><Input value={child.child_name} onChange={e => setChild(child.key, 'child_name', e.target.value)} /></div>
                     <div className="space-y-1.5">
                       <Label>Age *</Label>
@@ -183,33 +188,34 @@ export default function KidsGiftShopRegistrationDialog({ open, onOpenChange, onS
                         <SelectContent>{KIDS_GIFT_SHOP_AGE_BANDS.map(a => <SelectItem key={a.value} value={a.value}>{a.label}</SelectItem>)}</SelectContent>
                       </Select>
                     </div>
-                  </div>
-                  <div className="grid grid-cols-3 gap-3">
                     <div className="space-y-1.5">
                       <Label>How many gifts *</Label>
                       <Select value={child.gift_count} onValueChange={v => setChild(child.key, 'gift_count', v)}>
                         <SelectTrigger><SelectValue /></SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="1">1</SelectItem>
-                          <SelectItem value="2">2</SelectItem>
+                          <SelectItem value="1">1 gift</SelectItem>
+                          <SelectItem value="2">2 gifts</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
-                    <div className="space-y-1.5">
-                      <Label>Gift one *</Label>
-                      <Select value={child.gift_1} onValueChange={v => setChild(child.key, 'gift_1', v)}>
-                        <SelectTrigger><SelectValue placeholder="Select" /></SelectTrigger>
-                        <SelectContent>{KIDS_GIFT_SHOP_GENDERS.map(g => <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>)}</SelectContent>
-                      </Select>
-                    </div>
-                    <div className="space-y-1.5">
-                      <Label>Gift two{child.gift_count === '2' ? ' *' : ''}</Label>
-                      <Select value={child.gift_2} onValueChange={v => setChild(child.key, 'gift_2', v)} disabled={child.gift_count !== '2'}>
-                        <SelectTrigger><SelectValue placeholder={child.gift_count === '2' ? 'Select' : '—'} /></SelectTrigger>
-                        <SelectContent>{KIDS_GIFT_SHOP_GENDERS.map(g => <SelectItem key={g.value} value={g.value}>{g.label}</SelectItem>)}</SelectContent>
-                      </Select>
-                    </div>
                   </div>
+
+                  <GiftFields
+                    title="Gift 1"
+                    gender={child.gift_1}
+                    recipient={child.gift_1_rec}
+                    onGender={v => setChild(child.key, 'gift_1', v)}
+                    onRecipient={v => setChild(child.key, 'gift_1_rec', v)}
+                  />
+                  {child.gift_count === '2' && (
+                    <GiftFields
+                      title="Gift 2"
+                      gender={child.gift_2}
+                      recipient={child.gift_2_rec}
+                      onGender={v => setChild(child.key, 'gift_2', v)}
+                      onRecipient={v => setChild(child.key, 'gift_2_rec', v)}
+                    />
+                  )}
                 </div>
               ))}
             </div>
@@ -219,13 +225,13 @@ export default function KidsGiftShopRegistrationDialog({ open, onOpenChange, onS
             <div className="flex items-center justify-between mb-2">
               <p className="text-sm font-semibold">Time slot *</p>
               <p className="text-xs text-muted-foreground">
-                {KIDS_GIFT_SHOP_SLOT_CAPACITY} per slot{placesNeeded > 1 ? ` • needs ${placesNeeded} places` : ''}
+                Places left{placesNeeded > 1 ? ` • needs ${placesNeeded}` : ''}
               </p>
             </div>
             <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
               {KIDS_GIFT_SHOP_TIME_SLOTS.map(slot => {
                 const taken = counts[slot.value] || 0;
-                const remaining = KIDS_GIFT_SHOP_SLOT_CAPACITY - taken;
+                const remaining = Math.max(0, KIDS_GIFT_SHOP_SLOT_CAPACITY - taken);
                 const unavailable = remaining < placesNeeded;
                 const selected = form.time_slot === slot.value;
                 return (
@@ -244,9 +250,7 @@ export default function KidsGiftShopRegistrationDialog({ open, onOpenChange, onS
                     )}
                   >
                     <span className={cn('block text-xs font-medium', unavailable && 'line-through')}>{slot.label}</span>
-                    <span className="block text-[10px] text-muted-foreground">
-                      {remaining <= 0 ? 'Full' : `${taken}/${KIDS_GIFT_SHOP_SLOT_CAPACITY}`}
-                    </span>
+                    <span className="block text-[10px] font-semibold text-muted-foreground">{remaining}</span>
                   </button>
                 );
               })}
