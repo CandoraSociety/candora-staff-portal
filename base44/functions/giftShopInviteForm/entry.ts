@@ -43,6 +43,7 @@ export default async function (req) {
       const result = await redeemGiftShopInvite(base44.asServiceRole, token, payload);
       if (result.ok) {
         const confirmed = await confirmFamilyRegistration(base44.asServiceRole, result.registration_ids);
+        console.log('Gift shop invite registration confirmed — emailed:', confirmed.emailed, 'texted:', confirmed.texted);
         return giftShopHtmlResponse(renderSuccessPage({ ...result, ...confirmed }));
       }
 
