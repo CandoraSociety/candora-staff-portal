@@ -11,7 +11,7 @@ export default function WinterWonderlandKidsGiftShop() {
       accent={{ from: '#102070', to: '#fccf03' }}
       extraTabs={[
         { value: 'registration', label: 'Registration', content: <GiftShopRegistrations /> },
-        { value: 'signin', label: 'Sign-In', content: <GiftShopSignIn /> },
+        { value: 'signin', label: 'Check-In & Status', content: <GiftShopSignIn /> },
         { value: 'preregistration', label: 'Pre-registration links', content: <GiftShopPreRegistration /> },
       ]}
     />
