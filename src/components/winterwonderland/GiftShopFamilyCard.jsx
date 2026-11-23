@@ -183,8 +183,9 @@ export default function GiftShopFamilyCard({ family, onClick, texts = [], onText
         )}
       </CardContent>
 
-      {/* The card itself opens sign-in on click, so the dialog stops its own clicks. */}
-      <div onClick={(e) => e.stopPropagation()}>
+      {/* The card itself opens sign-in on click, so the dialog stops its own clicks
+          and keystrokes — otherwise typing a space in the reply box would open the family. */}
+      <div onClick={(e) => e.stopPropagation()} onKeyDown={(e) => e.stopPropagation()}>
         <GiftShopTextThreadDialog
           open={threadOpen}
           onOpenChange={setThreadOpen}
