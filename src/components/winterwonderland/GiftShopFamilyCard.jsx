@@ -25,7 +25,7 @@ export default function GiftShopFamilyCard({ family, onClick, texts = [], onText
   // a new message only while the desk has not opened it yet.
   const reply = lastReply(texts, family.guardian_phone);
   const unread = unreadReplies(texts, family.guardian_phone).length > 0;
-  // "Texted" only means something once the family is checked in.
+  // "Sent" only means something once the family is checked in.
   const textedAt = family.children.every(c => c.checked_in)
     ? lastComeUpSent(texts, family.guardian_phone)?.sent_at
     : null;
@@ -164,14 +164,16 @@ export default function GiftShopFamilyCard({ family, onClick, texts = [], onText
                 size="sm"
                 onClick={textFamily}
                 disabled={sending}
-                className="h-7 gap-1 bg-green-600 px-2 text-[11px] text-white hover:bg-green-700"
+                className={`h-7 gap-1 bg-green-600 px-2 text-[11px] text-white hover:bg-green-700 ${
+                  textedAt ? 'border border-green-300 shadow-[0_0_10px_2px_rgba(34,197,94,0.6)]' : ''
+                }`}
               >
                 {sending
                   ? <Loader2 className="h-3 w-3 animate-spin" />
                   : textedAt
                     ? <CheckCheck className="h-3 w-3" />
                     : <MessageSquare className="h-3 w-3" />}
-                {sending ? 'Sending…' : textedAt ? 'Texted' : 'Text to come up'}
+                {sending ? 'Sending…' : textedAt ? 'Sent' : 'Text to come up'}
               </Button>
             )}
           </span>
