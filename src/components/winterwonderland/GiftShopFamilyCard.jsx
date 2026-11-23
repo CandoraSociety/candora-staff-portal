@@ -5,7 +5,7 @@ import { CheckCheck, CheckCircle2, Gift, Loader2, MessageSquare, ShoppingBag } f
 import { useToast } from '@/components/ui/use-toast';
 import { base44 } from '@/api/base44Client';
 import GiftShopTextThreadDialog from '@/components/winterwonderland/GiftShopTextThreadDialog';
-import { lastReply, lastTextSent, normalizeSmsPhone, unreadReplies } from '@/lib/giftShopTexts';
+import { lastComeUpSent, lastReply, normalizeSmsPhone, unreadReplies } from '@/lib/giftShopTexts';
 import { giftShopChildFirstName, giftShopChildFullName, giftShopFamilyCompleted, giftShopFamilyShopping, giftShopIsCompleted, giftShopIsShopping, giftShopElfName, giftShopSlotLabel, giftShopTagGifts } from '@/lib/giftShopFamilies';
 
 const statusPill = (status) => {
@@ -25,7 +25,7 @@ export default function GiftShopFamilyCard({ family, onClick, texts = [], onText
   // a new message only while the desk has not opened it yet.
   const reply = lastReply(texts, family.guardian_phone);
   const unread = unreadReplies(texts, family.guardian_phone).length > 0;
-  const textedAt = lastTextSent(texts, family.guardian_phone)?.sent_at;
+  const textedAt = lastComeUpSent(texts, family.guardian_phone)?.sent_at;
   // An elf closed the children out from the tag form: they finished shopping and
   // went back to their parent or guardian.
   const done = giftShopFamilyCompleted(family);

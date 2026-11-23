@@ -30,8 +30,10 @@ export const lastReply = (texts, phone) => {
   return replies[replies.length - 1] || null;
 };
 
-// The last text the desk sent this family, so the card can say it went out.
-export const lastTextSent = (texts, phone) => {
-  const sent = textsForPhone(texts, phone).filter(t => t.direction === 'out');
+// The last "come to the desk" text the desk sent this family, so the card can
+// say it went out. Replies typed in the thread are not come-up texts.
+export const lastComeUpSent = (texts, phone) => {
+  const sent = textsForPhone(texts, phone)
+    .filter(t => t.direction === 'out' && /please bring/i.test(t.body || ''));
   return sent[sent.length - 1] || null;
 };
