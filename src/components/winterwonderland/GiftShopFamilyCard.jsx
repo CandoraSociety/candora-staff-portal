@@ -149,6 +149,16 @@ export default function GiftShopFamilyCard({ family, onClick, texts = [], onText
             ) : (
               <span className="text-[10px] text-muted-foreground">Tap to sign in</span>
             )}
+            {family.guardian_phone && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={(e) => { e.stopPropagation(); setThreadOpen(true); }}
+                className="h-7 gap-1 px-2 text-[11px]"
+              >
+                <MessageSquare className="h-3 w-3" /> Text
+              </Button>
+            )}
             {canText && (
               <Button
                 size="sm"
