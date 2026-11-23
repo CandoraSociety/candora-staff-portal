@@ -1,9 +1,11 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Gift, Loader2, MessageSquare, ShoppingBag } from 'lucide-react';
+import { CheckCheck, CheckCircle2, Gift, Loader2, MessageSquare, ShoppingBag } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { base44 } from '@/api/base44Client';
+import GiftShopTextThreadDialog from '@/components/winterwonderland/GiftShopTextThreadDialog';
+import { lastTextSent, normalizeSmsPhone, unreadReplies } from '@/lib/giftShopTexts';
 import { giftShopChildFirstName, giftShopChildFullName, giftShopFamilyCompleted, giftShopFamilyShopping, giftShopIsCompleted, giftShopIsShopping, giftShopElfName, giftShopSlotLabel, giftShopTagGifts } from '@/lib/giftShopFamilies';
 
 const statusPill = (status) => {
@@ -14,11 +16,14 @@ const statusPill = (status) => {
 
 // One registration card per family: the children's names lead, the guardian sits
 // underneath. Clicking it opens sign-in and editing for that family.
-export default function GiftShopFamilyCard({ family, onClick }) {
+export default function GiftShopFamilyCard({ family, onClick, texts = [], onTextsChanged }) {
   const { toast } = useToast();
   const [sending, setSending] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [threadOpen, setThreadOpen] = useState(false);
   const waitlisted = family.children.some(c => c.status === 'waitlisted');
+  // Replies the desk has not opened yet, and the last text it sent this family.
+  const unread = unreadReplies(texts, family.guardian_phone);
+  const textedAt = lastTextSent(texts, family.guardian_phone)?.sent_at;
   // An elf closed the children out from the tag form: they finished shopping and
   // went back to their parent or guardian.
   const done = giftShopFamilyCompleted(family);
@@ -49,8 +54,16 @@ export default function GiftShopFamilyCard({ family, onClick }) {
       const body = `Hi ${first || 'there'}, Candora Kids Gift Shop here. Please bring ${list} to the check-in desk now. Your turn to shop is coming up.`;
       const res = await base44.functions.invoke('sendSms', { to: family.guardian_phone, body });
       if (res.data?.error) throw new Error(res.data.error);
-      setSent(true);
-      setTimeout(() => setSent(false), 6000);
+      await base44.entities.GiftShopText.create({
+        phone: normalizeSmsPhone(family.guardian_phone),
+        direction: 'out',
+        body,
+        guardian_name: family.guardian_name,
+        sent_at: new Date().toISOString(),
+        staff_name: res.data?.sent_by || '',
+        twilio_sid: res.data?.sid || '',
+      });
+      onTextsChanged?.();
       toast({ title: 'Text sent', description: `${family.guardian_name} was asked to come to the desk.` });
     } catch (err) {
       toast({ title: 'Could not send the text', description: err.message, variant: 'destructive' });
@@ -131,15 +144,16 @@ export default function GiftShopFamilyCard({ family, onClick }) {
               {canText && (
                 <Button
                   size="sm"
-                  variant="outline"
                   onClick={textFamily}
                   disabled={sending}
-                  className="h-7 gap-1 px-2 text-[11px]"
+                  className="h-7 gap-1 bg-green-600 px-2 text-[11px] text-white hover:bg-green-700"
                 >
                   {sending
                     ? <Loader2 className="h-3 w-3 animate-spin" />
-                    : <MessageSquare className="h-3 w-3" />}
-                  {sending ? 'Sending…' : sent ? 'Text sent' : 'Text to come up'}
+                    : textedAt
+                      ? <CheckCheck className="h-3 w-3" />
+                      : <MessageSquare className="h-3 w-3" />}
+                  {sending ? 'Sending…' : textedAt ? 'Texted' : 'Text to come up'}
                 </Button>
               )}
             </span>
@@ -147,7 +161,30 @@ export default function GiftShopFamilyCard({ family, onClick }) {
             <span className="text-[10px] text-muted-foreground flex-shrink-0">Tap to sign in</span>
           )}
         </div>
+
+        {unread.length > 0 && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setThreadOpen(true); }}
+            className="mt-2 flex w-full items-center gap-2 rounded-md border border-green-600/40 bg-green-50 px-2 py-1.5 text-left transition-colors hover:bg-green-100"
+          >
+            <span className="h-2 w-2 flex-shrink-0 rounded-full bg-green-600" />
+            <span className="flex-shrink-0 text-[11px] font-bold text-green-800">New message</span>
+            <span className="truncate text-[11px] text-green-800/70">{unread[unread.length - 1].body}</span>
+          </button>
+        )}
       </CardContent>
+
+      {/* The card itself opens sign-in on click, so the dialog stops its own clicks. */}
+      <div onClick={(e) => e.stopPropagation()}>
+        <GiftShopTextThreadDialog
+          open={threadOpen}
+          onOpenChange={setThreadOpen}
+          family={family}
+          texts={texts}
+          onRead={onTextsChanged}
+        />
+      </div>
     </Card>
   );
 }

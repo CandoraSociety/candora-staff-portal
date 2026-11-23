@@ -11,6 +11,7 @@ import GiftShopSlotBoard from '@/components/winterwonderland/GiftShopSlotBoard';
 import { KIDS_GIFT_SHOP_TIME_SLOTS, KIDS_GIFT_SHOP_SLOT_CAPACITY } from '@/lib/centralRegConstants';
 import { groupGiftShopFamilies, giftShopSlotCounts, giftShopAgeBandCounts, giftShopGiftTally, giftShopRecipientLabel } from '@/lib/giftShopFamilies';
 import { useGiftShopRegistrations } from '@/lib/useGiftShopRegistrations';
+import { useGiftShopTexts } from '@/lib/useGiftShopTexts';
 
 // Kids Gift Shop registration tab — the children signed up for a shopping slot,
 // with each slot's remaining places.
@@ -29,6 +30,7 @@ export default function GiftShopRegistrations() {
   };
 
   const { data: registrations = [], isLoading, refresh } = useGiftShopRegistrations();
+  const { texts, refresh: refreshTexts } = useGiftShopTexts();
 
   const active = registrations.filter(r => !['declined', 'withdrawn'].includes(r.status));
   const giftsRequested = active.reduce((sum, r) => sum + (r.gift_count || 1), 0);
@@ -166,7 +168,13 @@ export default function GiftShopRegistrations() {
             hideSlots
             emptyText="No children registered for this time slot."
             renderFamily={(family) => (
-              <GiftShopFamilyCard key={family.key} family={family} onClick={() => setSelectedKey(family.key)} />
+              <GiftShopFamilyCard
+                key={family.key}
+                family={family}
+                texts={texts}
+                onTextsChanged={refreshTexts}
+                onClick={() => setSelectedKey(family.key)}
+              />
             )}
           />
         </div>

@@ -1,0 +1,104 @@
+{
+  "name": "GiftShopText",
+  "type": "object",
+  "description": "One text message exchanged with a Kids Gift Shop family \u2014 a note the desk sent asking them to come to the check-in desk, or the family's reply to it. Messages are stored against the family's phone number, so a reply appears on that family's card until a staff member opens it.",
+  "properties": {
+    "phone": {
+      "type": "string",
+      "description": "The family's number in international form, e.g. +15875551234. A message is matched to a family by this number."
+    },
+    "direction": {
+      "type": "string",
+      "enum": [
+        "out",
+        "in"
+      ],
+      "enumColors": [
+        "blue",
+        "green"
+      ],
+      "default": "out",
+      "description": "out = sent from the desk to the family; in = the family's reply"
+    },
+    "body": {
+      "type": "string",
+      "description": "The text of the message"
+    },
+    "guardian_name": {
+      "type": "string",
+      "description": "Parent or guardian the message was sent to, for the staff list"
+    },
+    "sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the message was sent or received"
+    },
+    "read_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When a staff member opened the family's reply. A reply with no read time still shows as a new message on the card."
+    },
+    "staff_name": {
+      "type": "string",
+      "description": "Staff member who sent the message"
+    },
+    "twilio_sid": {
+      "type": "string",
+      "description": "Twilio's identifier for the message, so the same reply is never stored twice"
+    }
+  },
+  "required": [
+    "phone",
+    "direction",
+    "body"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

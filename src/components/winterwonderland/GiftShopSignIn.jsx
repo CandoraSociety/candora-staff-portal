@@ -7,6 +7,7 @@ import GiftShopCheckInDialog from '@/components/winterwonderland/GiftShopCheckIn
 import GiftShopCheckinQrDialog from '@/components/winterwonderland/GiftShopCheckinQrDialog';
 import GiftShopSlotBoard from '@/components/winterwonderland/GiftShopSlotBoard';
 import { useGiftShopRegistrations } from '@/lib/useGiftShopRegistrations';
+import { useGiftShopTexts } from '@/lib/useGiftShopTexts';
 import { groupGiftShopFamilies, giftShopAgeBandCounts } from '@/lib/giftShopFamilies';
 
 // Sign-In tab — the same registration cards, sorted by shopping time, for
@@ -16,6 +17,7 @@ export default function GiftShopSignIn({ standalone = false }) {
   const [selectedKey, setSelectedKey] = useState(null);
   const [qrOpen, setQrOpen] = useState(false);
   const { data: registrations = [], isLoading, refresh } = useGiftShopRegistrations();
+  const { texts, refresh: refreshTexts } = useGiftShopTexts();
 
   const active = registrations.filter(r => !['declined', 'withdrawn'].includes(r.status));
   const families = groupGiftShopFamilies(active).sort((a, b) => (a.time_slot || '').localeCompare(b.time_slot || ''));
@@ -87,7 +89,13 @@ export default function GiftShopSignIn({ standalone = false }) {
         <GiftShopSlotBoard
           families={families}
           renderFamily={(family) => (
-            <GiftShopFamilyCard key={family.key} family={family} onClick={() => setSelectedKey(family.key)} />
+            <GiftShopFamilyCard
+              key={family.key}
+              family={family}
+              texts={texts}
+              onTextsChanged={refreshTexts}
+              onClick={() => setSelectedKey(family.key)}
+            />
           )}
         />
       )}
