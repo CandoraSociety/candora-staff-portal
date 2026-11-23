@@ -1,8 +1,11 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { MessageSquare } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Loader2, MessageSquare, Send } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
-import { textsForPhone, unreadReplies } from '@/lib/giftShopTexts';
+import { useToast } from '@/components/ui/use-toast';
+import { normalizeSmsPhone, textsForPhone, unreadReplies } from '@/lib/giftShopTexts';
 import { giftShopSlotLabel } from '@/lib/giftShopFamilies';
 
 const when = (value) => {
@@ -18,7 +21,38 @@ const when = (value) => {
 // The texts exchanged with one family — what the desk sent and what they wrote
 // back. Opening it marks their replies as read.
 export default function GiftShopTextThreadDialog({ open, onOpenChange, family, texts = [], onRead }) {
+  const { toast } = useToast();
+  const [draft, setDraft] = useState('');
+  const [sending, setSending] = useState(false);
   const messages = textsForPhone(texts, family?.guardian_phone);
+
+  // Answer the family back on the same number the conversation came in on.
+  const sendReply = async (event) => {
+    event.preventDefault();
+    const body = draft.trim();
+    if (!body || !family?.guardian_phone) return;
+    setSending(true);
+    try {
+      const res = await base44.functions.invoke('sendSms', { to: family.guardian_phone, body });
+      if (res.data?.error) throw new Error(res.data.error);
+      await base44.entities.GiftShopText.create({
+        phone: normalizeSmsPhone(family.guardian_phone),
+        direction: 'out',
+        body,
+        guardian_name: family.guardian_name,
+        sent_at: new Date().toISOString(),
+        staff_name: res.data?.sent_by || '',
+        twilio_sid: res.data?.sid || '',
+      });
+      setDraft('');
+      onRead?.();
+      toast({ title: 'Text sent', description: `${family.guardian_name} was sent your reply.` });
+    } catch (err) {
+      toast({ title: 'Could not send the text', description: err.message, variant: 'destructive' });
+    } finally {
+      setSending(false);
+    }
+  };
 
   useEffect(() => {
     if (!open || !family) return;
@@ -64,6 +98,20 @@ export default function GiftShopTextThreadDialog({ open, onOpenChange, family, t
             </div>
           ))}
         </div>
+
+        <form onSubmit={sendReply} className="flex items-center gap-2 border-t pt-3">
+          <Input
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder={family?.guardian_phone ? 'Write a reply…' : 'No number on this family'}
+            disabled={!family?.guardian_phone || sending}
+            autoFocus
+          />
+          <Button type="submit" size="sm" disabled={sending || !draft.trim() || !family?.guardian_phone}>
+            {sending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+            Send
+          </Button>
+        </form>
       </DialogContent>
     </Dialog>
   );
