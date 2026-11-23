@@ -13,7 +13,8 @@ import { confirmFamilyRegistration } from '../../shared/giftShopCheckin.ts';
 // Nothing from the portal is loaded here and no app data is reachable: the page
 // is built from one invitation and posts back to this same function.
 // Gift gender is asked only for Other and Caregiver — every other recipient
-// carries its own gender (see giftShopInvites.ts).
+// carries its own gender (see giftShopInvites.ts). Once the family registers,
+// their check-in code reaches them by email and by text.
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);

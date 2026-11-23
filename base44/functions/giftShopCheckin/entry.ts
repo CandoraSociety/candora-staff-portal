@@ -2,9 +2,9 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import { sendRegistrationConfirmation } from '../../shared/giftShopCheckin.ts';
 
 // Staff finishing a registration taken at the desk: the family's six-digit
-// check-in code is stamped on their registrations and emailed to them with
-// what they registered for. The family's own check-in runs on the standalone
-// page served by giftShopCheckinForm — never inside the portal.
+// check-in code is stamped on their registrations and sent to them — by email
+// and by text — with what they registered for. The family's own check-in runs
+// on the standalone page served by giftShopCheckinForm — never inside the portal.
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
