@@ -45,6 +45,11 @@
     "twilio_sid": {
       "type": "string",
       "description": "Twilio's identifier for the message, so the same reply is never stored twice"
+    },
+    "contact_card_sent": {
+      "type": "boolean",
+      "default": false,
+      "description": "True when this message carried the CANDORA contact card, so the family can save the number as CANDORA. Only the first text to a family carries it."
     }
   },
   "required": [

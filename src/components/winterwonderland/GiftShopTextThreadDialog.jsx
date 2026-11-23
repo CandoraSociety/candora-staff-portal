@@ -6,6 +6,7 @@ import { Loader2, MessageSquare, Send } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useToast } from '@/components/ui/use-toast';
 import { normalizeSmsPhone, textsForPhone, unreadReplies } from '@/lib/giftShopTexts';
+import { contactCardMediaUrl } from '@/lib/giftShopContactCard';
 import { giftShopSlotLabel } from '@/lib/giftShopFamilies';
 
 const when = (value) => {
@@ -33,7 +34,10 @@ export default function GiftShopTextThreadDialog({ open, onOpenChange, family, t
     if (!body || !family?.guardian_phone) return;
     setSending(true);
     try {
-      const res = await base44.functions.invoke('sendSms', { to: family.guardian_phone, body });
+      // The first text to a family carries the CANDORA contact card, so they can
+      // save the number as CANDORA.
+      const mediaUrl = contactCardMediaUrl(texts, family.guardian_phone);
+      const res = await base44.functions.invoke('sendSms', { to: family.guardian_phone, body, mediaUrl });
       if (res.data?.error) throw new Error(res.data.error);
       await base44.entities.GiftShopText.create({
         phone: normalizeSmsPhone(family.guardian_phone),
@@ -43,6 +47,7 @@ export default function GiftShopTextThreadDialog({ open, onOpenChange, family, t
         sent_at: new Date().toISOString(),
         staff_name: res.data?.sent_by || '',
         twilio_sid: res.data?.sid || '',
+        contact_card_sent: !!mediaUrl,
       });
       setDraft('');
       onRead?.();

@@ -6,6 +6,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { base44 } from '@/api/base44Client';
 import GiftShopTextThreadDialog from '@/components/winterwonderland/GiftShopTextThreadDialog';
 import { lastComeUpSent, lastReply, normalizeSmsPhone, unreadReplies } from '@/lib/giftShopTexts';
+import { contactCardMediaUrl } from '@/lib/giftShopContactCard';
 import { giftShopChildFirstName, giftShopChildFullName, giftShopFamilyCompleted, giftShopFamilyShopping, giftShopIsCompleted, giftShopIsShopping, giftShopElfName, giftShopSlotLabel, giftShopTagGifts } from '@/lib/giftShopFamilies';
 
 const statusPill = (status) => {
@@ -57,7 +58,10 @@ export default function GiftShopFamilyCard({ family, onClick, texts = [], onText
       const list = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}` : names[0];
       const first = (family.guardian_name || '').trim().split(/\s+/)[0];
       const body = `Hi ${first || 'there'}, Candora Kids Gift Shop here. Please bring ${list} to the check-in desk now. Your turn to shop is coming up.`;
-      const res = await base44.functions.invoke('sendSms', { to: family.guardian_phone, body });
+      // The first text to a family carries the CANDORA contact card, so they can
+      // save the number as CANDORA.
+      const mediaUrl = contactCardMediaUrl(texts, family.guardian_phone);
+      const res = await base44.functions.invoke('sendSms', { to: family.guardian_phone, body, mediaUrl });
       if (res.data?.error) throw new Error(res.data.error);
       await base44.entities.GiftShopText.create({
         phone: normalizeSmsPhone(family.guardian_phone),
@@ -67,6 +71,7 @@ export default function GiftShopFamilyCard({ family, onClick, texts = [], onText
         sent_at: new Date().toISOString(),
         staff_name: res.data?.sent_by || '',
         twilio_sid: res.data?.sid || '',
+        contact_card_sent: !!mediaUrl,
       });
       onTextsChanged?.();
       toast({ title: 'Text sent', description: `${family.guardian_name} was asked to come to the desk.` });

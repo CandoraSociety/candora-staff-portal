@@ -22,7 +22,7 @@ export default async function (req) {
     const user = await base44.auth.me().catch((e) => (e.status === 401 ? null : Promise.reject(e)));
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { to, body } = await req.json().catch(() => ({}));
+    const { to, body, mediaUrl } = await req.json().catch(() => ({}));
     const phone = normalizePhone(to);
     if (!phone) {
       return Response.json({ error: 'A phone number is required, including the area code.' }, { status: 400 });
@@ -36,7 +36,15 @@ export default async function (req) {
     const authToken = secrets.get('TWILIO_AUTH_TOKEN');
     const from = DEFAULT_FROM;
 
+    // An optional attachment — the CANDORA contact card rides along with the
+    // first text a family receives, so they can save the number as CANDORA.
+    const media = String(mediaUrl || '').trim();
+    if (media && !/^https:\/\/\S+$/i.test(media)) {
+      return Response.json({ error: 'The attachment link must be a public https address.' }, { status: 400 });
+    }
+
     const form = new URLSearchParams({ To: phone, From: from, Body: message });
+    if (media) form.append('MediaUrl', media);
     const res = await fetch(
       `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
       {
