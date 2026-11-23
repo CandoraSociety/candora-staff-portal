@@ -241,6 +241,7 @@ export async function redeemGiftShopInvite(base44, token, payload) {
     children: children.map(c => c.child_name),
     time_slot: timeSlot,
     time_label: slotLabel(timeSlot),
+    registration_ids: (created || []).map(r => r.id).filter(Boolean),
   };
 }
 
@@ -305,7 +306,7 @@ export async function redeemGeneralRegistration(base44, payload) {
     notes: 'General registration',
   });
 
-  await base44.entities.ProgramRegistration.bulkCreate(records);
+  const created = await base44.entities.ProgramRegistration.bulkCreate(records);
 
   return {
     ok: true,
@@ -313,5 +314,6 @@ export async function redeemGeneralRegistration(base44, payload) {
     children: children.map(c => c.child_name),
     time_slot: timeSlot,
     time_label: slotLabel(timeSlot),
+    registration_ids: (created || []).map(r => r.id).filter(Boolean),
   };
 }

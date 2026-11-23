@@ -1,0 +1,123 @@
+{
+  "name": "GiftShopDeskSession",
+  "type": "object",
+  "description": "One computer working the Kids Gift Shop check-in desk. It shows a QR code carrying this session's token; a family's phone opens the check-in page from that code, enters the six-digit code from their confirmation email and their own name, and the same computer picks the arrival up and prints the parent or guardian name tag to the DYMO printer attached to it.",
+  "properties": {
+    "token": {
+      "type": "string",
+      "description": "Unguessable code carried in the check-in QR link. Created once per desk computer and kept in that browser, so the same desk keeps the same code all day."
+    },
+    "desk_name": {
+      "type": "string",
+      "description": "How this desk is labelled for staff, e.g. Kids Gift Shop check-in"
+    },
+    "printer_name": {
+      "type": "string",
+      "description": "The DYMO label printer found on this computer when the desk was opened"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "closed"
+      ],
+      "enumColors": [
+        "green",
+        "gray"
+      ],
+      "default": "active",
+      "description": "active = the QR code opens the check-in page; closed = the desk is not taking arrivals"
+    },
+    "last_seen_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this desk last showed its check-in code"
+    },
+    "arrival_guardian_name": {
+      "type": "string",
+      "description": "The name the family typed at check-in \u2014 it becomes the name on the parent or guardian tag"
+    },
+    "arrival_code": {
+      "type": "string",
+      "description": "The six-digit code the family used for this arrival"
+    },
+    "arrival_registration_ids": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "The family's Kids Gift Shop registrations that arrived at this desk"
+    },
+    "arrival_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the family submitted their name at this desk \u2014 the moment the name tag is printed"
+    },
+    "printed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When this computer printed the parent or guardian name tag for that arrival"
+    },
+    "failed_lookups": {
+      "type": "number",
+      "description": "Wrong codes tried recently on this desk, so a short code cannot be guessed through"
+    },
+    "last_failed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the last wrong code was tried on this desk"
+    }
+  },
+  "required": [
+    "token"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

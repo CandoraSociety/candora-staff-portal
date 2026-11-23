@@ -1,0 +1,97 @@
+<mjml>
+  <mj-head>
+    <mj-title>Your Kids Gift Shop check-in code</mj-title>
+    <mj-preview>Bring this six-digit code to the Kids Gift Shop desk on December 12th.</mj-preview>
+    <mj-attributes>
+      <mj-all font-family="Inter, Helvetica, Arial, sans-serif" />
+      <mj-section background-color="#ffffff" padding="0 36px" />
+      <mj-column padding="0" />
+      <mj-text color="#080c21" font-size="15px" line-height="1.6" padding="0" />
+      <mj-button background-color="#fccf03" color="#0a0f29" border-radius="10px" font-size="15px" font-weight="700" inner-padding="14px 28px" padding="0" align="left" />
+      <mj-image padding="0" />
+      <mj-divider border-color="#dadce7" border-width="1px" padding="0" />
+      <mj-class name="h" font-family="Nunito, Helvetica, Arial, sans-serif" font-weight="700" />
+      <mj-class name="label" font-size="11px" letter-spacing="2px" text-transform="uppercase" font-weight="700" color="#0a0f29" />
+      <mj-class name="muted" color="#626784" />
+    </mj-attributes>
+    <mj-style>
+      @media (max-width:480px) { .hero-h div { font-size:30px !important; line-height:1.12 !important; } .code div { font-size:34px !important; letter-spacing:6px !important; } }
+    </mj-style>
+  </mj-head>
+  <mj-body background-color="#f9fafb" width="600px">
+    <mj-wrapper padding="28px 12px" background-color="#f9fafb">
+
+      <mj-section background-color="#fccf03" padding="22px 36px" border-radius="10px 10px 0 0">
+        <mj-column>
+          <mj-image src="https://media.base44.com/images/public/6a249282cb496579542673b7/c7fbd36e2_logo.png" alt="Candora 360" width="36px" align="center" padding="0 0 10px" />
+          <mj-text align="center" font-size="12px" letter-spacing="4px" font-weight="700" text-transform="uppercase" color="#0a0f29">Candora 360</mj-text>
+        </mj-column>
+      </mj-section>
+
+      <mj-section background-color="#fccf03" padding="44px 36px 42px">
+        <mj-column>
+          <mj-text mj-class="label" padding="0 0 14px">Winter Wonderland · Kids Gift Shop</mj-text>
+          <mj-text mj-class="h" css-class="hero-h" font-size="36px" line-height="1.08" color="#0a0f29" padding="0 0 18px">You’re registered, {{guardian_name}}</mj-text>
+          <mj-text font-size="16px" line-height="1.6" color="#0a0f29" padding="0 0 26px">Here is everything you need for the day, including your family’s six-digit check-in code.</mj-text>
+        </mj-column>
+      </mj-section>
+
+      <mj-section padding="34px 28px 6px">
+        <mj-column inner-background-color="#0a0f29" inner-border-radius="10px" padding="0">
+          <mj-text mj-class="label" color="#fccf03" padding="24px 24px 8px">Your check-in code</mj-text>
+          <mj-text mj-class="h" css-class="code" font-size="46px" letter-spacing="10px" color="#fccf03" padding="0 24px 10px">{{checkin_code}}</mj-text>
+          <mj-text font-size="14px" line-height="1.6" color="#dadce7" padding="0 24px 24px">Scan the QR code at the Kids Gift Shop check-in desk, type this code, then type your name. Your name tag prints at the desk.</mj-text>
+        </mj-column>
+      </mj-section>
+
+      <mj-section padding="30px 36px 6px">
+        <mj-column>
+          <mj-text mj-class="h" font-size="19px" line-height="1.3" color="#080c21" padding="0 0 8px">What you registered for</mj-text>
+          <mj-text font-size="15px" line-height="1.65" color="#080c21" padding="0">{{registration_details}}</mj-text>
+        </mj-column>
+      </mj-section>
+
+      <mj-section padding="16px 28px 6px">
+        <mj-column padding="0 8px 16px" inner-background-color="#ffffff" inner-border-radius="10px" inner-border="1px solid #dadce7">
+          <mj-text mj-class="label" padding="20px 20px 6px">Shopping time</mj-text>
+          <mj-text mj-class="h" font-size="20px" line-height="1.3" color="#080c21" padding="0 20px 20px">{{time_label}}</mj-text>
+        </mj-column>
+        <mj-column padding="0 8px 16px" inner-background-color="#ffffff" inner-border-radius="10px" inner-border="1px solid #dadce7">
+          <mj-text mj-class="label" padding="20px 20px 6px">When</mj-text>
+          <mj-text mj-class="h" font-size="20px" line-height="1.3" color="#080c21" padding="0 20px 20px">{{event_date}}</mj-text>
+        </mj-column>
+      </mj-section>
+
+      <mj-section padding="0 28px 6px">
+        <mj-column inner-background-color="#ffffff" inner-border-radius="10px" inner-border="1px solid #dadce7" padding="0">
+          <mj-text mj-class="label" padding="20px 20px 6px">Where</mj-text>
+          <mj-text mj-class="h" font-size="20px" line-height="1.3" color="#080c21" padding="0 20px 20px">{{event_location}}</mj-text>
+        </mj-column>
+      </mj-section>
+
+      <mj-section padding="16px 28px 6px">
+        <mj-column inner-background-color="#fffbeb" inner-border-radius="10px" padding="0">
+          <mj-text mj-class="label" padding="22px 20px 8px">On the day</mj-text>
+          <mj-text font-size="15px" line-height="1.6" color="#080c21" padding="0 20px 10px">At the check-in desk, scan the QR code with your phone camera. Type your six-digit code and your name, then press submit — your parent or guardian name tag prints at the desk and a volunteer will take it from there.</mj-text>
+          <mj-text font-size="15px" line-height="1.6" color="#626784" padding="0 20px 22px">Please arrive within your shopping time. Keep this code to yourself: it opens your family’s registration.</mj-text>
+        </mj-column>
+      </mj-section>
+
+      <mj-section padding="6px 36px 30px">
+        <mj-column>
+          <mj-divider padding="0 0 24px" />
+          <mj-text mj-class="h" font-size="18px" line-height="1.3" color="#080c21" padding="0 0 8px">Questions, or lost the code?</mj-text>
+          <mj-text font-size="15px" line-height="1.6" color="#626784" padding="0">Email us at <a href="mailto:{{contact_email}}" style="color:#0a0f29;text-decoration:underline;">{{contact_email}}</a> and we will find your family’s registration for you. A volunteer at the desk can look it up on the day too.</mj-text>
+        </mj-column>
+      </mj-section>
+
+      <mj-section background-color="#fccf03" padding="26px 36px 30px" border-radius="0 0 10px 10px">
+        <mj-column>
+          <mj-text mj-class="h" align="center" font-size="17px" color="#0a0f29" padding="0 0 6px">Candora Society</mj-text>
+          <mj-text align="center" font-size="12px" color="#0a0f29" padding="0">Winter Wonderland · Kids Gift Shop</mj-text>
+        </mj-column>
+      </mj-section>
+
+    </mj-wrapper>
+  </mj-body>
+</mjml>

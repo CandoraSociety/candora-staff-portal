@@ -268,6 +268,15 @@
       "type": "string",
       "description": "Unguessable code printed as the QR code on the child's name tag. It opens the volunteer's form for that one child, and only after the desk PIN is entered."
     },
+    "checkin_code": {
+      "type": "string",
+      "description": "Six-digit code the family is emailed when they register. One code per family, typed at the check-in desk to open their registration."
+    },
+    "confirmation_sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the registration confirmation email \u2014 with the six-digit check-in code \u2014 was last sent to the family"
+    },
     "completed": {
       "type": "boolean",
       "default": false,

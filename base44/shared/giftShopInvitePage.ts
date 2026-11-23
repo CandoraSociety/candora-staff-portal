@@ -284,7 +284,7 @@ function closedPage(state, mode = 'invite') {
   });
 }
 
-function successPage({ children = [], time_label: timeLabel }) {
+function successPage({ children = [], time_label: timeLabel, checkin_code: checkinCode }) {
   const names = children.length > 1
     ? `${children.slice(0, -1).join(', ')} and ${children[children.length - 1]}`
     : children[0] || 'Your child';
@@ -298,6 +298,12 @@ function successPage({ children = [], time_label: timeLabel }) {
           ${escapeHtml(names)} ${children.length > 1 ? 'are' : 'is'} booked for ${escapeHtml(timeLabel || '')} on
           Saturday, December 12th at Riverview Crossing Shopping Centre.
         </p>
+        ${checkinCode ? `
+        <div class="notice" style="text-align:left;margin:18px 0 0;background:var(--navy);border-color:var(--navy);color:var(--gold)">
+          <strong style="color:var(--gold)">Your check-in code</strong>
+          <div style="font-size:34px;font-weight:900;letter-spacing:8px;line-height:1.2;margin:6px 0 4px">${escapeHtml(checkinCode)}</div>
+          <span style="color:#dadce7;font-size:13px">We have emailed this code to you as well. Scan the QR code at the check-in desk, type the code and your own name.</span>
+        </div>` : ''}
         <div class="notice" style="text-align:left;margin:18px 0 0">
           <strong>On the day</strong>
           Come to the Kids Gift Shop registration desk and sign in every child who is participating.

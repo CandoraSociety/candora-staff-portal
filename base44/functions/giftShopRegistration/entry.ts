@@ -7,6 +7,7 @@ import {
   readInviteForm,
   giftShopHtmlResponse,
 } from '../../shared/giftShopInvitePage.ts';
+import { confirmFamilyRegistration } from '../../shared/giftShopCheckin.ts';
 
 // The Kids Gift Shop general registration form, open to the public. It is the
 // same form families see through a pre-registration link, but with no
@@ -44,7 +45,8 @@ export default async function (req) {
 
       const result = await redeemGeneralRegistration(base44.asServiceRole, submission);
       if (result.ok) {
-        return giftShopHtmlResponse(renderSuccessPage(result));
+        const confirmed = await confirmFamilyRegistration(base44.asServiceRole, result.registration_ids);
+        return giftShopHtmlResponse(renderSuccessPage({ ...result, ...confirmed }));
       }
 
       const current = await buildPublicGeneral(base44.asServiceRole);

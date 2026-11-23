@@ -69,6 +69,13 @@ const send = async (target, labelXml, who) => {
   }
 };
 
+// The parent or guardian's own tag, printed by the computer the family checked
+// in at — so it always reaches the DYMO attached to that machine.
+export async function printDymoGuardianTag(family, target) {
+  const logoPng = await dymoLogoImage();
+  await send(target, buildGuardianLabelXml(family, { logoPng }), family.guardian_name || 'the parent or guardian');
+}
+
 // Prepare every QR before sending anything, then submit each tag exactly once.
 // Never retry a successful job or silently remove the volunteer's QR code.
 // Each family also gets one tag for the parent or guardian, listing their children.

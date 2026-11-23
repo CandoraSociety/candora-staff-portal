@@ -125,7 +125,16 @@ export default function KidsGiftShopRegistrationDialog({ open, onOpenChange, onS
         };
       });
 
-      await base44.entities.ProgramRegistration.bulkCreate(records);
+      const created = await base44.entities.ProgramRegistration.bulkCreate(records);
+
+      // The family gets their six-digit check-in code by email, whichever way
+      // they registered. A failed send never blocks the registration.
+      base44.functions
+        .invoke('giftShopCheckin', {
+          action: 'confirm',
+          registration_ids: (created || []).map(record => record.id).filter(Boolean),
+        })
+        .catch(() => {});
 
       toast({
         title: records.length > 1 ? `${records.length} children registered` : 'Registration saved',

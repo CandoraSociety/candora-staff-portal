@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Clock, ExternalLink, Users } from 'lucide-react';
+import { CheckCircle2, Clock, ExternalLink, QrCode, Users } from 'lucide-react';
 import GiftShopFamilyCard from '@/components/winterwonderland/GiftShopFamilyCard';
 import GiftShopCheckInDialog from '@/components/winterwonderland/GiftShopCheckInDialog';
+import GiftShopCheckinQrDialog from '@/components/winterwonderland/GiftShopCheckinQrDialog';
 import GiftShopSlotBoard from '@/components/winterwonderland/GiftShopSlotBoard';
 import { useGiftShopRegistrations } from '@/lib/useGiftShopRegistrations';
 import { groupGiftShopFamilies, giftShopAgeBandCounts } from '@/lib/giftShopFamilies';
@@ -13,6 +14,7 @@ import { groupGiftShopFamilies, giftShopAgeBandCounts } from '@/lib/giftShopFami
 // every other area updates with it.
 export default function GiftShopSignIn({ standalone = false }) {
   const [selectedKey, setSelectedKey] = useState(null);
+  const [qrOpen, setQrOpen] = useState(false);
   const { data: registrations = [], isLoading, refresh } = useGiftShopRegistrations();
 
   const active = registrations.filter(r => !['declined', 'withdrawn'].includes(r.status));
@@ -61,16 +63,20 @@ export default function GiftShopSignIn({ standalone = false }) {
             Pick a shopping time, then tap a family to sign the children in and print their name tags. Sign-ins update on every screen as they happen.
           </p>
         </div>
-        {!standalone && (
-          <Button
-            size="sm"
-            variant="outline"
-            className="flex-shrink-0"
-            onClick={() => window.open('/winter-wonderland/kids-gift-shop/sign-in', '_blank', 'noopener')}
-          >
-            <ExternalLink className="h-3.5 w-3.5" /> Open in new window
+        <div className="flex flex-shrink-0 items-center gap-2">
+          <Button size="sm" onClick={() => setQrOpen(true)}>
+            <QrCode className="h-3.5 w-3.5" /> Check-in QR
           </Button>
-        )}
+          {!standalone && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => window.open('/winter-wonderland/kids-gift-shop/sign-in', '_blank', 'noopener')}
+            >
+              <ExternalLink className="h-3.5 w-3.5" /> Open in new window
+            </Button>
+          )}
+        </div>
       </div>
 
       {isLoading ? (
@@ -92,6 +98,8 @@ export default function GiftShopSignIn({ standalone = false }) {
         onOpenChange={(o) => { if (!o) setSelectedKey(null); }}
         onChanged={refresh}
       />
+
+      <GiftShopCheckinQrDialog open={qrOpen} onOpenChange={setQrOpen} />
     </div>
   );
 }
