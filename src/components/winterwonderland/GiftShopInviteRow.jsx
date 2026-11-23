@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { Check, Copy, Ban, Database, MailCheck } from 'lucide-react';
+import { Check, Copy, Ban, Database, MailCheck, MessageSquare } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { inviteLink, inviteDisplayStatus, INVITE_STATUS_META } from '@/lib/giftShopInvites';
 import { KIDS_GIFT_SHOP_TIME_SLOTS } from '@/lib/centralRegConstants';
@@ -45,6 +45,12 @@ export default function GiftShopInviteRow({ invite, onChanged }) {
             <p className="text-xs text-blue-700 mt-0.5 flex items-center gap-1">
               <MailCheck className="h-3 w-3 flex-shrink-0" />
               Emailed {new Date(invite.emailed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+            </p>
+          )}
+          {invite.texted_at && (
+            <p className="text-xs text-blue-700 mt-0.5 flex items-center gap-1">
+              <MessageSquare className="h-3 w-3 flex-shrink-0" />
+              Texted {new Date(invite.texted_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
             </p>
           )}
           {status === 'registered' && invite.registered_summary && (

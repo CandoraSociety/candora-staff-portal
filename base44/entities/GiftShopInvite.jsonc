@@ -54,6 +54,11 @@
       "format": "date-time",
       "description": "When the invitation email was last sent successfully \u2014 shown on the staff card so it is clear which families have been emailed"
     },
+    "texted_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the invitation text was last sent successfully \u2014 shown on the staff card so it is clear which families have been texted"
+    },
     "time_slot": {
       "type": "string",
       "description": "Shopping time the family booked (24-hour time, e.g. 10:30)"

@@ -304,7 +304,16 @@ function closedPage(state, mode = 'invite') {
   });
 }
 
-function successPage({ children = [], time_label: timeLabel, checkin_code: checkinCode }) {
+function successPage({ children = [], time_label: timeLabel, checkin_code: checkinCode, emailed = false, texted = false }) {
+  // Say what actually reached the family — a family with no email address is
+  // reached by text alone.
+  const sentNote = emailed && texted
+    ? 'We have emailed and texted this code to you as well.'
+    : texted
+      ? 'We have texted this code to you as well.'
+      : emailed
+        ? 'We have emailed this code to you as well.'
+        : 'Take a photo of this code, or ask a volunteer to write it down for you.';
   const names = children.length > 1
     ? `${children.slice(0, -1).join(', ')} and ${children[children.length - 1]}`
     : children[0] || 'Your child';
@@ -322,7 +331,7 @@ function successPage({ children = [], time_label: timeLabel, checkin_code: check
         <div class="notice" style="text-align:left;margin:18px 0 0;background:var(--navy);border-color:var(--navy);color:var(--gold)">
           <strong style="color:var(--gold)">Your check-in code</strong>
           <div style="font-size:34px;font-weight:900;letter-spacing:8px;line-height:1.2;margin:6px 0 4px">${escapeHtml(checkinCode)}</div>
-          <span style="color:#dadce7;font-size:13px">We have emailed this code to you as well. Scan the QR code at the check-in desk, type the code and your own name.</span>
+          <span style="color:#dadce7;font-size:13px">${sentNote} Scan the QR code at the check-in desk, type the code and your own name.</span>
         </div>` : ''}
         <div class="notice" style="text-align:left;margin:18px 0 0">
           <strong>On the day</strong>

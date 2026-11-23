@@ -3,13 +3,13 @@ import { AlertCircle, CheckCircle2, Download, MailWarning, Copy } from 'lucide-r
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 
-const COPY_LABEL = { failed: 'Not emailed', no_email: 'No email address', skipped: 'Skipped' };
+const COPY_LABEL = { failed: 'Not sent', skipped: 'Skipped' };
 
 function downloadLinks(results) {
-  const header = 'Guardian,Email,Status,Link';
+  const header = 'Guardian,Email,Phone,Status,Link';
   const lines = results
     .filter(row => row.link)
-    .map(row => [row.guardian_name || '', row.guardian_email || '', row.status || '', row.link]
+    .map(row => [row.guardian_name || '', row.guardian_email || '', row.guardian_phone || '', row.status || '', row.link]
       .map(value => `"${String(value).replace(/"/g, '""')}"`).join(','));
   const blob = new Blob([[header, ...lines].join('\n')], { type: 'text/csv;charset=utf-8' });
   const url = URL.createObjectURL(blob);
@@ -21,10 +21,12 @@ function downloadLinks(results) {
 }
 
 // What happened to each family after a send, and a way to finish by hand for
-// anyone the email could not reach.
+// anyone neither the email nor the text could reach.
 export default function GiftShopInviteSendResults({ results, onDone }) {
   const { toast } = useToast();
   const sent = results.filter(r => r.status === 'sent');
+  const emailed = sent.filter(r => r.emailed).length;
+  const texted = sent.filter(r => r.texted).length;
   const needing = results.filter(r => r.status !== 'sent');
   const linked = results.filter(r => r.central_db_status === 'linked').length;
   const created = results.filter(r => r.central_db_status === 'created').length;
@@ -42,11 +44,12 @@ export default function GiftShopInviteSendResults({ results, onDone }) {
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="rounded-lg border bg-green-50/60 p-4">
-          <p className="flex items-center gap-2 text-xs font-medium text-green-800"><CheckCircle2 className="h-4 w-4" /> Invitations emailed</p>
+          <p className="flex items-center gap-2 text-xs font-medium text-green-800"><CheckCircle2 className="h-4 w-4" /> Invitations sent</p>
           <p className="text-2xl font-bold text-green-900">{sent.length}</p>
+          <p className="text-xs text-green-800/80">{emailed} by email · {texted} by text</p>
         </div>
         <div className="rounded-lg border bg-amber-50/60 p-4">
-          <p className="flex items-center gap-2 text-xs font-medium text-amber-800"><MailWarning className="h-4 w-4" /> Still to send by hand</p>
+          <p className="flex items-center gap-2 text-xs font-medium text-amber-800"><MailWarning className="h-4 w-4" /> Still to reach</p>
           <p className="text-2xl font-bold text-amber-900">{needing.length}</p>
         </div>
       </div>

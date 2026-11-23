@@ -1,8 +1,10 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import { syncParticipantToCentralDb } from '../../shared/centralDbSync.ts';
+import { sendGiftShopText } from '../../shared/giftShopSms.ts';
 
 // Creates one private pre-registration invitation per family in an uploaded
-// list and emails each family their own single-use link. Staff must be signed
+// list, then sends each family their own single-use link by email and by text.
+// A family with no email address is reached by text alone. Staff must be signed
 // in; the public can never trigger a send.
 const FALLBACK_APP_URL = 'https://candora-360.base44.app';
 const CONTACT_EMAIL = 'info@candorasociety.com';
@@ -11,6 +13,13 @@ const DEFAULT_MESSAGE =
   'Our Kids Gift Shop is back for Winter Wonderland, and as one of the families we work with, yours is invited to choose a shopping time before registration opens to everyone else. The shop runs on Saturday, December 12th at Riverview Crossing Shopping Centre. Pick a time that works for you and tell us who each child is shopping for — on the day, please come to the Kids Gift Shop registration desk and sign in every child who is participating.';
 
 const newToken = () => crypto.randomUUID().replace(/[^a-zA-Z0-9]/g, '');
+
+// The text carries the same link as the email, kept short so it reads on a
+// phone. Plain characters only, so it goes out as one ordinary text message.
+const inviteText = (name, link) => {
+  const first = String(name || '').trim().split(/\s+/)[0];
+  return `Hi ${first || 'there'}, Candora's Kids Gift Shop invites your family to pick a shopping time before everyone else. Dec 12 at Riverview Crossing. Your link works once: ${link}`;
+};
 
 // The list carries one guardian name per family — split it for the Central
 // Database, which keeps a first and last name separately.
@@ -47,10 +56,11 @@ Deno.serve(async (req) => {
 
     const results = [];
     const seen = new Set();
+    const seenPhones = new Set();
 
     // Two ways in: a fresh list, where each family gets a new link, or
     // invitations already in the list, where the existing link is reused and
-    // only the email goes out.
+    // only the message goes out.
     const queue: any[] = [];
     if (inviteIds.length) {
       const found = await Promise.all(
@@ -113,6 +123,14 @@ Deno.serve(async (req) => {
       }
       if (emailKey) seen.add(emailKey);
 
+      // The same family must not be texted twice either.
+      const phoneKey = phone.replace(/\D/g, '').slice(-10);
+      if (phoneKey && phoneKey.length === 10 && seenPhones.has(phoneKey)) {
+        results.push({ guardian_name: name, guardian_email: email, guardian_phone: phone, status: 'skipped', message: 'The same phone number appears twice in this list.' });
+        continue;
+      }
+      if (phoneKey && phoneKey.length === 10) seenPhones.add(phoneKey);
+
       const token = existing?.token || newToken();
       const link = `${appUrl}/functions/giftShopInviteForm?token=${token}`;
 
@@ -127,7 +145,7 @@ Deno.serve(async (req) => {
             children_allowed: childrenAllowed,
             status: 'invited',
             expires_at: expiresAt,
-            sent_via: email ? 'email' : 'other',
+            sent_via: email ? 'email' : 'text',
             created_by_name: user.full_name || user.email || '',
           });
         } catch (error) {
@@ -166,60 +184,73 @@ Deno.serve(async (req) => {
         }
       }
 
-      if (!email) {
-        results.push({
-          guardian_name: name,
-          guardian_email: '',
-          guardian_phone: phone,
-          status: 'no_email',
-          link,
-          central_db_status: central?.status || null,
-          message: 'No email address on file. Send this link by text or print it for the family.',
-        });
-        continue;
+      // Both channels carry the same link: the email for whoever reads email,
+      // the text for whoever does not.
+      let emailed = false;
+      let texted = false;
+      let failure = null;
+
+      if (email) {
+        try {
+          const sent = await base44.asServiceRole.integrations.Core.SendEmail({
+            to: email,
+            template_name: 'GiftShopPreRegistrationInvite',
+            variables: {
+              guardian_name: name,
+              children_allowed: String(childrenAllowed),
+              expires_on: formatDate(existing?.expires_at ? existing.expires_at.slice(0, 10) : expiresOn),
+              custom_message: message,
+              invite_link: link,
+              contact_email: CONTACT_EMAIL,
+            },
+            category: 'transactional',
+            from_name: 'Candora 360',
+          });
+
+          if (sent && sent.success === false) {
+            failure = sent.message || `The email could not be sent (${sent.reason || 'refused'}).`;
+          } else {
+            emailed = true;
+          }
+        } catch (error) {
+          console.log(`Invitation email failed for ${email}:`, error.message);
+          failure = error.message;
+        }
       }
 
-      try {
-        const sent = await base44.asServiceRole.integrations.Core.SendEmail({
-          to: email,
-          template_name: 'GiftShopPreRegistrationInvite',
-          variables: {
-            guardian_name: name,
-            children_allowed: String(childrenAllowed),
-            expires_on: formatDate(existing?.expires_at ? existing.expires_at.slice(0, 10) : expiresOn),
-            custom_message: message,
-            invite_link: link,
-            contact_email: CONTACT_EMAIL,
-          },
-          category: 'transactional',
-          from_name: 'Candora 360',
-        });
+      if (phone) {
+        const text = await sendGiftShopText(phone, inviteText(name, link));
+        if (text.ok) texted = true;
+        else if (!emailed) failure = text.reason || 'The text could not be sent.';
+      }
 
-        if (sent && sent.success === false) {
-          results.push({
-            guardian_name: name,
-            guardian_email: email,
-            status: 'failed',
-            link,
-            central_db_status: central?.status || null,
-            message: sent.message || `The email could not be sent (${sent.reason || 'refused'}). Copy the link and send it yourself.`,
-          });
-        } else {
-          await base44.asServiceRole.entities.GiftShopInvite.update(invite.id, {
-            sent_via: 'email',
-            emailed_at: new Date().toISOString(),
-          });
-          results.push({ guardian_name: name, guardian_email: email, status: 'sent', link, central_db_status: central?.status || null });
-        }
-      } catch (error) {
-        console.log(`Invitation email failed for ${email}:`, error.message);
+      if (emailed || texted) {
+        await base44.asServiceRole.entities.GiftShopInvite.update(invite.id, {
+          sent_via: emailed ? 'email' : 'text',
+          ...(emailed ? { emailed_at: new Date().toISOString() } : {}),
+          ...(texted ? { texted_at: new Date().toISOString() } : {}),
+        });
         results.push({
           guardian_name: name,
           guardian_email: email,
-          status: 'failed',
+          guardian_phone: phone,
+          status: 'sent',
+          emailed,
+          texted,
           link,
           central_db_status: central?.status || null,
-          message: `${error.message} Copy the link and send it yourself.`,
+        });
+      } else {
+        results.push({
+          guardian_name: name,
+          guardian_email: email,
+          guardian_phone: phone,
+          status: 'failed',
+          emailed,
+          texted,
+          link,
+          central_db_status: central?.status || null,
+          message: `${failure || 'Neither the email nor the text could be sent.'} Copy the link and send it yourself.`,
         });
       }
     }
@@ -228,14 +259,15 @@ Deno.serve(async (req) => {
       acc[row.status] = (acc[row.status] || 0) + 1;
       return acc;
     }, {});
+    const textOnly = results.filter(row => row.status === 'sent' && row.texted && !row.emailed).length;
 
-    console.log(`Gift shop invitations: ${counts.sent || 0} sent, ${counts.failed || 0} failed, ${counts.no_email || 0} without email`);
+    console.log(`Gift shop invitations: ${counts.sent || 0} sent (${textOnly} by text only), ${counts.failed || 0} failed`);
 
     return Response.json({
       results,
       sent_count: counts.sent || 0,
       failed_count: counts.failed || 0,
-      no_email_count: counts.no_email || 0,
+      text_only_count: textOnly,
       skipped_count: counts.skipped || 0,
     });
   } catch (error) {

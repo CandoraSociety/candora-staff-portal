@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2, Mail } from 'lucide-react';
+import { Loader2, Send } from 'lucide-react';
 import GiftShopInviteSendResults from '@/components/winterwonderland/GiftShopInviteSendResults';
 
 const DEFAULT_MESSAGE =
@@ -12,9 +12,8 @@ const DEFAULT_MESSAGE =
 
 const CHUNK_SIZE = 15;
 
-// Emails the invitations that are already in the list — the same links, sent to
-// each guardian's email address. Families with no email address are reported
-// back so staff can text or print their link instead.
+// Sends the invitations that are already in the list — the same links, by email
+// and by text. A family with no email address is reached by text alone.
 export default function GiftShopEmailInvitesDialog({ open, onOpenChange, invites = [], onSent }) {
   const { toast } = useToast();
   const [message, setMessage] = useState(DEFAULT_MESSAGE);
@@ -31,19 +30,21 @@ export default function GiftShopEmailInvitesDialog({ open, onOpenChange, invites
     }
   }, [open]);
 
-  const withEmail = invites.filter(invite => invite.guardian_email);
+  const reachable = invites.filter(invite => invite.guardian_email || invite.guardian_phone);
+  const unreachable = invites.length - reachable.length;
+  const byTextOnly = reachable.filter(invite => !invite.guardian_email).length;
 
   const send = async () => {
-    if (!withEmail.length) return;
+    if (!reachable.length) return;
     setSending(true);
     setResults(null);
-    setProgress({ done: 0, total: withEmail.length });
+    setProgress({ done: 0, total: reachable.length });
 
     const collected = [];
     try {
-      for (let index = 0; index < withEmail.length; index += CHUNK_SIZE) {
-        const slice = withEmail.slice(index, index + CHUNK_SIZE);
-        setProgress({ done: index, total: withEmail.length });
+      for (let index = 0; index < reachable.length; index += CHUNK_SIZE) {
+        const slice = reachable.slice(index, index + CHUNK_SIZE);
+        setProgress({ done: index, total: reachable.length });
         const response = await base44.functions.invoke('sendGiftShopInvites', {
           invite_ids: slice.map(invite => invite.id),
           message,
@@ -58,20 +59,18 @@ export default function GiftShopEmailInvitesDialog({ open, onOpenChange, invites
       onSent?.();
     } finally {
       setSending(false);
-      setProgress({ done: withEmail.length, total: withEmail.length });
+      setProgress({ done: reachable.length, total: reachable.length });
     }
   };
-
-  const withoutEmail = invites.length - withEmail.length;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Email the invitations</DialogTitle>
+          <DialogTitle>Send the invitations</DialogTitle>
           <DialogDescription>
-            Sends each family the link that is already in the list — {withEmail.length}{' '}
-            {withEmail.length === 1 ? 'family has' : 'families have'} an email address.
+            Sends each family the link that is already in the list — by email and by text.{' '}
+            {reachable.length} {reachable.length === 1 ? 'family can' : 'families can'} be reached.
           </DialogDescription>
         </DialogHeader>
 
@@ -83,12 +82,18 @@ export default function GiftShopEmailInvitesDialog({ open, onOpenChange, invites
             <Textarea rows={6} value={message} onChange={e => setMessage(e.target.value)} />
             <p className="text-xs text-muted-foreground">
               The explanation that the link works only once, each link's closing date and info@candorasociety.com are
-              added below your message automatically.
+              added below your message automatically. The text carries a shorter version with the same link.
             </p>
-            {withoutEmail > 0 && (
+            {byTextOnly > 0 && (
               <p className="text-xs text-muted-foreground">
-                {withoutEmail} open {withoutEmail === 1 ? 'invitation has' : 'invitations have'} no email address — copy
-                or print {withoutEmail === 1 ? 'that link' : 'those links'} instead.
+                {byTextOnly} open {byTextOnly === 1 ? 'invitation has' : 'invitations have'} no email address —
+                {byTextOnly === 1 ? ' that family gets' : ' those families get'} the link by text only.
+              </p>
+            )}
+            {unreachable > 0 && (
+              <p className="text-xs text-muted-foreground">
+                {unreachable} open {unreachable === 1 ? 'invitation has' : 'invitations have'} no email address or phone
+                number — copy or print {unreachable === 1 ? 'that link' : 'those links'} instead.
               </p>
             )}
           </div>
@@ -97,11 +102,11 @@ export default function GiftShopEmailInvitesDialog({ open, onOpenChange, invites
         {!results && (
           <DialogFooter className="gap-2 sm:justify-between">
             <Button variant="outline" onClick={() => onOpenChange(false)} disabled={sending}>Cancel</Button>
-            <Button onClick={send} disabled={sending || !withEmail.length}>
+            <Button onClick={send} disabled={sending || !reachable.length}>
               {sending ? (
                 <><Loader2 className="h-4 w-4 animate-spin" /> Sending {progress.done} of {progress.total}…</>
               ) : (
-                <><Mail className="h-4 w-4" /> Send {withEmail.length} email{withEmail.length === 1 ? '' : 's'}</>
+                <><Send className="h-4 w-4" /> Send {reachable.length} invitation{reachable.length === 1 ? '' : 's'}</>
               )}
             </Button>
           </DialogFooter>

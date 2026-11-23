@@ -4,6 +4,7 @@
 // place so the invitation form, the general form and the front desk all issue
 // codes the same way.
 import { slotLabel, GIFT_SHOP_PROGRAM_NAME } from './giftShopInvites.ts';
+import { sendGiftShopText } from './giftShopSms.ts';
 
 export const GIFT_SHOP_EVENT_DATE = 'Saturday, December 12th';
 export const GIFT_SHOP_EVENT_LOCATION = 'Riverview Crossing Shopping Centre';
@@ -231,11 +232,12 @@ export async function confirmFamilyRegistration(base44, registrationIds) {
   if (!ids.length) return { checkin_code: null };
   const rows = await base44.entities.ProgramRegistration.filter({ id: { $in: ids } });
   const result = await sendRegistrationConfirmation(base44, rows || []);
-  return { checkin_code: result.checkin_code };
+  return { checkin_code: result.checkin_code, emailed: result.emailed, texted: result.texted };
 }
 
-// Stamps the family's code if they do not have one yet, then emails them the
-// code with what they registered for. A failed send never blocks a
+// Stamps the family's code if they do not have one yet, then sends them the
+// code with what they registered for — by email and by text. A family with no
+// email address is reached by text alone. A failed send never blocks a
 // registration — the code is still on the record and can be read out at the desk.
 export async function sendRegistrationConfirmation(base44, rows) {
   const list = (rows || []).filter(Boolean);
@@ -244,7 +246,7 @@ export async function sendRegistrationConfirmation(base44, rows) {
   const first = list[0];
   const code = await stampFamilyCode(base44, list);
   const email = String(first.parent_guardian_email || first.participant_email || '').trim();
-  if (!email) return { sent: false, reason: 'no_email', checkin_code: code };
+  const phone = String(first.parent_guardian_phone || first.participant_phone || '').trim();
 
   const details = list
     .map(row => [
@@ -254,33 +256,54 @@ export async function sendRegistrationConfirmation(base44, rows) {
     ].join(' — '))
     .join(' · ');
 
-  try {
-    const sent = await base44.integrations.Core.SendEmail({
-      to: email,
-      template_name: 'GiftShopRegistrationConfirmation',
-      variables: {
-        guardian_name: first.parent_guardian_name || 'there',
-        checkin_code: code,
-        registration_details: details,
-        time_label: slotLabel(first.time_slot),
-        event_date: GIFT_SHOP_EVENT_DATE,
-        event_location: GIFT_SHOP_EVENT_LOCATION,
-        contact_email: GIFT_SHOP_CONTACT_EMAIL,
-      },
-      category: 'transactional',
-      from_name: 'Candora 360',
-    });
+  let emailed = false;
+  let texted = false;
+  let reason = null;
 
-    if (sent && sent.success === false) {
-      return { sent: false, reason: sent.reason || 'refused', checkin_code: code };
+  if (email) {
+    try {
+      const sent = await base44.integrations.Core.SendEmail({
+        to: email,
+        template_name: 'GiftShopRegistrationConfirmation',
+        variables: {
+          guardian_name: first.parent_guardian_name || 'there',
+          checkin_code: code,
+          registration_details: details,
+          time_label: slotLabel(first.time_slot),
+          event_date: GIFT_SHOP_EVENT_DATE,
+          event_location: GIFT_SHOP_EVENT_LOCATION,
+          contact_email: GIFT_SHOP_CONTACT_EMAIL,
+        },
+        category: 'transactional',
+        from_name: 'Candora 360',
+      });
+
+      if (sent && sent.success === false) reason = sent.reason || 'refused';
+      else emailed = true;
+    } catch (error) {
+      console.log('Gift shop confirmation email failed:', error.message);
+      reason = error.message;
     }
-
-    await base44.entities.ProgramRegistration.bulkUpdate(
-      list.filter(row => row.id).map(row => ({ id: row.id, confirmation_sent_at: new Date().toISOString() })),
-    );
-    return { sent: true, checkin_code: code, reason: null };
-  } catch (error) {
-    console.log('Gift shop confirmation email failed:', error.message);
-    return { sent: false, reason: error.message, checkin_code: code };
+  } else {
+    reason = 'no_email';
   }
+
+  // The same code, in a text — so a family without an email address still gets
+  // what they need to check in.
+  if (phone) {
+    const firstName = String(first.parent_guardian_name || '').trim().split(/\s+/)[0];
+    const message = `Candora Kids Gift Shop: ${firstName ? `${firstName}, you're` : 'you are'} registered for `
+      + `${slotLabel(first.time_slot)} on ${GIFT_SHOP_EVENT_DATE} at ${GIFT_SHOP_EVENT_LOCATION}. `
+      + `Your check-in code is ${code}. Bring it to the registration desk.`;
+    const text = await sendGiftShopText(phone, message);
+    if (text.ok) texted = true;
+    else if (!emailed) reason = text.reason || reason;
+  }
+
+  if (!emailed && !texted) return { sent: false, reason, checkin_code: code };
+
+  await base44.entities.ProgramRegistration.bulkUpdate(
+    list.filter(row => row.id).map(row => ({ id: row.id, confirmation_sent_at: new Date().toISOString() })),
+  );
+  return { sent: true, emailed, texted, checkin_code: code, reason: null };
 }

@@ -55,7 +55,7 @@ export default function GiftShopInviteDialog({ open, onOpenChange, onSaved }) {
         children_allowed: CHILDREN_ALLOWED,
         status: 'invited',
         expires_at: new Date(`${form.expiry_date}T23:59:59`).toISOString(),
-        sent_via: 'email',
+        sent_via: form.guardian_email.trim() ? 'email' : 'text',
         created_by_name: me?.full_name || '',
       });
       toast({ title: 'Invitation created', description: 'Copy the link and send it to the family.' });

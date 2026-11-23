@@ -77,16 +77,21 @@ export default function GiftShopPreRegistration() {
           <div className="flex flex-wrap items-center gap-2 pt-1">
             <Button size="sm" onClick={() => setSingleOpen(true)}><Plus className="h-4 w-4" /> Invite a family</Button>
             <Button size="sm" variant="outline" onClick={() => setSendOpen(true)}><Send className="h-4 w-4" /> Upload a list &amp; send invites</Button>
-            <Button size="sm" variant="outline" onClick={() => setEmailOpen(true)} disabled={!openInvites.some(i => i.guardian_email)}>
-              <Mail className="h-4 w-4" /> Email invitations
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setEmailOpen(true)}
+              disabled={!openInvites.some(i => i.guardian_email || i.guardian_phone)}
+            >
+              <Mail className="h-4 w-4" /> Send invitations
             </Button>
             <Button size="sm" variant="outline" onClick={downloadLinks} disabled={!openInvites.length}>
               <Download className="h-4 w-4" /> Download links
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            Invite a family creates their link only — use Email invitations to send it. Every link opens the standalone
-            pre-registration form, which has no access to any other part of Candora 360.
+            Invite a family creates their link only — use Send invitations to send it by email and text. Every link
+            opens the standalone pre-registration form, which has no access to any other part of Candora 360.
           </p>
         </CardContent>
       </Card>

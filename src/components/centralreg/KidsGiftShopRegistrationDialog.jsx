@@ -127,8 +127,8 @@ export default function KidsGiftShopRegistrationDialog({ open, onOpenChange, onS
 
       const created = await base44.entities.ProgramRegistration.bulkCreate(records);
 
-      // The family gets their six-digit check-in code by email, whichever way
-      // they registered. A failed send never blocks the registration.
+      // The family gets their six-digit check-in code by email and by text,
+      // whichever way they registered. A failed send never blocks the registration.
       base44.functions
         .invoke('giftShopCheckin', {
           action: 'confirm',

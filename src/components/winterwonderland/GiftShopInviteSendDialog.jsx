@@ -75,7 +75,8 @@ export default function GiftShopInviteSendDialog({ open, onOpenChange, onSaved }
         <DialogHeader>
           <DialogTitle>Send pre-registration invites</DialogTitle>
           <DialogDescription>
-            Upload the family list, write your message, and each family gets their own link by email.
+            Upload the family list, write your message, and each family gets their own link by email and by text. A
+            family with no email address gets it by text only.
           </DialogDescription>
         </DialogHeader>
 
@@ -94,7 +95,7 @@ export default function GiftShopInviteSendDialog({ open, onOpenChange, onSaved }
                 rows={5}
                 value={message}
                 onChange={e => setMessage(e.target.value)}
-                placeholder="Write a short message to go in the email…"
+                placeholder="Write a short message to go in the email and text…"
               />
               <p className="text-xs text-muted-foreground">
                 Keep it to a short paragraph. The explanation that the link works only once, the closing date and
