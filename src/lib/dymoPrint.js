@@ -79,6 +79,6 @@ export default async function printDymoTags(tags, target, families = []) {
     await send(target, buildTagLabelXml(tags[index], { qrPng: qrImages[index], logoPng }), tags[index].child_name || 'this child');
   }
   for (const family of families) {
-    await send(target, buildGuardianLabelXml(family), family.guardian_name || 'the parent or guardian');
+    await send(target, buildGuardianLabelXml(family, { logoPng }), family.guardian_name || 'the parent or guardian');
   }
 }

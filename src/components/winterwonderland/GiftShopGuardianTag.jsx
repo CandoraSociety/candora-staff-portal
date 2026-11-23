@@ -12,9 +12,9 @@ export default function GiftShopGuardianTag({ family }) {
     <div className="giftshop-tag relative w-[4in] h-[2.3in] rounded-lg border-2 border-dashed border-slate-400 px-3 py-2 flex items-center gap-2 bg-white overflow-hidden">
       <p
         data-label-badge
-        className="flex-shrink-0 rounded border-2 border-slate-900 px-1.5 py-1 text-[10px] font-black leading-tight tracking-[0.15em] text-slate-900"
+        className="flex-shrink-0 rounded border-2 border-slate-900 px-1.5 py-1 text-[10px] font-black leading-tight tracking-[0.05em] text-slate-900"
       >
-        FAMILY
+        Parent/Guardian
       </p>
       <div data-label-details className="min-w-0 flex-1 space-y-1 border-l-2 border-slate-300 pl-2.5">
         <p data-label-name className="text-[2rem] font-display font-extrabold leading-none text-slate-900 break-words">
@@ -25,13 +25,13 @@ export default function GiftShopGuardianTag({ family }) {
         </p>
         {children.length > 0 && (
           <p data-label-kids className="text-xs font-bold text-slate-900 break-words">
-            {children.join(' · ')}
+            Shopper's name: {children.join(' · ')}
           </p>
         )}
       </div>
       <div data-label-code className="flex flex-col items-center justify-center gap-0.5 flex-shrink-0">
-        <img data-label-logo src={CANDORA_BRAND.logoUrl} alt="Candora" className="h-5 w-5 object-contain" />
-        <p data-label-caption className="text-[7px] font-black tracking-[0.15em] text-slate-700">KGS</p>
+        <img data-label-logo src={CANDORA_BRAND.logoUrl} alt="Candora" className="h-[30px] w-[30px] object-contain" />
+        <p data-label-caption className="text-[11px] font-black leading-none tracking-[0.1em] text-slate-700">KGS</p>
       </div>
     </div>
   );

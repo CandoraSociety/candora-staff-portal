@@ -67,8 +67,8 @@ const qrObject = (qrPng) => imageObject({ name: 'QRCODE', x: 4060, y: 110, width
 // The Candora mark under the QR code and the Kids Gift Shop initials in the
 // footer, printed large enough to read at a glance on the 2.3 x 4 in label.
 const brandObjects = (logoPng) => [
-  logoPng ? imageObject({ name: 'LOGO', x: 4060, y: 1790, width: 1600, height: 1500, png: logoPng, opaque: false }) : '',
-  textObject({ name: 'KGS', x: 1030, y: 2470, width: 2900, height: 780, size: 60, bold: true, align: 'Center', text: 'KGS' }),
+  logoPng ? imageObject({ name: 'LOGO', x: 4060, y: 1790, width: 1600, height: 750, png: logoPng, opaque: false }) : '',
+  textObject({ name: 'KGS', x: 1030, y: 2470, width: 2900, height: 780, size: 30, bold: true, align: 'Center', text: 'KGS' }),
 ];
 
 const wrapLabel = (objects) => `<?xml version="1.0" encoding="utf-8"?>
@@ -101,16 +101,27 @@ export default function buildTagLabelXml(tag, { qrPng, logoPng } = {}) {
 
 // The parent or guardian's own tag: their name, the shopping slot, and every
 // child they are at the shop with. No QR code — it is for the volunteer to read.
-export function buildGuardianLabelXml(family) {
+export function buildGuardianLabelXml(family, { logoPng } = {}) {
   const children = giftShopFamilyChildNames(family);
 
   const objects = [
-    textObject({ name: 'BADGE', x: 140, y: 200, width: 1600, height: 460, size: 20, bold: true, text: 'FAMILY' }),
-    textObject({ name: 'GUARDIAN_NAME', x: 140, y: 760, width: 5400, height: 960, size: 44, bold: true, text: family.guardian_name || 'Parent / Guardian' }),
-    textObject({ name: 'SLOT', x: 140, y: 1820, width: 5400, height: 380, size: 20, bold: true, text: giftShopSlotLabel(family.time_slot) }),
+    textObject({ name: 'BADGE', x: 140, y: 200, width: 3900, height: 460, size: 20, bold: true, text: 'Parent/Guardian' }),
+    textObject({ name: 'GUARDIAN_NAME', x: 140, y: 760, width: 3900, height: 960, size: 44, bold: true, text: family.guardian_name || 'Parent / Guardian' }),
+    textObject({ name: 'SLOT', x: 140, y: 1820, width: 3900, height: 380, size: 20, bold: true, text: giftShopSlotLabel(family.time_slot) }),
     children.length
-      ? textObject({ name: 'KIDS', x: 140, y: 2260, width: 5400, height: 860, size: 22, bold: true, text: children.join('\n') })
+      ? textObject({
+        name: 'KIDS',
+        x: 140,
+        y: 2260,
+        width: 3900,
+        height: 860,
+        size: 22,
+        bold: true,
+        text: children.map(name => `Shopper's name: ${name}`).join('\n'),
+      })
       : '',
+    logoPng ? imageObject({ name: 'LOGO', x: 4400, y: 200, width: 1100, height: 750, png: logoPng, opaque: false }) : '',
+    textObject({ name: 'KGS', x: 4400, y: 1020, width: 1100, height: 500, size: 30, bold: true, align: 'Center', text: 'KGS' }),
   ];
 
   return wrapLabel(objects);
