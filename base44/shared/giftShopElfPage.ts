@@ -59,6 +59,11 @@ const STYLES = `
   .order{font-size:44px;font-weight:900;line-height:1;color:var(--navy)}
   .child-name{font-size:26px;font-weight:800;line-height:1.15;margin:0}
   .child-sub{margin:2px 0 0;font-size:13px;color:var(--muted)}
+  .family{background:#f4f6fb;border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:0 0 14px}
+  .family > span{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);margin-bottom:3px}
+  .family ul{list-style:none;margin:0;padding:0}
+  .family li{font-size:16px;font-weight:800;padding:2px 0}
+  .family li.current{color:var(--muted);font-weight:600}
   .facts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
   .fact{background:#f4f6fb;border:1px solid var(--line);border-radius:10px;padding:10px 12px}
   .fact span{display:block;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);margin-bottom:2px}
@@ -162,18 +167,32 @@ export function elfGiftRows(reg) {
   return rows;
 }
 
-const childCard = (reg) => `
+const childCard = (reg, siblings = [], token = '') => {
+  const currentToken = token || reg.elf_token || '';
+  const others = (siblings || []).filter(sibling => sibling?.token && sibling.token !== currentToken);
+  const selfName = reg.child_name || reg.participant_name || 'Child';
+
+  return `
   <div class="child-head">
     <div class="order">${escapeHtml(reg.check_in_sequence || '–')}</div>
     <div>
-      <p class="child-name">${escapeHtml(reg.child_name || reg.participant_name || 'Child')}</p>
+      <p class="child-name">${escapeHtml(selfName)}</p>
     </div>
   </div>
+  ${others.length ? `
+  <div class="family">
+    <span>Children in this family</span>
+    <ul>
+      <li class="current">${escapeHtml(selfName)} — this child</li>
+      ${others.map(sibling => `<li>${escapeHtml(sibling.name)}</li>`).join('')}
+    </ul>
+  </div>` : ''}
   <div class="facts">
     <div class="fact"><span>Age category</span><strong>${escapeHtml(AGE_LABELS[reg.child_age_band] || 'Not recorded')}</strong></div>
     <div class="fact"><span>Time slot</span><strong>${escapeHtml(slotLabel(reg.time_slot) || 'Not recorded')}</strong></div>
   </div>
 `;
+};
 
 // Who to hand the child back to, with a tap-to-call number and email.
 const guardianCard = (reg) => {
@@ -281,7 +300,7 @@ export function renderElfChildPage({ reg, token, elfName, pin, error = '', saved
     title: `${reg.child_name || 'Child'} · Kids Gift Shop`,
     body: `
       <div class="card">
-        ${childCard(reg)}
+        ${childCard(reg, siblings, token)}
         ${nav ? `
         <form method="post">
           <input type="hidden" name="token" value="${escapeHtml(token)}" />
@@ -312,14 +331,14 @@ export function renderElfChildPage({ reg, token, elfName, pin, error = '', saved
 
 // A volunteer starts the shopping trip before the gift form opens, so the
 // registration desk can see which children are out shopping with an elf.
-export function renderElfBeginPage({ reg, token, elfName, pin }) {
+export function renderElfBeginPage({ reg, token, elfName, pin, siblings = [] }) {
   const first = String(reg.child_name || reg.participant_name || 'this child').trim().split(/\s+/)[0];
 
   return shell({
     title: `${reg.child_name || 'Child'} · Kids Gift Shop`,
     body: `
       <div class="card">
-        ${childCard(reg)}
+        ${childCard(reg, siblings, token)}
         ${guardianCard(reg)}
         <p class="lede">Press Begin shopping when you are ready to walk around with ${escapeHtml(first)}.</p>
         <form method="post">

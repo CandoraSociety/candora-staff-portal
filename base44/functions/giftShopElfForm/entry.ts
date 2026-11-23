@@ -82,7 +82,9 @@ export default async function (req) {
       // desk knows which children are out with an elf.
       if (!active.shopping_started_at) {
         if (action !== 'begin') {
-          return giftShopHtmlResponse(renderElfBeginPage({ reg: active, token: activeToken, elfName, pin }));
+          return giftShopHtmlResponse(renderElfBeginPage({
+            reg: active, token: activeToken, elfName, pin, siblings: await siblingsFor(active),
+          }));
         }
         active = await startElfShopping(base44.asServiceRole, active) || active;
       }
