@@ -4,9 +4,10 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Check, Copy, Loader2, Printer, QrCode } from 'lucide-react';
-import { findDymoPrinter, printDymoGuardianTag } from '@/lib/dymoPrint';
+import printDymoTags, { findDymoPrinter } from '@/lib/dymoPrint';
 import { newInviteToken, PUBLIC_APP_ORIGIN } from '@/lib/giftShopInvites';
 import { qrImageUrl } from '@/lib/giftShopElf';
+import GiftShopNameTag from '@/components/winterwonderland/GiftShopNameTag';
 import GiftShopGuardianTag from '@/components/winterwonderland/GiftShopGuardianTag';
 import printGiftShopLabels from '@/lib/printGiftShopLabels';
 
@@ -99,12 +100,14 @@ export default function GiftShopCheckinQrDialog({ open, onOpenChange }) {
 
     setPrintState('printing');
     try {
-      await printDymoGuardianTag(family, dymoRef.current);
+      // One tag per child, then the parent or guardian's own tag — the same
+      // stickers the desk hands out when it signs a family in by hand.
+      await printDymoTags(rows, dymoRef.current, [family]);
       await base44.entities.GiftShopDeskSession.update(record.id, { printed_at: new Date().toISOString() });
       setPrintState('printed');
     } catch (err) {
       setPrintState('error');
-      setError(`Could not print the name tag: ${err.message}`);
+      setError(`Could not print the name tags: ${err.message}`);
     }
   };
   handlerRef.current = handleArrival;
@@ -151,7 +154,7 @@ export default function GiftShopCheckinQrDialog({ open, onOpenChange }) {
       setPrintState('printed');
     } catch (err) {
       setPrintState('error');
-      setError(`Could not print the name tag: ${err.message}`);
+      setError(`Could not print the name tags: ${err.message}`);
     }
   };
 
@@ -164,7 +167,8 @@ export default function GiftShopCheckinQrDialog({ open, onOpenChange }) {
 
         <p className="text-sm text-muted-foreground">
           Families scan this code with their phone camera, type the six-digit code from their confirmation email and
-          their own name. Their parent or guardian name tag prints here automatically.
+          their own name. Their children are signed in and every name tag — one per child and one for the parent or
+          guardian — prints here automatically.
         </p>
 
         {error && <p role="alert" className="text-sm text-destructive">{error}</p>}
@@ -208,21 +212,24 @@ export default function GiftShopCheckinQrDialog({ open, onOpenChange }) {
 
                 {printState === 'printing' && (
                   <p className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Loader2 className="h-4 w-4 animate-spin" /> Printing the name tag…
+                    <Loader2 className="h-4 w-4 animate-spin" /> Printing the name tags…
                   </p>
                 )}
                 {printState === 'printed' && (
                   <p className="flex items-center gap-2 text-sm font-semibold text-success">
-                    <Check className="h-4 w-4" /> Name tag printed
+                    <Check className="h-4 w-4" /> Name tags printed
                   </p>
                 )}
                 {printState === 'needs_print' && (
                   <Button size="sm" onClick={printThroughBrowser}>
-                    <Printer className="h-3.5 w-3.5" /> Print this name tag
+                    <Printer className="h-3.5 w-3.5" /> Print these name tags
                   </Button>
                 )}
 
-                <div ref={tagRef} className="rounded-lg bg-white p-2">
+                <div ref={tagRef} className="flex flex-col items-center gap-2 rounded-lg bg-white p-2">
+                  {(arrival.children || []).map(child => (
+                    <GiftShopNameTag key={child.id} tag={child} />
+                  ))}
                   <GiftShopGuardianTag family={arrival} />
                 </div>
               </div>

@@ -32,6 +32,14 @@ export function newCheckinCode() {
   return String(buffer[0] % 1000000).padStart(6, '0');
 }
 
+// The code printed as the QR on one child's name tag. It only ever exists on
+// that sticker, so scanning it can never be forged.
+export function newElfCode() {
+  const bytes = new Uint8Array(16);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('');
+}
+
 export async function loadGiftShopRows(base44) {
   const rows = await base44.entities.ProgramRegistration.filter({ program_name: GIFT_SHOP_PROGRAM_NAME });
   return (rows || []).filter(row => row.program_name === GIFT_SHOP_PROGRAM_NAME);
@@ -167,9 +175,26 @@ export async function deskSubmit(base44, { sessionToken, code, guardianName }) {
     };
   }
 
-  await base44.entities.ProgramRegistration.bulkUpdate(
-    lookup.rows.map(row => ({ id: row.id, parent_guardian_name: name })),
-  );
+  // Checking in on the phone is the same as checking in at the desk: every
+  // child who is not signed in yet is signed in now, in the order the families
+  // actually arrive, so their tags carry their order number.
+  const stampedAt = new Date().toISOString();
+  const all = await loadGiftShopRows(base44);
+  let nextSequence = all.reduce((max, row) => Math.max(max, row.check_in_sequence || 0), 0);
+
+  const patches = lookup.rows.map(row => {
+    const patch = { parent_guardian_name: name };
+    if (!row.elf_token) patch.elf_token = newElfCode();
+    if (!row.checked_in) {
+      nextSequence += 1;
+      patch.checked_in = true;
+      patch.checked_in_at = stampedAt;
+      patch.check_in_sequence = nextSequence;
+    }
+    return { id: row.id, ...patch };
+  });
+  await base44.entities.ProgramRegistration.bulkUpdate(patches);
+  const rows = lookup.rows.map(row => ({ ...row, ...patches.find(patch => patch.id === row.id) }));
 
   await base44.entities.GiftShopDeskSession.update(lookup.session.id, {
     arrival_guardian_name: name,
@@ -181,10 +206,7 @@ export async function deskSubmit(base44, { sessionToken, code, guardianName }) {
     last_failed_at: null,
   });
 
-  return {
-    ok: true,
-    family: familyView(lookup.rows.map(row => ({ ...row, parent_guardian_name: name }))),
-  };
+  return { ok: true, rows, family: familyView(rows) };
 }
 
 // A family that has just finished a registration form: their rows are loaded
