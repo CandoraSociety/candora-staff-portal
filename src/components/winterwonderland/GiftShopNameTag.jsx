@@ -29,7 +29,7 @@ export default function GiftShopNameTag({ tag }) {
           <img data-label-qr src={qrImageUrl(elfFormLink(tag.elf_token))} alt="Scan to help this child" className="h-[0.85in] w-[0.85in]" />
         )}
         <img data-label-logo src={CANDORA_BRAND.logoUrl} alt="Candora" className="h-[30px] w-[30px] object-contain" />
-        <p data-label-caption className="text-[11px] font-black leading-none tracking-[0.1em] text-slate-700">KGS</p>
+        <p data-label-caption className="text-[6px] font-black leading-none tracking-[0.1em] text-slate-700">KGS</p>
       </div>
     </div>
   );

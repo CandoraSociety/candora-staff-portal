@@ -68,7 +68,7 @@ const qrObject = (qrPng) => imageObject({ name: 'QRCODE', x: 4060, y: 110, width
 // footer, printed large enough to read at a glance on the 2.3 x 4 in label.
 const brandObjects = (logoPng) => [
   logoPng ? imageObject({ name: 'LOGO', x: 4060, y: 1790, width: 1600, height: 750, png: logoPng, opaque: false }) : '',
-  textObject({ name: 'KGS', x: 1030, y: 2470, width: 2900, height: 780, size: 30, bold: true, align: 'Center', text: 'KGS' }),
+  textObject({ name: 'KGS', x: 1030, y: 2470, width: 2900, height: 780, size: 15, bold: true, align: 'Center', text: 'KGS' }),
 ];
 
 const wrapLabel = (objects) => `<?xml version="1.0" encoding="utf-8"?>
