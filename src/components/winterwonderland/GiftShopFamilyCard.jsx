@@ -45,8 +45,9 @@ export default function GiftShopFamilyCard({ family, onClick, texts = [], onText
   // A family only reads as completed once every child is back, so show how many
   // are already returned while one is still shopping.
   const returnedCount = family.children.filter(giftShopIsCompleted).length;
-  // Any family with a number can be texted, whatever stage they are at.
-  const canText = !!family.guardian_phone;
+  // The come-to-the-desk text belongs to the checked-in phase only — it is not
+  // shown while the children are out shopping or once they are returned.
+  const canText = !!family.guardian_phone && allSignedIn && !shopping && !done;
 
   const textFamily = async (event) => {
     event.stopPropagation();
