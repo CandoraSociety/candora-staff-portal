@@ -91,6 +91,7 @@ export function familyView(rows) {
   const first = rows[0] || {};
   return {
     guardian_name: first.parent_guardian_name || '',
+    guardian_phone: first.parent_guardian_phone || '',
     time_slot: first.time_slot || '',
     time_label: slotLabel(first.time_slot),
     children: rows.map(row => ({
@@ -161,7 +162,7 @@ export async function deskLookup(base44, { sessionToken, code }) {
 // The family types their own name. It is written to their registrations (so it
 // is the name on the parent or guardian tag) and to the desk session, which is
 // what makes the desk computer print the tag.
-export async function deskSubmit(base44, { sessionToken, code, guardianName }) {
+export async function deskSubmit(base44, { sessionToken, code, guardianName, guardianPhone }) {
   const lookup = await deskLookup(base44, { sessionToken, code });
   if (!lookup.ok) return lookup;
 
@@ -175,6 +176,18 @@ export async function deskSubmit(base44, { sessionToken, code, guardianName }) {
     };
   }
 
+  // The number is how the desk reaches the adult while the child is shopping.
+  // It stays on the family's record and is never printed on a name tag.
+  const phone = String(guardianPhone || '').trim();
+  if (phone.replace(/\D/g, '').length < 7) {
+    return {
+      ok: false,
+      status: 400,
+      message: 'Enter a phone number we can reach you at while your child is shopping.',
+      family: lookup.family,
+    };
+  }
+
   // Checking in on the phone is the same as checking in at the desk: every
   // child who is not signed in yet is signed in now, in the order the families
   // actually arrive, so their tags carry their order number.
@@ -183,7 +196,7 @@ export async function deskSubmit(base44, { sessionToken, code, guardianName }) {
   let nextSequence = all.reduce((max, row) => Math.max(max, row.check_in_sequence || 0), 0);
 
   const patches = lookup.rows.map(row => {
-    const patch = { parent_guardian_name: name };
+    const patch = { parent_guardian_name: name, parent_guardian_phone: phone };
     if (!row.elf_token) patch.elf_token = newElfCode();
     if (!row.checked_in) {
       nextSequence += 1;

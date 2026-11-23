@@ -32,6 +32,7 @@ export default async function (req) {
           sessionToken,
           code,
           guardianName: String(form.get('guardian_name') || ''),
+          guardianPhone: String(form.get('guardian_phone') || ''),
         });
         if (!result.ok) {
           const page = result.family
@@ -40,6 +41,7 @@ export default async function (req) {
               code,
               family: result.family,
               name: String(form.get('guardian_name') || ''),
+              phone: String(form.get('guardian_phone') || ''),
               error: result.message,
             })
             : renderCheckinCodePage({ sessionToken, code, error: result.message });

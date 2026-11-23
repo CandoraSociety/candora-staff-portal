@@ -29,7 +29,7 @@ const STYLES = `
   .eyebrow{margin:0 0 4px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.18em;color:var(--muted)}
   .error{background:#fef2f2;border:1px solid #fecaca;color:#991b1b;border-radius:10px;padding:12px 14px;font-size:14px;margin-bottom:14px}
   label{display:block;font-size:13px;font-weight:600;margin-bottom:14px}
-  input[type=text]{width:100%;margin-top:6px;padding:13px 12px;font-size:17px;font-family:inherit;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:9px}
+  input[type=text],input[type=tel]{width:100%;margin-top:6px;padding:13px 12px;font-size:17px;font-family:inherit;color:var(--ink);background:#fff;border:1px solid var(--line);border-radius:9px}
   input#code{margin-top:10px;padding:14px 10px;font-size:32px;font-weight:800;letter-spacing:.34em;text-align:center}
   input:focus{outline:2px solid var(--gold);outline-offset:1px;border-color:var(--gold)}
   .btn{display:block;width:100%;border:0;border-radius:10px;padding:16px 24px;font-size:17px;font-weight:800;background:var(--navy);color:var(--gold);cursor:pointer}
@@ -96,7 +96,7 @@ export function renderCheckinCodePage({ sessionToken = '', code = '', error = ''
   });
 }
 
-export function renderCheckinNamePage({ sessionToken = '', code = '', family = {}, name = '', error = '' }) {
+export function renderCheckinNamePage({ sessionToken = '', code = '', family = {}, name = '', phone = '', error = '' }) {
   const children = (family.children || []).map(child => `
     <div class="child">
       <strong>${escapeHtml(child.name)}</strong>
@@ -120,6 +120,9 @@ export function renderCheckinNamePage({ sessionToken = '', code = '', family = {
           <input type="hidden" name="action" value="submit" />
           <label for="guardian_name">Your name — this prints on your name tag
             <input id="guardian_name" name="guardian_name" type="text" autocomplete="name" value="${escapeHtml(name || family.guardian_name || '')}" required />
+          </label>
+          <label for="guardian_phone">Your phone number — so we can reach you while your child shops
+            <input id="guardian_phone" name="guardian_phone" type="tel" inputmode="tel" autocomplete="tel" value="${escapeHtml(phone || family.guardian_phone || '')}" required />
           </label>
           <button class="btn" type="submit">Submit and print my name tag</button>
         </form>
