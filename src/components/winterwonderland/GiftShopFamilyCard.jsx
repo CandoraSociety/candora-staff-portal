@@ -92,7 +92,7 @@ export default function GiftShopFamilyCard({ family, onClick }) {
             </span>
           ) : shopping ? (
             <span className="text-[10px] font-semibold text-highlight flex items-center gap-1 flex-shrink-0">
-              <ShoppingBag className="h-3 w-3" /> Out shopping
+              <ShoppingBag className="h-3 w-3" /> Out shopping{elfName ? ` · ${elfName}` : ''}
             </span>
           ) : allSignedIn ? (
             <span className="text-[10px] font-semibold text-green-700 flex items-center gap-1 flex-shrink-0">

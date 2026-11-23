@@ -134,7 +134,8 @@ export const giftShopFamilyShopping = (family) =>
 export const giftShopIsCompleted = (reg) => Boolean(reg?.completed);
 export const giftShopFamilyCompleted = (family) =>
   (family?.children || []).length > 0 && family.children.every(giftShopIsCompleted);
-export const giftShopElfName = (reg) => (reg?.completed_by_elf || '').trim();
+// The elf who took the child shopping, kept on the card after they are returned.
+export const giftShopElfName = (reg) => (reg?.assigned_elf || reg?.completed_by_elf || '').trim();
 
 const familyKey = (r) => [
   (r.parent_guardian_name || r.participant_name || '').trim().toLowerCase(),

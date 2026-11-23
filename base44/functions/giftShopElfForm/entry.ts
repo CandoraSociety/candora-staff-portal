@@ -87,7 +87,7 @@ export default async function (req) {
             reg: active, token: activeToken, elfName, pin, siblings: await siblingsFor(active),
           }));
         }
-        active = await startElfShopping(base44.asServiceRole, active) || active;
+        active = await startElfShopping(base44.asServiceRole, active, elfName) || active;
       }
 
       // A gift that is still locked has no input on the page, so only the gifts

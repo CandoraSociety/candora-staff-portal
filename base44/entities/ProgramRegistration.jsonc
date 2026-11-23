@@ -264,6 +264,10 @@
       "format": "date-time",
       "description": "When a volunteer pressed Begin shopping on the child's tag form \u2014 puts the child in the Shopping section until they are returned to their parent or guardian"
     },
+    "assigned_elf": {
+      "type": "string",
+      "description": "Name of the volunteer (elf) who began shopping with the child \u2014 stays on the child's card after they are returned"
+    },
     "elf_token": {
       "type": "string",
       "description": "Unguessable code printed as the QR code on the child's name tag. It opens the volunteer's form for that one child, and only after the desk PIN is entered."

@@ -365,7 +365,7 @@ export function renderElfBeginPage({ reg, token, elfName, pin, siblings = [] }) 
 
 // Marks the child, and the siblings signed in with them, as shopping. Children
 // already out shopping or already returned are left exactly as they are.
-export async function startElfShopping(base44, reg) {
+export async function startElfShopping(base44, reg, elfName = '') {
   const now = new Date().toISOString();
   if (reg?.shopping_started_at) return reg;
 
@@ -377,11 +377,11 @@ export async function startElfShopping(base44, reg) {
 
   if (targets.length) {
     await base44.entities.ProgramRegistration.bulkUpdate(
-      targets.map(child => ({ id: child.id, shopping_started_at: now })),
+      targets.map(child => ({ id: child.id, shopping_started_at: now, assigned_elf: elfName || child.assigned_elf || '' })),
     );
   }
 
-  return { ...reg, shopping_started_at: now };
+  return { ...reg, shopping_started_at: now, assigned_elf: elfName || reg.assigned_elf || '' };
 }
 
 export function renderElfDonePage({ reg, elfName, token = '', pin = '', siblings = [] }) {
