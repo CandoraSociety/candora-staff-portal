@@ -1,7 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
-import { CheckCircle2, Gift, ShoppingBag } from 'lucide-react';
-import { giftShopChildFullName, giftShopFamilyCompleted, giftShopFamilyShopping, giftShopIsCompleted, giftShopIsShopping, giftShopElfName, giftShopSlotLabel, giftShopTagGifts } from '@/lib/giftShopFamilies';
+import { Button } from '@/components/ui/button';
+import { CheckCircle2, Gift, Loader2, MessageSquare, ShoppingBag } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
+import { base44 } from '@/api/base44Client';
+import { giftShopChildFirstName, giftShopChildFullName, giftShopFamilyCompleted, giftShopFamilyShopping, giftShopIsCompleted, giftShopIsShopping, giftShopElfName, giftShopSlotLabel, giftShopTagGifts } from '@/lib/giftShopFamilies';
 
 const statusPill = (status) => {
   if (['approved', 'enrolled'].includes(status)) return { label: 'Confirmed', className: 'bg-green-100 text-green-700' };
@@ -12,6 +15,9 @@ const statusPill = (status) => {
 // One registration card per family: the children's names lead, the guardian sits
 // underneath. Clicking it opens sign-in and editing for that family.
 export default function GiftShopFamilyCard({ family, onClick }) {
+  const { toast } = useToast();
+  const [sending, setSending] = useState(false);
+  const [sent, setSent] = useState(false);
   const waitlisted = family.children.some(c => c.status === 'waitlisted');
   // An elf closed the children out from the tag form: they finished shopping and
   // went back to their parent or guardian.
@@ -29,6 +35,29 @@ export default function GiftShopFamilyCard({ family, onClick }) {
   // A family only reads as completed once every child is back, so show how many
   // are already returned while one is still shopping.
   const returnedCount = family.children.filter(giftShopIsCompleted).length;
+  // A family who has signed in but is not shopping yet can be texted to come to
+  // the desk as their turn approaches.
+  const canText = allSignedIn && !done && !shopping && !!family.guardian_phone;
+
+  const textFamily = async (event) => {
+    event.stopPropagation();
+    setSending(true);
+    try {
+      const names = family.children.map(giftShopChildFirstName);
+      const list = names.length > 1 ? `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}` : names[0];
+      const first = (family.guardian_name || '').trim().split(/\s+/)[0];
+      const body = `Hi ${first || 'there'}, Candora Kids Gift Shop here. Please bring ${list} to the check-in desk now. Your turn to shop is coming up.`;
+      const res = await base44.functions.invoke('sendSms', { to: family.guardian_phone, body });
+      if (res.data?.error) throw new Error(res.data.error);
+      setSent(true);
+      setTimeout(() => setSent(false), 6000);
+      toast({ title: 'Text sent', description: `${family.guardian_name} was asked to come to the desk.` });
+    } catch (err) {
+      toast({ title: 'Could not send the text', description: err.message, variant: 'destructive' });
+    } finally {
+      setSending(false);
+    }
+  };
 
   return (
     <Card
@@ -95,8 +124,24 @@ export default function GiftShopFamilyCard({ family, onClick }) {
               <ShoppingBag className="h-3 w-3" /> Out shopping{elfName ? ` · ${elfName}` : ''}
             </span>
           ) : allSignedIn ? (
-            <span className="text-[10px] font-semibold text-green-700 flex items-center gap-1 flex-shrink-0">
-              <CheckCircle2 className="h-3 w-3" /> Signed in
+            <span className="flex flex-shrink-0 items-center gap-2">
+              <span className="text-[10px] font-semibold text-green-700 flex items-center gap-1">
+                <CheckCircle2 className="h-3 w-3" /> Signed in
+              </span>
+              {canText && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={textFamily}
+                  disabled={sending}
+                  className="h-7 gap-1 px-2 text-[11px]"
+                >
+                  {sending
+                    ? <Loader2 className="h-3 w-3 animate-spin" />
+                    : <MessageSquare className="h-3 w-3" />}
+                  {sending ? 'Sending…' : sent ? 'Text sent' : 'Text to come up'}
+                </Button>
+              )}
             </span>
           ) : (
             <span className="text-[10px] text-muted-foreground flex-shrink-0">Tap to sign in</span>
