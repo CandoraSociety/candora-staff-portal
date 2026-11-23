@@ -150,7 +150,7 @@ function childFields(index, value) {
         <label>Who is the gift for?
           <select name="child_${index}_gift1_rec"${req}>${options(GIFT_SHOP_RECIPIENTS, value?.gift_1_rec || '', RECIPIENT_LABELS, 'Select who the gift is for')}</select>
         </label>
-        <label class="gift-gender" data-gender-for="child_${index}_gift1">The gift is for a…
+        <label class="gift-gender" data-gender-for="child_${index}_gift1"${['other', 'caregiver'].includes(value?.gift_1_rec || '') ? '' : ' hidden'}>The gift is for a…
           <select name="child_${index}_gift1">${options(GIFT_SHOP_GENDERS, value?.gift_1 || '', GENDER_LABELS, 'Select')}</select>
         </label>
       </div>
@@ -159,7 +159,7 @@ function childFields(index, value) {
         <label>Who is the gift for?
           <select name="child_${index}_gift2_rec">${options(GIFT_SHOP_RECIPIENTS, value?.gift_2_rec || '', RECIPIENT_LABELS, 'Select who the gift is for')}</select>
         </label>
-        <label class="gift-gender" data-gender-for="child_${index}_gift2">The gift is for a…
+        <label class="gift-gender" data-gender-for="child_${index}_gift2"${['other', 'caregiver'].includes(value?.gift_2_rec || '') ? '' : ' hidden'}>The gift is for a…
           <select name="child_${index}_gift2">${options(GIFT_SHOP_GENDERS, value?.gift_2 || '', GENDER_LABELS, 'Select')}</select>
         </label>
       </div>
@@ -219,6 +219,24 @@ function shell({ title, body, maxChildren = 1, mode = 'invite' }) {
     ${general ? 'Questions? Email' : 'Questions, or trouble with your link? Email'}
     <a href="mailto:${GIFT_SHOP_CONTACT_EMAIL}">${GIFT_SHOP_CONTACT_EMAIL}</a>
   </footer>
+  <script>
+    (function () {
+      var asks = { other: 1, caregiver: 1 };
+      var sync = function (select) {
+        var label = document.querySelector('[data-gender-for="' + select.name.replace(/_rec$/, '') + '"]');
+        if (!label) return;
+        var gender = label.querySelector('select');
+        var show = !!asks[select.value];
+        label.hidden = !show;
+        gender.disabled = !show;
+        if (!show) gender.value = '';
+      };
+      Array.prototype.forEach.call(document.querySelectorAll('select[name$="_rec"]'), function (select) {
+        select.addEventListener('change', function () { sync(select); });
+        sync(select);
+      });
+    })();
+  </script>
 </body>
 </html>`;
 }
