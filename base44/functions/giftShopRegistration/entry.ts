@@ -13,6 +13,8 @@ import { confirmFamilyRegistration } from '../../shared/giftShopCheckin.ts';
 // same form families see through a pre-registration link, but with no
 // invitation: anyone can open it, as often as their family needs, until
 // December 9th or until every shopping time is full.
+// Gift gender is asked only for Other and Caregiver — every other recipient
+// carries its own gender (see giftShopInvites.ts).
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);

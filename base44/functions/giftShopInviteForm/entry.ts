@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import {
   buildPublicInvite,
   redeemGiftShopInvite,
@@ -12,6 +12,8 @@ import { confirmFamilyRegistration } from '../../shared/giftShopCheckin.ts';
 // The Kids Gift Shop pre-registration form, served as its own standalone page.
 // Nothing from the portal is loaded here and no app data is reachable: the page
 // is built from one invitation and posts back to this same function.
+// Gift gender is asked only for Other and Caregiver — every other recipient
+// carries its own gender (see giftShopInvites.ts).
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
