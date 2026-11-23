@@ -25,7 +25,10 @@ export default function GiftShopFamilyCard({ family, onClick, texts = [], onText
   // a new message only while the desk has not opened it yet.
   const reply = lastReply(texts, family.guardian_phone);
   const unread = unreadReplies(texts, family.guardian_phone).length > 0;
-  const textedAt = lastComeUpSent(texts, family.guardian_phone)?.sent_at;
+  // "Texted" only means something once the family is checked in.
+  const textedAt = family.children.every(c => c.checked_in)
+    ? lastComeUpSent(texts, family.guardian_phone)?.sent_at
+    : null;
   // An elf closed the children out from the tag form: they finished shopping and
   // went back to their parent or guardian.
   const done = giftShopFamilyCompleted(family);
