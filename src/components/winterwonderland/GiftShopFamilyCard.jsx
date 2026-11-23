@@ -5,7 +5,7 @@ import { CheckCheck, CheckCircle2, Gift, Loader2, MessageSquare, ShoppingBag } f
 import { useToast } from '@/components/ui/use-toast';
 import { base44 } from '@/api/base44Client';
 import GiftShopTextThreadDialog from '@/components/winterwonderland/GiftShopTextThreadDialog';
-import { lastTextSent, normalizeSmsPhone, unreadReplies } from '@/lib/giftShopTexts';
+import { lastReply, lastTextSent, normalizeSmsPhone, unreadReplies } from '@/lib/giftShopTexts';
 import { giftShopChildFirstName, giftShopChildFullName, giftShopFamilyCompleted, giftShopFamilyShopping, giftShopIsCompleted, giftShopIsShopping, giftShopElfName, giftShopSlotLabel, giftShopTagGifts } from '@/lib/giftShopFamilies';
 
 const statusPill = (status) => {
@@ -21,8 +21,10 @@ export default function GiftShopFamilyCard({ family, onClick, texts = [], onText
   const [sending, setSending] = useState(false);
   const [threadOpen, setThreadOpen] = useState(false);
   const waitlisted = family.children.some(c => c.status === 'waitlisted');
-  // Replies the desk has not opened yet, and the last text it sent this family.
-  const unread = unreadReplies(texts, family.guardian_phone);
+  // The family's latest reply stays on the card after it is opened, and reads as
+  // a new message only while the desk has not opened it yet.
+  const reply = lastReply(texts, family.guardian_phone);
+  const unread = unreadReplies(texts, family.guardian_phone).length > 0;
   const textedAt = lastTextSent(texts, family.guardian_phone)?.sent_at;
   // An elf closed the children out from the tag form: they finished shopping and
   // went back to their parent or guardian.
@@ -162,15 +164,21 @@ export default function GiftShopFamilyCard({ family, onClick, texts = [], onText
           )}
         </div>
 
-        {unread.length > 0 && (
+        {reply && (
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); setThreadOpen(true); }}
-            className="mt-2 flex w-full items-center gap-2 rounded-md border border-green-600/40 bg-green-50 px-2 py-1.5 text-left transition-colors hover:bg-green-100"
+            className={`mt-2 flex w-full items-center gap-2 rounded-md border px-2 py-1.5 text-left transition-colors ${
+              unread
+                ? 'border-red-600/40 bg-red-50 hover:bg-red-100'
+                : 'border-border bg-muted/50 hover:bg-muted'
+            }`}
           >
-            <span className="h-2 w-2 flex-shrink-0 rounded-full bg-green-600" />
-            <span className="flex-shrink-0 text-[11px] font-bold text-green-800">New message</span>
-            <span className="truncate text-[11px] text-green-800/70">{unread[unread.length - 1].body}</span>
+            <span className={`h-2 w-2 flex-shrink-0 rounded-full ${unread ? 'bg-red-600' : 'bg-muted-foreground/40'}`} />
+            <span className={`flex-shrink-0 text-[11px] font-bold ${unread ? 'text-red-700' : 'text-muted-foreground'}`}>
+              {unread ? 'New message' : 'Reply'}
+            </span>
+            <span className={`truncate text-[11px] ${unread ? 'text-red-700/70' : 'text-muted-foreground'}`}>{reply.body}</span>
           </button>
         )}
       </CardContent>

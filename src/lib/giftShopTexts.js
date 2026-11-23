@@ -23,6 +23,13 @@ export const textsForPhone = (texts, phone) => {
 export const unreadReplies = (texts, phone) =>
   textsForPhone(texts, phone).filter(t => t.direction === 'in' && !t.read_at);
 
+// The family's most recent reply, read or not, so it stays on their card after
+// the desk has opened it.
+export const lastReply = (texts, phone) => {
+  const replies = textsForPhone(texts, phone).filter(t => t.direction === 'in');
+  return replies[replies.length - 1] || null;
+};
+
 // The last text the desk sent this family, so the card can say it went out.
 export const lastTextSent = (texts, phone) => {
   const sent = textsForPhone(texts, phone).filter(t => t.direction === 'out');
