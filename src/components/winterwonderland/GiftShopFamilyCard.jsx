@@ -42,9 +42,8 @@ export default function GiftShopFamilyCard({ family, onClick, texts = [], onText
   // A family only reads as completed once every child is back, so show how many
   // are already returned while one is still shopping.
   const returnedCount = family.children.filter(giftShopIsCompleted).length;
-  // A family who has signed in but is not shopping yet can be texted to come to
-  // the desk as their turn approaches.
-  const canText = allSignedIn && !done && !shopping && !!family.guardian_phone;
+  // Any family with a number can be texted, whatever stage they are at.
+  const canText = !!family.guardian_phone;
 
   const textFamily = async (event) => {
     event.stopPropagation();
@@ -126,42 +125,42 @@ export default function GiftShopFamilyCard({ family, onClick, texts = [], onText
             {giftShopSlotLabel(family.time_slot)} • {family.guardian_name}
             {family.guardian_phone ? ` • ${family.guardian_phone}` : ''}
           </p>
-          {done ? (
-            <span className="text-[10px] font-semibold text-accent flex items-center gap-1 flex-shrink-0">
-              <Gift className="h-3 w-3" /> Returned{elfName ? ` · ${elfName}` : ''}
-            </span>
-          ) : returnedCount > 0 ? (
-            <span className="text-[10px] font-semibold text-accent flex items-center gap-1 flex-shrink-0">
-              <Gift className="h-3 w-3" /> {returnedCount} of {family.children.length} returned
-            </span>
-          ) : shopping ? (
-            <span className="text-[10px] font-semibold text-highlight flex items-center gap-1 flex-shrink-0">
-              <ShoppingBag className="h-3 w-3" /> Out shopping{elfName ? ` · ${elfName}` : ''}
-            </span>
-          ) : allSignedIn ? (
-            <span className="flex flex-shrink-0 items-center gap-2">
+          <span className="flex flex-shrink-0 items-center gap-2">
+            {done ? (
+              <span className="text-[10px] font-semibold text-accent flex items-center gap-1">
+                <Gift className="h-3 w-3" /> Returned{elfName ? ` · ${elfName}` : ''}
+              </span>
+            ) : returnedCount > 0 ? (
+              <span className="text-[10px] font-semibold text-accent flex items-center gap-1">
+                <Gift className="h-3 w-3" /> {returnedCount} of {family.children.length} returned
+              </span>
+            ) : shopping ? (
+              <span className="text-[10px] font-semibold text-highlight flex items-center gap-1">
+                <ShoppingBag className="h-3 w-3" /> Out shopping{elfName ? ` · ${elfName}` : ''}
+              </span>
+            ) : allSignedIn ? (
               <span className="text-[10px] font-semibold text-green-700 flex items-center gap-1">
                 <CheckCircle2 className="h-3 w-3" /> Checked In
               </span>
-              {canText && (
-                <Button
-                  size="sm"
-                  onClick={textFamily}
-                  disabled={sending}
-                  className="h-7 gap-1 bg-green-600 px-2 text-[11px] text-white hover:bg-green-700"
-                >
-                  {sending
-                    ? <Loader2 className="h-3 w-3 animate-spin" />
-                    : textedAt
-                      ? <CheckCheck className="h-3 w-3" />
-                      : <MessageSquare className="h-3 w-3" />}
-                  {sending ? 'Sending…' : textedAt ? 'Texted' : 'Text to come up'}
-                </Button>
-              )}
-            </span>
-          ) : (
-            <span className="text-[10px] text-muted-foreground flex-shrink-0">Tap to sign in</span>
-          )}
+            ) : (
+              <span className="text-[10px] text-muted-foreground">Tap to sign in</span>
+            )}
+            {canText && (
+              <Button
+                size="sm"
+                onClick={textFamily}
+                disabled={sending}
+                className="h-7 gap-1 bg-green-600 px-2 text-[11px] text-white hover:bg-green-700"
+              >
+                {sending
+                  ? <Loader2 className="h-3 w-3 animate-spin" />
+                  : textedAt
+                    ? <CheckCheck className="h-3 w-3" />
+                    : <MessageSquare className="h-3 w-3" />}
+                {sending ? 'Sending…' : textedAt ? 'Texted' : 'Text to come up'}
+              </Button>
+            )}
+          </span>
         </div>
 
         {reply && (
