@@ -60,7 +60,7 @@ export default function GiftShopSlotBoard({ families, renderFamily, slot: contro
             >
               <span className="text-xs font-semibold">{s.label}</span>
               <span className="text-[10px] font-normal opacity-80">
-                {s.signed} of {s.total} signed in
+                {s.signed} of {s.total} checked in
               </span>
             </Button>
           ))}
@@ -90,7 +90,7 @@ export default function GiftShopSlotBoard({ families, renderFamily, slot: contro
           {signedIn.length > 0 && (
             <section className="space-y-2">
               <h3 className="flex items-center gap-1.5 text-sm font-display font-semibold text-green-700">
-                <CheckCircle2 className="h-4 w-4" /> Signed in
+                <CheckCircle2 className="h-4 w-4" /> Checked In
                 <span className="text-xs font-normal text-muted-foreground">({countChildren(signedIn)})</span>
               </h3>
               {signedIn.map(renderFamily)}

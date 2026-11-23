@@ -30,7 +30,7 @@ export default function GiftShopSignIn({ standalone = false }) {
       <div className="grid gap-3 sm:grid-cols-3">
         <Card className="border-highlight/30 bg-gradient-to-br from-highlight/10 via-card to-card">
           <CardContent className="pt-5">
-            <p className="text-xs font-medium text-highlight flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Signed in</p>
+            <p className="text-xs font-medium text-highlight flex items-center gap-1"><CheckCircle2 className="h-3 w-3" /> Checked In</p>
             <p className="text-2xl font-bold text-highlight">{signedIn} <span className="text-sm font-semibold text-highlight/70">of {active.length}</span></p>
             <div className="mt-2 flex items-center gap-4 border-t border-highlight/30 pt-2">
               <div className="flex items-center gap-2">
@@ -60,7 +60,7 @@ export default function GiftShopSignIn({ standalone = false }) {
 
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h2 className="text-lg font-display font-semibold">Sign children in</h2>
+          <h2 className="text-lg font-display font-semibold">Check-in</h2>
           <p className="text-xs text-muted-foreground">
             Pick a shopping time, then tap a family to sign the children in and print their name tags. Sign-ins update on every screen as they happen.
           </p>

@@ -139,7 +139,7 @@ export default function GiftShopFamilyCard({ family, onClick, texts = [], onText
           ) : allSignedIn ? (
             <span className="flex flex-shrink-0 items-center gap-2">
               <span className="text-[10px] font-semibold text-green-700 flex items-center gap-1">
-                <CheckCircle2 className="h-3 w-3" /> Signed in
+                <CheckCircle2 className="h-3 w-3" /> Checked In
               </span>
               {canText && (
                 <Button
