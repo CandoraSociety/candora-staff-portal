@@ -21,7 +21,6 @@ import PathwaysPublicIntake from '@/pages/portal/PathwaysPublicIntake';
 import EmpowerUPublicApplication from '@/pages/portal/EmpowerUPublicApplication';
 import SelfRegister from '@/pages/portal/SelfRegister';
 import GiftShopInvite from '@/pages/portal/GiftShopInvite';
-import GiftShopCheckIn from '@/pages/portal/GiftShopCheckIn';
 import CampaignPublicPage from '@/pages/portal/CampaignPublicPage';
 import GeneralDonationPage from '@/pages/portal/GeneralDonationPage';
 import GiftThankYou from '@/pages/portal/GiftThankYou';
@@ -471,7 +470,6 @@ const AuthenticatedApp = () => {
     || location.startsWith('/campaign')
     || location.startsWith('/donate')
     || location.startsWith('/gift-shop-invite')
-    || location.startsWith('/gift-shop-checkin')
     || location.startsWith('/empoweru-apply');
 
   // Only show loading spinner for protected routes, not public auth pages
@@ -509,10 +507,6 @@ const AuthenticatedApp = () => {
 
       {/* Kids Gift Shop private pre-registration — opened from an invitation link only */}
       <Route path="/gift-shop-invite" element={<GiftShopInvite />} />
-
-      {/* Kids Gift Shop check-in — opened from the QR code at the desk, on the
-          family's own phone. No login, no portal navigation. */}
-      <Route path="/gift-shop-checkin" element={<GiftShopCheckIn />} />
 
       {/* Public campaign page — supporters read the appeal and give online, no login */}
       <Route path="/campaign/:slug" element={<CampaignPublicPage />} />

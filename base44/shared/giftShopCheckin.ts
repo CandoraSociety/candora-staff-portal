@@ -95,6 +95,98 @@ export function familyView(rows) {
   };
 }
 
+const FAILURE_WINDOW_MS = 10 * 60 * 1000;
+const MAX_FAILURES = 12;
+
+const cleanCode = (value) => String(value || '').replace(/\D/g, '').slice(0, 6);
+
+export async function findDeskSession(base44, token) {
+  if (!token) return null;
+  const sessions = await base44.entities.GiftShopDeskSession.filter({ token });
+  return (sessions || [])[0] || null;
+}
+
+// The lookup a family's phone makes at the desk: the desk's own session token
+// is checked first, then the six-digit code. A short code is only safe while it
+// cannot be guessed through, so repeated misses on one desk are locked out for
+// a few minutes.
+export async function deskLookup(base44, { sessionToken, code }) {
+  if (!sessionToken) {
+    return {
+      ok: false,
+      status: 400,
+      message: 'This page only works from the QR code at the Kids Gift Shop check-in desk. Please scan it with your phone camera, or ask a volunteer for help.',
+    };
+  }
+  const session = await findDeskSession(base44, sessionToken);
+  if (!session || session.status !== 'active') {
+    return { ok: false, status: 410, message: 'This check-in desk is not open. Please ask a volunteer for help.' };
+  }
+
+  const cleaned = cleanCode(code);
+  if (cleaned.length !== 6) {
+    return { ok: false, status: 400, message: 'Enter the six-digit code from your confirmation email.' };
+  }
+
+  const lastFailure = session.last_failed_at ? new Date(session.last_failed_at).getTime() : 0;
+  const recentFailures = Date.now() - lastFailure < FAILURE_WINDOW_MS ? Number(session.failed_lookups) || 0 : 0;
+  if (recentFailures >= MAX_FAILURES) {
+    return { ok: false, status: 429, message: 'Too many tries at this desk. Please ask a volunteer for help.' };
+  }
+
+  const rows = await familyRowsForCode(base44, cleaned);
+  if (!rows.length) {
+    await base44.entities.GiftShopDeskSession.update(session.id, {
+      failed_lookups: recentFailures + 1,
+      last_failed_at: new Date().toISOString(),
+    });
+    return {
+      ok: false,
+      status: 404,
+      message: 'We could not find a registration with that code. Check the code in your confirmation email and try again.',
+    };
+  }
+
+  return { ok: true, session, code: cleaned, rows, family: familyView(rows) };
+}
+
+// The family types their own name. It is written to their registrations (so it
+// is the name on the parent or guardian tag) and to the desk session, which is
+// what makes the desk computer print the tag.
+export async function deskSubmit(base44, { sessionToken, code, guardianName }) {
+  const lookup = await deskLookup(base44, { sessionToken, code });
+  if (!lookup.ok) return lookup;
+
+  const name = String(guardianName || '').trim();
+  if (!name) {
+    return {
+      ok: false,
+      status: 400,
+      message: 'Enter your name as you would like it on your name tag.',
+      family: lookup.family,
+    };
+  }
+
+  await base44.entities.ProgramRegistration.bulkUpdate(
+    lookup.rows.map(row => ({ id: row.id, parent_guardian_name: name })),
+  );
+
+  await base44.entities.GiftShopDeskSession.update(lookup.session.id, {
+    arrival_guardian_name: name,
+    arrival_code: lookup.code,
+    arrival_registration_ids: lookup.rows.map(row => row.id),
+    arrival_at: new Date().toISOString(),
+    printed_at: null,
+    failed_lookups: 0,
+    last_failed_at: null,
+  });
+
+  return {
+    ok: true,
+    family: familyView(lookup.rows.map(row => ({ ...row, parent_guardian_name: name }))),
+  };
+}
+
 // A family that has just finished a registration form: their rows are loaded
 // from the ids the form returned, stamped with one code, and emailed their
 // confirmation. The code comes back for the success page.

@@ -16,7 +16,7 @@ import printGiftShopLabels from '@/lib/printGiftShopLabels';
 // to it — no computer ever needs to be identified, because DYMO Connect only
 // ever talks to the printer on the machine the page is open on.
 const TOKEN_KEY = 'kgs_checkin_desk_token';
-const checkinLink = (token) => `${PUBLIC_APP_ORIGIN}/gift-shop-checkin?t=${token}`;
+const checkinLink = (token) => `${PUBLIC_APP_ORIGIN}/functions/giftShopCheckinForm?t=${token}`;
 
 export default function GiftShopCheckinQrDialog({ open, onOpenChange }) {
   const [session, setSession] = useState(null);
