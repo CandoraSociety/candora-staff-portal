@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Check, Copy, Loader2, Printer, QrCode } from 'lucide-react';
-import printDymoTags, { findDymoPrinter } from '@/lib/dymoPrint';
+import printDymoTags, { findDymoPrinter, printDymoCheckinQr } from '@/lib/dymoPrint';
 import { newInviteToken, PUBLIC_APP_ORIGIN } from '@/lib/giftShopInvites';
 import { qrImageUrl } from '@/lib/giftShopElf';
 import GiftShopNameTag from '@/components/winterwonderland/GiftShopNameTag';
@@ -26,6 +26,7 @@ export default function GiftShopCheckinQrDialog({ open, onOpenChange }) {
   const [printState, setPrintState] = useState('idle');
   const [error, setError] = useState('');
   const [copied, setCopied] = useState(false);
+  const [qrPrint, setQrPrint] = useState('idle');
 
   const dymoRef = useRef(null);
   const handledRef = useRef('');
@@ -40,6 +41,7 @@ export default function GiftShopCheckinQrDialog({ open, onOpenChange }) {
     setArrival(null);
     setPrintState('idle');
     setCopied(false);
+    setQrPrint('idle');
     setSession(null);
     handledRef.current = '';
 
@@ -144,6 +146,25 @@ export default function GiftShopCheckinQrDialog({ open, onOpenChange }) {
     setTimeout(() => setCopied(false), 2000);
   };
 
+  // Prints this desk's own QR code on a label, so a fresh sticker can be put
+  // over the old one whenever the code changes.
+  const printQr = async () => {
+    setError('');
+    if (!dymoRef.current) {
+      setError('DYMO Connect is not running on this computer, so the QR code cannot be printed. Start DYMO Connect, then print again.');
+      return;
+    }
+    setQrPrint('printing');
+    try {
+      await printDymoCheckinQr(link, dymoRef.current);
+      setQrPrint('printed');
+      setTimeout(() => setQrPrint('idle'), 4000);
+    } catch (err) {
+      setQrPrint('idle');
+      setError(`Could not print the QR code: ${err.message}`);
+    }
+  };
+
   // Without DYMO Connect the tag still prints, through the browser's print window.
   const printThroughBrowser = async () => {
     setError('');
@@ -192,6 +213,14 @@ export default function GiftShopCheckinQrDialog({ open, onOpenChange }) {
                   {copied ? 'Copied' : 'Copy link'}
                 </Button>
               </div>
+              <Button size="sm" onClick={printQr} disabled={qrPrint === 'printing'} className="w-full">
+                {qrPrint === 'printing'
+                  ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  : qrPrint === 'printed'
+                    ? <Check className="h-3.5 w-3.5" />
+                    : <Printer className="h-3.5 w-3.5" />}
+                {qrPrint === 'printing' ? 'Printing…' : qrPrint === 'printed' ? 'QR code printed' : 'Print QR Code'}
+              </Button>
             </div>
 
             <p className="text-xs text-muted-foreground">

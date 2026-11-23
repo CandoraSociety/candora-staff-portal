@@ -99,6 +99,30 @@ export default function buildTagLabelXml(tag, { qrPng, logoPng } = {}) {
   return wrapLabel(objects);
 }
 
+// The check-in desk's own QR label — the same code shown in the Check-in QR
+// window, printed at the label size so a fresh sticker can go over an old one
+// whenever the desk code changes.
+export function buildCheckinQrLabelXml({ qrPng, logoPng } = {}) {
+  const objects = [
+    textObject({
+      name: 'TITLE',
+      x: 150,
+      y: 100,
+      width: 5415,
+      height: 620,
+      size: 32,
+      bold: true,
+      align: 'Center',
+      text: 'Scan to Check-In to Kids Gift Shop',
+    }),
+    qrPng ? imageObject({ name: 'QRCODE', x: 1907, y: 780, width: 1900, height: 1900, png: qrPng }) : '',
+    logoPng ? imageObject({ name: 'LOGO', x: 1902, y: 2720, width: 800, height: 460, png: logoPng, opaque: false }) : '',
+    textObject({ name: 'KGS', x: 2762, y: 2740, width: 1050, height: 420, size: 26, bold: true, text: 'KGS' }),
+  ];
+
+  return wrapLabel(objects);
+}
+
 // The parent or guardian's own tag: their name, the shopping slot, and every
 // child they are at the shop with. No QR code — it is for the volunteer to read.
 export function buildGuardianLabelXml(family, { logoPng } = {}) {

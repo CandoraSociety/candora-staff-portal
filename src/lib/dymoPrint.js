@@ -2,8 +2,8 @@
 // Connect service that runs beside the printer. This is what makes the tag come
 // out at its real 2.3 x 4 in size: the browser print dialog is never involved,
 // so the printer's paper size can never be overridden by a remembered sheet size.
-import buildTagLabelXml, { buildGuardianLabelXml } from '@/lib/dymoTagLabel';
-import dymoQrImage from '@/lib/dymoQrImage';
+import buildTagLabelXml, { buildGuardianLabelXml, buildCheckinQrLabelXml } from '@/lib/dymoTagLabel';
+import dymoQrImage, { dymoQrImageFromLink } from '@/lib/dymoQrImage';
 import { dymoLogoImage } from '@/lib/dymoImage';
 
 // DYMO Connect answers on localhost; newer builds use https, older ones http.
@@ -74,6 +74,14 @@ const send = async (target, labelXml, who) => {
 export async function printDymoGuardianTag(family, target) {
   const logoPng = await dymoLogoImage();
   await send(target, buildGuardianLabelXml(family, { logoPng }), family.guardian_name || 'the parent or guardian');
+}
+
+// The check-in desk's own QR code, printed on a label so a fresh sticker can be
+// put over the old one whenever the desk code changes.
+export async function printDymoCheckinQr(link, target) {
+  const qrPng = await dymoQrImageFromLink(link);
+  const logoPng = await dymoLogoImage();
+  await send(target, buildCheckinQrLabelXml({ qrPng, logoPng }), 'the check-in desk');
 }
 
 // Prepare every QR before sending anything, then submit each tag exactly once.
