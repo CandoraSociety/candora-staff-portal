@@ -15,7 +15,7 @@ import {
   KIDS_GIFT_SHOP_AGE_BANDS,
   today,
 } from '@/lib/centralRegConstants';
-import { giftShopSlotCounts } from '@/lib/giftShopFamilies';
+import { giftShopAsksGiftGender, giftShopGiftGender, giftShopSlotCounts } from '@/lib/giftShopFamilies';
 import { useGiftShopRegistrations } from '@/lib/useGiftShopRegistrations';
 
 let childKey = 0;
@@ -70,10 +70,10 @@ export default function KidsGiftShopRegistrationDialog({ open, onOpenChange, onS
       const label = form.children.length > 1 ? `Child ${i + 1}: ` : '';
       if (!child.child_name.trim()) return toast({ title: `${label}name is required`, variant: 'destructive' });
       if (!child.age_band) return toast({ title: `${label}select the age`, variant: 'destructive' });
-      if (!child.gift_1) return toast({ title: `${label}select who gift one is for`, variant: 'destructive' });
       if (!child.gift_1_rec) return toast({ title: `${label}select who the first gift is for (for example Mother or Uncle)`, variant: 'destructive' });
-      if (child.gift_count === '2' && !child.gift_2) return toast({ title: `${label}select who gift two is for`, variant: 'destructive' });
+      if (giftShopAsksGiftGender(child.gift_1_rec) && !child.gift_1) return toast({ title: `${label}select the gender of the first gift`, variant: 'destructive' });
       if (child.gift_count === '2' && !child.gift_2_rec) return toast({ title: `${label}select who the second gift is for (for example Mother or Uncle)`, variant: 'destructive' });
+      if (child.gift_count === '2' && giftShopAsksGiftGender(child.gift_2_rec) && !child.gift_2) return toast({ title: `${label}select the gender of the second gift`, variant: 'destructive' });
     }
     if (!form.time_slot) return toast({ title: 'Select a time slot', variant: 'destructive' });
 
@@ -117,8 +117,8 @@ export default function KidsGiftShopRegistrationDialog({ open, onOpenChange, onS
           child_name: childName,
           child_age_band: child.age_band,
           gift_count: Number(child.gift_count),
-          gift_1_gender: child.gift_1,
-          gift_2_gender: child.gift_count === '2' ? child.gift_2 : undefined,
+          gift_1_gender: giftShopGiftGender(child.gift_1_rec, child.gift_1) || undefined,
+          gift_2_gender: child.gift_count === '2' ? (giftShopGiftGender(child.gift_2_rec, child.gift_2) || undefined) : undefined,
           gift_1_recipient: child.gift_1_rec,
           gift_2_recipient: child.gift_count === '2' ? child.gift_2_rec : undefined,
           time_slot: form.time_slot,

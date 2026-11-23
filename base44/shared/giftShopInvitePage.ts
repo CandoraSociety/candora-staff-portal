@@ -82,6 +82,8 @@ const STYLES = `
   .seg input{position:absolute;opacity:0;pointer-events:none}
   .seg label:has(input:checked){border-color:var(--navy);background:#fffbe6;box-shadow:inset 0 0 0 1px var(--navy)}
   .gift-box{border:1px solid var(--line);border-radius:10px;padding:12px 14px 0;margin-bottom:14px;background:#fbfcfe}
+  .gift-gender[hidden]{display:none}
+  /* The gender question only appears for Other and Caregiver. */
   .gift-label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.14em;color:var(--muted);margin-bottom:10px}
   .gift-two{display:none}
   .child-fields:has(input[name$="_gifts"][value="2"]:checked) .gift-two{display:block}
@@ -145,20 +147,20 @@ function childFields(index, value) {
       </div>
       <div class="gift-box">
         <span class="gift-label">Gift 1</span>
-        <label>The gift is for a…
-          <select name="child_${index}_gift1"${req}>${options(GIFT_SHOP_GENDERS, value?.gift_1 || '', GENDER_LABELS, 'Select')}</select>
-        </label>
         <label>Who is the gift for?
           <select name="child_${index}_gift1_rec"${req}>${options(GIFT_SHOP_RECIPIENTS, value?.gift_1_rec || '', RECIPIENT_LABELS, 'Select who the gift is for')}</select>
+        </label>
+        <label class="gift-gender" data-gender-for="child_${index}_gift1">The gift is for a…
+          <select name="child_${index}_gift1">${options(GIFT_SHOP_GENDERS, value?.gift_1 || '', GENDER_LABELS, 'Select')}</select>
         </label>
       </div>
       <div class="gift-box gift-two">
         <span class="gift-label">Gift 2</span>
-        <label>The gift is for a…
-          <select name="child_${index}_gift2">${options(GIFT_SHOP_GENDERS, value?.gift_2 || '', GENDER_LABELS, 'Select')}</select>
-        </label>
         <label>Who is the gift for?
           <select name="child_${index}_gift2_rec">${options(GIFT_SHOP_RECIPIENTS, value?.gift_2_rec || '', RECIPIENT_LABELS, 'Select who the gift is for')}</select>
+        </label>
+        <label class="gift-gender" data-gender-for="child_${index}_gift2">The gift is for a…
+          <select name="child_${index}_gift2">${options(GIFT_SHOP_GENDERS, value?.gift_2 || '', GENDER_LABELS, 'Select')}</select>
         </label>
       </div>
   `;

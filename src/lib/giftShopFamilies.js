@@ -20,13 +20,50 @@ const RECIPIENT_LABELS = {
 };
 export const giftShopRecipientLabel = (value) => RECIPIENT_LABELS[value] || '';
 
-// The person a gift is for. A named recipient already says the gender, so only
-// a caregiver keeps it: "Caregiver (F)". With no recipient the gender stands alone.
+// Mother, Grandmother, Aunt and Father, Grandfather, Uncle already say the
+// gender of the gift. Only Other and Caregiver ask for it.
+const RECIPIENT_GENDERS = {
+  mother: 'female',
+  grandmother: 'female',
+  aunt: 'female',
+  father: 'male',
+  grandfather: 'male',
+  uncle: 'male',
+};
+export const giftShopAsksGiftGender = (recipient) => recipient === 'other' || recipient === 'caregiver';
+export const giftShopGiftGender = (recipient, gender) => (
+  RECIPIENT_GENDERS[recipient] || (giftShopAsksGiftGender(recipient) ? (gender || '') : '')
+);
+
+// The person a gift is for. A named relative already says the gender, so only
+// Other and Caregiver keep it: "Caregiver (F)". With no recipient the gender stands alone.
 const describeGift = (gender, recipient) => {
   const label = giftShopGenderLabel(gender);
   const who = giftShopRecipientLabel(recipient);
   if (!who) return label;
-  return recipient === 'caregiver' ? `${who} (${label})` : who;
+  return giftShopAsksGiftGender(recipient) ? `${who} (${label})` : who;
+};
+
+// How many gifts are requested for each gender, and who they are for — so the
+// team can plan how many male and female gifts to have ready.
+export const giftShopGiftTally = (registrations) => {
+  const tally = { total: 0, female: 0, male: 0, recipients: {} };
+  (registrations || [])
+    .filter(r => !['declined', 'withdrawn'].includes(r.status))
+    .forEach(reg => {
+      const count = Number(reg.gift_count) === 2 ? 2 : 1;
+      const gifts = [[reg.gift_1_recipient, reg.gift_1_gender]];
+      if (count === 2) gifts.push([reg.gift_2_recipient, reg.gift_2_gender]);
+      gifts.forEach(([recipient, gender]) => {
+        if (!recipient) return;
+        tally.total += 1;
+        const value = giftShopGiftGender(recipient, gender);
+        if (value === 'female') tally.female += 1;
+        if (value === 'male') tally.male += 1;
+        tally.recipients[recipient] = (tally.recipients[recipient] || 0) + 1;
+      });
+    });
+  return tally;
 };
 
 // How many places each shopping slot has taken. Every live registration counts,
@@ -67,7 +104,7 @@ export const giftShopGiftRows = (reg) => {
   const row = (index, recipient, gender) => ({
     index,
     who: giftShopRecipientLabel(recipient) || 'Someone special',
-    gender: gender === 'female' ? 'F' : gender === 'male' ? 'M' : '',
+    gender: giftShopAsksGiftGender(recipient) && gender ? giftShopGenderLabel(gender) : '',
   });
   const rows = [row(1, reg?.gift_1_recipient, reg?.gift_1_gender)];
   if (count === 2) rows.push(row(2, reg?.gift_2_recipient, reg?.gift_2_gender));

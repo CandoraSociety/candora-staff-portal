@@ -15,6 +15,7 @@ import {
   giftShopHtmlResponse,
 } from '../../shared/giftShopElfPage.ts';
 
+// (Redeployed so the shared form changes ship with it.)
 // The form behind the QR code on a child's Kids Gift Shop name tag. A volunteer
 // scans the tag, types their name and the desk PIN, sees who the child is buying
 // for, can note the gift, and closes the child out when they are returned to

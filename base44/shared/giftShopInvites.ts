@@ -20,6 +20,21 @@ export const GIFT_SHOP_RECIPIENTS = ['mother', 'father', 'grandmother', 'grandfa
 // The general registration link is open to the public — no invitation, no
 // contact match, no single use. It closes on December 9th, or as soon as every
 // shopping time is full, whichever comes first.
+// Mother, Grandmother, Aunt and Father, Grandfather, Uncle already say the
+// gender of the gift; only Other and Caregiver ask for it.
+const RECIPIENT_GENDERS = {
+  mother: 'female',
+  grandmother: 'female',
+  aunt: 'female',
+  father: 'male',
+  grandfather: 'male',
+  uncle: 'male',
+};
+export const giftShopAsksGiftGender = (recipient) => recipient === 'other' || recipient === 'caregiver';
+export const giftShopGiftGender = (recipient, gender) => (
+  RECIPIENT_GENDERS[recipient] || (giftShopAsksGiftGender(recipient) ? String(gender || '') : '')
+);
+
 export const GIFT_SHOP_GENERAL_MAX_CHILDREN = 6;
 export const GIFT_SHOP_GENERAL_CLOSES_AT = '2026-12-09T23:59:59-07:00';
 export const GIFT_SHOP_GENERAL_CLOSES_LABEL = 'December 9th';
@@ -118,14 +133,14 @@ export function parseChildren(rawChildren, max, overMessage) {
     const ageBand = String(child.age_band || '');
     if (!GIFT_SHOP_AGE_BANDS.includes(ageBand)) return fail(400, `Select the age for ${name}.`);
     const giftCount = Number(child.gift_count) === 2 ? 2 : 1;
-    const gift1 = String(child.gift_1_gender || '');
-    if (!GIFT_SHOP_GENDERS.includes(gift1)) return fail(400, `Select who the first gift is for, for ${name}.`);
-    const gift2 = String(child.gift_2_gender || '');
-    if (giftCount === 2 && !GIFT_SHOP_GENDERS.includes(gift2)) return fail(400, `Select who the second gift is for, for ${name}.`);
     const recipient1 = String(child.gift_1_recipient || '');
     if (!GIFT_SHOP_RECIPIENTS.includes(recipient1)) return fail(400, `Select who the first gift is for (for example Mother or Uncle), for ${name}.`);
+    const gift1 = giftShopGiftGender(recipient1, child.gift_1_gender);
+    if (!GIFT_SHOP_GENDERS.includes(gift1)) return fail(400, `Select the gender of the first gift, for ${name}.`);
     const recipient2 = String(child.gift_2_recipient || '');
     if (giftCount === 2 && !GIFT_SHOP_RECIPIENTS.includes(recipient2)) return fail(400, `Select who the second gift is for (for example Mother or Uncle), for ${name}.`);
+    const gift2 = giftCount === 2 ? giftShopGiftGender(recipient2, child.gift_2_gender) : '';
+    if (giftCount === 2 && !GIFT_SHOP_GENDERS.includes(gift2)) return fail(400, `Select the gender of the second gift, for ${name}.`);
     children.push({
       child_name: name,
       age_band: ageBand,

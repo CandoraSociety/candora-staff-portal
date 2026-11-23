@@ -9,7 +9,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import GiftFields from '@/components/centralreg/GiftShopGiftFields';
 import { KIDS_GIFT_SHOP_TIME_SLOTS, KIDS_GIFT_SHOP_SLOT_CAPACITY, KIDS_GIFT_SHOP_AGE_BANDS } from '@/lib/centralRegConstants';
-import { giftShopSlotCounts } from '@/lib/giftShopFamilies';
+import { giftShopAsksGiftGender, giftShopGiftGender, giftShopSlotCounts } from '@/lib/giftShopFamilies';
 import { useGiftShopRegistrations } from '@/lib/useGiftShopRegistrations';
 
 const toForm = (reg) => ({
@@ -49,10 +49,10 @@ export default function GiftShopRegistrationEditDialog({ registration, open, onO
   const handleSave = async () => {
     if (!form.child_name.trim()) return toast({ title: "The child's name is required", variant: 'destructive' });
     if (!form.age_band) return toast({ title: 'Select the age', variant: 'destructive' });
-    if (!form.gift_1) return toast({ title: 'Select who gift one is for', variant: 'destructive' });
     if (!form.gift_1_rec) return toast({ title: 'Select who the first gift is for (for example Mother or Uncle)', variant: 'destructive' });
-    if (form.gift_count === '2' && !form.gift_2) return toast({ title: 'Select who gift two is for', variant: 'destructive' });
+    if (giftShopAsksGiftGender(form.gift_1_rec) && !form.gift_1) return toast({ title: 'Select the gender of the first gift', variant: 'destructive' });
     if (form.gift_count === '2' && !form.gift_2_rec) return toast({ title: 'Select who the second gift is for (for example Mother or Uncle)', variant: 'destructive' });
+    if (form.gift_count === '2' && giftShopAsksGiftGender(form.gift_2_rec) && !form.gift_2) return toast({ title: 'Select the gender of the second gift', variant: 'destructive' });
     if (!form.time_slot) return toast({ title: 'Select a time slot', variant: 'destructive' });
 
     // Moving this child into a different slot needs a place there.
@@ -83,8 +83,8 @@ export default function GiftShopRegistrationEditDialog({ registration, open, onO
         child_name: childName,
         child_age_band: form.age_band,
         gift_count: Number(form.gift_count),
-        gift_1_gender: form.gift_1,
-        gift_2_gender: form.gift_count === '2' ? form.gift_2 : null,
+        gift_1_gender: giftShopGiftGender(form.gift_1_rec, form.gift_1) || null,
+        gift_2_gender: form.gift_count === '2' ? (giftShopGiftGender(form.gift_2_rec, form.gift_2) || null) : null,
         gift_1_recipient: form.gift_1_rec,
         gift_2_recipient: form.gift_count === '2' ? form.gift_2_rec : null,
         time_slot: form.time_slot,

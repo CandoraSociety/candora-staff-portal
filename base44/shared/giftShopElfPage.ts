@@ -24,6 +24,9 @@ const RECIPIENT_LABELS = {
 };
 
 const GENDER_LABELS = { female: 'F', male: 'M' };
+// Only Other and Caregiver carry a gender onto the child's card and name tag;
+// Mother, Aunt, Father and so on already say it.
+const asksGiftGender = (recipient) => recipient === 'other' || recipient === 'caregiver';
 const AGE_LABELS = { '0-5': 'Ages 0–5', '6-16': 'Ages 6–16' };
 
 const escapeHtml = (value) => String(value ?? '')
@@ -159,7 +162,7 @@ export function elfGiftRows(reg) {
   const row = (index, recipient, gender, value) => ({
     index,
     who: RECIPIENT_LABELS[recipient] || 'Someone special',
-    gender: GENDER_LABELS[gender] || '',
+    gender: asksGiftGender(recipient) ? (GENDER_LABELS[gender] || '') : '',
     value: value || '',
   });
   const rows = [row(1, reg?.gift_1_recipient, reg?.gift_1_gender, reg?.gift_1_selection)];

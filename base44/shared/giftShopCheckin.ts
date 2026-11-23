@@ -77,7 +77,8 @@ const giftSummary = (reg) => {
     const who = RECIPIENT_LABELS[recipient] || '';
     const short = gender === 'female' ? 'F' : gender === 'male' ? 'M' : '';
     if (!who) return short;
-    return recipient === 'caregiver' ? `${who} (${short})` : who;
+    // Only Other and Caregiver keep a gender; a named relative already says it.
+    return recipient === 'caregiver' || recipient === 'other' ? `${who} (${short})` : who;
   };
   const gifts = [describe(reg.gift_1_gender, reg.gift_1_recipient)];
   if (count === 2) gifts.push(describe(reg.gift_2_gender, reg.gift_2_recipient));

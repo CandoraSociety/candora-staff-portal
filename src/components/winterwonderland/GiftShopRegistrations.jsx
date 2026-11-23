@@ -9,7 +9,7 @@ import GiftShopFamilyCard from '@/components/winterwonderland/GiftShopFamilyCard
 import GiftShopCheckInDialog from '@/components/winterwonderland/GiftShopCheckInDialog';
 import GiftShopSlotBoard from '@/components/winterwonderland/GiftShopSlotBoard';
 import { KIDS_GIFT_SHOP_TIME_SLOTS, KIDS_GIFT_SHOP_SLOT_CAPACITY } from '@/lib/centralRegConstants';
-import { groupGiftShopFamilies, giftShopSlotCounts, giftShopAgeBandCounts } from '@/lib/giftShopFamilies';
+import { groupGiftShopFamilies, giftShopSlotCounts, giftShopAgeBandCounts, giftShopGiftTally, giftShopRecipientLabel } from '@/lib/giftShopFamilies';
 import { useGiftShopRegistrations } from '@/lib/useGiftShopRegistrations';
 
 // Kids Gift Shop registration tab — the children signed up for a shopping slot,
@@ -32,6 +32,10 @@ export default function GiftShopRegistrations() {
 
   const active = registrations.filter(r => !['declined', 'withdrawn'].includes(r.status));
   const giftsRequested = active.reduce((sum, r) => sum + (r.gift_count || 1), 0);
+  const giftTally = giftShopGiftTally(active);
+  const byRecipient = Object.entries(giftTally.recipients)
+    .map(([value, count]) => ({ value, count, label: giftShopRecipientLabel(value) }))
+    .sort((a, b) => b.count - a.count);
   const counts = giftShopSlotCounts(active);
   const ageBands = giftShopAgeBandCounts(active);
   const openSlots = KIDS_GIFT_SHOP_TIME_SLOTS.filter(s => (counts[s.value] || 0) < KIDS_GIFT_SHOP_SLOT_CAPACITY).length;
@@ -84,6 +88,21 @@ export default function GiftShopRegistrations() {
           <CardContent className="pt-5">
             <p className="text-xs font-medium text-highlight">Gifts requested</p>
             <p className="text-2xl font-bold text-highlight">{giftsRequested}</p>
+            <div className="mt-2 flex items-center gap-4 border-t border-highlight/30 pt-2">
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Female gifts</span>
+                <span className="border-l border-highlight/30 pl-2 text-base font-bold leading-none text-highlight">{giftTally.female}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-muted-foreground">Male gifts</span>
+                <span className="border-l border-highlight/30 pl-2 text-base font-bold leading-none text-accent">{giftTally.male}</span>
+              </div>
+            </div>
+            {byRecipient.length > 0 && (
+              <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+                {byRecipient.map(r => `${r.label} ${r.count}`).join(' · ')}
+              </p>
+            )}
           </CardContent>
         </Card>
         <Card className="border-accent/25 bg-gradient-to-br from-accent/10 via-card to-card">

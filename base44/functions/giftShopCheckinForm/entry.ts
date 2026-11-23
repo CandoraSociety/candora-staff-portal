@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
+// Redeployed so the shared check-in changes ship with it.
 import { giftShopHtmlResponse } from '../../shared/giftShopInvitePage.ts';
 import { deskLookup, deskSubmit } from '../../shared/giftShopCheckin.ts';
 import {
