@@ -22,6 +22,7 @@ import WorkerAppointmentsPanel from '@/components/rc/WorkerAppointmentsPanel';
 import DashboardNotifications from '@/components/dashboard/DashboardNotifications';
 import QuickFilesWidget from '@/components/dashboard/QuickFilesWidget';
 import SimpleModeToggle from '@/components/shared/SimpleModeToggle';
+import QuickTextButton from '@/components/dashboard/QuickTextButton';
 import { useSimpleMode } from '@/lib/useSimpleMode';
 import { useOrgSettings } from '@/lib/useOrgSettings';
 
@@ -29,6 +30,9 @@ import { useTrainingTour } from '@/components/training/TrainingTourProvider';
 import { FolderOpen, Sparkles, Settings, Search, LayoutGrid, Users, Megaphone, FileText, BarChart2, Calendar, Globe, BookOpen, Briefcase, Heart, Star, Layers, Pin, PinOff, Brain, Languages, Activity, Presentation, Mail } from 'lucide-react';
 
 
+
+// The quick text button is a personal shortcut — only this account sees it.
+const QUICK_TEXT_EMAILS = ['graham.currie@candorasociety.com', 'gncurrie@gmail.com'];
 
 const ICON_MAP = {
   FolderOpen, LayoutGrid, Users, Megaphone, FileText, BarChart2,
@@ -206,8 +210,9 @@ export default function Dashboard() {
       {/* Announcement Ribbon */}
       <AnnouncementRibbon announcements={userAnnouncements} user={user} />
 
-      {/* Simple mode — this user's own switch, always in the same spot on the page */}
-      <div className="flex items-center justify-end">
+      {/* My own shortcuts: quick text (only this account sees it) and the simple-mode switch */}
+      <div className="flex items-center justify-end gap-2">
+        {QUICK_TEXT_EMAILS.includes((user?.email || '').toLowerCase()) && <QuickTextButton />}
         <div className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 shadow-sm">
           <SimpleModeToggle simpleMode={simpleMode} onChange={setSimpleMode} />
         </div>
