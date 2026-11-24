@@ -11,7 +11,7 @@ export const CANDORA_BRAND = {
   postalCode: 'T5W 4W1',
   phone: '780.474.5011',
   email: 'info@candorasociety.com',
-  website: 'www.candora.ca',
+  website: 'candora.ca',
 };
 
 export function brandFooterLines() {
