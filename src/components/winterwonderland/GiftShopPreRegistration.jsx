@@ -42,12 +42,14 @@ export default function GiftShopPreRegistration() {
   }, {});
   Object.values(messagesByFamily).forEach(list => list.sort((a, b) => new Date(a.sent_at || 0) - new Date(b.sent_at || 0)));
 
-  // The invited families as the message dialog knows them — with their link
-  // status, so a message can go to everyone, one status, or chosen families.
+  // The invited families as the message dialog knows them — one row per
+  // invitation listed on this tab, with its link status, so a message can go to
+  // everyone, one status, or chosen families.
   const messageFamilies = invites
     .map(invite => {
       const status = inviteDisplayStatus(invite);
       return {
+        id: invite.id,
         family_key: familyMessageKey(invite),
         guardian_name: invite.guardian_name || '',
         guardian_email: invite.guardian_email || '',

@@ -156,35 +156,26 @@ export const giftShopFamilyStatus = (children = []) => {
   return 'waiting';
 };
 
-// Every registered family as the message dialog knows it — one entry per family
-// (siblings, and children booked into different shopping times, included) with
-// the status it is in, so staff can write to all of them or just one status.
+// The families the Registration and Check-In tabs show, as the message dialog
+// knows them — one row per card on the board, with the stage that card is in, so
+// staff can write to everyone, one status, or chosen families. `id` is the row's
+// own identity (a guardian can hold more than one card) and `family_key` is the
+// phone or email the message history is kept on.
 export function giftShopMessageFamilies(registrations = []) {
-  const map = new Map();
-  registrations.forEach(reg => {
-    const key = familyMessageKey(reg);
-    if (!key) return;
-    if (!map.has(key)) {
-      map.set(key, {
-        family_key: key,
-        guardian_name: reg.parent_guardian_name || reg.participant_name || 'No guardian recorded',
-        guardian_email: reg.parent_guardian_email || reg.participant_email || '',
-        guardian_phone: reg.parent_guardian_phone || reg.participant_phone || '',
-        children: [],
-      });
-    }
-    map.get(key).children.push(reg);
-  });
-
-  return Array.from(map.values())
-    .map(({ children, ...family }) => {
-      const status = giftShopFamilyStatus(children);
+  return groupGiftShopFamilies(registrations)
+    .map(family => {
+      const status = giftShopFamilyStatus(family.children);
       return {
-        ...family,
+        id: family.key,
+        family_key: familyMessageKey(family),
+        guardian_name: family.guardian_name,
+        guardian_email: family.guardian_email,
+        guardian_phone: family.guardian_phone,
         group: status,
         label: GIFT_SHOP_FAMILY_STATUSES.find(s => s.value === status)?.label || status,
       };
     })
+    .filter(row => row.family_key)
     .sort((a, b) => GIFT_SHOP_FAMILY_STATUSES.findIndex(s => s.value === a.group)
       - GIFT_SHOP_FAMILY_STATUSES.findIndex(s => s.value === b.group)
       || a.guardian_name.localeCompare(b.guardian_name));
