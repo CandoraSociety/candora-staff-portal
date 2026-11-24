@@ -69,6 +69,11 @@
       "default": false,
       "description": "Whether the campaign's public page is live and can accept online gifts"
     },
+    "is_private": {
+      "type": "boolean",
+      "default": false,
+      "description": "Private campaign \u2014 its page still opens for anyone holding the link, but it never appears in a public list: not on the donation page, the campaign list or the website."
+    },
     "is_general_fund": {
       "type": "boolean",
       "default": false,

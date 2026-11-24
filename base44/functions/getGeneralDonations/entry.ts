@@ -33,8 +33,11 @@ export default async function (req) {
     const general = campaigns.find((campaign) => campaign.is_general_fund) || null;
     const today = new Date().toISOString().slice(0, 10);
 
+    // A private campaign is never listed publicly: it is only ever opened from
+    // the link staff share, so it is left out of this feed entirely.
     const open = campaigns.filter((campaign) =>
       !campaign.is_general_fund &&
+      campaign.is_private !== true &&
       campaign.is_active !== false &&
       campaign.public_page_enabled === true &&
       (!campaign.end_date || String(campaign.end_date).slice(0, 10) >= today)

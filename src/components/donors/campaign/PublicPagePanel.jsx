@@ -13,19 +13,25 @@ import PublicPageAiCopyDialog from '@/components/donors/campaign/PublicPageAiCop
 export default function PublicPagePanel({ campaign, onSave, onManageOptions }) {
   const [slug, setSlug] = useState('');
   const [enabled, setEnabled] = useState(false);
+  const [isPrivate, setIsPrivate] = useState(false);
   const [saving, setSaving] = useState(false);
   const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     setSlug(campaign?.slug || slugify(campaign?.name));
     setEnabled(!!campaign?.public_page_enabled);
+    setIsPrivate(!!campaign?.is_private);
   }, [campaign]);
 
   const url = publicCampaignUrl(slug);
 
   const submit = async () => {
     setSaving(true);
-    await onSave({ slug: slugify(slug) || slugify(campaign?.name), public_page_enabled: enabled });
+    await onSave({
+      slug: slugify(slug) || slugify(campaign?.name),
+      public_page_enabled: enabled,
+      is_private: isPrivate,
+    });
     setSaving(false);
   };
 
@@ -68,6 +74,16 @@ export default function PublicPagePanel({ campaign, onSave, onManageOptions }) {
             Publish this page so supporters can open it and give online
             <span className="block text-xs text-muted-foreground">
               While unpublished, only signed-in staff can preview it.
+            </span>
+          </span>
+        </label>
+
+        <label className="flex items-start gap-2 text-sm">
+          <input type="checkbox" className="mt-0.5" checked={isPrivate} onChange={(e) => setIsPrivate(e.target.checked)} />
+          <span>
+            Private campaign — share by link only
+            <span className="block text-xs text-muted-foreground">
+              Keeps it out of the donation page, the campaign list and the website. The link above still works for anyone you send it to.
             </span>
           </span>
         </label>

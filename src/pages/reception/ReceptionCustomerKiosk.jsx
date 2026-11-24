@@ -44,7 +44,10 @@ export default function ReceptionCustomerKiosk() {
     loadStations();
     loadPrompts();
     base44.entities.Donor.list('-created_date', 300).then((rows) => setDonors(rows || [])).catch(() => setDonors([]));
-    base44.entities.DonationCampaign.list('-created_date', 100).then((rows) => setCampaigns(rows || [])).catch(() => setCampaigns([]));
+    // Private campaigns are never offered on a public screen.
+    base44.entities.DonationCampaign.list('-created_date', 100)
+      .then((rows) => setCampaigns((rows || []).filter((row) => !row.is_private)))
+      .catch(() => setCampaigns([]));
   }, [loadStations, loadPrompts]);
 
   // Live status: anything the tablet does shows up here without a refresh.

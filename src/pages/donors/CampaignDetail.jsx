@@ -68,6 +68,9 @@ export default function CampaignDetail() {
           </Link>
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-2xl font-display font-bold">{campaign.name}</h1>
+            {campaign.is_private && (
+              <Badge className="bg-purple-100 text-purple-700">Private</Badge>
+            )}
             <Badge className={campaign.public_page_enabled ? 'bg-emerald-100 text-emerald-700' : 'bg-muted text-muted-foreground'}>
               {campaign.public_page_enabled ? 'Page live' : 'Page not published'}
             </Badge>

@@ -16,7 +16,7 @@ import { CAMPAIGN_TYPES, activeTiers, formatMoney, labelFor, slugify } from '@/l
 
 const EMPTY = {
   name: '', description: '', campaign_type: 'appeal', goal_amount: '',
-  start_date: '', end_date: '', is_active: true, owner_name: '', notes: '',
+  start_date: '', end_date: '', is_active: true, owner_name: '', notes: '', is_private: false,
 };
 
 export default function Campaigns() {
@@ -118,6 +118,9 @@ export default function Campaigns() {
                       <Badge className={campaign.public_page_enabled ? 'bg-blue-100 text-blue-700' : 'bg-muted text-muted-foreground'}>
                         {campaign.public_page_enabled ? 'Page live' : 'No page'}
                       </Badge>
+                      {campaign.is_private && (
+                        <Badge className="bg-purple-100 text-purple-700">Private</Badge>
+                      )}
                       {campaign.is_general_fund && (
                         <Badge className="bg-primary/20 text-foreground">General fund</Badge>
                       )}
@@ -215,6 +218,16 @@ export default function Campaigns() {
               <input type="checkbox" checked={!!form.is_active}
                 onChange={(e) => setForm({ ...form, is_active: e.target.checked })} />
               Still accepting gifts
+            </label>
+            <label className="flex items-start gap-2 text-sm">
+              <input type="checkbox" className="mt-0.5" checked={!!form.is_private}
+                onChange={(e) => setForm({ ...form, is_private: e.target.checked })} />
+              <span>
+                Private campaign
+                <span className="block text-xs text-muted-foreground">
+                  Never listed on the donation page, the campaign list or the website. Its page still opens for anyone you share the link with.
+                </span>
+              </span>
             </label>
             <div className="flex justify-end gap-2">
               <Button variant="outline" onClick={() => setOpen(false)}>Cancel</Button>
