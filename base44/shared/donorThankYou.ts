@@ -297,7 +297,10 @@ export async function sendDonationThankYou(base44, { donation, donorPhone, appUr
   const giftDate = donation.donation_date || new Date().toISOString().slice(0, 10);
   const giftLabel = donation.product_name || (donation.donation_type === 'recurring_monthly' ? 'Monthly gift' : 'Donation');
   const monthly = donation.donation_type === 'recurring_monthly';
-  const receiptWanted = amount >= RECEIPT_MINIMUM && donor?.receipt_preference !== 'none';
+  // A monthly gift is never receipted as it arrives: the supporter is thanked
+  // each month, and one consolidated receipt for the whole year is issued in
+  // early January (see sendAnnualDonationReceipts below).
+  const receiptWanted = !monthly && amount >= RECEIPT_MINIMUM && donor?.receipt_preference !== 'none';
 
   let receiptNumber = '';
   let receiptBase64 = null;
@@ -348,10 +351,13 @@ export async function sendDonationThankYou(base44, { donation, donorPhone, appUr
           frequency_line: monthly
             ? 'Your monthly gift has been received and will repeat each month until you cancel.'
             : 'Your gift has been received and put to work right away.',
+          receipt_heading: monthly ? 'Your tax receipt comes once a year' : 'Your tax receipt',
           receipt_number: receiptBase64 ? receiptNumber : '',
-          receipt_line: receiptBase64
-            ? `Your official tax receipt (no. ${receiptNumber}) is attached to this email. Keep it for your tax records.`
-            : `Receipts are issued for gifts of ${formatMoney(RECEIPT_MINIMUM)} or more. Smaller gifts are recorded on your donor file and a consolidated receipt can be issued at year end.`,
+          receipt_line: monthly
+            ? 'You do not need to do anything. Monthly gifts are not receipted one at a time: one official tax receipt covering every monthly gift you make this year will be emailed to you in early January, and that is the only receipt you will receive for them.'
+            : receiptBase64
+              ? `Your official tax receipt (no. ${receiptNumber}) is attached to this email. Keep it for your tax records.`
+              : `Receipts are issued for gifts of ${formatMoney(RECEIPT_MINIMUM)} or more. Smaller gifts are recorded on your donor file and a consolidated receipt can be issued at year end.`,
           receipt_sent: receiptBase64 ? 'yes' : 'no',
           charity_number: branding.charityNumber,
           contact_email: branding.orgEmail,
@@ -379,7 +385,11 @@ export async function sendDonationThankYou(base44, { donation, donorPhone, appUr
   let texted = false;
   if (phone && !donor?.do_not_contact) {
     const thanks = `Thank you ${firstNameOf(donation.donor_name)}! Candora received your ${formatMoney(amount)} gift to ${donation.campaign_name || 'the general fund'}.`
-      + (receiptBase64 ? ` Your tax receipt no. ${receiptNumber} was emailed to you.` : ' Your gift is on file with Candora Society.')
+      + (monthly
+        ? ' One tax receipt covering all your monthly gifts will be emailed to you in early January.'
+        : receiptBase64
+          ? ` Your tax receipt no. ${receiptNumber} was emailed to you.`
+          : ' Your gift is on file with Candora Society.')
       + ' Candora Society, info@candorasociety.com';
     const result = await sendText(phone, thanks);
     texted = !!result.ok;
@@ -403,4 +413,288 @@ export async function sendDonationThankYou(base44, { donation, donorPhone, appUr
   }
 
   return { sent: emailed || texted, emailed, texted, receipt_number: receiptNumber || null };
+}
+
+// ---------------------------------------------------------------------------
+// One receipt a year for monthly donors
+// ---------------------------------------------------------------------------
+
+// The highest receipt number already used in a year, so a batch of annual
+// receipts continues the same sequence instead of restarting it.
+async function highestReceiptSequence(base44, year) {
+  let numbers = [];
+  try {
+    const { items } = await base44.asServiceRole.entities.Donation.filter(
+      { receipt_issued: true, receipt_number: { $regex: `^${year}-` } },
+      { limit: 500 },
+    );
+    numbers = (items || []).map((row) => Number(String(row.receipt_number || '').split('-')[1]) || 0);
+  } catch (error) {
+    console.log('donorThankYou: receipt sequence unavailable', error.message);
+  }
+  return numbers.length ? Math.max(...numbers) : 0;
+}
+
+// The consolidated receipt lists every monthly gift of the year and one total.
+export async function buildAnnualReceiptPdf({
+  receiptNumber,
+  receiptDate,
+  year,
+  donorName,
+  donorEmail,
+  gifts = [],
+  total = 0,
+  charityNumber,
+  address,
+  orgEmail,
+  orgPhone,
+  logoBytes,
+}) {
+  const pdf = await PDFDocument.create();
+  const page = pdf.addPage([PAGE_W, PAGE_H]);
+  const bold = await pdf.embedFont(StandardFonts.HelveticaBold);
+  const regular = await pdf.embedFont(StandardFonts.Helvetica);
+
+  const rightText = (text, y, size, font, color) => {
+    const width = font.widthOfTextAtSize(text, size);
+    page.drawText(text, { x: PAGE_W - MARGIN - width, y, size, font, color });
+  };
+
+  page.drawRectangle({ x: 0, y: PAGE_H - 112, width: PAGE_W, height: 112, color: NAVY });
+  page.drawRectangle({ x: 0, y: PAGE_H - 116, width: PAGE_W, height: 4, color: GOLD });
+
+  let drewLogo = false;
+  if (logoBytes) {
+    try {
+      const logo = await pdf.embedPng(logoBytes);
+      const width = 200;
+      const height = (logo.height / logo.width) * width;
+      page.drawImage(logo, { x: MARGIN, y: PAGE_H - 56 - height / 2, width, height });
+      drewLogo = true;
+    } catch (error) {
+      console.log('donorThankYou: logo could not be embedded', error.message);
+    }
+  }
+  if (!drewLogo) {
+    page.drawText('CANDORA', { x: MARGIN, y: PAGE_H - 62, size: 24, font: bold, color: GOLD });
+  }
+
+  rightText('OFFICIAL DONATION RECEIPT', PAGE_H - 52, 12, bold, rgb(1, 1, 1));
+  rightText(`Monthly gifts, ${year}`, PAGE_H - 70, 9, regular, rgb(0.72, 0.76, 0.85));
+
+  let y = PAGE_H - 156;
+  page.drawText('RECEIPT NUMBER', { x: MARGIN, y, size: 7.5, font: bold, color: MUTED });
+  rightText('DATE ISSUED', y, 7.5, bold, MUTED);
+  y -= 20;
+  page.drawText(receiptNumber, { x: MARGIN, y, size: 15, font: bold, color: INK });
+  rightText(longDate(receiptDate), y, 11, regular, INK);
+
+  y -= 26;
+  page.drawLine({ start: { x: MARGIN, y }, end: { x: PAGE_W - MARGIN, y }, thickness: 1, color: HAIR });
+
+  y -= 30;
+  page.drawText('RECEIVED WITH THANKS FROM', { x: MARGIN, y, size: 7.5, font: bold, color: MUTED });
+  y -= 22;
+  page.drawText(clip(donorName || 'Supporter', 52), { x: MARGIN, y, size: 18, font: bold, color: INK });
+  if (donorEmail) {
+    y -= 16;
+    page.drawText(clip(donorEmail, 70), { x: MARGIN, y, size: 10, font: regular, color: MUTED });
+  }
+
+  y -= 30;
+  const boxHeight = 96;
+  page.drawRectangle({
+    x: MARGIN,
+    y: y - boxHeight,
+    width: PAGE_W - MARGIN * 2,
+    height: boxHeight,
+    color: TINT,
+    borderColor: HAIR,
+    borderWidth: 1,
+  });
+
+  let rowY = y - 26;
+  const row = (label, value, size = 10.5, font = regular) => {
+    page.drawText(label, { x: MARGIN + 18, y: rowY, size: 9, font: regular, color: MUTED });
+    const width = font.widthOfTextAtSize(value, size);
+    page.drawText(value, { x: PAGE_W - MARGIN - 18 - width, y: rowY, size, font, color: INK });
+    rowY -= 22;
+  };
+  row('Period covered', `January 1 – December 31, ${year}`);
+  row('Monthly gifts included', `${gifts.length} gift${gifts.length === 1 ? '' : 's'}`);
+  row('TOTAL CHARITABLE GIFT', formatMoney(total), 16, bold);
+
+  let listY = y - boxHeight - 26;
+  page.drawText('GIFTS INCLUDED', { x: MARGIN, y: listY, size: 7.5, font: bold, color: MUTED });
+  listY -= 16;
+  const shown = gifts.slice(0, 10);
+  for (const gift of shown) {
+    page.drawText(longDate(gift.date), { x: MARGIN, y: listY, size: 9.5, font: regular, color: INK });
+    page.drawText(clip(gift.label || 'Monthly gift', 34), { x: MARGIN + 150, y: listY, size: 9.5, font: regular, color: MUTED });
+    const amountText = formatMoney(gift.amount);
+    const width = regular.widthOfTextAtSize(amountText, 9.5);
+    page.drawText(amountText, { x: PAGE_W - MARGIN - width, y: listY, size: 9.5, font: regular, color: INK });
+    listY -= 13;
+  }
+  if (gifts.length > shown.length) {
+    page.drawText(`…and ${gifts.length - shown.length} more monthly gift(s), all included in the total above.`, {
+      x: MARGIN,
+      y: listY - 4,
+      size: 9,
+      font: regular,
+      color: MUTED,
+    });
+  }
+
+  page.drawText(
+    'This receipt covers every monthly gift received during the year shown. No goods or services were provided in exchange for these gifts.',
+    { x: MARGIN, y: 190, size: 9.5, font: regular, color: INK },
+  );
+  page.drawText(
+    `Candora Society is a registered charity. Registration no. ${charityNumber}`,
+    { x: MARGIN, y: 176, size: 9.5, font: regular, color: INK },
+  );
+
+  page.drawLine({ start: { x: MARGIN, y: 132 }, end: { x: PAGE_W - MARGIN, y: 132 }, thickness: 1, color: HAIR });
+  page.drawText('CANDORA SOCIETY', { x: MARGIN, y: 112, size: 8, font: bold, color: MUTED });
+  page.drawText(clip(address, 70), { x: MARGIN, y: 98, size: 9, font: regular, color: MUTED });
+  page.drawText(`${orgEmail}  ·  ${orgPhone}`, { x: MARGIN, y: 84, size: 9, font: regular, color: MUTED });
+  rightText('Keep this receipt for your tax records', 98, 8.5, regular, MUTED);
+
+  return pdf.save();
+}
+
+// Runs once a year (the Annual Donation Tax Receipts workflow, January 2): for
+// every supporter who gave monthly during the year, one receipt covering all of
+// their monthly gifts is issued and emailed, and those gifts are marked receipted
+// with that number. Nothing new is ever sent — only gifts already recorded.
+export async function sendAnnualDonationReceipts(base44, { year, appUrl }) {
+  const now = new Date();
+  const targetYear = Number(year) || now.getFullYear() - 1;
+  const issueDate = now.toISOString().slice(0, 10);
+
+  const { items } = await base44.asServiceRole.entities.Donation.filter(
+    {
+      donation_type: 'recurring_monthly',
+      donation_date: { $gte: `${targetYear}-01-01`, $lte: `${targetYear}-12-31` },
+    },
+    { limit: 500, sort: 'donation_date' },
+  );
+
+  const pending = (items || []).filter((gift) => !gift.receipt_issued && Number(gift.amount) > 0);
+  const groups = new Map();
+  for (const gift of pending) {
+    const email = String(gift.donor_email || '').trim().toLowerCase();
+    const key = gift.donor_id || (email ? `e:${email}` : `n:${String(gift.donor_name || '').trim().toLowerCase()}`);
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(gift);
+  }
+
+  const branding = await loadBranding(base44);
+  const base = String(appUrl || '').replace(/\/+$/, '');
+  let sequence = await highestReceiptSequence(base44, now.getFullYear());
+  const receipts = [];
+
+  for (const [, gifts] of groups) {
+    const total = gifts.reduce((sum, gift) => sum + (Number(gift.amount) || 0), 0);
+    const first = gifts[0];
+    const donor = first.donor_id
+      ? await base44.asServiceRole.entities.Donor.get(first.donor_id).catch(() => null)
+      : null;
+    const email = String(first.donor_email || donor?.email || '').trim();
+    const name = first.donor_name || [donor?.first_name, donor?.last_name].filter(Boolean).join(' ');
+
+    if (!email || donor?.receipt_preference === 'none' || total < RECEIPT_MINIMUM) {
+      receipts.push({
+        donor_name: name,
+        total,
+        status: 'skipped',
+        reason: !email
+          ? 'No email address on file'
+          : donor?.receipt_preference === 'none'
+            ? 'Receipts turned off on the donor file'
+            : `Under the ${formatMoney(RECEIPT_MINIMUM)} receipt minimum`,
+      });
+      continue;
+    }
+
+    sequence += 1;
+    const receiptNumber = `${now.getFullYear()}-${String(sequence).padStart(4, '0')}`;
+    let attachment = null;
+    try {
+      const bytes = await buildAnnualReceiptPdf({
+        receiptNumber,
+        receiptDate: issueDate,
+        year: targetYear,
+        donorName: name,
+        donorEmail: email,
+        gifts: gifts.map((gift) => ({
+          date: gift.donation_date,
+          amount: Number(gift.amount) || 0,
+          label: gift.product_name || gift.campaign_name || 'Monthly gift',
+        })),
+        total,
+        charityNumber: branding.charityNumber,
+        address: branding.address,
+        orgEmail: branding.orgEmail,
+        orgPhone: branding.orgPhone,
+        logoBytes: branding.logoBytes,
+      });
+      attachment = { filename: `Candora-Tax-Receipt-${receiptNumber}.pdf`, content: toBase64(bytes) };
+    } catch (error) {
+      console.log('donorThankYou: annual receipt PDF failed', error.message);
+      receipts.push({ donor_name: name, total, status: 'failed', reason: error.message });
+      continue;
+    }
+
+    let emailed = false;
+    try {
+      const result = await base44.asServiceRole.integrations.Core.SendEmail({
+        to: email,
+        template_name: 'DonationAnnualReceipt',
+        variables: {
+          first_name: firstNameOf(name),
+          year: String(targetYear),
+          gift_count: String(gifts.length),
+          total: formatMoney(total),
+          receipt_number: receiptNumber,
+          receipt_date: longDate(issueDate),
+          campaign_url: `${base}/donate`,
+          charity_number: branding.charityNumber,
+          contact_email: branding.orgEmail,
+          contact_phone: branding.orgPhone,
+          contact_address: branding.address,
+        },
+        attachments: [attachment],
+        category: 'transactional',
+        from_name: 'Candora Society',
+      });
+      if (result && result.success === false) {
+        console.log('donorThankYou: annual receipt refused', result.reason, result.message);
+        receipts.push({ donor_name: name, total, status: 'failed', reason: result.message || result.reason });
+        continue;
+      }
+      emailed = true;
+    } catch (error) {
+      console.log('donorThankYou: annual receipt email failed', error.message);
+      receipts.push({ donor_name: name, total, status: 'failed', reason: error.message });
+      continue;
+    }
+
+    // One receipt number covers every gift it lists.
+    await base44.asServiceRole.entities.Donation.bulkUpdate(
+      gifts.map((gift) => ({
+        id: gift.id,
+        receipt_issued: true,
+        receipt_number: receiptNumber,
+        receipt_date: issueDate,
+      })),
+    ).catch((error) => console.log('donorThankYou: annual receipt not saved on gifts', error.message));
+
+    receipts.push({ donor_name: name, donor_email: email, total, receipt_number: receiptNumber, status: 'sent', emailed });
+  }
+
+  const sent = receipts.filter((row) => row.status === 'sent').length;
+  console.log(`Annual receipts ${targetYear}: ${sent} sent, ${receipts.length - sent} skipped or failed`);
+  return { year: targetYear, groups: groups.size, sent, receipts };
 }

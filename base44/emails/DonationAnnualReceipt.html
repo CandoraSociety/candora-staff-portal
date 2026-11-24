@@ -1,0 +1,99 @@
+<mjml>
+  <mj-head>
+    <mj-title>Your {{year}} tax receipt for your monthly gifts</mj-title>
+    <mj-preview>One receipt covering all {{gift_count}} monthly gifts you made in {{year}}.</mj-preview>
+    <mj-attributes>
+      <mj-all font-family="Inter, Helvetica, Arial, sans-serif" />
+      <mj-section background-color="#ffffff" padding="0 36px" />
+      <mj-text color="#080c21" font-size="15px" line-height="1.6" padding="0" />
+      <mj-button background-color="#fccf03" color="#0a0f29" border-radius="10px" font-weight="700" inner-padding="14px 28px" align="left" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body background-color="#f9fafb">
+    <!-- Header band -->
+    <mj-section background-color="#fccf03" padding="22px 36px">
+      <mj-column width="45%">
+        <mj-image src="https://media.base44.com/images/public/6a249282cb496579542673b7/c7fbd36e2_logo.png" alt="Candora" height="44px" align="left" padding="0" />
+      </mj-column>
+      <mj-column width="55%">
+        <mj-text align="right" font-size="12px" font-weight="700" letter-spacing="1px" color="#0a0f29" padding="0">
+          CANDORA SOCIETY
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Headline -->
+    <mj-section padding="40px 36px 8px">
+      <mj-column>
+        <mj-text font-family="Nunito, Arial, sans-serif" font-size="30px" font-weight="800" line-height="1.15" color="#0a0f29">
+          Your {{year}} tax receipt, {{first_name}}
+        </mj-text>
+        <mj-text font-size="15px" color="#626784" padding="10px 0 0">
+          Thank you for giving every month. This one receipt covers all {{gift_count}} of your monthly gifts in {{year}}, and it is attached to this email.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Year summary -->
+    <mj-section padding="20px 36px 0">
+      <mj-column background-color="#ffffff" border="1px solid #dadce7" border-radius="10px" padding="20px 24px">
+        <mj-table cellpadding="0" cellspacing="0" width="100%">
+          <tr>
+            <td style="font-size:13px;color:#626784;padding:5px 0;">Period covered</td>
+            <td align="right" style="font-size:14px;color:#080c21;font-weight:700;padding:5px 0;">January 1 – December 31, {{year}}</td>
+          </tr>
+          <tr>
+            <td style="font-size:13px;color:#626784;padding:5px 0;">Monthly gifts</td>
+            <td align="right" style="font-size:14px;color:#080c21;font-weight:700;padding:5px 0;">{{gift_count}}</td>
+          </tr>
+          <tr>
+            <td style="font-size:13px;color:#626784;padding:12px 0 0;border-top:1px solid #dadce7;">Total charitable gifts</td>
+            <td align="right" style="font-size:20px;color:#0a0f29;font-weight:800;padding:12px 0 0;border-top:1px solid #dadce7;">{{total}}</td>
+          </tr>
+        </mj-table>
+      </mj-column>
+    </mj-section>
+
+    <!-- Receipt -->
+    <mj-section padding="24px 36px 0">
+      <mj-column>
+        <mj-text font-size="14px" font-weight="700" color="#0a0f29" padding="0 0 4px">
+          Your tax receipt
+        </mj-text>
+        <mj-text font-size="14px" color="#080c21" padding="0">
+          Your official tax receipt no. {{receipt_number}}, issued {{receipt_date}}, is attached to this email. Keep it for your tax records.
+        </mj-text>
+        <mj-text font-size="14px" color="#626784" padding="12px 0 0">
+          This is the only receipt you will receive for your monthly gifts. We will still thank you each month your gift is processed, and your next receipt will arrive in January for {{year}}.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Action -->
+    <mj-section padding="24px 36px 0">
+      <mj-column>
+        <mj-button href="{{campaign_url}}">Give again</mj-button>
+      </mj-column>
+    </mj-section>
+
+    <!-- Charity note -->
+    <mj-section background-color="#ffffff" padding="28px 36px" border-top="1px solid #dadce7">
+      <mj-column>
+        <mj-text font-size="12px" color="#626784" padding="0">
+          Candora Society is a registered charity. Registration no. {{charity_number}}.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <!-- Footer -->
+    <mj-section background-color="#0a0f29" padding="26px 36px">
+      <mj-column>
+        <mj-text font-size="12px" color="#f9fafb" font-weight="700" padding="0 0 4px">Candora Society</mj-text>
+        <mj-text font-size="12px" color="#b9bed1" padding="0">
+          {{contact_address}}<br />
+          {{contact_email}} · {{contact_phone}}
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>
