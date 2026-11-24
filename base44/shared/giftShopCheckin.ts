@@ -275,7 +275,7 @@ export async function sendRegistrationConfirmation(base44, rows) {
           contact_email: GIFT_SHOP_CONTACT_EMAIL,
         },
         category: 'transactional',
-        from_name: 'Candora 360',
+        from_name: 'CANDORA - Kids Gift Shop',
       });
 
       if (sent && sent.success === false) reason = sent.reason || 'refused';

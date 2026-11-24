@@ -204,7 +204,7 @@ Deno.serve(async (req) => {
               contact_email: CONTACT_EMAIL,
             },
             category: 'transactional',
-            from_name: 'Candora 360',
+            from_name: 'CANDORA - Kids Gift Shop',
           });
 
           if (sent && sent.success === false) {

@@ -43,7 +43,8 @@ export async function loadCheckinCodeLookup(base44) {
 
 const CODE_REMINDER = 'Reminder - Your Check-In code when you arrive at Kids Gift Shop is';
 
-const BRAND_LOGO = 'https://media.base44.com/images/public/6a249282cb496579542673b7/c7fbd36e2_logo.png';
+const BRAND_LOGO = 'https://base44.app/api/apps/6a249282cb496579542673b7/files/mp/public/6a249282cb496579542673b7/6d7d8de5b7cf5f4838f9d1df98d171cc_kids-gift-shop-logo.png';
+const FROM_NAME = 'CANDORA - Kids Gift Shop';
 const CONTACT_EMAIL = 'info@candorasociety.com';
 
 const escapeHtml = (value) => String(value || '').replace(/[&<>"]/g, (char) => ({
@@ -75,7 +76,7 @@ export function emailHtml({ guardianName, subject, body, attachmentName, checkin
   <tr><td align="center">
     <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border:1px solid #dadce7;border-radius:10px;overflow:hidden;font-family:Inter,Arial,sans-serif;">
       <tr><td style="background:#fccf03;padding:14px 28px;">
-        <img src="${BRAND_LOGO}" alt="Candora 360" style="height:36px;display:block;border:0;" />
+        <img src="${BRAND_LOGO}" alt="CANDORA - Kids Gift Shop" style="height:44px;display:block;border:0;border-radius:6px;" />
       </td></tr>
       <tr><td style="padding:26px 28px 8px;">
         <p style="margin:0 0 6px;font-size:12px;letter-spacing:.09em;text-transform:uppercase;color:#626784;font-family:Arial,sans-serif;">Kids Gift Shop</p>
@@ -120,7 +121,7 @@ export async function messageFamily(base44, family, { subject, body, attachment,
         subject,
         html: emailHtml({ guardianName: name, subject, body, attachmentName: attachment?.name, checkinCode: code }),
         category: 'transactional',
-        from_name: 'Candora 360',
+        from_name: FROM_NAME,
         ...(attachment?.file_uri
           ? { attachments: [{ filename: attachment.name || 'attachment', file_url: attachment.file_uri }] }
           : {}),
