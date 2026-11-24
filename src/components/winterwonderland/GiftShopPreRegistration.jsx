@@ -56,6 +56,7 @@ export default function GiftShopPreRegistration() {
         guardian_phone: invite.guardian_phone || '',
         group: status,
         label: INVITE_STATUS_META[status]?.label || status,
+        excluded_from_all: status === 'revoked',
       };
     })
     .filter(family => family.family_key);

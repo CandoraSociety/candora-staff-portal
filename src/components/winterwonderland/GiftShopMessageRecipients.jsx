@@ -23,7 +23,9 @@ export function uniqueFamilies(families = []) {
 // tab, chosen individuals — or a mix of groups and individuals.
 export function recipientsFor(families, selectedGroups = new Set(), selectedIds = new Set()) {
   const reachable = uniqueFamilies(families);
-  if (selectedGroups.has('all')) return reachable;
+  // A cancelled family stays out of "All families" — it can still be reached by
+  // picking its own category or choosing it by hand.
+  if (selectedGroups.has('all')) return reachable.filter(f => !f.excluded_from_all);
   const chosen = selectedGroups.has('choose')
     ? reachable.filter(f => selectedIds.has(familyRowId(f)))
     : [];
