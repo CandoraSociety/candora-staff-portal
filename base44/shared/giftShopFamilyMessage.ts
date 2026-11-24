@@ -11,33 +11,58 @@ import { GIFT_SHOP_PROGRAM_NAME } from './giftShopInvites.ts';
 // number, then by email address.
 export async function loadCheckinCodeLookup(base44) {
   const rows = await base44.asServiceRole.entities.ProgramRegistration.filter({ program_name: GIFT_SHOP_PROGRAM_NAME });
+  const byPhoneName = new Map();
+  const byEmailName = new Map();
   const byPhone = new Map();
   const byEmail = new Map();
 
+  const phoneOf = (value) => String(value || '').replace(/\D/g, '').slice(-10);
+  const nameOf = (value) => String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
+  const emailOf = (value) => String(value || '').trim().toLowerCase();
+
   // A family may hold several registrations under one contact. One code is
   // enough, and the reminder keeps going out while any child is still expected.
+  // The codes seen under a key are kept as a set, so a contact detail shared by
+  // more than one family can never hand out somebody else's code.
   const remember = (map, key, row) => {
     if (!key) return;
-    const existing = map.get(key) || { code: '', pending: false };
-    if (!existing.code && row.checkin_code) existing.code = row.checkin_code;
-    if (row.checked_in !== true) existing.pending = true;
-    map.set(key, existing);
+    const entry = map.get(key) || { codes: new Set(), pending: false };
+    if (row.checkin_code) entry.codes.add(row.checkin_code);
+    if (row.checked_in !== true) entry.pending = true;
+    map.set(key, entry);
   };
 
   (rows || []).forEach((row) => {
     if (!row.checkin_code) return;
-    const phone = String(row.parent_guardian_phone || row.participant_phone || '').replace(/\D/g, '').slice(-10);
-    if (phone.length === 10) remember(byPhone, phone, row);
-    const email = String(row.parent_guardian_email || row.participant_email || '').trim().toLowerCase();
-    if (email) remember(byEmail, email, row);
+    const phone = phoneOf(row.parent_guardian_phone || row.participant_phone);
+    const name = nameOf(row.parent_guardian_name || row.participant_name);
+    const email = emailOf(row.parent_guardian_email || row.participant_email);
+    if (phone.length === 10) {
+      remember(byPhone, phone, row);
+      if (name) remember(byPhoneName, `${phone}|${name}`, row);
+    }
+    if (email) {
+      remember(byEmail, email, row);
+      if (name) remember(byEmailName, `${email}|${name}`, row);
+    }
   });
 
+  // Only a key that points at one family's single code is used — anything shared
+  // between families stays silent rather than sending the wrong code.
+  const codeOf = (entry) => (entry && entry.pending && entry.codes.size === 1 ? [...entry.codes][0] : '');
+
   return (family) => {
-    const phone = String(family.guardian_phone || '').replace(/\D/g, '').slice(-10);
-    const entry = (phone.length === 10 && byPhone.get(phone))
-      || byEmail.get(String(family.guardian_email || '').trim().toLowerCase());
-    // Once the family is checked in the code has done its job.
-    return entry && entry.pending ? entry.code : '';
+    const phone = phoneOf(family.guardian_phone);
+    const name = nameOf(family.guardian_name);
+    const email = emailOf(family.guardian_email);
+    // The family's own rows are matched as closely as possible: their name on
+    // the number, then their name on the email address, and only then the
+    // number or address on its own.
+    const entry = (phone.length === 10 && name && byPhoneName.get(`${phone}|${name}`))
+      || (email && name && byEmailName.get(`${email}|${name}`))
+      || (phone.length === 10 && byPhone.get(phone))
+      || (email && byEmail.get(email));
+    return codeOf(entry);
   };
 }
 
