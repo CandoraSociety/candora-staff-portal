@@ -203,7 +203,12 @@ export function groupGiftShopFamilies(registrations) {
         children: [],
       });
     }
-    map.get(key).children.push(reg);
+    // A family's contact details can sit on any of its children's rows — the
+    // first row registered may carry only one of them, so take whichever row has each.
+    const family = map.get(key);
+    family.children.push(reg);
+    if (!family.guardian_phone) family.guardian_phone = reg.parent_guardian_phone || reg.participant_phone || '';
+    if (!family.guardian_email) family.guardian_email = reg.parent_guardian_email || reg.participant_email || '';
   });
   return Array.from(map.values());
 }

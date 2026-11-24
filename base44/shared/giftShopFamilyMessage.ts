@@ -85,7 +85,9 @@ export async function messageFamily(base44, family, { subject, body, attachment,
   if (phone) {
     const text = await sendGiftShopText(phone, `${subject}\n\n${body}`);
     if (text.ok) texted = true;
-    else if (!emailed) failure = text.reason || 'The text could not be sent.';
+    // Keep the reason even when the email worked, so staff can see why a family
+    // was only reached on one channel.
+    else failure = failure || text.reason || 'The text could not be sent.';
   }
 
   const status = emailed && texted ? 'sent' : emailed || texted ? 'partial' : 'failed';
