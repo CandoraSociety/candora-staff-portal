@@ -1,0 +1,45 @@
+{
+  "description": "Sends the Kids Gift Shop messages the desk scheduled, once each one's time has come",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "*/5 * * * *",
+      "one_time_date": null,
+      "timezone": "America/Cambridge_Bay",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "kids_gift_shop_scheduled_messages",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "send_due_messages": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "sendGiftShopScheduledMessages",
+            "args": {}
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Send the messages that are due",
+            "description": "Every scheduled message whose time has come"
+          }
+        }
+      }
+    ]
+  },
+  "name": "Kids Gift Shop Scheduled Messages"
+}

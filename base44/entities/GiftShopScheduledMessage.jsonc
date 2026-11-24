@@ -1,0 +1,143 @@
+{
+  "name": "GiftShopScheduledMessage",
+  "type": "object",
+  "description": "One Kids Gift Shop message the desk wrote ahead of time, with the families it should reach and the moment it should go out. The scheduled send runs on its own every few minutes, sends each message once its time has come, and records what happened so staff can see it in the Scheduled messages tab.",
+  "properties": {
+    "subject": {
+      "type": "string",
+      "description": "Heading of the message as the family sees it"
+    },
+    "body": {
+      "type": "string",
+      "description": "Text of the message"
+    },
+    "attachment_name": {
+      "type": "string",
+      "description": "File name of the attachment, when one was included"
+    },
+    "attachment_url": {
+      "type": "string",
+      "description": "Stored private file of the attachment, opened through a signed link"
+    },
+    "recipients": {
+      "type": "array",
+      "description": "The families this message goes to, captured when it was scheduled so the message still reaches the same people even if a card changes later",
+      "items": {
+        "type": "object",
+        "properties": {
+          "family_key": {
+            "type": "string",
+            "description": "The family \u2014 p:<ten-digit phone> or e:<email address>"
+          },
+          "guardian_name": {
+            "type": "string"
+          },
+          "guardian_email": {
+            "type": "string"
+          },
+          "guardian_phone": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "family_key"
+        ]
+      }
+    },
+    "recipient_count": {
+      "type": "number",
+      "description": "How many families the message is going to"
+    },
+    "send_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "The moment the message should go out"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "sending",
+        "sent",
+        "failed",
+        "cancelled"
+      ],
+      "enumColors": [
+        "yellow",
+        "blue",
+        "green",
+        "red",
+        "gray"
+      ],
+      "default": "pending",
+      "description": "pending = waiting for its time; sending = going out now; sent = delivered to the families; failed = it could not go out; cancelled = called off by staff before it was sent"
+    },
+    "sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the message actually went out"
+    },
+    "sent_by_name": {
+      "type": "string",
+      "description": "Staff member who scheduled it"
+    },
+    "result_summary": {
+      "type": "string",
+      "description": "Short line on what happened when it was sent, e.g. 4 sent \u00b7 1 reached one channel"
+    }
+  },
+  "required": [
+    "subject",
+    "body",
+    "send_at"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
