@@ -10,7 +10,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Plus, Newspaper, Users, FileText, Search } from 'lucide-react';
+import { Plus, Newspaper, Users, FileText, Search, ClipboardList } from 'lucide-react';
+import InterviewPrepTab from '@/components/marketing/media/InterviewPrepTab';
 
 const STATUS_COLORS = {
   draft: 'bg-gray-100 text-gray-700',
@@ -201,6 +202,7 @@ export default function MarketingMedia() {
           <TabsTrigger value="press"><FileText className="w-4 h-4 mr-1" />Press Releases <Badge variant="outline" className="ml-1 text-xs">{releases.length}</Badge></TabsTrigger>
           <TabsTrigger value="contacts"><Users className="w-4 h-4 mr-1" />Media Contacts <Badge variant="outline" className="ml-1 text-xs">{contacts.length}</Badge></TabsTrigger>
           <TabsTrigger value="coverage"><Newspaper className="w-4 h-4 mr-1" />Coverage Log <Badge variant="outline" className="ml-1 text-xs">{coverage.length}</Badge></TabsTrigger>
+          <TabsTrigger value="prep"><ClipboardList className="w-4 h-4 mr-1" />Interview Prep</TabsTrigger>
         </TabsList>
 
         <TabsContent value="press" className="space-y-3 mt-4">
@@ -251,6 +253,10 @@ export default function MarketingMedia() {
             </Card>
           ))}
           {coverage.length === 0 && <Card><CardContent className="py-12 text-center text-muted-foreground">No coverage logged yet</CardContent></Card>}
+        </TabsContent>
+
+        <TabsContent value="prep">
+          <InterviewPrepTab releases={releases} search={search} />
         </TabsContent>
       </Tabs>
 

@@ -1,0 +1,136 @@
+{
+  "name": "InterviewPrep",
+  "type": "object",
+  "description": "Preparation for one media interview the marketing team is getting ready for - who is interviewing, when, on which outlet, and which press release the interview is about. Kept deliberately light: the working notes hold whatever briefing the team needs, and the record can be tied to a press release or stand on its own.",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "How this interview is labelled for staff, e.g. CBC Morning - Winter Wonderland launch"
+    },
+    "press_release_id": {
+      "type": "string",
+      "description": "The press release this interview is about. Optional - leave empty for an interview that is not tied to a release."
+    },
+    "press_release_title": {
+      "type": "string",
+      "description": "Title of the linked press release at the time it was chosen, so the card still reads correctly if the release is later renamed"
+    },
+    "outlet": {
+      "type": "string",
+      "description": "Where the interview appears, e.g. CBC Radio, Edmonton Journal"
+    },
+    "interviewer": {
+      "type": "string",
+      "description": "Journalist or host conducting the interview"
+    },
+    "interview_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the interview happens"
+    },
+    "format": {
+      "type": "string",
+      "enum": [
+        "in_person",
+        "phone",
+        "radio",
+        "tv",
+        "podcast",
+        "video_call",
+        "written"
+      ],
+      "enumColors": [
+        "blue",
+        "gray",
+        "purple",
+        "pink",
+        "yellow",
+        "blue",
+        "green"
+      ],
+      "default": "phone",
+      "description": "How the interview is being conducted"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "planned",
+        "preparing",
+        "ready",
+        "completed"
+      ],
+      "enumColors": [
+        "gray",
+        "yellow",
+        "blue",
+        "green"
+      ],
+      "default": "planned",
+      "description": "planned = booked; preparing = briefing being written; ready = the spokesperson is set; completed = the interview happened"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Working briefing for the interview - talking points, questions to expect, who is speaking"
+    },
+    "spokesperson": {
+      "type": "string",
+      "description": "Staff member giving the interview"
+    },
+    "created_by_name": {
+      "type": "string",
+      "description": "Staff member who set up the preparation"
+    }
+  },
+  "required": [
+    "title"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
