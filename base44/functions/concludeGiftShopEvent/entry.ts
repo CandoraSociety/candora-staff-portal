@@ -258,6 +258,47 @@ export default async function(req: Request) {
       sharepoint_files: files,
     });
 
+    // The event is a milestone in Candora's history, so it is also recorded in the
+    // Candora Archives portal — same counts, venue and SharePoint folder. A
+    // failure here never blocks the archive or the clearing below.
+    try {
+      const [dateYear, dateMonth, dateDay] = String(activeSetup?.event_date || '')
+        .split('-')
+        .map((part) => Number(part));
+      const when = dateYear
+        ? new Date(`${activeSetup.event_date}T12:00:00Z`).toLocaleDateString('en-CA', {
+          year: 'numeric', month: 'long', day: 'numeric',
+        })
+        : String(year);
+      const familyWord = summary.families === 1 ? 'family' : 'families';
+      const childWord = summary.children === 1 ? 'child' : 'children';
+      const venue = activeSetup?.venue || 'the festival';
+
+      const entry: any = {
+        title: `${eventName} ${year}`,
+        year,
+        era: 'modern',
+        category: 'community_impact',
+        summary: `${eventName} on ${when} at ${venue} — ${summary.families} ${familyWord}, ${summary.children} ${childWord}, ${summary.completed} taken through the shop by volunteers.`,
+        detailed_content: [
+          `<p>${eventName} ran on ${when} at ${venue}${activeSetup?.desk_location ? `, with the check-in desk at ${activeSetup.desk_location}` : ''}.</p>`,
+          '<ul>',
+          `<li>${summary.families} ${familyWord} and ${summary.children} ${childWord} registered</li>`,
+          `<li>${summary.checked_in} children checked in on the day</li>`,
+          `<li>${summary.completed} children finished shopping with a volunteer</li>`,
+          `<li>${summary.invites} pre-registration invitations sent</li>`,
+          '</ul>',
+          `<p>The full record — every registration, check-in and message — is kept in SharePoint under ${SHAREPOINT_FOLDER}.</p>`,
+        ].join(''),
+        is_featured: false,
+      };
+      if (dateMonth) entry.month = dateMonth;
+      if (dateDay) entry.day = dateDay;
+      await svc.entities.ArchiveTimelineItem.create(entry);
+    } catch (error: any) {
+      console.log('Conclude Kids Gift Shop: Archives entry failed —', error?.message);
+    }
+
     // Clear the shop for next year — the archive above and the SharePoint copy
     // hold everything that was just removed.
     const cleared = {
