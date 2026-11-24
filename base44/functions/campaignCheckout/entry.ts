@@ -98,6 +98,8 @@ export default async function (req) {
       : 'one_time';
     const donorName = String(body.donorName || '').trim().slice(0, 120);
     const donorEmail = String(body.donorEmail || '').trim().toLowerCase().slice(0, 200);
+    // A mobile number is optional — it only ever carries the thank-you text.
+    const donorPhone = String(body.donorPhone || '').replace(/[^\d+]/g, '').slice(0, 20);
     const message = String(body.message || '').trim().slice(0, 500);
 
     if (!donorName) return Response.json({ error: 'Please tell us your name.' }, { status: 400 });
@@ -143,6 +145,7 @@ export default async function (req) {
       frequency,
       donor_name: donorName,
       donor_email: donorEmail,
+      donor_phone: donorPhone || null,
       gift_message: message,
       is_anonymous: !!body.anonymous,
       status: 'pending',

@@ -74,6 +74,10 @@
     "donor_email": {
       "type": "string"
     },
+    "donor_phone": {
+      "type": "string",
+      "description": "Mobile number the supporter gave for a thank-you text, when they chose to share one"
+    },
     "gift_message": {
       "type": "string"
     },

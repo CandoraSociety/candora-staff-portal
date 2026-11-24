@@ -2,6 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
 import { secrets } from 'base44:runtime';
 import Stripe from 'npm:stripe@17.4.0';
 import { recordCampaignGift } from '../../shared/campaignGifts.ts';
+import { sendDonationThankYou } from '../../shared/donorThankYou.ts';
 
 const intentFor = (base44, id) =>
   base44.asServiceRole.entities.CampaignDonationIntent
@@ -92,6 +93,19 @@ export default async function (req) {
         payment_reference: session.payment_intent || '',
       });
 
+      // Thank the supporter with their receipt. The gift is already recorded, so
+      // a thank-you that could not go out never fails the payment.
+      try {
+        await sendDonationThankYou(base44, {
+          donation,
+          donorPhone: intent.donor_phone || '',
+          campaignSlug: intent.campaign_slug || '',
+          appUrl: req.headers.get('X-Base44-App-Url') || '',
+        });
+      } catch (error) {
+        console.error('stripeCampaignWebhook: thank-you failed', error?.message || error);
+      }
+
       return Response.json({ received: true });
     }
 
@@ -125,7 +139,7 @@ export default async function (req) {
       const intent = await intentFor(base44, meta.intent_id);
       if (!intent) return Response.json({ received: true });
 
-      await recordCampaignGift(base44, {
+      const donation = await recordCampaignGift(base44, {
         campaignId: intent.campaign_id,
         campaignName: intent.campaign_name,
         productName: intent.product_name,
@@ -138,6 +152,18 @@ export default async function (req) {
         anonymous: intent.is_anonymous,
         reference,
       });
+
+      // Each monthly gift is receipted and thanked on its own.
+      try {
+        await sendDonationThankYou(base44, {
+          donation,
+          donorPhone: intent.donor_phone || '',
+          campaignSlug: intent.campaign_slug || '',
+          appUrl: req.headers.get('X-Base44-App-Url') || '',
+        });
+      } catch (error) {
+        console.error('stripeCampaignWebhook: renewal thank-you failed', error?.message || error);
+      }
 
       return Response.json({ received: true });
     }

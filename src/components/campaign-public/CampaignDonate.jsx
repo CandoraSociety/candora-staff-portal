@@ -33,6 +33,7 @@ export default function CampaignDonate({
   const [frequency, setFrequency] = useState('one_time');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [anonymous, setAnonymous] = useState(false);
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
@@ -88,6 +89,7 @@ export default function CampaignDonate({
         frequency: monthly ? 'monthly' : 'one_time',
         donorName: name.trim(),
         donorEmail: email.trim(),
+        donorPhone: phone.trim(),
         anonymous,
         message: message.trim(),
         returnPath,
@@ -236,6 +238,17 @@ export default function CampaignDonate({
         <div>
           <Label htmlFor="donor-email">Email for your receipt</Label>
           <Input id="donor-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1.5" />
+        </div>
+        <div>
+          <Label htmlFor="donor-phone">Mobile for a thank-you text (optional)</Label>
+          <Input
+            id="donor-phone"
+            type="tel"
+            placeholder="(780) 555-0123"
+            value={phone}
+            onChange={(e) => setPhone(e.target.value)}
+            className="mt-1.5"
+          />
         </div>
         <div>
           <Label htmlFor="donor-message">Leave a message (optional)</Label>
