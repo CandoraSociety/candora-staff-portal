@@ -34,6 +34,9 @@ export function emailHtml({ guardianName, subject, body, attachmentName }) {
       </td></tr>
       <tr><td style="padding:16px 28px 22px;border-top:1px solid #dadce7;margin-top:20px;">
         <p style="margin:14px 0 0;font-size:12px;line-height:1.6;color:#626784;font-family:Arial,sans-serif;">
+          Please do not reply to this email. The inbox is not monitored. If you have any questions or need assistance, email ${CONTACT_EMAIL}.
+        </p>
+        <p style="margin:8px 0 0;font-size:12px;line-height:1.6;color:#626784;font-family:Arial,sans-serif;">
           Candora 360 · Kids Gift Shop · ${CONTACT_EMAIL}
         </p>
       </td></tr>

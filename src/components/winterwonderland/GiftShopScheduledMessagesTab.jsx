@@ -6,6 +6,8 @@ import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { ChevronDown, ChevronLeft, ChevronRight, Loader2, Paperclip } from 'lucide-react';
 
+const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
 const STATUS_META = {
   pending: { label: 'Scheduled', className: 'bg-amber-100 text-amber-800' },
   sending: { label: 'Sending', className: 'bg-blue-100 text-blue-800' },
@@ -23,6 +25,10 @@ const whenLabel = (value) => new Date(value).toLocaleString(undefined, {
   month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
 });
 
+const timeLabel = (value) => new Date(value).toLocaleTimeString(undefined, {
+  hour: 'numeric', minute: '2-digit',
+});
+
 // Six weeks of days around the month being shown, so the calendar always keeps
 // the same shape while the month changes.
 function monthDays(cursor) {
@@ -36,8 +42,8 @@ function monthDays(cursor) {
   });
 }
 
-// The Scheduled messages tab: a month calendar showing which days have messages
-// waiting, and a collapsible list of everything scheduled. A day in the calendar
+// The Scheduled messages tab: a month calendar with each message sitting in its
+// day, and a collapsible list of everything scheduled underneath. Picking a day
 // narrows the list to that day.
 export default function GiftShopScheduledMessagesTab({ reloadKey = 0 }) {
   const { toast } = useToast();
@@ -59,9 +65,9 @@ export default function GiftShopScheduledMessagesTab({ reloadKey = 0 }) {
 
   useEffect(() => { load(); }, [reloadKey]);
 
-  const counts = useMemo(() => items.reduce((acc, item) => {
+  const byDay = useMemo(() => items.reduce((acc, item) => {
     const key = dayKey(item.send_at);
-    acc[key] = (acc[key] || 0) + 1;
+    (acc[key] = acc[key] || []).push(item);
     return acc;
   }, {}), [items]);
 
@@ -85,61 +91,103 @@ export default function GiftShopScheduledMessagesTab({ reloadKey = 0 }) {
 
   return (
     <div className="space-y-3">
-      <div className="rounded-md border p-3">
-        <div className="mb-2 flex items-center justify-between">
+      <div className="overflow-hidden rounded-lg border">
+        <div className="flex items-center justify-between border-b bg-muted/40 px-2 py-1.5">
           <Button
             variant="ghost"
             size="icon"
+            className="h-7 w-7"
             onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() - 1, 1))}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
-          <p className="text-sm font-semibold">
-            {cursor.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
-          </p>
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-semibold">
+              {cursor.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}
+            </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 px-2 text-xs"
+              onClick={() => { setCursor(new Date()); setDayFilter(null); }}
+            >
+              Today
+            </Button>
+          </div>
           <Button
             variant="ghost"
             size="icon"
+            className="h-7 w-7"
             onClick={() => setCursor(new Date(cursor.getFullYear(), cursor.getMonth() + 1, 1))}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
 
-        <div className="mb-1 grid grid-cols-7 gap-1 text-center text-[11px] uppercase tracking-wide text-muted-foreground">
-          {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => <span key={day}>{day.slice(0, 1)}</span>)}
+        <div className="grid grid-cols-7 border-b bg-muted/20 text-center text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+          {WEEKDAYS.map(day => <div key={day} className="py-1.5">{day}</div>)}
         </div>
 
-        <div className="grid grid-cols-7 gap-1">
+        <div className="grid grid-cols-7 gap-px bg-border">
           {days.map(day => {
             const key = dayKey(day);
-            const count = counts[key] || 0;
-            const active = dayFilter === key;
+            const dayItems = byDay[key] || [];
             const inMonth = day.getMonth() === cursor.getMonth();
+            const active = dayFilter === key;
             return (
-              <button
+              <div
                 key={key}
-                type="button"
-                onClick={() => setDayFilter(active ? null : key)}
                 className={cn(
-                  'relative flex h-9 flex-col items-center justify-center rounded-md border text-xs transition-colors',
-                  inMonth ? 'text-foreground' : 'text-muted-foreground/50',
-                  active ? 'border-primary bg-primary/10 font-semibold' : 'hover:bg-muted/50',
-                  !active && key === today && 'border-muted-foreground/40',
+                  'min-h-[92px] p-1',
+                  inMonth ? 'bg-background' : 'bg-muted/30',
+                  active && 'bg-primary/5 ring-1 ring-inset ring-primary',
                 )}
               >
-                <span>{day.getDate()}</span>
-                {count > 0 && (
-                  <span className="absolute bottom-1 h-1 w-1 rounded-full bg-primary" />
-                )}
-              </button>
+                <button
+                  type="button"
+                  onClick={() => setDayFilter(active ? null : key)}
+                  className="mb-0.5 flex w-full items-center justify-between rounded px-0.5 hover:bg-muted/60"
+                >
+                  <span
+                    className={cn(
+                      'flex h-5 w-5 items-center justify-center rounded-full text-xs',
+                      key === today && 'bg-primary font-semibold text-primary-foreground',
+                      key !== today && !inMonth && 'text-muted-foreground/60',
+                    )}
+                  >
+                    {day.getDate()}
+                  </span>
+                  {dayItems.length > 0 && (
+                    <span className="pr-0.5 text-[10px] text-muted-foreground">{dayItems.length}</span>
+                  )}
+                </button>
+
+                <div className="space-y-0.5">
+                  {dayItems.slice(0, 2).map(item => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setDayFilter(key)}
+                      className={cn(
+                        'block w-full truncate rounded px-1 py-0.5 text-left text-[10px] leading-tight',
+                        item.status === 'pending' ? 'bg-amber-100 text-amber-900'
+                          : item.status === 'sent' ? 'bg-green-100 text-green-900'
+                            : item.status === 'failed' ? 'bg-red-100 text-red-900'
+                              : 'bg-muted text-muted-foreground',
+                      )}
+                      title={`${timeLabel(item.send_at)} · ${item.subject}`}
+                    >
+                      {timeLabel(item.send_at)} · {item.subject}
+                    </button>
+                  ))}
+                  {dayItems.length > 2 && (
+                    <p className="px-1 text-[10px] text-muted-foreground">+{dayItems.length - 2} more</p>
+                  )}
+                </div>
+              </div>
             );
           })}
         </div>
-
-        <p className="mt-2 text-xs text-muted-foreground">
-          {dayFilter ? 'Showing one day — pick the day again to see them all.' : 'A dot marks a day with a message waiting.'}
-        </p>
       </div>
 
       <button
@@ -176,6 +224,9 @@ export default function GiftShopScheduledMessagesTab({ reloadKey = 0 }) {
                       {whenLabel(item.send_at)} · {item.recipient_count || (item.recipients || []).length} families
                     </p>
                     {names && <p className="truncate text-xs text-muted-foreground">{names}</p>}
+                    {item.include_checkin_code && (
+                      <p className="text-xs text-muted-foreground">Includes each family’s check-in code</p>
+                    )}
                     {item.attachment_name && (
                       <p className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
                         <Paperclip className="h-3 w-3" /> {item.attachment_name}

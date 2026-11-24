@@ -53,6 +53,11 @@
       "format": "date-time",
       "description": "The moment the message should go out"
     },
+    "include_checkin_code": {
+      "type": "boolean",
+      "default": false,
+      "description": "When on, each family's own six-digit check-in code is added to the end of the message, so the reminder carries what they need at the desk"
+    },
     "status": {
       "type": "string",
       "enum": [

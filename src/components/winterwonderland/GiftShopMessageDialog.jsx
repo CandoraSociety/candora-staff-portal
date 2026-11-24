@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/components/ui/use-toast';
 import { Clock, Loader2, Paperclip, Send, X } from 'lucide-react';
 import GiftShopMessageRecipients, { recipientsFor } from '@/components/winterwonderland/GiftShopMessageRecipients';
@@ -45,6 +46,7 @@ export default function GiftShopMessageDialog({ open, onOpenChange, families = [
   const [results, setResults] = useState(null);
   const [timing, setTiming] = useState('now');
   const [when, setWhen] = useState('');
+  const [includeCode, setIncludeCode] = useState(false);
   const [scheduling, setScheduling] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
 
@@ -61,6 +63,7 @@ export default function GiftShopMessageDialog({ open, onOpenChange, families = [
       setResults(null);
       setTiming('now');
       setWhen('');
+      setIncludeCode(false);
       setScheduling(false);
     }
   }, [open]);
@@ -105,6 +108,7 @@ export default function GiftShopMessageDialog({ open, onOpenChange, families = [
     setAttachment(null);
     setTiming('now');
     setWhen('');
+    setIncludeCode(false);
   };
 
   const send = async () => {
@@ -170,6 +174,7 @@ export default function GiftShopMessageDialog({ open, onOpenChange, families = [
         })),
         recipient_count: recipients.length,
         send_at: sendAt.toISOString(),
+        include_checkin_code: includeCode,
         status: 'pending',
         sent_by_name: me?.full_name || me?.email || '',
       });
@@ -288,12 +293,27 @@ export default function GiftShopMessageDialog({ open, onOpenChange, families = [
                     </Button>
                   </div>
                   {timing === 'later' && (
-                    <Input
-                      type="datetime-local"
-                      value={when}
-                      onChange={e => setWhen(e.target.value)}
-                      className="max-w-xs"
-                    />
+                    <>
+                      <Input
+                        type="datetime-local"
+                        value={when}
+                        onChange={e => setWhen(e.target.value)}
+                        className="max-w-xs"
+                      />
+                      <label className="flex cursor-pointer items-start gap-2 pt-1">
+                        <Checkbox
+                          checked={includeCode}
+                          onCheckedChange={value => setIncludeCode(Boolean(value))}
+                          className="mt-0.5"
+                        />
+                        <span className="text-sm">
+                          Add each family’s six-digit check-in code to their reminder
+                          <span className="mt-0.5 block text-xs text-muted-foreground">
+                            Each family gets their own code at the end of the message.
+                          </span>
+                        </span>
+                      </label>
+                    </>
                   )}
                 </div>
 
