@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Play, ChevronLeft, ChevronRight, ListChecks } from 'lucide-react';
 import GuideTopBar from '@/components/interviewguide/GuideTopBar';
@@ -95,9 +95,7 @@ export default function InterviewGuide() {
     if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
   }, [item?.key, follow, audio.playing]);
 
-  const jumpQuickRef = () => {
-    document.getElementById('quick-reference')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  };
+  const quickRefPath = `/interview-guide/${token}/quick-reference`;
 
   const scale = SCALES[scaleIndex];
   const bg = dark ? 'bg-[#0a0f29]' : 'bg-[#f9fafb]';
@@ -141,7 +139,7 @@ export default function InterviewGuide() {
         onTogglePractice={() => { setPractice((p) => !p); setSimulated(false); }}
         onListenAll={playAll}
         hasAudio={playlist.length > 0}
-        onJumpQuickRef={jumpQuickRef}
+        quickRefPath={quickRefPath}
       />
 
       <main className="max-w-3xl mx-auto px-4 pt-5 pb-48 space-y-5">
@@ -266,13 +264,12 @@ export default function InterviewGuide() {
       </main>
 
       {!simulated && (
-        <button
-          type="button"
-          onClick={jumpQuickRef}
+        <Link
+          to={quickRefPath}
           className="fixed right-4 bottom-32 z-30 rounded-full bg-[#0a0f29] text-white text-xs font-semibold px-4 py-2.5 shadow-lg print:hidden"
         >
           Quick reference
-        </button>
+        </Link>
       )}
 
       {playlist.length > 0 && (

@@ -1,9 +1,10 @@
 import React from 'react';
+import { Link } from 'react-router-dom';
 import { Play, Sun, Moon, Type, ListChecks, X, Printer } from 'lucide-react';
 
 // Sticky top bar: brand, what this guide is, and the reading controls.
 export default function GuideTopBar({
-  guide, dark, onToggleDark, onScale, scale, practice, onTogglePractice, onListenAll, hasAudio, onJumpQuickRef,
+  guide, dark, onToggleDark, onScale, scale, practice, onTogglePractice, onListenAll, hasAudio, quickRefPath,
 }) {
   const surface = dark ? 'bg-[#0a0f29] border-[#26305a] text-[#eef1ff]' : 'bg-white border-[#dadce7] text-[#080c21]';
   const muted = dark ? 'text-[#a9b0cd]' : 'text-[#626784]';
@@ -69,13 +70,12 @@ export default function GuideTopBar({
             {practice ? <X className="w-3.5 h-3.5" /> : <ListChecks className="w-3.5 h-3.5" />}
             {practice ? 'Exit practice mode' : 'Practise'}
           </button>
-          <button
-            type="button"
-            onClick={onJumpQuickRef}
+          <Link
+            to={quickRefPath}
             className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-medium ${btn}`}
           >
             Quick reference
-          </button>
+          </Link>
           <button
             type="button"
             onClick={() => window.print()}
