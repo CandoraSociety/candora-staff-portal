@@ -1,30 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
-import { messageFamily } from '../../shared/giftShopFamilyMessage.ts';
-import { GIFT_SHOP_PROGRAM_NAME } from '../../shared/giftShopInvites.ts';
-
-// A reminder can carry each family's six-digit check-in code. The codes live on
-// the family's registrations, so they are read once per run and matched to the
-// family by phone number, then by email address.
-async function loadCodeLookup(base44) {
-  const rows = await base44.asServiceRole.entities.ProgramRegistration.filter({ program_name: GIFT_SHOP_PROGRAM_NAME });
-  const byPhone = new Map();
-  const byEmail = new Map();
-  (rows || []).forEach((row: any) => {
-    const code = row.checkin_code;
-    if (!code) return;
-    const phone = String(row.parent_guardian_phone || row.participant_phone || '').replace(/\D/g, '').slice(-10);
-    if (phone.length === 10) byPhone.set(phone, code);
-    const email = String(row.parent_guardian_email || row.participant_email || '').trim().toLowerCase();
-    if (email) byEmail.set(email, code);
-  });
-
-  return (family: any) => {
-    const phone = String(family.guardian_phone || '').replace(/\D/g, '').slice(-10);
-    if (phone.length === 10 && byPhone.has(phone)) return byPhone.get(phone);
-    const email = String(family.guardian_email || '').trim().toLowerCase();
-    return byEmail.get(email) || '';
-  };
-}
+import { messageFamily, loadCheckinCodeLookup, messageBodyFor } from '../../shared/giftShopFamilyMessage.ts';
 
 // Sends the Kids Gift Shop messages the desk scheduled, once each one's time has
 // come. The scheduled workflow calls it every few minutes. It takes no input and
@@ -53,7 +28,7 @@ export default async function (req: Request): Promise<Response> {
         ? { name: item.attachment_name || 'attachment', file_uri: item.attachment_url }
         : null;
 
-      if (item.include_checkin_code && !codeForFamily) codeForFamily = await loadCodeLookup(base44);
+      if (item.include_checkin_code && !codeForFamily) codeForFamily = await loadCheckinCodeLookup(base44);
 
       const rows: any[] = [];
       // Small batches keep the worker's outbound connections in hand.
@@ -66,7 +41,7 @@ export default async function (req: Request): Promise<Response> {
               : '';
             return messageFamily(base44, family, {
               subject: item.subject,
-              body: code ? `${item.body}\n\nYour check-in code: ${code}` : item.body,
+              body: messageBodyFor(item.body, code),
               attachment,
               sentByName: item.sent_by_name || 'Scheduled message',
             });

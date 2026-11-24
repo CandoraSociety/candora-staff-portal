@@ -3,6 +3,37 @@
 // keeps the family's message history. Shared by the immediate send and the
 // scheduled send, so both behave the same way and both leave the same trail.
 import { sendGiftShopText } from './giftShopSms.ts';
+import { GIFT_SHOP_PROGRAM_NAME } from './giftShopInvites.ts';
+
+// A message can carry each family's six-digit check-in code. The codes live on
+// the family's registrations, so they are read once and matched to the family by
+// phone number, then by email address.
+export async function loadCheckinCodeLookup(base44) {
+  const rows = await base44.asServiceRole.entities.ProgramRegistration.filter({ program_name: GIFT_SHOP_PROGRAM_NAME });
+  const byPhone = new Map();
+  const byEmail = new Map();
+  (rows || []).forEach((row) => {
+    const code = row.checkin_code;
+    if (!code) return;
+    const phone = String(row.parent_guardian_phone || row.participant_phone || '').replace(/\D/g, '').slice(-10);
+    if (phone.length === 10) byPhone.set(phone, code);
+    const email = String(row.parent_guardian_email || row.participant_email || '').trim().toLowerCase();
+    if (email) byEmail.set(email, code);
+  });
+
+  return (family) => {
+    const phone = String(family.guardian_phone || '').replace(/\D/g, '').slice(-10);
+    if (phone.length === 10 && byPhone.has(phone)) return byPhone.get(phone);
+    const email = String(family.guardian_email || '').trim().toLowerCase();
+    return byEmail.get(email) || '';
+  };
+}
+
+// The message text a family receives, with their own code at the end when the
+// reminder asks for it.
+export function messageBodyFor(body, code) {
+  return code ? `${body}\n\nYour check-in code: ${code}` : body;
+}
 
 const BRAND_LOGO = 'https://media.base44.com/images/public/6a249282cb496579542673b7/c7fbd36e2_logo.png';
 const CONTACT_EMAIL = 'info@candorasociety.com';

@@ -139,6 +139,7 @@ export default function GiftShopMessageDialog({ open, onOpenChange, families = [
           subject: subject.trim(),
           body: body.trim(),
           attachment,
+          include_checkin_code: includeCode,
         });
         collected.push(...(response.data?.results || []));
       }
@@ -302,28 +303,26 @@ export default function GiftShopMessageDialog({ open, onOpenChange, families = [
                     </Button>
                   </div>
                   {timing === 'later' && (
-                    <>
-                      <Input
-                        type="datetime-local"
-                        value={when}
-                        onChange={e => setWhen(e.target.value)}
-                        className="max-w-xs"
-                      />
-                      <label className="flex cursor-pointer items-start gap-2 pt-1">
-                        <Checkbox
-                          checked={includeCode}
-                          onCheckedChange={value => setIncludeCode(Boolean(value))}
-                          className="mt-0.5"
-                        />
-                        <span className="text-sm">
-                          Add each family’s six-digit check-in code to their reminder
-                          <span className="mt-0.5 block text-xs text-muted-foreground">
-                            Each family gets their own code at the end of the message.
-                          </span>
-                        </span>
-                      </label>
-                    </>
+                    <Input
+                      type="datetime-local"
+                      value={when}
+                      onChange={e => setWhen(e.target.value)}
+                      className="max-w-xs"
+                    />
                   )}
+                  <label className="flex cursor-pointer items-start gap-2 pt-1">
+                    <Checkbox
+                      checked={includeCode}
+                      onCheckedChange={value => setIncludeCode(Boolean(value))}
+                      className="mt-0.5"
+                    />
+                    <span className="text-sm">
+                      Include each family’s six-digit check-in code
+                      <span className="mt-0.5 block text-xs text-muted-foreground">
+                        Each registered family gets their own code at the end of the message.
+                      </span>
+                    </span>
+                  </label>
                 </div>
 
                 <p className="text-xs text-muted-foreground">
