@@ -36,8 +36,10 @@ export function recipientsFor(families, selectedGroups = new Set(), selectedIds 
 
 export default function GiftShopMessageRecipients({ families, groups = [], selectedGroups, onToggleGroup, selectedIds, onToggle }) {
   const reachable = uniqueFamilies(families);
+  // When a tab holds families that "All families" skips, the chip says so.
+  const hasExcluded = reachable.some(f => f.excluded_from_all);
   const options = [
-    { value: 'all', label: 'All families' },
+    { value: 'all', label: hasExcluded ? 'All families (excluding cancelled)' : 'All families' },
     ...groups,
     { value: 'choose', label: 'Choose families' },
   ];
@@ -62,7 +64,8 @@ export default function GiftShopMessageRecipients({ families, groups = [], selec
                     : 'border-input text-muted-foreground hover:border-primary/50',
                 )}
               >
-                {option.label}{option.value === 'choose' ? '' : ` (${count})`}
+                {option.label}
+                {option.value === 'choose' ? '' : option.value === 'all' && hasExcluded ? ` · ${count}` : ` (${count})`}
               </button>
             );
           })}
