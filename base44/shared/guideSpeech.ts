@@ -252,23 +252,42 @@ export function buildQuickReferenceSegments(guide, questions = []) {
     });
   });
 
-  const essentials = (guide?.quick_reference_info || []).filter((row) => row?.value);
-  if (essentials.length) {
+  // The promotional box that closes the sheet: its heading, then each block with
+  // every one of its lines as its own clip, so there is a real pause between them.
+  const promoRows = (guide?.quick_reference_info || []).filter((row) => row?.label && (row.value || row.url));
+  if (promoRows.length) {
     push({
-      id: 'qr-essentials',
+      id: 'qr-promo',
       kind: 'heading',
-      text: 'Essential donation information.',
-      category_label: 'Essential donation information',
+      text: 'Essential promotional information.',
+      category_label: 'Essential promotional information',
       pause_after_ms: PAUSES.heading,
     });
-    essentials.forEach((row, index) => {
+
+    promoRows.forEach((row, rowIndex) => {
+      const label = spokenText(row.label);
       push({
-        id: `qr-essentials-${index}`,
-        kind: 'point',
-        text: spokenText([row.label, row.value].filter(Boolean).join(': ')),
-        category_label: 'Essential donation information',
-        point_index: index,
-        pause_after_ms: index === essentials.length - 1 ? PAUSES.sectionEnd : PAUSES.point,
+        id: `qr-promo-h${rowIndex}`,
+        kind: 'heading',
+        text: label,
+        category_label: label,
+        pause_after_ms: PAUSES.cue,
+      });
+
+      const rowLines = String(row.value || '')
+        .split(/\n+/)
+        .map((line) => spokenText(line))
+        .filter(Boolean);
+
+      rowLines.forEach((line, index) => {
+        push({
+          id: `qr-promo-${rowIndex}-${index}`,
+          kind: 'point',
+          text: line,
+          category_label: label,
+          point_index: index,
+          pause_after_ms: index === rowLines.length - 1 ? PAUSES.categoryEnd : PAUSES.point,
+        });
       });
     });
   }

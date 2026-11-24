@@ -1,6 +1,7 @@
 import React from 'react';
 import { Play, Pause, Printer } from 'lucide-react';
 import EmphasisText from './EmphasisText';
+import PromoPanel from './PromoPanel';
 
 // The second tab of the guide: a one-page cheat sheet Dawn can scan in seconds
 // right before - or during - the interview. Each question keeps its heading and
@@ -14,11 +15,12 @@ export default function GuideReferenceTab({
   const card = dark ? 'bg-[#111a3d] border-[#26305a]' : 'bg-white border-[#dadce7]';
   const tile = dark ? 'bg-[#0e1734] border-[#26305a]' : 'bg-white border-[#e8ebf3]';
   const keyPanel = dark ? 'bg-[#111a3d]' : 'bg-[#f6f7fb]';
+  const pointText = dark ? 'text-[#dfe4f7]' : 'text-[#1a2140]';
   const softBtn = dark ? 'border-[#26305a] text-[#eef1ff] hover:bg-[#1b2550]' : 'border-[#dadce7] text-[#080c21] hover:bg-[#f0f2f8]';
 
   const segments = guide?.quick_reference_segments || [];
   const hasAudio = segments.some((segment) => segment.audio_url);
-  const essentials = guide?.quick_reference_info || [];
+  const promoRows = (guide?.quick_reference_info || []).filter((row) => row?.label);
   const listening = item?.section === 'quick';
 
   return (
@@ -99,7 +101,7 @@ export default function GuideReferenceTab({
               {(question.quick_points || []).length > 0 && (
                 <ul className="mt-1.5 space-y-0.5">
                   {(question.quick_points || []).map((point, pointIndex) => (
-                    <li key={pointIndex} className={`flex gap-1.5 text-[12px] leading-[1.4] ${muted}`}>
+                    <li key={pointIndex} className={`flex gap-1.5 text-[12.5px] leading-[1.45] ${pointText}`}>
                       <span className="mt-[0.55em] h-1 w-1 flex-shrink-0 rounded-full bg-[#fccf03]" />
                       <EmphasisText text={point} className="min-w-0" />
                     </li>
@@ -109,34 +111,9 @@ export default function GuideReferenceTab({
             </article>
           );
         })}
-      </div>
 
-      {essentials.length > 0 && (
-        <div className={`mt-2.5 rounded-lg border-l-4 border-[#fccf03] px-3 py-2 ${dark ? 'bg-[#0e1734]' : 'bg-[#fffbea]'}`}>
-          <p className="text-[9px] font-bold uppercase tracking-[0.12em] text-[#b38b00]">
-            Essential donation information
-          </p>
-          <div className="mt-1 grid gap-x-4 gap-y-0.5 sm:grid-cols-2">
-            {essentials.map((row) => (
-              <p key={row.label} className="text-[12px] leading-[1.4]">
-                <span className={`font-semibold ${text}`}>{row.label}: </span>
-                {row.url ? (
-                  <a
-                    href={row.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="font-semibold underline decoration-[#fccf03] decoration-2 underline-offset-2"
-                  >
-                    {row.value}
-                  </a>
-                ) : (
-                  <span className={muted}>{row.value}</span>
-                )}
-              </p>
-            ))}
-          </div>
-        </div>
-      )}
+        <PromoPanel rows={promoRows} dark={dark} />
+      </div>
     </section>
   );
 }
