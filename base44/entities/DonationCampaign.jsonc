@@ -64,6 +64,65 @@
       "type": "string",
       "description": "Main photo at the top of the public page (publicly stored file URL)"
     },
+    "hero_image_alt": {
+      "type": "string",
+      "description": "Alternative text describing the hero photo, read out by screen readers"
+    },
+    "hero_image_position": {
+      "type": "string",
+      "enum": [
+        "top",
+        "center",
+        "bottom"
+      ],
+      "enumColors": [
+        "gray",
+        "blue",
+        "gray"
+      ],
+      "default": "center",
+      "description": "Which part of the hero photo stays in view when it is cropped on narrow screens"
+    },
+    "hero_image_provisional": {
+      "type": "boolean",
+      "default": true,
+      "description": "True while the hero photo is still a stand-in waiting for staff approval"
+    },
+    "share_image_url": {
+      "type": "string",
+      "description": "Picture shown when the campaign page is shared on social media or in a message (publicly stored file URL)"
+    },
+    "garland_horizontal_url": {
+      "type": "string",
+      "description": "Candora Christmas garland artwork laid across the top of the public page (publicly stored file URL, transparent PNG)"
+    },
+    "garland_vertical_url": {
+      "type": "string",
+      "description": "Candora Christmas garland artwork hung down a side of the public page (publicly stored file URL, transparent PNG)"
+    },
+    "image_history": {
+      "type": "array",
+      "description": "Photos replaced on this campaign, kept so staff can put a previous one back",
+      "items": {
+        "type": "object",
+        "properties": {
+          "slot": {
+            "type": "string",
+            "description": "Where the photo sat \u2014 hero, share, or pillar:<id>"
+          },
+          "url": {
+            "type": "string"
+          },
+          "alt": {
+            "type": "string"
+          },
+          "replaced_at": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      }
+    },
     "seasonal_theme": {
       "type": "string",
       "enum": [
@@ -109,7 +168,15 @@
           },
           "name": {
             "type": "string",
-            "description": "Pillar name as supporters see it, e.g. Joy \u2014 Kids Gift Shop"
+            "description": "Short label for the pillar used in lists, giving buttons and reports, e.g. Joy \u2014 Kids Gift Shop"
+          },
+          "headline": {
+            "type": "string",
+            "description": "The approved headline shown at the top of this pillar's card, e.g. Bring joy to a child this Christmas."
+          },
+          "gift_name": {
+            "type": "string",
+            "description": "How this pillar reads as a charitable gift, e.g. The Gift of Joy"
           },
           "tagline": {
             "type": "string",
@@ -122,6 +189,30 @@
           "image_url": {
             "type": "string",
             "description": "Photo shown on the pillar card (publicly stored file URL)"
+          },
+          "image_alt": {
+            "type": "string",
+            "description": "Alternative text describing this pillar's photo, read out by screen readers"
+          },
+          "image_position": {
+            "type": "string",
+            "enum": [
+              "top",
+              "center",
+              "bottom"
+            ],
+            "enumColors": [
+              "gray",
+              "blue",
+              "gray"
+            ],
+            "default": "center",
+            "description": "Which part of the photo stays in view when the card is cropped on narrow screens"
+          },
+          "image_provisional": {
+            "type": "boolean",
+            "default": true,
+            "description": "True while this pillar's photo is still a stand-in waiting for staff approval"
           },
           "goal_amount": {
             "type": "number",

@@ -9,6 +9,7 @@ import { feeToCover } from '@/lib/stripeFees';
 import { PAYMENTS_READY, startCampaignCheckout } from '@/lib/campaignPayments';
 import { DONATION_STORAGE_NOTE } from '@/lib/dataPrivacy';
 import CampaignGiftFields from '@/components/campaign-public/CampaignGiftFields';
+import { pillarShortLabel } from '@/lib/campaignDisplay';
 
 // The giving box on a campaign's public page. A supporter picks one of the
 // campaign's giving options (and a price variation where there are several, or
@@ -172,7 +173,7 @@ export default function CampaignDonate({
                   (pillarId || '') === option.id ? 'border-primary bg-primary/10' : 'hover:bg-muted/60'
                 }`}
               >
-                {option.id ? option.name.split('—')[0].trim() : option.name}
+                {option.id ? pillarShortLabel(option) : option.name}
               </button>
             ))}
           </div>
@@ -304,6 +305,7 @@ export default function CampaignDonate({
           value={gift}
           onChange={setGift}
           donorName={name}
+          pillar={pillars.find((item) => item.id === pillarId) || null}
         />
       )}
 

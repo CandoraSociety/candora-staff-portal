@@ -42,6 +42,9 @@ export default function CampaignCertificatePage() {
 
   const { card } = data;
   const issued = card.delivered_at || card.created_date;
+  const pillar = (data.campaign?.pillars || []).find((item) => item.id === card.pillar_id);
+  const giftName = String(pillar?.gift_name || '').trim();
+  const garland = data.campaign?.garland_horizontal_url || '';
 
   return (
     <div className="min-h-screen bg-muted/40 px-4 py-8">
@@ -66,10 +69,18 @@ export default function CampaignCertificatePage() {
           </Button>
         </div>
 
-        <div className="certificate-sheet bg-white rounded-xl shadow-lg border-4 border-[#fccf03] p-8 sm:p-12">
+        <div className="certificate-sheet bg-white rounded-xl shadow-lg border-4 border-[#fccf03] p-6 sm:p-10">
+          {garland && (
+            <img src={garland} alt="" aria-hidden="true" className="w-full h-16 object-cover object-top mb-2" />
+          )}
           <div className="border border-[#0a0f29]/15 rounded-lg p-6 sm:p-10 space-y-6 text-center">
             <div className="space-y-2">
               <p className="text-xs uppercase tracking-[0.35em] text-muted-foreground">Candora Society</p>
+              {giftName && (
+                <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-[#0a0f29]">
+                  {giftName}
+                </p>
+              )}
               <h1 className="font-display font-extrabold text-3xl sm:text-4xl text-[#0a0f29]">
                 {certificate.title}
               </h1>

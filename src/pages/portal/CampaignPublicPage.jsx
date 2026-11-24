@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
@@ -7,6 +7,7 @@ import CampaignHero from '@/components/campaign-public/CampaignHero';
 import CampaignDonate from '@/components/campaign-public/CampaignDonate';
 import CampaignPillars from '@/components/campaign-public/CampaignPillars';
 import CandoraBrandLockup from '@/components/campaign-public/CandoraBrandLockup';
+import CandoraGarland from '@/components/campaign-public/CandoraGarland';
 import { CANDORA_BRAND, brandFooterLines } from '@/lib/candoraBrand';
 import moment from 'moment';
 
@@ -24,6 +25,48 @@ export default function CampaignPublicPage() {
     queryFn: async () => (await base44.functions.invoke('getPublicCampaign', { slug })).data,
     retry: false,
   });
+
+  // What a link to this page looks like when it is shared — the campaign's own
+  // name, its tagline and the sharing picture staff chose.
+  useEffect(() => {
+    const campaign = data?.campaign;
+    if (!campaign) return;
+
+    const previousTitle = document.title;
+    const title = `${campaign.name} · Candora Society`;
+    const description = campaign.tagline || campaign.description || '';
+    const image = campaign.share_image_url || campaign.hero_image_url || '';
+
+    const tags = [
+      ['name', 'description', description],
+      ['property', 'og:title', title],
+      ['property', 'og:description', description],
+      ['property', 'og:type', 'website'],
+      ['name', 'twitter:card', 'summary_large_image'],
+      ['name', 'twitter:title', title],
+      ['name', 'twitter:description', description],
+    ];
+    if (image) {
+      tags.push(['property', 'og:image', image]);
+      tags.push(['name', 'twitter:image', image]);
+    }
+
+    document.title = title;
+    const added = tags
+      .filter(([, , value]) => !!value)
+      .map(([attr, key, value]) => {
+        const tag = document.createElement('meta');
+        tag.setAttribute(attr, key);
+        tag.setAttribute('content', value);
+        document.head.appendChild(tag);
+        return tag;
+      });
+
+    return () => {
+      added.forEach((tag) => tag.remove());
+      document.title = previousTitle;
+    };
+  }, [data]);
 
   if (isLoading) {
     return (
@@ -54,7 +97,7 @@ export default function CampaignPublicPage() {
   const gift = new URLSearchParams(window.location.search).get('gift');
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="relative min-h-screen bg-background">
       {preview && (
         <div className="bg-amber-100 text-amber-900 text-center text-xs py-2 px-4">
           Staff preview — this page is not published yet, so visitors can't open it.
@@ -63,7 +106,13 @@ export default function CampaignPublicPage() {
 
       <CampaignHero campaign={campaign} raised={raised} />
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-10 grid gap-8 lg:grid-cols-[1.4fr_1fr] lg:items-start">
+      <CandoraGarland
+        campaign={campaign}
+        variant="side"
+        className="hidden xl:block absolute left-0 top-0 w-28 h-[32rem]"
+      />
+
+      <main className="relative max-w-5xl mx-auto px-4 sm:px-6 py-10 grid gap-8 lg:grid-cols-[1.4fr_1fr] lg:items-start">
         <article className="space-y-6">
           {campaign.description && (
             <p className="text-lg text-foreground/90 leading-relaxed">{campaign.description}</p>

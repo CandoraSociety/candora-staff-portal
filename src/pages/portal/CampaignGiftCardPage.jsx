@@ -41,6 +41,8 @@ export default function CampaignGiftCardPage() {
 
   const { card, campaign, certificate } = data;
   const art = card.theme_image_url || campaign?.hero_image_url || '';
+  const pillar = (campaign?.pillars || []).find((item) => item.id === card.pillar_id);
+  const giftName = String(pillar?.gift_name || '').trim();
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0a0f29] via-[#131b3d] to-[#0a0f29] px-4 py-10">
@@ -50,12 +52,17 @@ export default function CampaignGiftCardPage() {
           <p className="text-sm">From {card.donor_name || 'someone who cares about you'}</p>
         </div>
 
-        <article className="rounded-3xl overflow-hidden bg-white shadow-2xl">
+        <article className="rounded-3xl overflow-hidden bg-white shadow-2xl ring-2 ring-[#fccf03]">
           <div className="relative h-56 sm:h-64 bg-[#0a0f29]">
             {art && <img src={art} alt="" className="absolute inset-0 h-full w-full object-cover" />}
             <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f29]/90 via-[#0a0f29]/30 to-transparent" />
             <div className="relative h-full flex flex-col justify-end p-6 text-white">
-              <span className="text-[11px] uppercase tracking-[0.22em] text-[#fccf03]">For</span>
+              {giftName && (
+                <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#fccf03]">
+                  {giftName}
+                </span>
+              )}
+              <span className="text-[11px] uppercase tracking-[0.22em] text-white/70">For</span>
               <h1 className="font-display font-extrabold text-3xl leading-tight">
                 {card.recipient_name}
               </h1>
@@ -69,7 +76,11 @@ export default function CampaignGiftCardPage() {
 
             <div className="rounded-xl bg-muted/60 p-4 space-y-1 text-sm">
               <p className="font-medium">{card.campaign_name}</p>
-              {card.pillar_name && <p className="text-muted-foreground">Supporting {card.pillar_name}</p>}
+              {card.pillar_name && (
+                <p className="text-muted-foreground">
+                  {giftName ? `${giftName} · ${card.pillar_name}` : `Supporting ${card.pillar_name}`}
+                </p>
+              )}
               {card.amount > 0 && (
                 <p className="text-muted-foreground">
                   A gift of ${Number(card.amount).toLocaleString('en-CA')}

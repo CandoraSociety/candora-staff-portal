@@ -16,6 +16,7 @@ import CampaignCertificatesPanel from '@/components/donors/campaign/CampaignCert
 import CampaignDeliveriesPanel from '@/components/donors/campaign/CampaignDeliveriesPanel';
 import CampaignShareLinks from '@/components/donors/campaign/CampaignShareLinks';
 import CampaignPillarReport from '@/components/donors/campaign/CampaignPillarReport';
+import CampaignImagesPanel from '@/components/donors/campaign/CampaignImagesPanel';
 import { activeTiers, formatMoney, publicCampaignUrl } from '@/lib/donorConstants';
 
 // A campaign's own workspace: the full profile, the giving options offered on
@@ -116,6 +117,7 @@ export default function CampaignDetail() {
         <TabsList className="w-full justify-start overflow-x-auto">
           <TabsTrigger value="profile">Overview</TabsTrigger>
           <TabsTrigger value="pillars">Pillars</TabsTrigger>
+          <TabsTrigger value="photography">Photography</TabsTrigger>
           <TabsTrigger value="options">Giving options</TabsTrigger>
           <TabsTrigger value="gifting">Gifting &amp; e-cards</TabsTrigger>
           <TabsTrigger value="certificates">Certificates</TabsTrigger>
@@ -131,6 +133,9 @@ export default function CampaignDetail() {
         </TabsContent>
         <TabsContent value="pillars" className="mt-4">
           <CampaignPillarsPanel campaign={campaign} onSave={save} />
+        </TabsContent>
+        <TabsContent value="photography" className="mt-4">
+          <CampaignImagesPanel campaign={campaign} onSave={save} />
         </TabsContent>
         <TabsContent value="options" className="mt-4">
           <DonationOptionsEditor

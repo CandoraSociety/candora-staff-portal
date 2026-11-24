@@ -51,7 +51,8 @@ export default function HeroImageAiDialog({ campaign, onSave }) {
 
   const use = async () => {
     setSaving(true);
-    await onSave({ hero_image_url: url });
+    // A newly generated hero waits for staff approval in Photography & artwork.
+    await onSave({ hero_image_url: url, hero_image_provisional: true });
     setSaving(false);
     setOpen(false);
   };

@@ -87,6 +87,8 @@ export async function deliverGiftCard(base44, card) {
   const cardLink = `${base}/gift-card/${card.token}`;
   const certificateLink = campaign?.certificate_enabled ? `${base}/certificate/${card.token}` : '';
   const greeting = card.message || themeGreeting(campaign, card.theme_id);
+  const pillar = (campaign?.pillars || []).find((item) => item.id === card.pillar_id);
+  const giftName = clean(pillar?.gift_name, 80);
 
   try {
     const result = await base44.asServiceRole.integrations.Core.SendEmail({
@@ -97,6 +99,7 @@ export async function deliverGiftCard(base44, card) {
         recipient_name: card.recipient_name,
         donor_line: card.is_anonymous ? 'Someone who cares about you' : (card.donor_name || 'Someone who cares about you'),
         campaign_name: card.campaign_name,
+        gift_line: giftName,
         pillar_line: card.pillar_name ? `Your gift supports ${card.pillar_name}.` : '',
         greeting,
         card_image_url: card.theme_image_url || campaign?.hero_image_url || '',

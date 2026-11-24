@@ -1,17 +1,18 @@
 import React, { useEffect, useState } from 'react';
-import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { ArrowDown, ArrowUp, Copy, ImagePlus, Loader2, Plus, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, Copy, Plus, Trash2 } from 'lucide-react';
 import { publicCampaignUrl } from '@/lib/donorConstants';
 
 const newPillar = () => ({
   id: `pillar-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
   name: '',
+  headline: '',
+  gift_name: '',
   tagline: '',
   description: '',
   image_url: '',
@@ -25,7 +26,6 @@ export default function CampaignPillarsPanel({ campaign, onSave }) {
   const [enabled, setEnabled] = useState(false);
   const [pillars, setPillars] = useState([]);
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState('');
   const [copied, setCopied] = useState('');
 
   useEffect(() => {
@@ -49,15 +49,6 @@ export default function CampaignPillarsPanel({ campaign, onSave }) {
       [next[index], next[target]] = [next[target], next[index]];
       return next;
     });
-  };
-
-  const upload = async (index, event) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    setUploading(String(index));
-    const { file_url } = await base44.integrations.Core.UploadPublicFile({ file });
-    set(index, 'image_url', file_url);
-    setUploading('');
   };
 
   const save = async () => {
@@ -132,7 +123,7 @@ export default function CampaignPillarsPanel({ campaign, onSave }) {
 
             <div className="grid sm:grid-cols-[1fr_140px] gap-3">
               <div>
-                <Label>Pillar name</Label>
+                <Label>Short label</Label>
                 <Input
                   value={pillar.name || ''}
                   onChange={(e) => set(index, 'name', e.target.value)}
@@ -146,6 +137,28 @@ export default function CampaignPillarsPanel({ campaign, onSave }) {
                   min="0"
                   value={pillar.goal_amount}
                   onChange={(e) => set(index, 'goal_amount', e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="grid sm:grid-cols-[1fr_220px] gap-3">
+              <div>
+                <Label>Headline</Label>
+                <Input
+                  value={pillar.headline || ''}
+                  onChange={(e) => set(index, 'headline', e.target.value)}
+                  placeholder="The headline on this cause's card"
+                />
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  Used verbatim wherever this cause is introduced.
+                </p>
+              </div>
+              <div>
+                <Label>Gift name</Label>
+                <Input
+                  value={pillar.gift_name || ''}
+                  onChange={(e) => set(index, 'gift_name', e.target.value)}
+                  placeholder="e.g. The Gift of Joy"
                 />
               </div>
             </div>
@@ -172,18 +185,15 @@ export default function CampaignPillarsPanel({ campaign, onSave }) {
               {pillar.image_url ? (
                 <img src={pillar.image_url} alt="" className="h-16 w-24 rounded-lg object-cover" />
               ) : (
-                <div className="h-16 w-24 rounded-lg bg-muted flex items-center justify-center">
-                  <ImagePlus className="w-5 h-5 text-muted-foreground" />
+                <div className="h-16 w-24 rounded-lg bg-muted flex items-center justify-center text-xs text-muted-foreground">
+                  No photo
                 </div>
               )}
-              <Button variant="outline" size="sm" asChild disabled={uploading === String(index)}>
-                <label className="cursor-pointer">
-                  {uploading === String(index) ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <ImagePlus className="w-4 h-4 mr-2" />}
-                  {pillar.image_url ? 'Replace photo' : 'Add photo'}
-                  <input type="file" accept="image/*" className="hidden" onChange={(e) => upload(index, e)} />
-                </label>
-              </Button>
-              <label className="flex items-center gap-2 text-sm">
+              <p className="text-xs text-muted-foreground max-w-[15rem]">
+                The photo, its alternative text and which part stays in frame are managed in the
+                Photography tab.
+              </p>
+              <label className="flex items-center gap-2 text-sm ml-auto">
                 <input
                   type="checkbox"
                   checked={pillar.is_active !== false}
