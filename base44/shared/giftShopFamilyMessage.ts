@@ -119,25 +119,36 @@ const codeReminderHtml = (code) => `
           </td></tr>
         </table>`;
 
-// The family's own registration sits in its own block: the date, their shopping
-// time, and each child with who their gifts are for.
+// The family's own registration, one labelled item per line — the date, their
+// shopping time, and each registered child with who their gifts are for.
+const detailLines = (details) => {
+  const children = details.children.map(
+    (child) => `${child.name}${child.gifts ? ` — ${child.gifts}` : ''}`,
+  );
+  return [
+    ['Date', GIFT_SHOP_EVENT_DATE],
+    ['Time', details.time_label],
+    ['Registered Children', children.join('; ')],
+  ].filter(([, value]) => value);
+};
+
 const detailsHtml = (details) => `
         <table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0 0;">
           <tr><td style="background:#f9fafb;border:1px solid #dadce7;border-radius:10px;padding:14px 16px;">
             <p style="margin:0 0 6px;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#626784;font-family:Arial,sans-serif;">Your registration</p>
-            <p style="margin:0 0 8px;font-size:15px;line-height:1.5;color:#080c21;font-family:Inter,Arial,sans-serif;">
-              <strong>${escapeHtml(GIFT_SHOP_EVENT_DATE)}</strong>${details.time_label ? ` · ${escapeHtml(details.time_label)}` : ''}
-            </p>
-            <ul style="margin:0;padding-left:18px;font-size:15px;line-height:1.6;color:#080c21;font-family:Inter,Arial,sans-serif;">
-              ${details.children.map((child) => `<li style="margin:2px 0;"><strong>${escapeHtml(child.name)}</strong> — ${escapeHtml(child.gifts)}</li>`).join('')}
-            </ul>
+            <table width="100%" cellpadding="0" cellspacing="0">
+              ${detailLines(details).map(([label, value]) => `<tr>
+                <td valign="top" style="padding:3px 10px 3px 0;font-size:15px;line-height:1.5;color:#626784;font-family:Inter,Arial,sans-serif;white-space:nowrap;">${escapeHtml(label)}:</td>
+                <td valign="top" style="padding:3px 0;font-size:15px;line-height:1.5;color:#080c21;font-family:Inter,Arial,sans-serif;"><strong>${escapeHtml(value)}</strong></td>
+              </tr>`).join('')}
+            </table>
           </td></tr>
         </table>`;
 
-// The same details as one plain paragraph for the text message.
+// The same details for the text message — one item per line.
 const detailsText = (details) => [
-  `Your registration: ${GIFT_SHOP_EVENT_DATE}${details.time_label ? `, ${details.time_label}` : ''}`,
-  ...details.children.map((child) => `${child.name} - ${child.gifts}`),
+  'Your registration:',
+  ...detailLines(details).map(([label, value]) => `${label}: ${value}`),
 ].join('\n');
 
 export function emailHtml({ guardianName, subject, body, attachmentName, checkinCode, details }) {
