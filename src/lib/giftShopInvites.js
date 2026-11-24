@@ -21,6 +21,17 @@ export const inviteLink = (token) => `${PUBLIC_APP_ORIGIN}/functions/giftShopInv
 export const generalRegistrationLink = (origin) =>
   `${origin || PUBLIC_APP_ORIGIN}/functions/giftShopRegistration`;
 
+// How a family is identified for its message history — its phone number when
+// it has one, otherwise its email address. The same key is used on the
+// Registration, Check-In and Pre-registration tabs, so one family keeps one
+// history wherever the desk messages it from.
+export const familyMessageKey = ({ guardian_phone, guardian_email } = {}) => {
+  const phone = String(guardian_phone || '').replace(/\D/g, '').slice(-10);
+  if (phone.length === 10) return `p:${phone}`;
+  const email = String(guardian_email || '').trim().toLowerCase();
+  return email ? `e:${email}` : '';
+};
+
 export const INVITE_STATUS_META = {
   invited: { label: 'Link open', className: 'bg-amber-100 text-amber-800' },
   registered: { label: 'Registered', className: 'bg-green-100 text-green-800' },

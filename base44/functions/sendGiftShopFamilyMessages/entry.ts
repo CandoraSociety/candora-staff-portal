@@ -45,11 +45,14 @@ function emailHtml({ guardianName, subject, body, attachmentName }) {
 }
 
 // One family, both channels. A family with only a phone number is reached by
-// text alone; a family with only an email is reached by email alone.
-async function messageFamily(base44, invite, { subject, body, attachment, sentByName }) {
-  const name = String(invite.guardian_name || '').trim();
-  const email = String(invite.guardian_email || '').trim();
-  const phone = String(invite.guardian_phone || '').trim();
+// text alone; a family with only an email is reached by email alone. The family
+// arrives from the page (its key is the phone number, or the email when it has
+// no phone), so the same desk message works from every gift shop tab.
+async function messageFamily(base44, family, { subject, body, attachment, sentByName }) {
+  const familyKey = String(family.family_key || '').trim();
+  const name = String(family.guardian_name || '').trim();
+  const email = String(family.guardian_email || '').trim();
+  const phone = String(family.guardian_phone || '').trim();
 
   let emailed = false;
   let texted = false;
@@ -88,7 +91,7 @@ async function messageFamily(base44, invite, { subject, body, attachment, sentBy
 
   try {
     await base44.asServiceRole.entities.GiftShopMessage.create({
-      invite_id: invite.id,
+      family_key: familyKey,
       guardian_name: name,
       subject,
       body,
@@ -106,7 +109,7 @@ async function messageFamily(base44, invite, { subject, body, attachment, sentBy
   }
 
   return {
-    invite_id: invite.id,
+    family_key: familyKey,
     guardian_name: name,
     guardian_email: email,
     guardian_phone: phone,
@@ -124,23 +127,29 @@ export default async function (req: Request): Promise<Response> {
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
     const payload = await req.json().catch(() => ({}));
-    const inviteIds = Array.isArray(payload.invite_ids) ? payload.invite_ids.filter(Boolean) : [];
+    const incoming = Array.isArray(payload.families) ? payload.families : [];
     const subject = String(payload.subject || '').trim();
     const body = String(payload.body || '').trim();
     const attachment = payload.attachment?.file_uri
       ? { name: String(payload.attachment.name || 'attachment'), file_uri: String(payload.attachment.file_uri) }
       : null;
 
-    if (!inviteIds.length) return Response.json({ error: 'Choose at least one family.' }, { status: 400 });
+    if (!incoming.length) return Response.json({ error: 'Choose at least one family.' }, { status: 400 });
     if (!subject) return Response.json({ error: 'Add a heading for the message.' }, { status: 400 });
     if (!body) return Response.json({ error: 'Enter the message text.' }, { status: 400 });
 
     const sentByName = user.full_name || user.email || '';
 
-    const found = await Promise.all(
-      inviteIds.map((id: string) => base44.asServiceRole.entities.GiftShopInvite.get(id).catch(() => null)),
-    );
-    const families = found.filter(Boolean);
+    const families = incoming
+      .map((family: any) => ({
+        family_key: String(family?.family_key || '').trim(),
+        guardian_name: String(family?.guardian_name || '').trim(),
+        guardian_email: String(family?.guardian_email || '').trim(),
+        guardian_phone: String(family?.guardian_phone || '').trim(),
+      }))
+      .filter((family: any) => family.family_key);
+
+    if (!families.length) return Response.json({ error: 'Those families could not be identified.' }, { status: 400 });
 
     const results: any[] = [];
     // Small batches keep the worker's outbound connections in hand while a
@@ -148,16 +157,16 @@ export default async function (req: Request): Promise<Response> {
     for (let index = 0; index < families.length; index += 3) {
       const batch = families.slice(index, index + 3);
       const settled = await Promise.allSettled(
-        batch.map((invite: any) => messageFamily(base44, invite, { subject, body, attachment, sentByName })),
+        batch.map((family: any) => messageFamily(base44, family, { subject, body, attachment, sentByName })),
       );
       settled.forEach((outcome, position) => {
         if (outcome.status === 'fulfilled') {
           results.push(outcome.value);
         } else {
-          const invite: any = batch[position];
+          const family: any = batch[position];
           results.push({
-            invite_id: invite.id,
-            guardian_name: invite.guardian_name,
+            family_key: family.family_key,
+            guardian_name: family.guardian_name,
             status: 'failed',
             emailed: false,
             texted: false,

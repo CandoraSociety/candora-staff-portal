@@ -1,11 +1,11 @@
 {
   "name": "GiftShopMessage",
   "type": "object",
-  "description": "One message the Kids Gift Shop desk sent to an invited family \u2014 the heading, the text, any attachment, and which channels it actually reached the family on. Kept so staff can open a family's message history and see what was already said.",
+  "description": "One message the Kids Gift Shop desk sent to a family \u2014 the heading, the text, any attachment, and which channels it actually reached the family on. Kept so staff can open a family's message history and see what was already said. A family is identified by its phone number (or email address), so the same history follows the family across the Registration, Check-In and Pre-registration tabs.",
   "properties": {
-    "invite_id": {
+    "family_key": {
       "type": "string",
-      "description": "The pre-registration invitation (the family) this message was sent to"
+      "description": "The family this message was sent to \u2014 p:<ten-digit phone> or e:<email address>"
     },
     "guardian_name": {
       "type": "string",
@@ -67,7 +67,7 @@
     }
   },
   "required": [
-    "invite_id",
+    "family_key",
     "subject",
     "body"
   ],

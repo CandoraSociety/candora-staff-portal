@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -12,8 +12,10 @@ import GiftShopMessageRecipients, { recipientsFor } from '@/components/winterwon
 const CHUNK_SIZE = 10;
 
 // Writes one message and sends it to the chosen families — by email and by text,
-// whichever each family has on file.
-export default function GiftShopMessageDialog({ open, onOpenChange, invites = [], onSent }) {
+// whichever each family has on file. Families are { family_key, guardian_name,
+// guardian_email, guardian_phone, group? }, so the same dialog serves the
+// Registration, Check-In and Pre-registration tabs.
+export default function GiftShopMessageDialog({ open, onOpenChange, families = [], onSent }) {
   const { toast } = useToast();
   const [group, setGroup] = useState('all');
   const [selectedIds, setSelectedIds] = useState(new Set());
@@ -37,10 +39,20 @@ export default function GiftShopMessageDialog({ open, onOpenChange, invites = []
     }
   }, [open]);
 
-  const recipients = recipientsFor(invites, group, selectedIds);
-  const toggle = (id) => setSelectedIds(prev => {
+  // A tab that has statuses (the invitation list) offers them as groups; the
+  // registration tabs simply offer all families or chosen individuals.
+  const groups = useMemo(() => {
+    const seen = new Map();
+    families.forEach(family => {
+      if (family.group && family.label && !seen.has(family.group)) seen.set(family.group, family.label);
+    });
+    return Array.from(seen, ([value, label]) => ({ value, label }));
+  }, [families]);
+
+  const recipients = recipientsFor(families, group, selectedIds);
+  const toggle = (key) => setSelectedIds(prev => {
     const next = new Set(prev);
-    if (next.has(id)) next.delete(id); else next.add(id);
+    if (next.has(key)) next.delete(key); else next.add(key);
     return next;
   });
 
@@ -72,7 +84,9 @@ export default function GiftShopMessageDialog({ open, onOpenChange, invites = []
       for (let index = 0; index < recipients.length; index += CHUNK_SIZE) {
         const slice = recipients.slice(index, index + CHUNK_SIZE);
         const response = await base44.functions.invoke('sendGiftShopFamilyMessages', {
-          invite_ids: slice.map(invite => invite.id),
+          families: slice.map(({ family_key, guardian_name, guardian_email, guardian_phone }) => ({
+            family_key, guardian_name, guardian_email, guardian_phone,
+          })),
           subject: subject.trim(),
           body: body.trim(),
           attachment,
@@ -101,7 +115,7 @@ export default function GiftShopMessageDialog({ open, onOpenChange, invites = []
         <DialogHeader>
           <DialogTitle>Send a message</DialogTitle>
           <DialogDescription>
-            Goes to each family by text and email, whichever they have on file. Every message is kept on the family’s card.
+            Goes to each family by text and email, whichever they have on file. Every message is kept on the family’s history.
           </DialogDescription>
         </DialogHeader>
 
@@ -112,7 +126,7 @@ export default function GiftShopMessageDialog({ open, onOpenChange, invites = []
             </p>
             <div className="max-h-64 overflow-y-auto rounded-md border divide-y">
               {results.map((row, index) => (
-                <div key={`${row.invite_id}-${index}`} className="px-3 py-2 text-sm">
+                <div key={`${row.family_key}-${index}`} className="px-3 py-2 text-sm">
                   <div className="flex items-center justify-between gap-2">
                     <span className="truncate">{row.guardian_name}</span>
                     <span className="text-xs text-muted-foreground flex-shrink-0">
@@ -127,7 +141,8 @@ export default function GiftShopMessageDialog({ open, onOpenChange, invites = []
         ) : (
           <div className="space-y-3">
             <GiftShopMessageRecipients
-              invites={invites}
+              families={families}
+              groups={groups}
               group={group}
               onGroupChange={setGroup}
               selectedIds={selectedIds}

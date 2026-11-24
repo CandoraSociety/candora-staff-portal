@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, ExternalLink, Copy, Link2 } from 'lucide-react';
+import { Plus, ExternalLink, Copy, Link2, MessageSquare } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { generalRegistrationLink } from '@/lib/giftShopInvites';
+import { generalRegistrationLink, familyMessageKey } from '@/lib/giftShopInvites';
+import GiftShopMessageDialog from '@/components/winterwonderland/GiftShopMessageDialog';
 import KidsGiftShopRegistrationDialog from '@/components/centralreg/KidsGiftShopRegistrationDialog';
 import GiftShopFamilyCard from '@/components/winterwonderland/GiftShopFamilyCard';
 import GiftShopCheckInDialog from '@/components/winterwonderland/GiftShopCheckInDialog';
@@ -19,6 +20,7 @@ export default function GiftShopRegistrations() {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selectedKey, setSelectedKey] = useState(null);
   const [slot, setSlot] = useState('');
+  const [messageOpen, setMessageOpen] = useState(false);
   const { toast } = useToast();
   // Always the published app's address — never the builder preview's, which
   // would hand families a link that only works for the builder.
@@ -43,6 +45,16 @@ export default function GiftShopRegistrations() {
   const openSlots = KIDS_GIFT_SHOP_TIME_SLOTS.filter(s => (counts[s.value] || 0) < KIDS_GIFT_SHOP_SLOT_CAPACITY).length;
   // Siblings registered by the same guardian into the same slot share one card.
   const families = groupGiftShopFamilies(active).sort((a, b) => (a.time_slot || '').localeCompare(b.time_slot || ''));
+  // The same families as the message dialog knows them, so a message can go to
+  // every registered family or to chosen ones.
+  const messageFamilies = families
+    .map(family => ({
+      family_key: familyMessageKey(family),
+      guardian_name: family.guardian_name || '',
+      guardian_email: family.guardian_email || '',
+      guardian_phone: family.guardian_phone || '',
+    }))
+    .filter(family => family.family_key);
 
   return (
     <div className="space-y-4">
@@ -150,6 +162,9 @@ export default function GiftShopRegistrations() {
           <Button size="sm" variant="outline" onClick={() => window.open('/winter-wonderland/kids-gift-shop/children', '_blank', 'noopener')}>
             <ExternalLink className="h-3.5 w-3.5" /> Open in new window
           </Button>
+          <Button size="sm" variant="outline" onClick={() => setMessageOpen(true)} disabled={!messageFamilies.length}>
+            <MessageSquare className="h-4 w-4" /> Send message
+          </Button>
           <Button size="sm" onClick={() => setDialogOpen(true)}><Plus className="h-4 w-4" /> Register a child</Button>
         </div>
       </div>
@@ -181,6 +196,8 @@ export default function GiftShopRegistrations() {
       )}
 
       <KidsGiftShopRegistrationDialog open={dialogOpen} onOpenChange={setDialogOpen} onSaved={refresh} />
+
+      <GiftShopMessageDialog open={messageOpen} onOpenChange={setMessageOpen} families={messageFamilies} />
 
       <GiftShopCheckInDialog
         family={selectedKey ? families.find(f => f.key === selectedKey) : null}

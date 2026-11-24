@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CheckCircle2, Clock, ExternalLink, QrCode, Users } from 'lucide-react';
+import { CheckCircle2, Clock, ExternalLink, MessageSquare, QrCode, Users } from 'lucide-react';
 import GiftShopFamilyCard from '@/components/winterwonderland/GiftShopFamilyCard';
+import GiftShopMessageDialog from '@/components/winterwonderland/GiftShopMessageDialog';
+import { familyMessageKey } from '@/lib/giftShopInvites';
 import GiftShopCheckInDialog from '@/components/winterwonderland/GiftShopCheckInDialog';
 import GiftShopCheckinQrDialog from '@/components/winterwonderland/GiftShopCheckinQrDialog';
 import GiftShopSlotBoard from '@/components/winterwonderland/GiftShopSlotBoard';
@@ -16,11 +18,22 @@ import { groupGiftShopFamilies, giftShopAgeBandCounts } from '@/lib/giftShopFami
 export default function GiftShopSignIn({ standalone = false }) {
   const [selectedKey, setSelectedKey] = useState(null);
   const [qrOpen, setQrOpen] = useState(false);
+  const [messageOpen, setMessageOpen] = useState(false);
   const { data: registrations = [], isLoading, refresh } = useGiftShopRegistrations();
   const { texts, refresh: refreshTexts } = useGiftShopTexts();
 
   const active = registrations.filter(r => !['declined', 'withdrawn'].includes(r.status));
   const families = groupGiftShopFamilies(active).sort((a, b) => (a.time_slot || '').localeCompare(b.time_slot || ''));
+  // The same families as the message dialog knows them, so the door can text and
+  // email every family or chosen ones.
+  const messageFamilies = families
+    .map(family => ({
+      family_key: familyMessageKey(family),
+      guardian_name: family.guardian_name || '',
+      guardian_email: family.guardian_email || '',
+      guardian_phone: family.guardian_phone || '',
+    }))
+    .filter(family => family.family_key);
   const signedIn = active.filter(r => r.checked_in).length;
   const waiting = active.length - signedIn;
   const ageBands = giftShopAgeBandCounts(active);
@@ -66,6 +79,9 @@ export default function GiftShopSignIn({ standalone = false }) {
           </p>
         </div>
         <div className="flex flex-shrink-0 items-center gap-2">
+          <Button size="sm" variant="outline" onClick={() => setMessageOpen(true)} disabled={!messageFamilies.length}>
+            <MessageSquare className="h-3.5 w-3.5" /> Send message
+          </Button>
           <Button size="sm" onClick={() => setQrOpen(true)}>
             <QrCode className="h-3.5 w-3.5" /> Check-in QR
           </Button>
@@ -108,6 +124,8 @@ export default function GiftShopSignIn({ standalone = false }) {
       />
 
       <GiftShopCheckinQrDialog open={qrOpen} onOpenChange={setQrOpen} />
+
+      <GiftShopMessageDialog open={messageOpen} onOpenChange={setMessageOpen} families={messageFamilies} />
     </div>
   );
 }

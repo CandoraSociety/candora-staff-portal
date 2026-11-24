@@ -10,7 +10,7 @@ import GiftShopEmailInvitesDialog from '@/components/winterwonderland/GiftShopEm
 import GiftShopMessageDialog from '@/components/winterwonderland/GiftShopMessageDialog';
 import GiftShopInviteRow from '@/components/winterwonderland/GiftShopInviteRow';
 import GiftShopSearchInput from '@/components/winterwonderland/GiftShopSearchInput';
-import { inviteLink, inviteDisplayStatus } from '@/lib/giftShopInvites';
+import { inviteLink, inviteDisplayStatus, familyMessageKey, INVITE_STATUS_META } from '@/lib/giftShopInvites';
 import { filterInvites } from '@/lib/giftShopSearch';
 
 // Pre-registration tab — private, single-use links for the families invited
@@ -35,12 +35,28 @@ export default function GiftShopPreRegistration() {
   });
 
   // Each family's message history, oldest first, for the card's Messages button.
-  const messagesByInvite = messages.reduce((acc, message) => {
-    if (!message.invite_id) return acc;
-    (acc[message.invite_id] = acc[message.invite_id] || []).push(message);
+  const messagesByFamily = messages.reduce((acc, message) => {
+    if (!message.family_key) return acc;
+    (acc[message.family_key] = acc[message.family_key] || []).push(message);
     return acc;
   }, {});
-  Object.values(messagesByInvite).forEach(list => list.sort((a, b) => new Date(a.sent_at || 0) - new Date(b.sent_at || 0)));
+  Object.values(messagesByFamily).forEach(list => list.sort((a, b) => new Date(a.sent_at || 0) - new Date(b.sent_at || 0)));
+
+  // The invited families as the message dialog knows them — with their link
+  // status, so a message can go to everyone, one status, or chosen families.
+  const messageFamilies = invites
+    .map(invite => {
+      const status = inviteDisplayStatus(invite);
+      return {
+        family_key: familyMessageKey(invite),
+        guardian_name: invite.guardian_name || '',
+        guardian_email: invite.guardian_email || '',
+        guardian_phone: invite.guardian_phone || '',
+        group: status,
+        label: INVITE_STATUS_META[status]?.label || status,
+      };
+    })
+    .filter(family => family.family_key);
 
   const openInvites = invites.filter(i => inviteDisplayStatus(i) === 'invited');
   const visible = filterInvites(invites, query);
@@ -162,7 +178,7 @@ export default function GiftShopPreRegistration() {
                 {waiting.length === 0 ? (
                   <p className="text-sm text-muted-foreground">Every invited family has registered.</p>
                 ) : waiting.map(invite => (
-                  <GiftShopInviteRow key={invite.id} invite={invite} messages={messagesByInvite[invite.id] || []} onChanged={refresh} />
+                  <GiftShopInviteRow key={invite.id} invite={invite} messages={messagesByFamily[familyMessageKey(invite)] || []} onChanged={refresh} />
                 ))}
               </div>
 
@@ -174,7 +190,7 @@ export default function GiftShopPreRegistration() {
                 {registered.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No family has registered through a link yet.</p>
                 ) : registered.map(invite => (
-                  <GiftShopInviteRow key={invite.id} invite={invite} messages={messagesByInvite[invite.id] || []} onChanged={refresh} />
+                  <GiftShopInviteRow key={invite.id} invite={invite} messages={messagesByFamily[familyMessageKey(invite)] || []} onChanged={refresh} />
                 ))}
               </div>
             </>
@@ -185,7 +201,7 @@ export default function GiftShopPreRegistration() {
       <GiftShopInviteDialog open={singleOpen} onOpenChange={setSingleOpen} onSaved={refresh} />
       <GiftShopInviteSendDialog open={sendOpen} onOpenChange={setSendOpen} onSaved={refresh} />
       <GiftShopEmailInvitesDialog open={emailOpen} onOpenChange={setEmailOpen} invites={openInvites} onSent={refresh} />
-      <GiftShopMessageDialog open={messageOpen} onOpenChange={setMessageOpen} invites={invites} onSent={refresh} />
+      <GiftShopMessageDialog open={messageOpen} onOpenChange={setMessageOpen} families={messageFamilies} onSent={refresh} />
     </div>
   );
 }
