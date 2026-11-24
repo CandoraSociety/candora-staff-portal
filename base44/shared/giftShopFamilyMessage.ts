@@ -5,6 +5,7 @@
 import { greetText, sendGiftShopText } from './giftShopSms.ts';
 import { GIFT_SHOP_PROGRAM_NAME, slotLabel } from './giftShopInvites.ts';
 import { GIFT_SHOP_EVENT_DATE, giftSummary } from './giftShopCheckin.ts';
+import { loadGiftShopEvent } from './giftShopEvent.ts';
 
 const phoneOf = (value) => String(value || '').replace(/\D/g, '').slice(-10);
 const nameOf = (value) => String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
@@ -75,6 +76,9 @@ export async function loadCheckinCodeLookup(base44) {
 // shared by more than one family, so nobody is sent another family's children.
 export async function loadFamilyDetailsLookup(base44) {
   const rowsFor = await loadFamilyRowsLookup(base44);
+  // The event's own date, so a message sent after next year's setup carries the
+  // new day rather than the one the shop used to run on.
+  const event = await loadGiftShopEvent(base44);
 
   return (family) => {
     const rows = rowsFor(family);
@@ -82,6 +86,7 @@ export async function loadFamilyDetailsLookup(base44) {
     if (new Set(rows.map((row) => nameOf(row.parent_guardian_name || row.participant_name))).size > 1) return null;
     if (!rows.some((row) => row.checked_in !== true)) return null;
     return {
+      event_date: event.event_date,
       time_label: slotLabel(rows[0].time_slot),
       children: rows.map((row) => ({
         name: row.child_name || row.participant_name || 'Child',
@@ -126,7 +131,7 @@ const detailLines = (details) => {
     (child) => `${child.name}${child.gifts ? ` — ${child.gifts}` : ''}`,
   );
   return [
-    ['Date', GIFT_SHOP_EVENT_DATE],
+    ['Date', details.event_date || GIFT_SHOP_EVENT_DATE],
     ['Time', details.time_label],
     ['Registered Children', children.join('; ')],
   ].filter(([, value]) => value);

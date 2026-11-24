@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -10,9 +10,7 @@ import { Loader2, Send } from 'lucide-react';
 import { defaultExpiryDate } from '@/lib/giftShopInvites';
 import GiftShopInviteListInput from '@/components/winterwonderland/GiftShopInviteListInput';
 import GiftShopInviteSendResults from '@/components/winterwonderland/GiftShopInviteSendResults';
-
-const DEFAULT_MESSAGE =
-  'Our Kids Gift Shop is back for Winter Wonderland, and as one of the families we work with, yours is invited to choose a shopping time before registration opens to everyone else. The shop runs on Saturday, December 12th at Riverview Crossing Shopping Centre. Pick a time that works for you and tell us who each child is shopping for — on the day, please come to the Kids Gift Shop registration desk and sign in every child who is participating.';
+import { useGiftShopEventDetails, inviteMessageDraft } from '@/lib/giftShopEvent';
 
 const CHUNK_SIZE = 15;
 
@@ -21,8 +19,11 @@ const CHUNK_SIZE = 15;
 // added by the email template itself.
 export default function GiftShopInviteSendDialog({ open, onOpenChange, onSaved }) {
   const { toast } = useToast();
+  const event = useGiftShopEventDetails();
+  const draft = inviteMessageDraft({ eventDate: event.eventDate, eventLocation: event.eventLocation });
+  const lastDraft = useRef(draft);
   const [rows, setRows] = useState([]);
-  const [message, setMessage] = useState(DEFAULT_MESSAGE);
+  const [message, setMessage] = useState(draft);
   const [expiryDate, setExpiryDate] = useState(defaultExpiryDate());
   const [sending, setSending] = useState(false);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
@@ -31,13 +32,14 @@ export default function GiftShopInviteSendDialog({ open, onOpenChange, onSaved }
   useEffect(() => {
     if (open) {
       setRows([]);
-      setMessage(DEFAULT_MESSAGE);
+      setMessage(prev => (!prev || prev === lastDraft.current ? draft : prev));
       setExpiryDate(defaultExpiryDate());
       setSending(false);
       setProgress({ done: 0, total: 0 });
       setResults(null);
     }
-  }, [open]);
+    lastDraft.current = draft;
+  }, [open, draft]);
 
   const send = async () => {
     if (!rows.length) return;

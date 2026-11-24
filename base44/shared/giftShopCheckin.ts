@@ -6,8 +6,13 @@
 import { slotLabel, GIFT_SHOP_PROGRAM_NAME } from './giftShopInvites.ts';
 import { greetText, sendGiftShopText } from './giftShopSms.ts';
 
-export const GIFT_SHOP_EVENT_DATE = 'Saturday, December 12th';
-export const GIFT_SHOP_EVENT_LOCATION = 'Riverview Crossing Shopping Centre';
+// The date and venue come from the event setup wizard's record, so starting
+// next year's event updates them everywhere. These are the fallbacks used
+// before any setup has been saved.
+import { DEFAULT_EVENT_DATE, DEFAULT_EVENT_LOCATION, loadGiftShopEvent } from './giftShopEvent.ts';
+
+export const GIFT_SHOP_EVENT_DATE = DEFAULT_EVENT_DATE;
+export const GIFT_SHOP_EVENT_LOCATION = DEFAULT_EVENT_LOCATION;
 export const GIFT_SHOP_CONTACT_EMAIL = 'info@candorasociety.com';
 
 const AGE_LABELS = { '0-5': 'Ages 0–5', '6-16': 'Ages 6–16' };
@@ -247,6 +252,7 @@ export async function sendRegistrationConfirmation(base44, rows) {
   const code = await stampFamilyCode(base44, list);
   const email = String(first.parent_guardian_email || first.participant_email || '').trim();
   const phone = String(first.parent_guardian_phone || first.participant_phone || '').trim();
+  const event = await loadGiftShopEvent(base44);
 
   const details = list
     .map(row => [
@@ -270,8 +276,8 @@ export async function sendRegistrationConfirmation(base44, rows) {
           checkin_code: code,
           registration_details: details,
           time_label: slotLabel(first.time_slot),
-          event_date: GIFT_SHOP_EVENT_DATE,
-          event_location: GIFT_SHOP_EVENT_LOCATION,
+          event_date: event.event_date,
+          event_location: event.event_location,
           contact_email: GIFT_SHOP_CONTACT_EMAIL,
         },
         category: 'transactional',
@@ -292,7 +298,7 @@ export async function sendRegistrationConfirmation(base44, rows) {
   // what they need to check in.
   if (phone) {
     const message = `Candora Kids Gift Shop: you're registered for `
-      + `${slotLabel(first.time_slot)} on ${GIFT_SHOP_EVENT_DATE} at ${GIFT_SHOP_EVENT_LOCATION}. `
+      + `${slotLabel(first.time_slot)} on ${event.event_date} at ${event.event_location}. `
       + `Your check-in code is ${code}. Bring it to the registration desk.`;
     const text = await sendGiftShopText(phone, greetText(first.parent_guardian_name, message));
     if (text.ok) texted = true;

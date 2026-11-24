@@ -1,0 +1,241 @@
+{
+  "name": "GiftShopEventArchive",
+  "type": "object",
+  "description": "One finished Kids Gift Shop event, kept after staff conclude it. Holds the event's logistics exactly as they were set up, the registration, check-in, invitation and message records from the day, and the summary counts \u2014 so the shop can be cleared for next year without losing anything. A copy of the same data is written to the Winter Wonderland Festival / Kids Gift Shop folder in SharePoint when the event is concluded.",
+  "properties": {
+    "festival_id": {
+      "type": "string",
+      "description": "The Winter Wonderland festival the concluded event belonged to"
+    },
+    "festival_year": {
+      "type": "number",
+      "description": "Festival year, kept alongside the id for quick reading"
+    },
+    "event_name": {
+      "type": "string",
+      "description": "Name the event ran under, e.g. Kids Gift Shop"
+    },
+    "event_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Day the gift shop ran"
+    },
+    "start_time": {
+      "type": "string",
+      "description": "First shopping slot of the day, 24-hour time"
+    },
+    "end_time": {
+      "type": "string",
+      "description": "Last shopping slot of the day, 24-hour time"
+    },
+    "venue": {
+      "type": "string",
+      "description": "Where the gift shop was held"
+    },
+    "desk_location": {
+      "type": "string",
+      "description": "Where families checked in on the day"
+    },
+    "registration_opens": {
+      "type": "string",
+      "format": "date",
+      "description": "Day registration opened"
+    },
+    "registration_closes": {
+      "type": "string",
+      "format": "date",
+      "description": "Day registration closed"
+    },
+    "slot_minutes": {
+      "type": "number",
+      "description": "How long each family's shopping slot lasted"
+    },
+    "children_per_slot": {
+      "type": "number",
+      "description": "How many children were booked into each slot"
+    },
+    "gifts_per_child": {
+      "type": "number",
+      "description": "How many gifts each child shopped for"
+    },
+    "gift_price": {
+      "type": "number",
+      "description": "What a gift cost the family"
+    },
+    "coordinator_name": {
+      "type": "string",
+      "description": "Staff member who coordinated the event"
+    },
+    "coordinator_phone": {
+      "type": "string"
+    },
+    "coordinator_email": {
+      "type": "string"
+    },
+    "volunteers_needed": {
+      "type": "number",
+      "description": "How many volunteers (elves) the event needed"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Notes recorded in the event setup"
+    },
+    "summary": {
+      "type": "object",
+      "description": "The headline counts from the event, shown on the archive card",
+      "properties": {
+        "registrations": {
+          "type": "number",
+          "description": "Registration rows archived"
+        },
+        "children": {
+          "type": "number",
+          "description": "Children registered"
+        },
+        "families": {
+          "type": "number",
+          "description": "Families registered"
+        },
+        "checked_in": {
+          "type": "number",
+          "description": "Children signed in at the desk"
+        },
+        "completed": {
+          "type": "number",
+          "description": "Children who finished shopping"
+        },
+        "invites": {
+          "type": "number",
+          "description": "Pre-registration invitations archived"
+        },
+        "messages": {
+          "type": "number",
+          "description": "Messages sent to families"
+        },
+        "scheduled_messages": {
+          "type": "number",
+          "description": "Scheduled messages archived"
+        },
+        "texts": {
+          "type": "number",
+          "description": "Text messages archived"
+        }
+      }
+    },
+    "registrations": {
+      "type": "array",
+      "description": "Every registration from the event, as it stood when the event was concluded",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "invites": {
+      "type": "array",
+      "description": "Every pre-registration invitation from the event",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "messages": {
+      "type": "array",
+      "description": "Every message sent to a family during the event",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "scheduled_messages": {
+      "type": "array",
+      "description": "Every scheduled message from the event, with what became of it",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "texts": {
+      "type": "array",
+      "description": "Every text exchanged with families during the event",
+      "items": {
+        "type": "object",
+        "additionalProperties": true
+      }
+    },
+    "concluded_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the event was concluded and the live records cleared"
+    },
+    "concluded_by_name": {
+      "type": "string",
+      "description": "Staff member who concluded the event"
+    },
+    "sharepoint_path": {
+      "type": "string",
+      "description": "Folder in SharePoint the archive was written to"
+    },
+    "sharepoint_files": {
+      "type": "array",
+      "description": "The files written to SharePoint for this event",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "item_id": {
+            "type": "string"
+          },
+          "web_url": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "event_name",
+    "concluded_at"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

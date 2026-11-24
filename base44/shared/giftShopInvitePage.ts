@@ -16,6 +16,7 @@ import {
   GIFT_SHOP_GENERAL_MAX_CHILDREN,
   GIFT_SHOP_GENERAL_CLOSES_LABEL,
 } from './giftShopInvites.ts';
+import { DEFAULT_EVENT_DATE, DEFAULT_EVENT_LOCATION } from './giftShopEvent.ts';
 
 export const GIFT_SHOP_CONTACT_EMAIL = 'info@candorasociety.com';
 
@@ -304,7 +305,15 @@ function closedPage(state, mode = 'invite') {
   });
 }
 
-function successPage({ children = [], time_label: timeLabel, checkin_code: checkinCode, emailed = false, texted = false }) {
+function successPage({
+  children = [],
+  time_label: timeLabel,
+  checkin_code: checkinCode,
+  emailed = false,
+  texted = false,
+  event_date: eventDate = '',
+  event_location: eventLocation = '',
+}) {
   // Say what actually reached the family — a family with no email address is
   // reached by text alone.
   const sentNote = emailed && texted
@@ -325,7 +334,7 @@ function successPage({ children = [], time_label: timeLabel, checkin_code: check
         <h2>You’re registered</h2>
         <p class="lede">
           ${escapeHtml(names)} ${children.length > 1 ? 'are' : 'is'} booked for ${escapeHtml(timeLabel || '')} on
-          Saturday, December 12th at Riverview Crossing Shopping Centre.
+          ${escapeHtml(eventDate || DEFAULT_EVENT_DATE)} at ${escapeHtml(eventLocation || DEFAULT_EVENT_LOCATION)}.
         </p>
         ${checkinCode ? `
         <div class="notice" style="text-align:left;margin:18px 0 0;background:var(--navy);border-color:var(--navy);color:var(--gold)">

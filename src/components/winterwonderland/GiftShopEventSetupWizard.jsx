@@ -221,7 +221,7 @@ export default function GiftShopEventSetupWizard({ open, onOpenChange, festival,
         <DialogHeader>
           <DialogTitle>Event setup</DialogTitle>
           <DialogDescription>
-            The logistics for this year's Kids Gift Shop. Saved here on the overview — the other tabs keep working as they do today.
+            The logistics for this year's Kids Gift Shop. These details are used across the shop — the registration link, the check-in desk and every email and text families receive.
           </DialogDescription>
         </DialogHeader>
 

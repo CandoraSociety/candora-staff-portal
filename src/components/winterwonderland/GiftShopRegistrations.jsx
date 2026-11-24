@@ -13,6 +13,8 @@ import { KIDS_GIFT_SHOP_TIME_SLOTS, KIDS_GIFT_SHOP_SLOT_CAPACITY } from '@/lib/c
 import { groupGiftShopFamilies, giftShopSlotCounts, giftShopAgeBandCounts, giftShopGiftTally, giftShopRecipientLabel, giftShopMessageFamilies } from '@/lib/giftShopFamilies';
 import { useGiftShopRegistrations } from '@/lib/useGiftShopRegistrations';
 import { useGiftShopTexts } from '@/lib/useGiftShopTexts';
+import { useGiftShopEventDetails } from '@/lib/giftShopEvent';
+import moment from 'moment';
 
 // Kids Gift Shop registration tab — the children signed up for a shopping slot,
 // with each slot's remaining places.
@@ -25,6 +27,12 @@ export default function GiftShopRegistrations() {
   // Always the published app's address — never the builder preview's, which
   // would hand families a link that only works for the builder.
   const generalLink = generalRegistrationLink();
+  // The closing day comes from this year's event setup, so next year's dates
+  // are reflected here without editing the copy.
+  const { setup: eventSetup } = useGiftShopEventDetails();
+  const registrationClosesLabel = eventSetup?.registration_closes
+    ? moment(eventSetup.registration_closes).format('MMMM D')
+    : 'December 9th';
 
   const copyGeneralLink = async () => {
     await navigator.clipboard.writeText(generalLink);
@@ -60,7 +68,7 @@ export default function GiftShopRegistrations() {
             <div>
               <p className="text-sm font-semibold">General registration link</p>
               <p className="text-sm text-muted-foreground">
-                Open to everyone — share it however you like. It closes on December 9th, or as soon as every shopping time is full.
+                Open to everyone — share it however you like. It closes on {registrationClosesLabel}, or as soon as every shopping time is full.
               </p>
             </div>
           </div>

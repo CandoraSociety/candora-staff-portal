@@ -8,6 +8,7 @@ import {
   giftShopHtmlResponse,
 } from '../../shared/giftShopInvitePage.ts';
 import { confirmFamilyRegistration } from '../../shared/giftShopCheckin.ts';
+import { loadGiftShopEvent } from '../../shared/giftShopEvent.ts';
 
 // The Kids Gift Shop pre-registration form, served as its own standalone page.
 // Nothing from the portal is loaded here and no app data is reachable: the page
@@ -43,8 +44,14 @@ export default async function (req) {
       const result = await redeemGiftShopInvite(base44.asServiceRole, token, payload);
       if (result.ok) {
         const confirmed = await confirmFamilyRegistration(base44.asServiceRole, result.registration_ids);
+        const event = await loadGiftShopEvent(base44);
         console.log('Gift shop invite registration confirmed — emailed:', confirmed.emailed, 'texted:', confirmed.texted);
-        return giftShopHtmlResponse(renderSuccessPage({ ...result, ...confirmed }));
+        return giftShopHtmlResponse(renderSuccessPage({
+          ...result,
+          ...confirmed,
+          event_date: event.event_date,
+          event_location: event.event_location,
+        }));
       }
 
       const current = token ? await buildPublicInvite(base44.asServiceRole, token) : null;

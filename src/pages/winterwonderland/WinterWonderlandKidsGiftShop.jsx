@@ -3,6 +3,7 @@ import GiftShopRegistrations from '@/components/winterwonderland/GiftShopRegistr
 import GiftShopSignIn from '@/components/winterwonderland/GiftShopSignIn';
 import GiftShopPreRegistration from '@/components/winterwonderland/GiftShopPreRegistration';
 import GiftShopEventOverview from '@/components/winterwonderland/GiftShopEventOverview';
+import GiftShopEventArchiveTab from '@/components/winterwonderland/GiftShopEventArchiveTab';
 import { FESTIVAL_AREAS } from '@/lib/winterFestivalAreas';
 
 export default function WinterWonderlandKidsGiftShop() {
@@ -16,6 +17,7 @@ export default function WinterWonderlandKidsGiftShop() {
         { value: 'registration', label: 'Registration', content: <GiftShopRegistrations /> },
         { value: 'signin', label: 'Check-In & Status', content: <GiftShopSignIn /> },
         { value: 'preregistration', label: 'Pre-registration links', content: <GiftShopPreRegistration /> },
+        { value: 'archive', label: 'Event archive', content: <GiftShopEventArchiveTab /> },
       ]}
     />
   );

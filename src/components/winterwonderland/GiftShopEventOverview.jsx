@@ -4,8 +4,9 @@ import moment from 'moment';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { CalendarDays, Clock, MapPin, Users, Gift, Ticket, Phone, Mail, Settings2, StickyNote } from 'lucide-react';
+import { CalendarDays, Clock, MapPin, Users, Gift, Ticket, Phone, Mail, Settings2, StickyNote, Archive } from 'lucide-react';
 import GiftShopEventSetupWizard from '@/components/winterwonderland/GiftShopEventSetupWizard';
+import GiftShopConcludeEventDialog from '@/components/winterwonderland/GiftShopConcludeEventDialog';
 
 const dateLabel = (value) => (value ? moment(value).format('dddd, MMMM D, YYYY') : '');
 const shortDate = (value) => (value ? moment(value).format('MMM D, YYYY') : '');
@@ -28,10 +29,12 @@ function Line({ icon: Icon, label, value }) {
 }
 
 // The Kids Gift Shop's own logistics — filled in through the setup wizard and
-// shown here on the overview. Nothing on the other tabs reads from it yet.
+// shown here on the overview. The messages the shop sends read their date and
+// venue from this same record, and concluding the event archives it.
 export default function GiftShopEventOverview({ festival }) {
   const qc = useQueryClient();
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [concludeOpen, setConcludeOpen] = useState(false);
 
   const { data: setups } = useQuery({
     queryKey: ['giftShopEventSetup', festival?.id],
@@ -40,7 +43,19 @@ export default function GiftShopEventOverview({ festival }) {
   });
   const setup = setups?.[0];
 
-  const refresh = () => qc.invalidateQueries({ queryKey: ['giftShopEventSetup'] });
+  const { data: archives = [] } = useQuery({
+    queryKey: ['giftShopEventArchives'],
+    queryFn: () => base44.entities.GiftShopEventArchive
+      .filter({}, { sort: '-concluded_at', limit: 5 })
+      .then(res => res.items || []),
+    enabled: !!festival?.id,
+  });
+  const lastArchive = archives[0];
+
+  const refresh = () => {
+    qc.invalidateQueries({ queryKey: ['giftShopEventSetup'] });
+    qc.invalidateQueries({ queryKey: ['giftShopEventArchives'] });
+  };
 
   if (!festival) return null;
 
@@ -63,12 +78,21 @@ export default function GiftShopEventOverview({ festival }) {
               <Settings2 className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <p className="font-medium">Set up this year's event details</p>
+              <p className="font-medium">
+                {lastArchive ? 'Commence the event set-up for the new year' : "Set up this year's event details"}
+              </p>
               <p className="text-sm text-muted-foreground mt-1">
                 The date, shopping times, venue, check-in desk, registration window, slot capacity and who coordinates the day.
+                These details flow through the registration, check-in and pre-registration tabs and into every message families receive.
               </p>
+              {lastArchive && (
+                <p className="text-xs text-muted-foreground mt-2">
+                  Last event archived: {lastArchive.event_name} {lastArchive.festival_year || ''}
+                  {lastArchive.concluded_at ? ` · concluded ${moment(lastArchive.concluded_at).format('MMM D, YYYY')}` : ''}
+                </p>
+              )}
             </div>
-            <Button onClick={() => setWizardOpen(true)}><Settings2 className="h-4 w-4" /> Set up event details</Button>
+            <Button onClick={() => setWizardOpen(true)}><Settings2 className="h-4 w-4" /> Commence event set-up</Button>
           </CardContent>
         </Card>
         {wizard}
@@ -91,9 +115,14 @@ export default function GiftShopEventOverview({ festival }) {
           <h2 className="text-lg font-display font-semibold">{setup.event_name || 'Kids Gift Shop'} details</h2>
           {setup.event_date && <p className="text-sm text-muted-foreground">{dateLabel(setup.event_date)}</p>}
         </div>
-        <Button variant="outline" size="sm" onClick={() => setWizardOpen(true)}>
-          <Settings2 className="h-3.5 w-3.5" /> Edit details
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" size="sm" onClick={() => setWizardOpen(true)}>
+            <Settings2 className="h-3.5 w-3.5" /> Edit details
+          </Button>
+          <Button variant="outline" size="sm" onClick={() => setConcludeOpen(true)}>
+            <Archive className="h-3.5 w-3.5" /> Conclude event
+          </Button>
+        </div>
       </div>
 
       <div className="grid gap-3 md:grid-cols-2">
@@ -139,6 +168,13 @@ export default function GiftShopEventOverview({ festival }) {
       </div>
 
       {wizard}
+
+      <GiftShopConcludeEventDialog
+        open={concludeOpen}
+        onOpenChange={setConcludeOpen}
+        festival={festival}
+        onConcluded={refresh}
+      />
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import { syncParticipantToCentralDb } from '../../shared/centralDbSync.ts';
 import { sendGiftShopText } from '../../shared/giftShopSms.ts';
+import { loadGiftShopEvent } from '../../shared/giftShopEvent.ts';
 
 // Creates one private pre-registration invitation per family in an uploaded
 // list, then sends each family their own single-use link by email and by text.
@@ -9,16 +10,18 @@ import { sendGiftShopText } from '../../shared/giftShopSms.ts';
 const FALLBACK_APP_URL = 'https://candora-360.base44.app';
 const CONTACT_EMAIL = 'info@candorasociety.com';
 
-const DEFAULT_MESSAGE =
-  'Our Kids Gift Shop is back for Winter Wonderland, and as one of the families we work with, yours is invited to choose a shopping time before registration opens to everyone else. The shop runs on Saturday, December 12th at Riverview Crossing Shopping Centre. Pick a time that works for you and tell us who each child is shopping for — on the day, please come to the Kids Gift Shop registration desk and sign in every child who is participating.';
+// The invitation copy carries whatever date and venue the event setup holds, so
+// next year's dates reach every family without the wording being rewritten.
+const defaultMessage = (event) =>
+  `Our Kids Gift Shop is back for Winter Wonderland, and as one of the families we work with, yours is invited to choose a shopping time before registration opens to everyone else. The shop runs on ${event.event_date} at ${event.event_location}. Pick a time that works for you and tell us who each child is shopping for — on the day, please come to the Kids Gift Shop registration desk and sign in every child who is participating.`;
 
 const newToken = () => crypto.randomUUID().replace(/[^a-zA-Z0-9]/g, '');
 
 // The text carries the same link as the email, kept short so it reads on a
 // phone. Plain characters only, so it goes out as one ordinary text message.
-const inviteText = (name, link) => {
+const inviteText = (name, link, event) => {
   const first = String(name || '').trim().split(/\s+/)[0];
-  return `Hi ${first || 'there'}, Candora's Kids Gift Shop invites your family to pick a shopping time before everyone else. Dec 12 at Riverview Crossing. Your link works once: ${link}`;
+  return `Hi ${first || 'there'}, Candora's Kids Gift Shop invites your family to pick a shopping time before everyone else. ${event.event_date_short} at ${event.event_location}. Your link works once: ${link}`;
 };
 
 // The list carries one guardian name per family — split it for the Central
@@ -52,7 +55,8 @@ Deno.serve(async (req) => {
     const appUrl = (req.headers.get('X-Base44-App-Url') || FALLBACK_APP_URL).replace(/\/+$/, '');
     const expiresOn = body.expires_on ? String(body.expires_on) : null;
     const expiresAt = expiresOn ? new Date(`${expiresOn}T23:59:59`).toISOString() : null;
-    const message = String(body.message || '').trim() || DEFAULT_MESSAGE;
+    const event = await loadGiftShopEvent(base44);
+    const message = String(body.message || '').trim() || defaultMessage(event);
 
     const results = [];
     const seen = new Set();
@@ -202,6 +206,8 @@ Deno.serve(async (req) => {
               custom_message: message,
               invite_link: link,
               contact_email: CONTACT_EMAIL,
+              event_date: event.event_date,
+              event_location: event.event_location,
             },
             category: 'transactional',
             from_name: 'CANDORA - Kids Gift Shop',
@@ -219,7 +225,7 @@ Deno.serve(async (req) => {
       }
 
       if (phone) {
-        const text = await sendGiftShopText(phone, inviteText(name, link));
+        const text = await sendGiftShopText(phone, inviteText(name, link, event));
         if (text.ok) texted = true;
         else if (!emailed) failure = text.reason || 'The text could not be sent.';
       }
