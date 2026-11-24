@@ -66,11 +66,14 @@ export default function GiftShopPreRegistration() {
     .filter(i => i.status === 'registered')
     .sort((a, b) => new Date(b.used_at || b.created_date || 0) - new Date(a.used_at || a.created_date || 0));
   const waiting = visible
-    .filter(i => i.status !== 'registered')
+    .filter(i => ['invited', 'expired'].includes(inviteDisplayStatus(i)))
     .sort((a, b) => {
       const rank = (i) => (inviteDisplayStatus(i) === 'invited' ? 0 : 1);
       return rank(a) - rank(b) || (a.guardian_name || '').localeCompare(b.guardian_name || '');
     });
+  const cancelled = visible
+    .filter(i => inviteDisplayStatus(i) === 'revoked')
+    .sort((a, b) => new Date(b.updated_date || b.created_date || 0) - new Date(a.updated_date || a.created_date || 0));
 
   const refresh = () => {
     qc.invalidateQueries({ queryKey: ['giftShopInvites'] });
@@ -178,7 +181,7 @@ export default function GiftShopPreRegistration() {
                   <span className="text-xs text-muted-foreground">{waiting.length}</span>
                 </div>
                 {waiting.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Every invited family has registered.</p>
+                  <p className="text-sm text-muted-foreground">No family is waiting to register.</p>
                 ) : waiting.map(invite => (
                   <GiftShopInviteRow key={invite.id} invite={invite} messages={messagesByFamily[familyMessageKey(invite)] || []} onChanged={refresh} />
                 ))}
@@ -195,6 +198,18 @@ export default function GiftShopPreRegistration() {
                   <GiftShopInviteRow key={invite.id} invite={invite} messages={messagesByFamily[familyMessageKey(invite)] || []} onChanged={refresh} />
                 ))}
               </div>
+
+              {cancelled.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold">Cancelled</h3>
+                    <span className="text-xs text-muted-foreground">{cancelled.length}</span>
+                  </div>
+                  {cancelled.map(invite => (
+                    <GiftShopInviteRow key={invite.id} invite={invite} messages={messagesByFamily[familyMessageKey(invite)] || []} onChanged={refresh} />
+                  ))}
+                </div>
+              )}
             </>
           )}
         </div>

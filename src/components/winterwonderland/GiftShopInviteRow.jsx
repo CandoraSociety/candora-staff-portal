@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { Check, Copy, Ban, Database, MailCheck, MessageSquare, Pencil, History } from 'lucide-react';
+import { Check, Copy, Ban, Database, MailCheck, MessageSquare, Pencil, History, RefreshCw } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { inviteLink, inviteDisplayStatus, INVITE_STATUS_META } from '@/lib/giftShopInvites';
+import { inviteLink, inviteDisplayStatus, newInviteToken, defaultExpiryDate, INVITE_STATUS_META } from '@/lib/giftShopInvites';
 import { KIDS_GIFT_SHOP_TIME_SLOTS } from '@/lib/centralRegConstants';
 import GiftShopInviteEditDialog from '@/components/winterwonderland/GiftShopInviteEditDialog';
 import GiftShopMessageHistoryDialog from '@/components/winterwonderland/GiftShopMessageHistoryDialog';
@@ -34,6 +34,25 @@ export default function GiftShopInviteRow({ invite, messages = [], onChanged }) 
       onChanged?.();
     } catch (err) {
       toast({ title: 'Error cancelling invitation', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  // A cancelled or expired link is replaced, not reopened: the family gets a
+  // fresh code and a new closing date, and the old link stays dead.
+  const renew = async () => {
+    try {
+      await base44.entities.GiftShopInvite.update(invite.id, {
+        token: newInviteToken(),
+        status: 'invited',
+        expires_at: new Date(`${defaultExpiryDate()}T23:59:59`).toISOString(),
+        used_at: null,
+        emailed_at: null,
+        texted_at: null,
+      });
+      toast({ title: 'New link created', description: 'The old link no longer works — send the new one to the family.' });
+      onChanged?.();
+    } catch (err) {
+      toast({ title: 'Error creating a new link', description: err.message, variant: 'destructive' });
     }
   };
 
@@ -91,6 +110,11 @@ export default function GiftShopInviteRow({ invite, messages = [], onChanged }) 
               <Ban className="h-3.5 w-3.5" /> Cancel
             </Button>
           </>
+        )}
+        {(status === 'revoked' || status === 'expired') && (
+          <Button size="sm" variant="outline" onClick={renew}>
+            <RefreshCw className="h-3.5 w-3.5" /> New link
+          </Button>
         )}
         <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>
           <Pencil className="h-3.5 w-3.5" /> Edit
