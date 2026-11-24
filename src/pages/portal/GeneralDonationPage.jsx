@@ -7,6 +7,7 @@ import CampaignDonate from '@/components/campaign-public/CampaignDonate';
 import CampaignsDirectory from '@/components/campaign-public/CampaignsDirectory';
 import CandoraBrandLockup from '@/components/campaign-public/CandoraBrandLockup';
 import { CANDORA_BRAND, brandFooterLines } from '@/lib/candoraBrand';
+import { findChristmasCampaign } from '@/lib/christmasCampaign';
 
 // The organization's general donation page — standalone and public. One tab
 // takes a gift to the general fund (preset amounts or one of the supporter's
@@ -19,8 +20,15 @@ export default function GeneralDonationPage() {
     retry: false,
   });
 
-  const gift = new URLSearchParams(window.location.search).get('gift');
+  const params = new URLSearchParams(window.location.search);
+  const gift = params.get('gift');
+  const campaignParam = params.get('campaign');
+  const pillarParam = params.get('pillar') || '';
   const general = data?.general;
+  // While the Christmas appeal is running, the page opens on it: the three
+  // causes are the first thing a visitor sees, not a tab they have to find.
+  const christmasOpen = !!findChristmasCampaign(data?.campaigns || []);
+  const defaultTab = campaignParam || pillarParam || christmasOpen ? 'campaigns' : 'give';
 
   return (
     <div className="min-h-screen bg-background">
@@ -50,12 +58,12 @@ export default function GeneralDonationPage() {
             <p className="text-sm text-muted-foreground">Please try again in a moment.</p>
           </div>
         ) : (
-          <Tabs defaultValue="give">
+          <Tabs defaultValue={defaultTab}>
             <TabsList className="w-full justify-start">
-              <TabsTrigger value="give">Give now</TabsTrigger>
               <TabsTrigger value="campaigns">
                 Campaigns{data?.campaigns?.length ? ` (${data.campaigns.length})` : ''}
               </TabsTrigger>
+              <TabsTrigger value="give">Give now</TabsTrigger>
             </TabsList>
 
             <TabsContent value="give" className="mt-6">
@@ -107,7 +115,10 @@ export default function GeneralDonationPage() {
             </TabsContent>
 
             <TabsContent value="campaigns" className="mt-6">
-              <CampaignsDirectory campaigns={data?.campaigns || []} />
+              <CampaignsDirectory
+                campaigns={data?.campaigns || []}
+                initialPillarId={pillarParam}
+              />
             </TabsContent>
           </Tabs>
         )}

@@ -8,6 +8,40 @@ const activeOptions = (campaign) =>
     .filter((option) => option.is_active !== false && Number(option.amount) > 0)
     .sort((a, b) => (Number(a.display_order) || 0) - (Number(b.display_order) || 0));
 
+// The causes inside a campaign, so the campaigns page can present each one on
+// its own instead of sending visitors through another page first.
+const activePillars = (campaign) =>
+  (campaign.pillars || [])
+    .filter((pillar) => pillar.is_active !== false)
+    .sort((a, b) => (Number(a.display_order) || 0) - (Number(b.display_order) || 0))
+    .map((pillar) => ({
+      id: pillar.id,
+      name: pillar.name || '',
+      headline: pillar.headline || '',
+      gift_name: pillar.gift_name || '',
+      tagline: pillar.tagline || '',
+      description: pillar.description || '',
+      image_url: pillar.image_url || '',
+      image_alt: pillar.image_alt || '',
+      image_position: pillar.image_position || 'center',
+      image_provisional: pillar.image_provisional !== false,
+      goal_amount: Number(pillar.goal_amount) || 0,
+      display_order: Number(pillar.display_order) || 0,
+    }));
+
+// The greeting card designs a supporter can choose when they give in someone's
+// honour, so the gifting feature can show an example card.
+const activeCards = (campaign) =>
+  (campaign.ecard_themes || [])
+    .filter((card) => card.is_active !== false)
+    .sort((a, b) => (Number(a.display_order) || 0) - (Number(b.display_order) || 0))
+    .map((card) => ({
+      id: card.id,
+      name: card.name || '',
+      image_url: card.image_url || '',
+      message: card.message || '',
+    }));
+
 const publicCampaign = (campaign) => ({
   id: campaign.id,
   name: campaign.name,
@@ -15,12 +49,24 @@ const publicCampaign = (campaign) => ({
   tagline: campaign.tagline || '',
   description: campaign.description || '',
   hero_image_url: campaign.hero_image_url || '',
+  hero_image_alt: campaign.hero_image_alt || '',
+  hero_image_position: campaign.hero_image_position || 'center',
+  share_image_url: campaign.share_image_url || '',
+  seasonal_theme: campaign.seasonal_theme || 'none',
+  garland_horizontal_url: campaign.garland_horizontal_url || '',
+  garland_vertical_url: campaign.garland_vertical_url || '',
   goal_amount: Number(campaign.goal_amount) || 0,
+  contact_email: campaign.contact_email || '',
   allow_custom_amount: campaign.allow_custom_amount !== false,
   allow_monthly: campaign.allow_monthly !== false,
   allow_fee_coverage: campaign.allow_fee_coverage !== false,
   thank_you_message: campaign.thank_you_message || '',
   tax_receipt_note: campaign.tax_receipt_note || '',
+  enable_pillars: campaign.enable_pillars === true,
+  pillars: activePillars(campaign),
+  enable_gifting: campaign.enable_gifting === true,
+  ecard_themes: activeCards(campaign),
+  certificate_enabled: campaign.certificate_enabled === true,
   donation_products: activeOptions(campaign),
 });
 
@@ -55,11 +101,26 @@ export default async function (req) {
       };
     }
 
+    // Progress for each cause, so a pillar card can show what it has raised on
+    // its own while the campaign's total stays the sum of them.
+    const pillarRaisedBy = {};
+    for (const campaign of open.filter((item) => item.enable_pillars === true)) {
+      const pillarTotals = await base44.asServiceRole.entities.Donation
+        .aggregate({ query: { campaign_id: campaign.id }, groupBy: 'pillar_id', sum: ['amount'] })
+        .catch(() => ({ rows: [] }));
+      pillarRaisedBy[campaign.id] = (pillarTotals.rows || []).map((group) => ({
+        pillar_id: group.pillar_id || '',
+        raised: Number(group.sum_amount) || 0,
+        giftCount: Number(group.count) || 0,
+      }));
+    }
+
     return Response.json({
       general: general ? publicCampaign(general) : null,
       campaigns: open.map((campaign) => ({
         ...publicCampaign(campaign),
         ...(raisedBy[campaign.id] || { raised: 0, gifts: 0 }),
+        pillar_totals: pillarRaisedBy[campaign.id] || [],
       })),
     });
   } catch (error) {

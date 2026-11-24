@@ -22,6 +22,7 @@ export default function CampaignDonate({
   returnPath,
   pillarId = '',
   onSelectPillar,
+  initialTierId = '',
 }) {
   // When a campaign runs pillars, the giving options narrow to the cause the
   // supporter picked — plus the options that belong to the whole campaign.
@@ -61,14 +62,16 @@ export default function CampaignDonate({
   });
 
   // A different cause brings a different set of options — keep the choice valid.
+  // An amount chosen on a fundraising card arrives here already selected.
   useEffect(() => {
-    setSelectedId((current) =>
-      current === 'custom' || tiers.some((option) => option.id === current)
+    setSelectedId((current) => {
+      if (initialTierId && tiers.some((option) => option.id === initialTierId)) return initialTierId;
+      return current === 'custom' || tiers.some((option) => option.id === current)
         ? current
-        : (tiers[0]?.id || 'custom')
-    );
+        : (tiers[0]?.id || 'custom');
+    });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pillarId]);
+  }, [pillarId, initialTierId]);
 
   const tier = tiers.find((option) => option.id === selectedId);
   const variations = (tier?.variations || []).filter((variation) => Number(variation.amount) > 0);

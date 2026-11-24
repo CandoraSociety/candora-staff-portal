@@ -11,6 +11,9 @@ export default function CampaignHero({ campaign, raised }) {
   const goal = Number(campaign.goal_amount) || 0;
   const pct = goal ? Math.min(100, Math.round((raised / goal) * 100)) : 0;
   const heroAlt = campaign.hero_image_alt || '';
+  // A seasonal campaign keeps its header short: the causes it is raising for
+  // matter more than the banner above them.
+  const compact = campaign.seasonal_theme === 'christmas';
 
   return (
     <header className="relative overflow-hidden bg-[#0a0f29] text-white">
@@ -27,7 +30,7 @@ export default function CampaignHero({ campaign, raised }) {
 
       <CandoraGarland campaign={campaign} variant="top" className="absolute inset-x-0 top-0 h-20 sm:h-24" />
 
-      <div className="relative max-w-5xl mx-auto px-4 sm:px-6 pt-8 pb-12 sm:pb-16">
+      <div className={`relative max-w-5xl mx-auto px-4 sm:px-6 ${compact ? 'pt-6 pb-8' : 'pt-8 pb-12 sm:pb-16'}`}>
         <div className="flex items-start justify-between gap-4">
           <CandoraBrandLockup />
           <a
@@ -40,8 +43,8 @@ export default function CampaignHero({ campaign, raised }) {
           </a>
         </div>
 
-        <div className="mt-10 max-w-2xl space-y-4">
-          <h1 className="text-3xl sm:text-5xl font-display font-extrabold leading-tight">{campaign.name}</h1>
+        <div className={`${compact ? 'mt-6 space-y-3' : 'mt-10 space-y-4'} max-w-2xl`}>
+          <h1 className={`font-display font-extrabold leading-tight ${compact ? 'text-2xl sm:text-4xl' : 'text-3xl sm:text-5xl'}`}>{campaign.name}</h1>
           {campaign.tagline && (
             <p className="text-base sm:text-lg text-white/80">{campaign.tagline}</p>
           )}
