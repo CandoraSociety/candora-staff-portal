@@ -84,6 +84,8 @@ export default function GiftShopEventArchiveTab() {
               <Count icon={Gift} label="completed" value={archive.summary?.completed} />
               <Count icon={Ticket} label="invitations" value={archive.summary?.invites} />
               <Count icon={MessageSquare} label="messages" value={archive.summary?.messages} />
+              <Count icon={MessageSquare} label="scheduled messages" value={archive.summary?.scheduled_messages} />
+              <Count icon={MessageSquare} label="texts" value={archive.summary?.texts} />
             </div>
 
             {(archive.sharepoint_files || []).length > 0 && (

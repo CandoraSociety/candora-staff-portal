@@ -126,8 +126,16 @@ export default async function(req: Request) {
     const scheduled = asArray(scheduledRes).map((row: any) => pick(row, SCHEDULED_FIELDS));
     const texts = asArray(textsRes).map((row: any) => pick(row, TEXT_FIELDS));
 
-    const familyKeys = new Set(registrations.map((row: any) =>
-      String(row.parent_guardian_phone || row.parent_guardian_email || '').trim()).filter(Boolean));
+    // A family is one card on the Registration and Check-In board: the same
+    // guardian, the same contact and the same shopping slot. Counting phone
+    // numbers alone collapsed different families that share a number and split
+    // one family whose rows carried different details, so the archive was wrong.
+    const familyKey = (row: any) => [
+      String(row.parent_guardian_name || row.participant_name || '').trim().toLowerCase(),
+      String(row.parent_guardian_phone || row.parent_guardian_email || '').trim(),
+      String(row.time_slot || ''),
+    ].join('|');
+    const familyKeys = new Set(registrations.map(familyKey).filter(Boolean));
 
     const summary = {
       registrations: registrations.length,
