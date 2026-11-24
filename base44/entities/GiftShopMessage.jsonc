@@ -1,0 +1,123 @@
+{
+  "name": "GiftShopMessage",
+  "type": "object",
+  "description": "One message the Kids Gift Shop desk sent to an invited family \u2014 the heading, the text, any attachment, and which channels it actually reached the family on. Kept so staff can open a family's message history and see what was already said.",
+  "properties": {
+    "invite_id": {
+      "type": "string",
+      "description": "The pre-registration invitation (the family) this message was sent to"
+    },
+    "guardian_name": {
+      "type": "string",
+      "description": "Parent or guardian the message was addressed to, for the staff list"
+    },
+    "subject": {
+      "type": "string",
+      "description": "Heading of the message as the family sees it"
+    },
+    "body": {
+      "type": "string",
+      "description": "Text of the message"
+    },
+    "attachment_name": {
+      "type": "string",
+      "description": "File name of the attachment, when one was included"
+    },
+    "attachment_url": {
+      "type": "string",
+      "description": "Stored private file of the attachment, opened through a signed link"
+    },
+    "emailed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the email went out"
+    },
+    "texted": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the text went out"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "sent",
+        "partial",
+        "failed"
+      ],
+      "enumColors": [
+        "green",
+        "yellow",
+        "red"
+      ],
+      "default": "sent",
+      "description": "sent = reached the family on every channel on file; partial = one channel worked; failed = neither went out"
+    },
+    "failure_reason": {
+      "type": "string",
+      "description": "What stopped a channel from going out, shown to staff"
+    },
+    "sent_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the message was sent"
+    },
+    "sent_by_name": {
+      "type": "string",
+      "description": "Staff member who sent it"
+    }
+  },
+  "required": [
+    "invite_id",
+    "subject",
+    "body"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

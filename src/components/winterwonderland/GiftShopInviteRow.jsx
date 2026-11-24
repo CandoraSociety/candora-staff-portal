@@ -1,18 +1,22 @@
 import React, { useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
-import { Check, Copy, Ban, Database, MailCheck, MessageSquare } from 'lucide-react';
+import { Check, Copy, Ban, Database, MailCheck, MessageSquare, Pencil, History } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { inviteLink, inviteDisplayStatus, INVITE_STATUS_META } from '@/lib/giftShopInvites';
 import { KIDS_GIFT_SHOP_TIME_SLOTS } from '@/lib/centralRegConstants';
+import GiftShopInviteEditDialog from '@/components/winterwonderland/GiftShopInviteEditDialog';
+import GiftShopMessageHistoryDialog from '@/components/winterwonderland/GiftShopMessageHistoryDialog';
 
 const slotText = (value) => KIDS_GIFT_SHOP_TIME_SLOTS.find(s => s.value === value)?.label || value || '';
 
 // One invitation in the staff list — its status, who it is for, and the actions
 // staff need: copy the private link, or cancel it.
-export default function GiftShopInviteRow({ invite, onChanged }) {
+export default function GiftShopInviteRow({ invite, messages = [], onChanged }) {
   const { toast } = useToast();
   const [copied, setCopied] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
   const status = inviteDisplayStatus(invite);
   const meta = INVITE_STATUS_META[status] || INVITE_STATUS_META.invited;
   const open = status === 'invited';
@@ -76,17 +80,28 @@ export default function GiftShopInviteRow({ invite, onChanged }) {
         <span className={`text-xs px-2 py-0.5 rounded-full font-medium flex-shrink-0 ${meta.className}`}>{meta.label}</span>
       </div>
 
-      {open && (
-        <div className="flex items-center gap-2 mt-2">
-          <Button size="sm" variant="outline" onClick={copy}>
-            {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
-            {copied ? 'Copied' : 'Copy link'}
-          </Button>
-          <Button size="sm" variant="ghost" className="text-muted-foreground" onClick={revoke}>
-            <Ban className="h-3.5 w-3.5" /> Cancel
-          </Button>
-        </div>
-      )}
+      <div className="flex flex-wrap items-center gap-2 mt-2">
+        {open && (
+          <>
+            <Button size="sm" variant="outline" onClick={copy}>
+              {copied ? <Check className="h-3.5 w-3.5" /> : <Copy className="h-3.5 w-3.5" />}
+              {copied ? 'Copied' : 'Copy link'}
+            </Button>
+            <Button size="sm" variant="ghost" className="text-muted-foreground" onClick={revoke}>
+              <Ban className="h-3.5 w-3.5" /> Cancel
+            </Button>
+          </>
+        )}
+        <Button size="sm" variant="outline" onClick={() => setEditOpen(true)}>
+          <Pencil className="h-3.5 w-3.5" /> Edit
+        </Button>
+        <Button size="sm" variant="ghost" onClick={() => setHistoryOpen(true)}>
+          <History className="h-3.5 w-3.5" /> Messages{messages.length ? ` (${messages.length})` : ''}
+        </Button>
+      </div>
+
+      <GiftShopInviteEditDialog open={editOpen} onOpenChange={setEditOpen} invite={invite} onSaved={onChanged} />
+      <GiftShopMessageHistoryDialog open={historyOpen} onOpenChange={setHistoryOpen} invite={invite} messages={messages} />
     </div>
   );
 }

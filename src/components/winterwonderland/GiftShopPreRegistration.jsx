@@ -3,10 +3,11 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download, Mail, Plus, Send, ShieldCheck } from 'lucide-react';
+import { Download, Mail, MessageSquare, Plus, Send, ShieldCheck } from 'lucide-react';
 import GiftShopInviteDialog from '@/components/winterwonderland/GiftShopInviteDialog';
 import GiftShopInviteSendDialog from '@/components/winterwonderland/GiftShopInviteSendDialog';
 import GiftShopEmailInvitesDialog from '@/components/winterwonderland/GiftShopEmailInvitesDialog';
+import GiftShopMessageDialog from '@/components/winterwonderland/GiftShopMessageDialog';
 import GiftShopInviteRow from '@/components/winterwonderland/GiftShopInviteRow';
 import GiftShopSearchInput from '@/components/winterwonderland/GiftShopSearchInput';
 import { inviteLink, inviteDisplayStatus } from '@/lib/giftShopInvites';
@@ -20,12 +21,26 @@ export default function GiftShopPreRegistration() {
   const [singleOpen, setSingleOpen] = useState(false);
   const [sendOpen, setSendOpen] = useState(false);
   const [emailOpen, setEmailOpen] = useState(false);
+  const [messageOpen, setMessageOpen] = useState(false);
   const [query, setQuery] = useState('');
 
   const { data: invites = [], isLoading } = useQuery({
     queryKey: ['giftShopInvites'],
     queryFn: () => base44.entities.GiftShopInvite.list('-created_date', 500),
   });
+
+  const { data: messages = [] } = useQuery({
+    queryKey: ['giftShopMessages'],
+    queryFn: () => base44.entities.GiftShopMessage.list('-sent_at', 500),
+  });
+
+  // Each family's message history, oldest first, for the card's Messages button.
+  const messagesByInvite = messages.reduce((acc, message) => {
+    if (!message.invite_id) return acc;
+    (acc[message.invite_id] = acc[message.invite_id] || []).push(message);
+    return acc;
+  }, {});
+  Object.values(messagesByInvite).forEach(list => list.sort((a, b) => new Date(a.sent_at || 0) - new Date(b.sent_at || 0)));
 
   const openInvites = invites.filter(i => inviteDisplayStatus(i) === 'invited');
   const visible = filterInvites(invites, query);
@@ -39,7 +54,10 @@ export default function GiftShopPreRegistration() {
       return rank(a) - rank(b) || (a.guardian_name || '').localeCompare(b.guardian_name || '');
     });
 
-  const refresh = () => qc.invalidateQueries({ queryKey: ['giftShopInvites'] });
+  const refresh = () => {
+    qc.invalidateQueries({ queryKey: ['giftShopInvites'] });
+    qc.invalidateQueries({ queryKey: ['giftShopMessages'] });
+  };
 
   const downloadLinks = () => {
     const header = 'Guardian,Email,Phone,Link';
@@ -84,6 +102,14 @@ export default function GiftShopPreRegistration() {
               disabled={!openInvites.some(i => i.guardian_email || i.guardian_phone)}
             >
               <Mail className="h-4 w-4" /> Send invitations
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setMessageOpen(true)}
+              disabled={!invites.some(i => i.guardian_email || i.guardian_phone)}
+            >
+              <MessageSquare className="h-4 w-4" /> Send message
             </Button>
             <Button size="sm" variant="outline" onClick={downloadLinks} disabled={!openInvites.length}>
               <Download className="h-4 w-4" /> Download links
@@ -136,7 +162,7 @@ export default function GiftShopPreRegistration() {
                 {waiting.length === 0 ? (
                   <p className="text-sm text-muted-foreground">Every invited family has registered.</p>
                 ) : waiting.map(invite => (
-                  <GiftShopInviteRow key={invite.id} invite={invite} onChanged={refresh} />
+                  <GiftShopInviteRow key={invite.id} invite={invite} messages={messagesByInvite[invite.id] || []} onChanged={refresh} />
                 ))}
               </div>
 
@@ -148,7 +174,7 @@ export default function GiftShopPreRegistration() {
                 {registered.length === 0 ? (
                   <p className="text-sm text-muted-foreground">No family has registered through a link yet.</p>
                 ) : registered.map(invite => (
-                  <GiftShopInviteRow key={invite.id} invite={invite} onChanged={refresh} />
+                  <GiftShopInviteRow key={invite.id} invite={invite} messages={messagesByInvite[invite.id] || []} onChanged={refresh} />
                 ))}
               </div>
             </>
@@ -159,6 +185,7 @@ export default function GiftShopPreRegistration() {
       <GiftShopInviteDialog open={singleOpen} onOpenChange={setSingleOpen} onSaved={refresh} />
       <GiftShopInviteSendDialog open={sendOpen} onOpenChange={setSendOpen} onSaved={refresh} />
       <GiftShopEmailInvitesDialog open={emailOpen} onOpenChange={setEmailOpen} invites={openInvites} onSent={refresh} />
+      <GiftShopMessageDialog open={messageOpen} onOpenChange={setMessageOpen} invites={invites} onSent={refresh} />
     </div>
   );
 }
