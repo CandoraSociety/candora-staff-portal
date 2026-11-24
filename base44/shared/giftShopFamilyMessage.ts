@@ -2,7 +2,7 @@
 // whichever contact details the family has on file — and the record of it that
 // keeps the family's message history. Shared by the immediate send and the
 // scheduled send, so both behave the same way and both leave the same trail.
-import { sendGiftShopText } from './giftShopSms.ts';
+import { greetText, sendGiftShopText } from './giftShopSms.ts';
 import { GIFT_SHOP_PROGRAM_NAME } from './giftShopInvites.ts';
 
 // Every family's six-digit check-in code travels with each message until the
@@ -140,7 +140,7 @@ export async function messageFamily(base44, family, { subject, body, attachment,
   if (phone) {
     const text = await sendGiftShopText(
       phone,
-      code ? `${subject}\n\n${body}\n\n${CODE_REMINDER} ${code}` : `${subject}\n\n${body}`,
+      greetText(name, code ? `${subject}\n\n${body}\n\n${CODE_REMINDER} ${code}` : `${subject}\n\n${body}`),
     );
     if (text.ok) texted = true;
     // Keep the reason even when the email worked, so staff can see why a family

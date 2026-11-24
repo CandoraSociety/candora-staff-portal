@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Loader2, MessageSquare, Send } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { useToast } from '@/components/ui/use-toast';
-import { normalizeSmsPhone, textsForPhone, unreadReplies } from '@/lib/giftShopTexts';
+import { greetText, normalizeSmsPhone, textsForPhone, unreadReplies } from '@/lib/giftShopTexts';
 import { contactCardMediaUrl } from '@/lib/giftShopContactCard';
 import { giftShopSlotLabel } from '@/lib/giftShopFamilies';
 
@@ -30,8 +30,8 @@ export default function GiftShopTextThreadDialog({ open, onOpenChange, family, t
   // Answer the family back on the same number the conversation came in on.
   const sendReply = async (event) => {
     event.preventDefault();
-    const body = draft.trim();
-    if (!body || !family?.guardian_phone) return;
+    if (!draft.trim() || !family?.guardian_phone) return;
+    const body = greetText(family.guardian_name, draft);
     setSending(true);
     try {
       // The first text to a family carries the CANDORA contact card, so they can

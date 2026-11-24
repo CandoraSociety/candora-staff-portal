@@ -10,6 +10,15 @@ export const normalizeSmsPhone = (raw) => {
   return `+${digits}`;
 };
 
+// Every text the Kids Gift Shop sends opens with the guardian's name.
+export const greetText = (name, body) => {
+  const message = String(body || '').trim();
+  if (!message) return message;
+  if (/^hi\b/i.test(message)) return message;
+  const first = String(name || '').trim().split(/\s+/)[0];
+  return `Hi ${first || 'there'},\n\n${message}`;
+};
+
 // Every message with the family, oldest first.
 export const textsForPhone = (texts, phone) => {
   const key = normalizeSmsPhone(phone);

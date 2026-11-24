@@ -4,7 +4,7 @@
 // place so the invitation form, the general form and the front desk all issue
 // codes the same way.
 import { slotLabel, GIFT_SHOP_PROGRAM_NAME } from './giftShopInvites.ts';
-import { sendGiftShopText } from './giftShopSms.ts';
+import { greetText, sendGiftShopText } from './giftShopSms.ts';
 
 export const GIFT_SHOP_EVENT_DATE = 'Saturday, December 12th';
 export const GIFT_SHOP_EVENT_LOCATION = 'Riverview Crossing Shopping Centre';
@@ -291,11 +291,10 @@ export async function sendRegistrationConfirmation(base44, rows) {
   // The same code, in a text — so a family without an email address still gets
   // what they need to check in.
   if (phone) {
-    const firstName = String(first.parent_guardian_name || '').trim().split(/\s+/)[0];
-    const message = `Candora Kids Gift Shop: ${firstName ? `${firstName}, you're` : 'you are'} registered for `
+    const message = `Candora Kids Gift Shop: you're registered for `
       + `${slotLabel(first.time_slot)} on ${GIFT_SHOP_EVENT_DATE} at ${GIFT_SHOP_EVENT_LOCATION}. `
       + `Your check-in code is ${code}. Bring it to the registration desk.`;
-    const text = await sendGiftShopText(phone, message);
+    const text = await sendGiftShopText(phone, greetText(first.parent_guardian_name, message));
     if (text.ok) texted = true;
     else if (!emailed) reason = text.reason || reason;
   }

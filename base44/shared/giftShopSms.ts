@@ -15,6 +15,15 @@ export function normalizeSmsPhone(raw) {
   return null;
 }
 
+// Every text the Kids Gift Shop sends opens with the guardian's name.
+export function greetText(name, body) {
+  const message = String(body || '').trim();
+  if (!message) return message;
+  if (/^hi\b/i.test(message)) return message;
+  const first = String(name || '').trim().split(/\s+/)[0];
+  return `Hi ${first || 'there'},\n\n${message}`;
+}
+
 // Sends one text. It never throws: a text that could not go out is reported
 // back, so the caller can carry on with the email and still tell staff what
 // happened to the family.
