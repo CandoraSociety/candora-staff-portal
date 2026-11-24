@@ -12,6 +12,7 @@ export default function WinterWonderlandKidsGiftShop() {
       area={FESTIVAL_AREAS.kidsGiftShop}
       accent={{ from: '#102070', to: '#fccf03' }}
       showEvents={false}
+      showComponent={false}
       overviewExtra={({ festival }) => <GiftShopEventOverview festival={festival} />}
       extraTabs={[
         { value: 'registration', label: 'Registration', content: <GiftShopRegistrations /> },

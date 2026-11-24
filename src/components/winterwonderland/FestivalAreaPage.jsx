@@ -18,7 +18,7 @@ function StatusPill({ status, options }) {
 
 // One festival area — its component details and its own scheduled events — with
 // any extra tabs the area needs (the Kids Gift Shop adds Registration).
-export default function FestivalAreaPage({ area, extraTabs = [], accent, showEvents = true, overviewExtra }) {
+export default function FestivalAreaPage({ area, extraTabs = [], accent, showEvents = true, showComponent = true, overviewExtra }) {
   const { toast } = useToast();
   const qc = useQueryClient();
   const [componentDialog, setComponentDialog] = useState(false);
@@ -82,7 +82,7 @@ export default function FestivalAreaPage({ area, extraTabs = [], accent, showEve
   ) : (
     <>
       {overviewExtra?.({ festival: activeFestival, component })}
-      {!component ? (
+      {showComponent && (!component ? (
         <Card>
           <CardContent className="pt-6 text-center space-y-3">
             <p className="text-muted-foreground">{area.label} is not set up for this festival yet.</p>
@@ -141,10 +141,10 @@ export default function FestivalAreaPage({ area, extraTabs = [], accent, showEve
           )}
         </>
       )}
-        </>
-      )}
-    </>
-  );
+      </>
+      ))}
+      </>
+      );
 
   // An area may ask for its own brighter treatment: a gradient badge and a gold
   // highlight on the open tab. Without it the header stays as it always was.
