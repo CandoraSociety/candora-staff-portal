@@ -49,7 +49,7 @@ export async function generateNarration({ text, voice }) {
 // Narrates the preparation material of one question, or the quick reference, as
 // short clips. A run that stops before it is finished reports what is left, so it
 // is simply asked again until every clip has audio.
-export async function narrateStructure({ guideId, questionId, scope, voice, regenerate }) {
+export async function narrateStructure({ guideId, questionId, scope, voice, regenerate, segments }) {
   let last = null;
   for (let pass = 0; pass < 8; pass += 1) {
     const res = await base44.functions.invoke('generateGuideNarration', {
@@ -57,6 +57,7 @@ export async function narrateStructure({ guideId, questionId, scope, voice, rege
       question_id: questionId,
       scope,
       voice,
+      segments,
       regenerate: pass === 0 ? Boolean(regenerate) : false,
     });
     if (res.data?.error) throw new Error(res.data.error);
@@ -141,6 +142,27 @@ export function buildPlaylist(guide, questions = []) {
   });
 
   return playlist;
+}
+
+// The clips behind the Interview tips tab: the general coaching sections, read
+// from the stored tips narration. Empty until the tips have been narrated.
+export function buildTipsPlaylist(guide) {
+  if (!guide) return [];
+  return (guide.tips_segments || [])
+    .filter((segment) => segment.audio_url)
+    .map((segment) => ({
+      key: `tips-${segment.id}`,
+      section: 'tips',
+      sectionLabel: 'Interview tips',
+      categoryLabel: segment.category_label || 'Interview tips',
+      segmentId: segment.id,
+      questionId: null,
+      categoryIndex: segment.category_index ?? null,
+      kind: segment.kind,
+      text: segment.text || '',
+      url: segment.audio_url,
+      pauseAfterMs: segment.pause_after_ms || 0,
+    }));
 }
 
 // "Name | note", "When | event | location", "Label | value | url" - one per line.

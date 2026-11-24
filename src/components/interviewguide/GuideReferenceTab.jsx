@@ -2,13 +2,14 @@ import React from 'react';
 import { Play, Pause, Printer } from 'lucide-react';
 import EmphasisText from './EmphasisText';
 import PromoPanel from './PromoPanel';
+import OnAirReminders from './OnAirReminders';
 
 // The second tab of the guide: a one-page cheat sheet Dawn can scan in seconds
 // right before - or during - the interview. Each question keeps its heading and
 // key message, with two or three short bullets underneath, and the practical
 // donation details appear once at the bottom. Nothing expands, nothing repeats.
 export default function GuideReferenceTab({
-  guide, questions, dark, item, playing, onListen, onPlaySection, onPrint,
+  guide, questions, dark, item, playing, onListen, onPlaySection, onPlayReminders, onPrint,
 }) {
   const muted = dark ? 'text-[#a9b0cd]' : 'text-[#626784]';
   const text = dark ? 'text-[#eef1ff]' : 'text-[#080c21]';
@@ -22,6 +23,10 @@ export default function GuideReferenceTab({
   const hasAudio = segments.some((segment) => segment.audio_url);
   const promoRows = (guide?.quick_reference_info || []).filter((row) => row?.label);
   const listening = item?.section === 'quick';
+  const remindersActive = listening && item?.categoryLabel === 'On-air reminders';
+  const hasReminderAudio = segments.some(
+    (segment) => segment.audio_url && segment.category_label === 'On-air reminders'
+  );
 
   return (
     <section className={`rounded-xl border p-3 sm:p-4 ${card}`}>
@@ -113,6 +118,16 @@ export default function GuideReferenceTab({
         })}
 
         <PromoPanel rows={promoRows} dark={dark} />
+      </div>
+
+      <div className="mt-2 print:hidden">
+        <OnAirReminders
+          dark={dark}
+          hasAudio={hasReminderAudio}
+          active={remindersActive}
+          playing={playing}
+          onListen={onPlayReminders}
+        />
       </div>
     </section>
   );

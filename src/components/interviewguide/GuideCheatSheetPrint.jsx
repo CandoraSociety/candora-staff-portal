@@ -1,6 +1,7 @@
 import React from 'react';
 import EmphasisText from './EmphasisText';
 import PromoPanel from './PromoPanel';
+import OnAirReminders from './OnAirReminders';
 
 // The cheat sheet as it prints: one letter page, two columns, nothing to expand.
 // Hidden on screen - the quick reference tab's "Print this sheet" button prints
@@ -62,6 +63,10 @@ export default function GuideCheatSheetPrint({ guide, questions }) {
         ))}
 
         <PromoPanel rows={promoRows} print />
+      </div>
+
+      <div className="mt-1.5">
+        <OnAirReminders print />
       </div>
 
       <footer className="mt-1.5 text-[6.5pt] text-[#626784]">

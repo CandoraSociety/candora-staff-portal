@@ -59,12 +59,13 @@ export default function GuideTopBar({
           {[
             { key: 'guide', label: 'The guide' },
             { key: 'reference', label: 'Quick reference & key points' },
+            { key: 'tips', label: 'Interview tips' },
           ].map((tab) => (
             <button
               key={tab.key}
               type="button"
               onClick={() => onChangeView(tab.key)}
-              className={`flex-1 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors ${
+              className={`flex-1 rounded-lg px-2 py-1.5 text-[11.5px] font-semibold leading-tight transition-colors sm:px-3 sm:text-sm ${
                 view === tab.key
                   ? 'bg-[#fccf03] text-[#0a0f29]'
                   : dark ? 'text-[#a9b0cd] hover:text-[#eef1ff]' : 'text-[#626784] hover:text-[#080c21]'
