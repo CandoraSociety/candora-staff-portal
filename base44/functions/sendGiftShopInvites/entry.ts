@@ -57,6 +57,10 @@ Deno.serve(async (req) => {
     const expiresAt = expiresOn ? new Date(`${expiresOn}T23:59:59`).toISOString() : null;
     const event = await loadGiftShopEvent(base44);
     const message = String(body.message || '').trim() || defaultMessage(event);
+    // A list can be added without sending anything: the invitations are created
+    // with their links so staff can review the list first, then send them from
+    // the Pre-registration tab with the Send invitations button.
+    const createOnly = body.create_only === true;
 
     const results = [];
     const seen = new Set();
@@ -188,6 +192,19 @@ Deno.serve(async (req) => {
         }
       }
 
+      // Links only: the invitation is in the list, nothing has gone out yet.
+      if (createOnly) {
+        results.push({
+          guardian_name: name,
+          guardian_email: email,
+          guardian_phone: phone,
+          status: 'created',
+          link,
+          central_db_status: central?.status || null,
+        });
+        continue;
+      }
+
       // Both channels carry the same link: the email for whoever reads email,
       // the text for whoever does not.
       let emailed = false;
@@ -271,6 +288,7 @@ Deno.serve(async (req) => {
 
     return Response.json({
       results,
+      created_count: counts.created || 0,
       sent_count: counts.sent || 0,
       failed_count: counts.failed || 0,
       text_only_count: textOnly,

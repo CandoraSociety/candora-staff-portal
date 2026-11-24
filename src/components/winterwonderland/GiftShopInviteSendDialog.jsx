@@ -1,49 +1,40 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
-import { Loader2, Send } from 'lucide-react';
+import { Link2, Loader2 } from 'lucide-react';
 import { defaultExpiryDate } from '@/lib/giftShopInvites';
 import GiftShopInviteListInput from '@/components/winterwonderland/GiftShopInviteListInput';
-import GiftShopInviteSendResults from '@/components/winterwonderland/GiftShopInviteSendResults';
-import { useGiftShopEventDetails, inviteMessageDraft } from '@/lib/giftShopEvent';
+import GiftShopInviteCreateResults from '@/components/winterwonderland/GiftShopInviteCreateResults';
 
 const CHUNK_SIZE = 15;
 
-// Upload a family list, write the message, and email each family their own
-// single-use link. The one-time explanation and the office email address are
-// added by the email template itself.
+// Upload a family list and create each family's own single-use link. Nothing is
+// sent from here: the families land in the Pre-registration tab so the list can
+// be reviewed, and Send invitations sends them when staff are ready.
 export default function GiftShopInviteSendDialog({ open, onOpenChange, onSaved }) {
   const { toast } = useToast();
-  const event = useGiftShopEventDetails();
-  const draft = inviteMessageDraft({ eventDate: event.eventDate, eventLocation: event.eventLocation });
-  const lastDraft = useRef(draft);
   const [rows, setRows] = useState([]);
-  const [message, setMessage] = useState(draft);
   const [expiryDate, setExpiryDate] = useState(defaultExpiryDate());
-  const [sending, setSending] = useState(false);
+  const [working, setWorking] = useState(false);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
   const [results, setResults] = useState(null);
 
   useEffect(() => {
     if (open) {
       setRows([]);
-      setMessage(prev => (!prev || prev === lastDraft.current ? draft : prev));
       setExpiryDate(defaultExpiryDate());
-      setSending(false);
+      setWorking(false);
       setProgress({ done: 0, total: 0 });
       setResults(null);
     }
-    lastDraft.current = draft;
-  }, [open, draft]);
+  }, [open]);
 
-  const send = async () => {
+  const create = async () => {
     if (!rows.length) return;
-    setSending(true);
+    setWorking(true);
     setResults(null);
     setProgress({ done: 0, total: rows.length });
 
@@ -54,8 +45,8 @@ export default function GiftShopInviteSendDialog({ open, onOpenChange, onSaved }
         setProgress({ done: index, total: rows.length });
         const response = await base44.functions.invoke('sendGiftShopInvites', {
           families: slice,
-          message,
           expires_on: expiryDate,
+          create_only: true,
         });
         collected.push(...(response.data?.results || []));
       }
@@ -63,10 +54,10 @@ export default function GiftShopInviteSendDialog({ open, onOpenChange, onSaved }
       onSaved?.();
     } catch (err) {
       if (collected.length) setResults(collected);
-      toast({ title: 'Some invitations did not go out', description: err.message, variant: 'destructive' });
+      toast({ title: 'Some links could not be created', description: err.message, variant: 'destructive' });
       onSaved?.();
     } finally {
-      setSending(false);
+      setWorking(false);
       setProgress({ done: rows.length, total: rows.length });
     }
   };
@@ -75,15 +66,15 @@ export default function GiftShopInviteSendDialog({ open, onOpenChange, onSaved }
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Send pre-registration invites</DialogTitle>
+          <DialogTitle>Upload a family list</DialogTitle>
           <DialogDescription>
-            Upload the family list, write your message, and each family gets their own link by email and by text. A
-            family with no email address gets it by text only.
+            Add the families to the pre-registration list and create each family's own single-use link. Nothing is
+            sent — review the list first, then press Send invitations.
           </DialogDescription>
         </DialogHeader>
 
         {results ? (
-          <GiftShopInviteSendResults results={results} onDone={() => onOpenChange(false)} />
+          <GiftShopInviteCreateResults results={results} onDone={() => onOpenChange(false)} />
         ) : (
           <div className="space-y-5">
             <div className="space-y-2">
@@ -91,22 +82,8 @@ export default function GiftShopInviteSendDialog({ open, onOpenChange, onSaved }
               <GiftShopInviteListInput rows={rows} onRowsChange={setRows} />
             </div>
 
-            <div className="space-y-2">
-              <p className="text-sm font-semibold">2. Your message</p>
-              <Textarea
-                rows={5}
-                value={message}
-                onChange={e => setMessage(e.target.value)}
-                placeholder="Write a short message to go in the email and text…"
-              />
-              <p className="text-xs text-muted-foreground">
-                Keep it to a short paragraph. The explanation that the link works only once, the closing date and
-                info@candorasociety.com for questions are added below your message automatically.
-              </p>
-            </div>
-
             <div className="space-y-1.5">
-              <p className="text-sm font-semibold">3. When the links close</p>
+              <p className="text-sm font-semibold">2. When the links close</p>
               <div className="flex items-center gap-3">
                 <Input type="date" value={expiryDate} onChange={e => setExpiryDate(e.target.value)} className="w-48" />
                 <p className="text-xs text-muted-foreground">After this date the links stop working.</p>
@@ -117,12 +94,12 @@ export default function GiftShopInviteSendDialog({ open, onOpenChange, onSaved }
 
         {!results && (
           <DialogFooter className="gap-2 sm:justify-between">
-            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={sending}>Cancel</Button>
-            <Button onClick={send} disabled={sending || !rows.length}>
-              {sending ? (
-                <><Loader2 className="h-4 w-4 animate-spin" /> Sending {progress.done} of {progress.total}…</>
+            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={working}>Cancel</Button>
+            <Button onClick={create} disabled={working || !rows.length}>
+              {working ? (
+                <><Loader2 className="h-4 w-4 animate-spin" /> Creating {progress.done} of {progress.total}…</>
               ) : (
-                <><Send className="h-4 w-4" /> Send pre-registration invite{rows.length === 1 ? '' : 's'}</>
+                <><Link2 className="h-4 w-4" /> Create {rows.length || ''} link{rows.length === 1 ? '' : 's'}</>
               )}
             </Button>
           </DialogFooter>

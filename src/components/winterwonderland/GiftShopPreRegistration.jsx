@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download, Mail, MessageSquare, Plus, Send, ShieldCheck } from 'lucide-react';
+import { Download, Mail, MessageSquare, Plus, ShieldCheck, Upload } from 'lucide-react';
 import GiftShopInviteDialog from '@/components/winterwonderland/GiftShopInviteDialog';
 import GiftShopInviteSendDialog from '@/components/winterwonderland/GiftShopInviteSendDialog';
 import GiftShopEmailInvitesDialog from '@/components/winterwonderland/GiftShopEmailInvitesDialog';
@@ -116,7 +116,7 @@ export default function GiftShopPreRegistration() {
           </div>
           <div className="flex flex-wrap items-center gap-2 pt-1">
             <Button size="sm" onClick={() => setSingleOpen(true)}><Plus className="h-4 w-4" /> Invite a family</Button>
-            <Button size="sm" variant="outline" onClick={() => setSendOpen(true)}><Send className="h-4 w-4" /> Upload a list &amp; send invites</Button>
+            <Button size="sm" variant="outline" onClick={() => setSendOpen(true)}><Upload className="h-4 w-4" /> Upload a family list</Button>
             <Button
               size="sm"
               variant="outline"
@@ -138,8 +138,9 @@ export default function GiftShopPreRegistration() {
             </Button>
           </div>
           <p className="text-xs text-muted-foreground">
-            Invite a family creates their link only — use Send invitations to send it by email and text. Every link
-            opens the standalone pre-registration form, which has no access to any other part of Candora 360.
+            Invite a family and Upload a family list create links only — use Send invitations to send them by email and
+            text once you have reviewed the list. Every link opens the standalone pre-registration form, which has no
+            access to any other part of Candora 360.
           </p>
         </CardContent>
       </Card>
