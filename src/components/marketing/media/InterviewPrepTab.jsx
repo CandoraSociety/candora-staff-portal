@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Plus, FileText, Mic } from 'lucide-react';
 import InterviewPrepForm from '@/components/marketing/media/InterviewPrepForm';
+import GuideList from '@/components/marketing/media/GuideList';
 
 const STATUS_COLORS = {
   planned: 'bg-gray-100 text-gray-700',
@@ -48,11 +49,11 @@ export default function InterviewPrepTab({ releases = [], search = '' }) {
   const visible = preps.filter((p) => `${p.title} ${p.outlet} ${p.interviewer} ${p.press_release_title}`.toLowerCase().includes(q));
 
   return (
-    <div className="space-y-3 mt-4">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">
-          Booking details and a working briefing for each upcoming interview.
-        </p>
+    <div className="space-y-4 mt-4">
+      <GuideList />
+
+      <div className="flex items-center justify-between pt-3 border-t">
+        <p className="font-medium">Prep sessions</p>
         <Button size="sm" onClick={() => openDialog(null)}>
           <Plus className="w-4 h-4 mr-1" /> New Prep
         </Button>

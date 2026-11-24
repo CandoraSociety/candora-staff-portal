@@ -22,6 +22,7 @@ import EmpowerUPublicApplication from '@/pages/portal/EmpowerUPublicApplication'
 import SelfRegister from '@/pages/portal/SelfRegister';
 import GiftShopInvite from '@/pages/portal/GiftShopInvite';
 import CampaignPublicPage from '@/pages/portal/CampaignPublicPage';
+import InterviewGuide from '@/pages/portal/InterviewGuide';
 import GeneralDonationPage from '@/pages/portal/GeneralDonationPage';
 import GiftThankYou from '@/pages/portal/GiftThankYou';
 import CampaignGiftCardPage from '@/pages/portal/CampaignGiftCardPage';
@@ -295,6 +296,7 @@ import MarketingMedia from '@/pages/marketing/MarketingMedia';
 import MarketingContent from '@/pages/marketing/MarketingContent';
 import MarketingDonationPages from '@/pages/marketing/MarketingDonationPages';
 import MarketingAnnualReport from '@/pages/marketing/MarketingAnnualReport';
+import InterviewGuideEditor from '@/pages/marketing/InterviewGuideEditor';
 
 // ELL (English Language Learning) Portal
 import ELLLayout from '@/components/ell/ELLLayout';
@@ -474,6 +476,7 @@ const AuthenticatedApp = () => {
     || location.startsWith('/gift-card')
     || location.startsWith('/certificate')
     || location.startsWith('/gift-shop-invite')
+    || location.startsWith('/interview-guide')
     || location.startsWith('/empoweru-apply');
 
   // Only show loading spinner for protected routes, not public auth pages
@@ -514,6 +517,9 @@ const AuthenticatedApp = () => {
 
       {/* Public campaign page — supporters read the appeal and give online, no login */}
       <Route path="/campaign/:slug" element={<CampaignPublicPage />} />
+
+      {/* Interview preparation guide — opened by its own share link, no login */}
+      <Route path="/interview-guide/:token" element={<InterviewGuide />} />
 
       {/* Public general donation page — general fund giving plus every open campaign */}
       <Route path="/donate" element={<GeneralDonationPage />} />
@@ -785,6 +791,7 @@ const AuthenticatedApp = () => {
           <Route path="/marketing/content" element={<MarketingContent />} />
           <Route path="/marketing/donation-pages" element={<MarketingDonationPages />} />
           <Route path="/marketing/annual-report" element={<MarketingAnnualReport />} />
+          <Route path="/marketing/interview-guides/:id" element={<InterviewGuideEditor />} />
         </Route>
 
         {/* ELL (English Language Learning) Portal - standalone layout */}

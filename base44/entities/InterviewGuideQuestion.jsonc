@@ -1,0 +1,115 @@
+{
+  "name": "InterviewGuideQuestion",
+  "type": "object",
+  "description": "One question inside an interview preparation guide - the question as the host will ask it, the written talking points, the single key message to land, and the spoken narration with its stored audio. Questions are ordered by display_order so staff can reorder them.",
+  "properties": {
+    "guide_id": {
+      "type": "string",
+      "description": "The guide this question belongs to"
+    },
+    "display_order": {
+      "type": "number",
+      "default": 0,
+      "description": "Position in the guide, lowest first"
+    },
+    "question": {
+      "type": "string",
+      "description": "The question as the host will ask it"
+    },
+    "talking_points": {
+      "type": "array",
+      "description": "The written talking points, each with optional sub-points",
+      "items": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          },
+          "details": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "key_message": {
+      "type": "string",
+      "description": "The one message to land in this answer"
+    },
+    "checklist": {
+      "type": "array",
+      "description": "Important messages to tick off while practising this answer",
+      "items": {
+        "type": "string"
+      }
+    },
+    "narration": {
+      "type": "string",
+      "description": "Spoken version of this question and its talking points - conversational, written to be heard rather than read"
+    },
+    "audio_url": {
+      "type": "string",
+      "description": "Stored audio file of this question's narration"
+    },
+    "audio_generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the narration audio was last generated"
+    }
+  },
+  "required": [
+    "guide_id",
+    "question"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

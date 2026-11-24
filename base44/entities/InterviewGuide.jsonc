@@ -1,0 +1,247 @@
+{
+  "name": "InterviewGuide",
+  "type": "object",
+  "description": "One interactive media interview preparation guide - who it is for, the show and date, the spoken narration for its sections, and the quick-reference material. The questions themselves live in InterviewGuideQuestion. Staff create and publish a guide; the spokesperson opens it through its own secure link and can read, listen and practise without an app account.",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "How the guide is labelled, e.g. Global Morning Show - Candora Interview Preparation"
+    },
+    "token": {
+      "type": "string",
+      "description": "Unguessable code in the guide's share link. Generated once when the guide is created."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "published",
+        "archived"
+      ],
+      "enumColors": [
+        "gray",
+        "green",
+        "purple"
+      ],
+      "default": "draft",
+      "description": "draft = being built; published = the share link opens the guide; archived = finished interview, link closed"
+    },
+    "purpose": {
+      "type": "string",
+      "description": "One line on what this guide prepares the spokesperson for, shown at the top of the guide"
+    },
+    "spokesperson": {
+      "type": "string",
+      "description": "Staff member the guide is written for"
+    },
+    "outlet": {
+      "type": "string",
+      "description": "Where the interview appears, e.g. Global TV Edmonton"
+    },
+    "show_name": {
+      "type": "string",
+      "description": "Programme or segment, e.g. Global Morning Show"
+    },
+    "interviewer": {
+      "type": "string",
+      "description": "Journalist or host conducting the interview"
+    },
+    "interview_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Day the interview airs"
+    },
+    "voice": {
+      "type": "string",
+      "enum": [
+        "honey",
+        "sunny",
+        "river",
+        "storm",
+        "spark"
+      ],
+      "enumColors": [
+        "yellow",
+        "pink",
+        "blue",
+        "gray",
+        "purple"
+      ],
+      "default": "honey",
+      "description": "Narrator voice used when audio is generated for this guide. honey = warm and soft, sunny = bright and upbeat, river = calm and neutral"
+    },
+    "intro_narration": {
+      "type": "string",
+      "description": "Spoken welcome at the start of the guide - what this guide is for and how to use it"
+    },
+    "intro_audio_url": {
+      "type": "string",
+      "description": "Stored audio file of the intro narration, generated once and replayed without regenerating"
+    },
+    "key_messages_narration": {
+      "type": "string",
+      "description": "Spoken version of the key messages on their own, for a quick listen before going on air"
+    },
+    "key_messages_audio_url": {
+      "type": "string",
+      "description": "Stored audio file of the key messages narration"
+    },
+    "quick_reference_narration": {
+      "type": "string",
+      "description": "Spoken version of the quick reference - statistics, dates, partners and reminders"
+    },
+    "quick_reference_audio_url": {
+      "type": "string",
+      "description": "Stored audio file of the quick reference narration"
+    },
+    "quick_reference": {
+      "type": "array",
+      "description": "The scannable quick-reference blocks - priority messages, donations, events",
+      "items": {
+        "type": "object",
+        "properties": {
+          "heading": {
+            "type": "string"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    },
+    "partners": {
+      "type": "array",
+      "description": "Partners and supporters to acknowledge, with how to acknowledge each",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "important_dates": {
+      "type": "array",
+      "description": "Dates the spokesperson may be asked about",
+      "items": {
+        "type": "object",
+        "properties": {
+          "when": {
+            "type": "string",
+            "description": "How the date reads, e.g. November 26 or Around December 5"
+          },
+          "event": {
+            "type": "string"
+          },
+          "location": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "reminders": {
+      "type": "array",
+      "description": "Interview reminders - what to emphasise, what to avoid saying",
+      "items": {
+        "type": "string"
+      }
+    },
+    "contacts": {
+      "type": "array",
+      "description": "Contact details shown at the end of the guide",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "assigned_to_name": {
+      "type": "string",
+      "description": "Staff member the guide was handed to"
+    },
+    "assigned_to_email": {
+      "type": "string"
+    },
+    "published_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "archived_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "created_by_name": {
+      "type": "string",
+      "description": "Staff member who built the guide"
+    }
+  },
+  "required": [
+    "title",
+    "token"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

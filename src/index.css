@@ -115,6 +115,16 @@
   border-top-color: hsl(231,64%,20%);
 }
 
+/* ===== Interview guide reader — comfortable, resizable reading text ===== */
+.guide-reader {
+  font-family: 'Inter', sans-serif;
+  font-size: calc(1.0625rem * var(--guide-scale, 1));
+  line-height: 1.7;
+}
+.guide-reader .g-small { font-size: 0.82em; }
+.guide-reader .g-h2 { font-size: 1.26em; line-height: 1.3; }
+.guide-reader .g-h3 { font-size: 1.02em; }
+
 /* ===== Training intro scenes — layered Candora navy/gold backdrop ===== */
 .portal-intro-bg {
   background:
