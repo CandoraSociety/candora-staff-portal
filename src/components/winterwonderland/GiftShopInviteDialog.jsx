@@ -6,6 +6,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { newInviteToken, defaultExpiryDate } from '@/lib/giftShopInvites';
+import { reviewFamilies } from '@/lib/giftShopFamilyMatches';
+import GiftShopFamilyMatchReview from '@/components/winterwonderland/GiftShopFamilyMatchReview';
 
 const emptyForm = () => ({
   guardian_name: '',
@@ -24,11 +26,17 @@ export default function GiftShopInviteDialog({ open, onOpenChange, onSaved }) {
   const { toast } = useToast();
   const [form, setForm] = useState(emptyForm);
   const [saving, setSaving] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const [review, setReview] = useState(null);
+  const [decision, setDecision] = useState(null);
 
   useEffect(() => {
     if (open) {
       setForm(emptyForm());
       setSaving(false);
+      setChecking(false);
+      setReview(null);
+      setDecision(null);
     }
   }, [open]);
 
@@ -44,6 +52,31 @@ export default function GiftShopInviteDialog({ open, onOpenChange, onSaved }) {
       });
     }
 
+    // The name and contact details are checked against every family already in
+    // the Kids Gift Shop before a new card is opened.
+    setChecking(true);
+    try {
+      const found = await reviewFamilies([{
+        guardian_name: form.guardian_name.trim(),
+        guardian_email: form.guardian_email.trim(),
+        guardian_phone: form.guardian_phone.trim(),
+      }]);
+      if (found.length) {
+        setReview(found[0]);
+        setDecision(null);
+        return;
+      }
+    } catch (err) {
+      toast({ title: 'Could not check for a duplicate family', description: err.message, variant: 'destructive' });
+      return;
+    } finally {
+      setChecking(false);
+    }
+
+    create(null);
+  };
+
+  const create = async (match) => {
     setSaving(true);
     try {
       const me = await base44.auth.me().catch(() => null);
@@ -57,6 +90,10 @@ export default function GiftShopInviteDialog({ open, onOpenChange, onSaved }) {
         expires_at: new Date(`${form.expiry_date}T23:59:59`).toISOString(),
         sent_via: form.guardian_email.trim() ? 'email' : 'text',
         created_by_name: me?.full_name || '',
+        ...(match ? {
+          notes: `Matched an existing Kids Gift Shop family — ${match.source}: ${match.guardian_name}${match.detail ? ` (${match.detail})` : ''}`,
+          ...(match.rc_client_id ? { rc_client_id: match.rc_client_id, central_db_status: 'linked' } : {}),
+        } : {}),
       });
       toast({ title: 'Invitation created', description: 'Copy the link and send it to the family.' });
       onSaved?.();
@@ -70,7 +107,7 @@ export default function GiftShopInviteDialog({ open, onOpenChange, onSaved }) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-lg">
+      <DialogContent className={review ? 'max-w-2xl' : 'max-w-lg'}>
         <DialogHeader>
           <DialogTitle>Invite a family</DialogTitle>
           <DialogDescription>
@@ -78,32 +115,48 @@ export default function GiftShopInviteDialog({ open, onOpenChange, onSaved }) {
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-3">
-          <div className="space-y-1.5">
-            <Label>Parent or guardian’s name *</Label>
-            <Input value={form.guardian_name} onChange={e => set('guardian_name', e.target.value)} />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label>Email</Label>
-              <Input type="email" value={form.guardian_email} onChange={e => set('guardian_email', e.target.value)} />
+        {review ? (
+          <GiftShopFamilyMatchReview
+            reviews={[review]}
+            decisions={decision ? { [review.key]: decision } : {}}
+            onDecide={(key, value) => setDecision(value)}
+            onConfirm={() => create(decision === 'existing' ? review.matches[0] : null)}
+            onCancel={() => setReview(null)}
+            working={saving}
+            confirmLabel="Create invitation"
+          />
+        ) : (
+          <>
+            <div className="space-y-3">
+              <div className="space-y-1.5">
+                <Label>Parent or guardian’s name *</Label>
+                <Input value={form.guardian_name} onChange={e => set('guardian_name', e.target.value)} />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label>Email</Label>
+                  <Input type="email" value={form.guardian_email} onChange={e => set('guardian_email', e.target.value)} />
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Phone</Label>
+                  <Input value={form.guardian_phone} onChange={e => set('guardian_phone', e.target.value)} />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Link expires</Label>
+                <Input type="date" value={form.expiry_date} onChange={e => set('expiry_date', e.target.value)} className="w-48" />
+                <p className="text-xs text-muted-foreground">Pre-registration closes on December 1. The family chooses how many children they register.</p>
+              </div>
             </div>
-            <div className="space-y-1.5">
-              <Label>Phone</Label>
-              <Input value={form.guardian_phone} onChange={e => set('guardian_phone', e.target.value)} />
-            </div>
-          </div>
-          <div className="space-y-1.5">
-            <Label>Link expires</Label>
-            <Input type="date" value={form.expiry_date} onChange={e => set('expiry_date', e.target.value)} className="w-48" />
-            <p className="text-xs text-muted-foreground">Pre-registration closes on December 1. The family chooses how many children they register.</p>
-          </div>
-        </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={save} disabled={saving}>{saving ? 'Creating…' : 'Create invitation'}</Button>
-        </DialogFooter>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
+              <Button onClick={save} disabled={saving || checking}>
+                {checking ? 'Checking the family list…' : saving ? 'Creating…' : 'Create invitation'}
+              </Button>
+            </DialogFooter>
+          </>
+        )}
       </DialogContent>
     </Dialog>
   );

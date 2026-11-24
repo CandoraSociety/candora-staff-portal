@@ -8,6 +8,8 @@ import { Link2, Loader2 } from 'lucide-react';
 import { defaultExpiryDate } from '@/lib/giftShopInvites';
 import GiftShopInviteListInput from '@/components/winterwonderland/GiftShopInviteListInput';
 import GiftShopInviteCreateResults from '@/components/winterwonderland/GiftShopInviteCreateResults';
+import GiftShopFamilyMatchReview from '@/components/winterwonderland/GiftShopFamilyMatchReview';
+import { reviewFamilies } from '@/lib/giftShopFamilyMatches';
 
 const CHUNK_SIZE = 15;
 
@@ -21,6 +23,9 @@ export default function GiftShopInviteSendDialog({ open, onOpenChange, onSaved }
   const [working, setWorking] = useState(false);
   const [progress, setProgress] = useState({ done: 0, total: 0 });
   const [results, setResults] = useState(null);
+  const [reviews, setReviews] = useState(null);
+  const [decisions, setDecisions] = useState({});
+  const [checking, setChecking] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -29,20 +34,61 @@ export default function GiftShopInviteSendDialog({ open, onOpenChange, onSaved }
       setWorking(false);
       setProgress({ done: 0, total: 0 });
       setResults(null);
+      setReviews(null);
+      setDecisions({});
+      setChecking(false);
     }
   }, [open]);
 
+  // Every family on the list is checked against the ones already in the Kids Gift
+  // Shop before any card is opened, so a family that is already on file is
+  // confirmed first.
   const create = async () => {
     if (!rows.length) return;
+    setChecking(true);
+    try {
+      const found = await reviewFamilies(rows);
+      if (found.length) {
+        setReviews(found);
+        setDecisions({});
+        return;
+      }
+    } catch (err) {
+      toast({ title: 'Could not check the list for duplicate families', description: err.message, variant: 'destructive' });
+      return;
+    } finally {
+      setChecking(false);
+    }
+    submit({});
+  };
+
+  // A family confirmed as the same household is sent with the card already on
+  // file, so the invitation links to it instead of opening a second family card.
+  const submit = async (chosen) => {
+    const families = rows.map((row, index) => {
+      if (chosen[String(index)] !== 'existing') return row;
+      const match = (reviews || []).find(review => review.key === String(index))?.matches[0];
+      if (!match) return row;
+      return {
+        ...row,
+        existing_family: {
+          label: `${match.source} · ${match.guardian_name}${match.detail ? ` · ${match.detail}` : ''}`,
+          rc_client_id: match.rc_client_id || null,
+          registration_ids: match.registration_ids || [],
+        },
+      };
+    });
+
+    setReviews(null);
     setWorking(true);
     setResults(null);
-    setProgress({ done: 0, total: rows.length });
+    setProgress({ done: 0, total: families.length });
 
     const collected = [];
     try {
-      for (let index = 0; index < rows.length; index += CHUNK_SIZE) {
-        const slice = rows.slice(index, index + CHUNK_SIZE);
-        setProgress({ done: index, total: rows.length });
+      for (let index = 0; index < families.length; index += CHUNK_SIZE) {
+        const slice = families.slice(index, index + CHUNK_SIZE);
+        setProgress({ done: index, total: families.length });
         const response = await base44.functions.invoke('sendGiftShopInvites', {
           families: slice,
           expires_on: expiryDate,
@@ -75,6 +121,16 @@ export default function GiftShopInviteSendDialog({ open, onOpenChange, onSaved }
 
         {results ? (
           <GiftShopInviteCreateResults results={results} onDone={() => onOpenChange(false)} />
+        ) : reviews ? (
+          <GiftShopFamilyMatchReview
+            reviews={reviews}
+            decisions={decisions}
+            onDecide={(key, value) => setDecisions(prev => ({ ...prev, [key]: value }))}
+            onConfirm={() => submit(decisions)}
+            onCancel={() => setReviews(null)}
+            working={working}
+            confirmLabel={`Create ${rows.length} link${rows.length === 1 ? '' : 's'}`}
+          />
         ) : (
           <div className="space-y-5">
             <div className="space-y-2">
@@ -92,11 +148,13 @@ export default function GiftShopInviteSendDialog({ open, onOpenChange, onSaved }
           </div>
         )}
 
-        {!results && (
+        {!results && !reviews && (
           <DialogFooter className="gap-2 sm:justify-between">
             <Button variant="outline" onClick={() => onOpenChange(false)} disabled={working}>Cancel</Button>
-            <Button onClick={create} disabled={working || !rows.length}>
-              {working ? (
+            <Button onClick={create} disabled={working || checking || !rows.length}>
+              {checking ? (
+                <><Loader2 className="h-4 w-4 animate-spin" /> Checking the family list…</>
+              ) : working ? (
                 <><Loader2 className="h-4 w-4 animate-spin" /> Creating {progress.done} of {progress.total}…</>
               ) : (
                 <><Link2 className="h-4 w-4" /> Create {rows.length || ''} link{rows.length === 1 ? '' : 's'}</>

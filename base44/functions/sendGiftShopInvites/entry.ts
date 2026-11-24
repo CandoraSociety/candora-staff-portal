@@ -95,6 +95,7 @@ Deno.serve(async (req) => {
           phone: String(invite.guardian_phone || '').trim(),
           childrenAllowed: allowed > 0 ? Math.min(6, allowed) : 3,
           token: invite.token,
+          existingFamily: null,
         });
       }
     } else {
@@ -107,12 +108,18 @@ Deno.serve(async (req) => {
           phone: String(family?.guardian_phone || '').trim(),
           childrenAllowed: requested > 0 ? Math.min(6, requested) : 3,
           token: null,
+          // Set when staff confirmed this family is the same household as a card
+          // already in the Kids Gift Shop, so the invitation links to it rather
+          // than opening a second family card.
+          existingFamily: family?.existing_family && typeof family.existing_family === 'object'
+            ? family.existing_family
+            : null,
         });
       }
     }
 
     for (const entry of queue) {
-      const { existing, name, email, phone, childrenAllowed } = entry;
+      const { existing, name, email, phone, childrenAllowed, existingFamily } = entry;
 
       if (!name || (!email && !phone)) {
         results.push({
@@ -155,6 +162,12 @@ Deno.serve(async (req) => {
             expires_at: expiresAt,
             sent_via: email ? 'email' : 'text',
             created_by_name: user.full_name || user.email || '',
+            ...(existingFamily ? {
+              notes: `Matched an existing Kids Gift Shop family — ${existingFamily.label || 'already on file'}`,
+              ...(existingFamily.rc_client_id
+                ? { rc_client_id: existingFamily.rc_client_id, central_db_status: 'linked' }
+                : {}),
+            } : {}),
           });
         } catch (error) {
           console.log(`Invitation record failed for ${name}:`, error.message);
@@ -169,7 +182,7 @@ Deno.serve(async (req) => {
       // Being invited is not registering: an existing profile is never changed
       // here — only a real Kids Gift Shop registration updates it.
       let central: any = null;
-      if (!existing) {
+      if (!existing && !existingFamily?.rc_client_id) {
         const person = splitName(name);
         try {
           central = await syncParticipantToCentralDb(base44, {
