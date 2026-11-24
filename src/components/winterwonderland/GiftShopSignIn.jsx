@@ -4,13 +4,12 @@ import { Button } from '@/components/ui/button';
 import { CheckCircle2, Clock, ExternalLink, MessageSquare, QrCode, Users } from 'lucide-react';
 import GiftShopFamilyCard from '@/components/winterwonderland/GiftShopFamilyCard';
 import GiftShopMessageDialog from '@/components/winterwonderland/GiftShopMessageDialog';
-import { familyMessageKey } from '@/lib/giftShopInvites';
 import GiftShopCheckInDialog from '@/components/winterwonderland/GiftShopCheckInDialog';
 import GiftShopCheckinQrDialog from '@/components/winterwonderland/GiftShopCheckinQrDialog';
 import GiftShopSlotBoard from '@/components/winterwonderland/GiftShopSlotBoard';
 import { useGiftShopRegistrations } from '@/lib/useGiftShopRegistrations';
 import { useGiftShopTexts } from '@/lib/useGiftShopTexts';
-import { groupGiftShopFamilies, giftShopAgeBandCounts } from '@/lib/giftShopFamilies';
+import { groupGiftShopFamilies, giftShopAgeBandCounts, giftShopMessageFamilies } from '@/lib/giftShopFamilies';
 
 // Sign-In tab — the same registration cards, sorted by shopping time, for
 // working the door. Signing a child in here writes to the same registration, so
@@ -24,16 +23,9 @@ export default function GiftShopSignIn({ standalone = false }) {
 
   const active = registrations.filter(r => !['declined', 'withdrawn'].includes(r.status));
   const families = groupGiftShopFamilies(active).sort((a, b) => (a.time_slot || '').localeCompare(b.time_slot || ''));
-  // The same families as the message dialog knows them, so the door can text and
-  // email every family or chosen ones.
-  const messageFamilies = families
-    .map(family => ({
-      family_key: familyMessageKey(family),
-      guardian_name: family.guardian_name || '',
-      guardian_email: family.guardian_email || '',
-      guardian_phone: family.guardian_phone || '',
-    }))
-    .filter(family => family.family_key);
+  // Every registered family, with the stage it is in, so the door can write to
+  // everyone, one status, or chosen families.
+  const messageFamilies = giftShopMessageFamilies(active);
   const signedIn = active.filter(r => r.checked_in).length;
   const waiting = active.length - signedIn;
   const ageBands = giftShopAgeBandCounts(active);

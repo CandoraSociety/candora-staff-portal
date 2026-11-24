@@ -3,14 +3,14 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Plus, ExternalLink, Copy, Link2, MessageSquare } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { generalRegistrationLink, familyMessageKey } from '@/lib/giftShopInvites';
+import { generalRegistrationLink } from '@/lib/giftShopInvites';
 import GiftShopMessageDialog from '@/components/winterwonderland/GiftShopMessageDialog';
 import KidsGiftShopRegistrationDialog from '@/components/centralreg/KidsGiftShopRegistrationDialog';
 import GiftShopFamilyCard from '@/components/winterwonderland/GiftShopFamilyCard';
 import GiftShopCheckInDialog from '@/components/winterwonderland/GiftShopCheckInDialog';
 import GiftShopSlotBoard from '@/components/winterwonderland/GiftShopSlotBoard';
 import { KIDS_GIFT_SHOP_TIME_SLOTS, KIDS_GIFT_SHOP_SLOT_CAPACITY } from '@/lib/centralRegConstants';
-import { groupGiftShopFamilies, giftShopSlotCounts, giftShopAgeBandCounts, giftShopGiftTally, giftShopRecipientLabel } from '@/lib/giftShopFamilies';
+import { groupGiftShopFamilies, giftShopSlotCounts, giftShopAgeBandCounts, giftShopGiftTally, giftShopRecipientLabel, giftShopMessageFamilies } from '@/lib/giftShopFamilies';
 import { useGiftShopRegistrations } from '@/lib/useGiftShopRegistrations';
 import { useGiftShopTexts } from '@/lib/useGiftShopTexts';
 
@@ -45,16 +45,9 @@ export default function GiftShopRegistrations() {
   const openSlots = KIDS_GIFT_SHOP_TIME_SLOTS.filter(s => (counts[s.value] || 0) < KIDS_GIFT_SHOP_SLOT_CAPACITY).length;
   // Siblings registered by the same guardian into the same slot share one card.
   const families = groupGiftShopFamilies(active).sort((a, b) => (a.time_slot || '').localeCompare(b.time_slot || ''));
-  // The same families as the message dialog knows them, so a message can go to
-  // every registered family or to chosen ones.
-  const messageFamilies = families
-    .map(family => ({
-      family_key: familyMessageKey(family),
-      guardian_name: family.guardian_name || '',
-      guardian_email: family.guardian_email || '',
-      guardian_phone: family.guardian_phone || '',
-    }))
-    .filter(family => family.family_key);
+  // Every registered family, with the stage it is in, so a message can go to
+  // everyone, one status, or chosen families.
+  const messageFamilies = giftShopMessageFamilies(active);
 
   return (
     <div className="space-y-4">

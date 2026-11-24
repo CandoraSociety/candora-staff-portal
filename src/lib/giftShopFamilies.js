@@ -1,4 +1,5 @@
 import { KIDS_GIFT_SHOP_TIME_SLOTS } from '@/lib/centralRegConstants';
+import { familyMessageKey } from '@/lib/giftShopInvites';
 
 export const giftShopSlotLabel = (value) => KIDS_GIFT_SHOP_TIME_SLOTS.find(s => s.value === value)?.label || value || 'No slot';
 export const giftShopGenderLabel = (value) => (value === 'female' ? 'F' : value === 'male' ? 'M' : '—');
@@ -136,6 +137,58 @@ export const giftShopFamilyCompleted = (family) =>
   (family?.children || []).length > 0 && family.children.every(giftShopIsCompleted);
 // The elf who took the child shopping, kept on the card after they are returned.
 export const giftShopElfName = (reg) => (reg?.assigned_elf || reg?.completed_by_elf || '').trim();
+
+// The stages a family moves through at the door, in the order they happen —
+// the same sections the check-in board shows.
+export const GIFT_SHOP_FAMILY_STATUSES = [
+  { value: 'waiting', label: 'Not signed in yet' },
+  { value: 'checked_in', label: 'Checked In' },
+  { value: 'shopping', label: 'Shopping' },
+  { value: 'completed', label: 'Completed' },
+];
+
+// Where a family stands, taken across all of its children, so a message can go
+// to every family in one stage.
+export const giftShopFamilyStatus = (children = []) => {
+  if (children.length && children.every(giftShopIsCompleted)) return 'completed';
+  if (children.some(giftShopIsShopping)) return 'shopping';
+  if (children.length && children.every(c => c.checked_in)) return 'checked_in';
+  return 'waiting';
+};
+
+// Every registered family as the message dialog knows it — one entry per family
+// (siblings, and children booked into different shopping times, included) with
+// the status it is in, so staff can write to all of them or just one status.
+export function giftShopMessageFamilies(registrations = []) {
+  const map = new Map();
+  registrations.forEach(reg => {
+    const key = familyMessageKey(reg);
+    if (!key) return;
+    if (!map.has(key)) {
+      map.set(key, {
+        family_key: key,
+        guardian_name: reg.parent_guardian_name || reg.participant_name || 'No guardian recorded',
+        guardian_email: reg.parent_guardian_email || reg.participant_email || '',
+        guardian_phone: reg.parent_guardian_phone || reg.participant_phone || '',
+        children: [],
+      });
+    }
+    map.get(key).children.push(reg);
+  });
+
+  return Array.from(map.values())
+    .map(({ children, ...family }) => {
+      const status = giftShopFamilyStatus(children);
+      return {
+        ...family,
+        group: status,
+        label: GIFT_SHOP_FAMILY_STATUSES.find(s => s.value === status)?.label || status,
+      };
+    })
+    .sort((a, b) => GIFT_SHOP_FAMILY_STATUSES.findIndex(s => s.value === a.group)
+      - GIFT_SHOP_FAMILY_STATUSES.findIndex(s => s.value === b.group)
+      || a.guardian_name.localeCompare(b.guardian_name));
+}
 
 const familyKey = (r) => [
   (r.parent_guardian_name || r.participant_name || '').trim().toLowerCase(),
