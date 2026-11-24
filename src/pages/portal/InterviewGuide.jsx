@@ -7,6 +7,7 @@ import GuideQuestionCard from '@/components/interviewguide/GuideQuestionCard';
 import GuideQuickReference from '@/components/interviewguide/GuideQuickReference';
 import GuideReferenceTab from '@/components/interviewguide/GuideReferenceTab';
 import GuidePrintDocument from '@/components/interviewguide/GuidePrintDocument';
+import GuideCheatSheetPrint from '@/components/interviewguide/GuideCheatSheetPrint';
 import GuideAudioPlayer from '@/components/interviewguide/GuideAudioPlayer';
 import GuidePracticeTimer from '@/components/interviewguide/GuidePracticeTimer';
 import useGuideAudio from '@/components/interviewguide/useGuideAudio';
@@ -26,6 +27,7 @@ export default function InterviewGuide() {
   const [simIndex, setSimIndex] = useState(0);
   const [follow, setFollow] = useState(true);
   const [view, setView] = useState('guide');
+  const [printSheet, setPrintSheet] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -86,6 +88,21 @@ export default function InterviewGuide() {
   const playGroup = (index) => {
     const group = groups[index];
     if (group) audio.playIndices(group.indices);
+  };
+
+  const playQuickSection = (index) =>
+    audio.playIndices(indicesFor((entry) => entry.section === 'quick' && entry.categoryIndex === index));
+
+  // Printing the cheat sheet prints only the sheet, not the whole guide.
+  useEffect(() => {
+    const done = () => setPrintSheet(false);
+    window.addEventListener('afterprint', done);
+    return () => window.removeEventListener('afterprint', done);
+  }, []);
+
+  const printCheatSheet = () => {
+    setPrintSheet(true);
+    setTimeout(() => window.print(), 150);
   };
 
   // Keep the talking point being narrated in view, unless the listener has turned
@@ -158,10 +175,9 @@ export default function InterviewGuide() {
             dark={dark}
             item={item}
             playing={audio.playing}
-            onPlayKeyMessages={playKeyMessages}
-            onPlayQuickReference={playQuickReference}
-            onPlayBlock={playQuickBlock}
-            onPlayKeyMessage={playKeyMessage}
+            onListen={playQuickReference}
+            onPlaySection={playQuickSection}
+            onPrint={printCheatSheet}
           />
         ) : (
         <>
@@ -310,7 +326,11 @@ export default function InterviewGuide() {
       )}
     </div>
 
-    <GuidePrintDocument guide={guide} questions={questions} />
+    {printSheet ? (
+      <GuideCheatSheetPrint guide={guide} questions={questions} />
+    ) : (
+      <GuidePrintDocument guide={guide} questions={questions} />
+    )}
     </>
   );
 }

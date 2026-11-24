@@ -132,7 +132,7 @@ export function buildPlaylist(guide, questions = []) {
       categoryLabel: segment.category_label || 'Quick reference',
       segmentId: segment.id,
       questionId: null,
-      categoryIndex: null,
+      categoryIndex: segment.category_index ?? null,
       kind: segment.kind,
       text: segment.text || '',
       url: segment.audio_url,

@@ -197,91 +197,84 @@ export function buildQuestionSegments(question) {
   return segments;
 }
 
-// The spoken quick reference: priority messages, partners, dates, reminders and
-// contacts — the same order the written quick reference reads in.
-export function buildQuickReferenceSegments(guide) {
+// The spoken quick reference — the one-page cheat sheet read aloud in the same
+// order it is written: for each question the question itself, its key message and
+// its short bullets, then the essential donation information once at the end.
+export function buildQuickReferenceSegments(guide, questions = []) {
   const segments = [];
-  const heading = (text, id) =>
-    segments.push({
-      id,
-      kind: 'heading',
-      text: spokenText(text),
-      category_label: spokenText(text),
-      category_index: null,
-      point_index: null,
-      pause_after_ms: PAUSES.heading,
-    });
+  const push = (segment) =>
+    segments.push({ category_index: null, point_index: null, ...segment });
 
-  const points = (label, id, items) => {
-    items.forEach((item, index) => {
-      segments.push({
-        id: `${id}-${index}`,
-        kind: 'point',
-        text: spokenText(item),
-        category_label: spokenText(label),
-        category_index: null,
-        point_index: index,
-        pause_after_ms: index === items.length - 1 ? PAUSES.categoryEnd : PAUSES.point,
-      });
-    });
-  };
-
-  segments.push({
+  push({
     id: 'qr-intro',
     kind: 'cue',
-    text: 'Interview quick reference. Important information and priority messages to remember.',
+    text: 'Interview quick reference. The essentials for each question, then where to send donations.',
     category_label: 'Interview quick reference',
-    category_index: null,
-    point_index: null,
     pause_after_ms: PAUSES.cue,
   });
 
-  heading('Priority messages', 'qr-priority');
-  (guide?.quick_reference || []).forEach((block, blockIndex) => {
-    if (!block?.heading) return;
-    heading(block.heading, `qr-block-${blockIndex}`);
-    points(block.heading, `qr-block-${blockIndex}-p`, (block.items || []).filter(Boolean));
+  (questions || []).forEach((question, questionIndex) => {
+    const label = `Question ${questionIndex + 1}`;
+
+    push({
+      id: `qr-q${questionIndex}`,
+      kind: 'question',
+      text: spokenText(question?.question),
+      category_label: label,
+      category_index: questionIndex,
+      pause_after_ms: PAUSES.question,
+    });
+
+    const keyParagraphs = splitParagraphs(question?.key_message);
+    keyParagraphs.forEach((paragraph, index) => {
+      push({
+        id: `qr-k${questionIndex}-${index}`,
+        kind: 'key',
+        text: paragraph,
+        category_label: label,
+        category_index: questionIndex,
+        point_index: index,
+        pause_after_ms: index === keyParagraphs.length - 1 ? PAUSES.categoryEnd : PAUSES.point,
+      });
+    });
+
+    const bullets = (question?.quick_points || []).filter(Boolean);
+    bullets.forEach((bullet, index) => {
+      push({
+        id: `qr-p${questionIndex}-${index}`,
+        kind: 'point',
+        text: spokenText(bullet),
+        category_label: label,
+        category_index: questionIndex,
+        point_index: index,
+        pause_after_ms: index === bullets.length - 1 ? PAUSES.categoryEnd : PAUSES.point,
+      });
+    });
   });
 
-  const partners = guide?.partners || [];
-  if (partners.length) {
-    heading('Important partners to acknowledge', 'qr-partners');
-    points(
-      'Important partners to acknowledge',
-      'qr-partners-p',
-      partners.map((partner) => [partner.name, partner.note].filter(Boolean).join('. '))
-    );
-  }
-
-  const dates = guide?.important_dates || [];
-  if (dates.length) {
-    heading('Important dates', 'qr-dates');
-    points(
-      'Important dates',
-      'qr-dates-p',
-      dates.map((row) => [row.when, row.event, row.location].filter(Boolean).join('. '))
-    );
-  }
-
-  const reminders = guide?.reminders || [];
-  if (reminders.length) {
-    heading('Important interview reminders', 'qr-reminders');
-    points('Important interview reminders', 'qr-reminders-p', reminders.filter(Boolean));
-  }
-
-  const contacts = guide?.contacts || [];
-  if (contacts.length) {
-    heading('Contact information', 'qr-contacts');
-    points(
-      'Contact information',
-      'qr-contacts-p',
-      contacts.map((contact) => `${contact.label}: ${contact.value}`)
-    );
+  const essentials = (guide?.quick_reference_info || []).filter((row) => row?.value);
+  if (essentials.length) {
+    push({
+      id: 'qr-essentials',
+      kind: 'heading',
+      text: 'Essential donation information.',
+      category_label: 'Essential donation information',
+      pause_after_ms: PAUSES.heading,
+    });
+    essentials.forEach((row, index) => {
+      push({
+        id: `qr-essentials-${index}`,
+        kind: 'point',
+        text: spokenText([row.label, row.value].filter(Boolean).join(': ')),
+        category_label: 'Essential donation information',
+        point_index: index,
+        pause_after_ms: index === essentials.length - 1 ? PAUSES.sectionEnd : PAUSES.point,
+      });
+    });
   }
 
   if (segments.length > 1) {
-    const last = segments[segments.length - 1];
-    last.pause_after_ms = PAUSES.sectionEnd;
+    segments[segments.length - 1].pause_after_ms = PAUSES.sectionEnd;
   }
 
   return segments.filter((segment) => segment.text);

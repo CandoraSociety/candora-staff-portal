@@ -88,7 +88,7 @@
     },
     "quick_reference_segments": {
       "type": "array",
-      "description": "The spoken quick reference, one short clip per category heading and per item, in the same order as the written quick reference below.",
+      "description": "The spoken quick reference, one short clip per question, key message and cheat-sheet bullet, followed by the essential donation information. Read in the same order as the one-page quick reference.",
       "items": {
         "type": "object",
         "properties": {
@@ -100,11 +100,15 @@
             "enum": [
               "cue",
               "heading",
+              "question",
+              "key",
               "point"
             ],
             "enumColors": [
               "gray",
               "purple",
+              "blue",
+              "green",
               "blue"
             ]
           },
@@ -114,7 +118,15 @@
           },
           "category_label": {
             "type": "string",
-            "description": "Category this clip belongs to, shown while it plays"
+            "description": "Section this clip belongs to, shown while it plays"
+          },
+          "category_index": {
+            "type": "number",
+            "description": "Position of the question this clip belongs to in the quick reference, for highlighting and per-question playback"
+          },
+          "point_index": {
+            "type": "number",
+            "description": "Position of this clip inside its section"
           },
           "pause_after_ms": {
             "type": "number",
@@ -136,6 +148,30 @@
     "quick_reference_generated_at": {
       "type": "string",
       "format": "date-time"
+    },
+    "quick_reference_info": {
+      "type": "array",
+      "description": "The essential practical details shown once in the compact box on the one-page quick reference cheat sheet - where and when the donation drive is, what is needed and where to give.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string",
+            "description": "What the row is about, e.g. Donation drive"
+          },
+          "value": {
+            "type": "string",
+            "description": "The detail itself, e.g. Thursday, November 26, 1-4 PM"
+          },
+          "url": {
+            "type": "string",
+            "description": "Link the value opens, when there is one"
+          }
+        },
+        "required": [
+          "label"
+        ]
+      }
     },
     "quick_reference": {
       "type": "array",

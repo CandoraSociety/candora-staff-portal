@@ -1,7 +1,7 @@
 {
   "name": "InterviewGuideQuestion",
   "type": "object",
-  "description": "One question inside an interview preparation guide - the question as the host will ask it, the preparation material grouped into thematic categories of talking points, the single key message to land, and the spoken narration broken into short clips (question, category headings, individual talking points, key message) each with the pause that follows it. Questions are ordered by display_order so staff can reorder them.",
+  "description": "One question inside an interview preparation guide - the question as the host will ask it, the preparation material grouped into thematic categories of talking points, the single key message to land, the short scan-ready bullets used on the one-page quick reference, and the spoken narration broken into short clips (question, category headings, individual talking points, key message) each with the pause that follows it. Questions are ordered by display_order so staff can reorder them.",
   "properties": {
     "guide_id": {
       "type": "string",
@@ -42,6 +42,13 @@
     "key_message": {
       "type": "string",
       "description": "The one message to land in this answer. Paragraphs are separated by a blank line."
+    },
+    "quick_points": {
+      "type": "array",
+      "description": "The two or three short bullets shown under this question on the one-page quick reference cheat sheet. Written for scanning during a live interview: brief, factual, never repeating the key message. Phrases wrapped in double asterisks are shown in bold.",
+      "items": {
+        "type": "string"
+      }
     },
     "checklist": {
       "type": "array",

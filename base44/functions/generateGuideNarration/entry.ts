@@ -32,7 +32,12 @@ export default async function (req) {
     const chosen = isGuideVoice(voice) ? voice : isGuideVoice(guide.voice) ? guide.voice : DEFAULT_GUIDE_VOICE;
 
     if (scope === 'quick_reference') {
-      const built = buildQuickReferenceSegments(guide);
+      const found = await base44.asServiceRole.entities.InterviewGuideQuestion.filter(
+        { guide_id },
+        { sort: 'display_order' }
+      );
+      const questions = Array.isArray(found) ? found : found?.items || [];
+      const built = buildQuickReferenceSegments(guide, questions);
       if (!built.length) {
         return Response.json({ error: 'There is no quick-reference material to narrate yet.' }, { status: 400 });
       }
