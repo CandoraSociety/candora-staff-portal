@@ -1,4 +1,5 @@
 import React from 'react';
+import { ExternalLink } from 'lucide-react';
 import { formatMoney } from '@/lib/donorConstants';
 import { imageFocalStyle } from '@/lib/campaignDisplay';
 import CandoraBrandLockup from '@/components/campaign-public/CandoraBrandLockup';
@@ -27,7 +28,17 @@ export default function CampaignHero({ campaign, raised }) {
       <CandoraGarland campaign={campaign} variant="top" className="absolute inset-x-0 top-0 h-20 sm:h-24" />
 
       <div className="relative max-w-5xl mx-auto px-4 sm:px-6 pt-8 pb-12 sm:pb-16">
-        <CandoraBrandLockup />
+        <div className="flex items-start justify-between gap-4">
+          <CandoraBrandLockup />
+          <a
+            href="https://www.candora.ca"
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-3.5 py-2 text-xs font-semibold text-white backdrop-blur transition hover:bg-white/20 sm:text-sm"
+          >
+            <ExternalLink className="w-4 h-4" /> Visit candora.ca
+          </a>
+        </div>
 
         <div className="mt-10 max-w-2xl space-y-4">
           <h1 className="text-3xl sm:text-5xl font-display font-extrabold leading-tight">{campaign.name}</h1>

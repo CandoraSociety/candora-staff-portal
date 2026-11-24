@@ -75,8 +75,15 @@ export const slugify = (value) =>
     .replace(/^-+|-+$/g, '')
     .slice(0, 60);
 
-export const publicCampaignUrl = (slug) =>
-  `${typeof window !== 'undefined' ? window.location.origin : ''}/campaign/${slug || ''}`;
+// The published app address. Links a supporter opens are always built from this,
+// never from the builder preview origin, so a shared link works outside preview.
+export const PUBLIC_APP_ORIGIN = 'https://candora-360.base44.app';
+
+export const publicCampaignUrl = (slug) => {
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const internal = !origin || /localhost|127\.0\.0\.1|preview/.test(origin);
+  return `${internal ? PUBLIC_APP_ORIGIN : origin}/campaign/${slug || ''}`;
+};
 
 // The giving options a campaign actually offers on its page, in display order.
 export const activeTiers = (campaign) =>
