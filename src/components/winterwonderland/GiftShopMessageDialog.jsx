@@ -36,7 +36,7 @@ const suggestedSendTime = () => {
 export default function GiftShopMessageDialog({ open, onOpenChange, families = [], onSent }) {
   const { toast } = useToast();
   const [tab, setTab] = useState('compose');
-  const [group, setGroup] = useState('all');
+  const [selectedGroups, setSelectedGroups] = useState(() => new Set(['all']));
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
@@ -53,7 +53,7 @@ export default function GiftShopMessageDialog({ open, onOpenChange, families = [
   useEffect(() => {
     if (open) {
       setTab('compose');
-      setGroup('all');
+      setSelectedGroups(new Set(['all']));
       setSelectedIds(new Set());
       setSubject('');
       setBody('');
@@ -78,7 +78,16 @@ export default function GiftShopMessageDialog({ open, onOpenChange, families = [
     return Array.from(seen, ([value, label]) => ({ value, label }));
   }, [families]);
 
-  const recipients = recipientsFor(families, group, selectedIds);
+  const recipients = recipientsFor(families, selectedGroups, selectedIds);
+  // Categories can be combined — a message can go to the families waiting and
+  // the families already checked in, for example.
+  const toggleGroup = (value) => setSelectedGroups(prev => {
+    if (value === 'all') return new Set(['all']);
+    const next = new Set(prev);
+    next.delete('all');
+    if (next.has(value)) next.delete(value); else next.add(value);
+    return next;
+  });
   const toggle = (key) => setSelectedIds(prev => {
     const next = new Set(prev);
     if (next.has(key)) next.delete(key); else next.add(key);
@@ -101,7 +110,7 @@ export default function GiftShopMessageDialog({ open, onOpenChange, families = [
   };
 
   const clearComposer = () => {
-    setGroup('all');
+    setSelectedGroups(new Set(['all']));
     setSelectedIds(new Set());
     setSubject('');
     setBody('');
@@ -238,8 +247,8 @@ export default function GiftShopMessageDialog({ open, onOpenChange, families = [
                 <GiftShopMessageRecipients
                   families={families}
                   groups={groups}
-                  group={group}
-                  onGroupChange={setGroup}
+                  selectedGroups={selectedGroups}
+                  onToggleGroup={toggleGroup}
                   selectedIds={selectedIds}
                   onToggle={toggle}
                 />

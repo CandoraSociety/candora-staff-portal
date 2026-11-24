@@ -1,7 +1,7 @@
 import React from 'react';
 import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { cn } from '@/lib/utils';
 
 // Each row on the tab is its own family — a guardian can hold more than one card
 // — so rows are told apart by id, and a family without an email or phone cannot
@@ -19,16 +19,20 @@ export function uniqueFamilies(families = []) {
   });
 }
 
-// Who a message goes to: every family, one group (a status from the same tab),
-// or chosen individuals.
-export function recipientsFor(families, group, selectedIds) {
+// Who a message goes to: every family, any number of status groups from the same
+// tab, chosen individuals — or a mix of groups and individuals.
+export function recipientsFor(families, selectedGroups = new Set(), selectedIds = new Set()) {
   const reachable = uniqueFamilies(families);
-  if (group === 'all') return reachable;
-  if (group === 'choose') return reachable.filter(f => selectedIds.has(familyRowId(f)));
-  return reachable.filter(f => f.group === group);
+  if (selectedGroups.has('all')) return reachable;
+  const chosen = selectedGroups.has('choose')
+    ? reachable.filter(f => selectedIds.has(familyRowId(f)))
+    : [];
+  const inGroups = reachable.filter(f => selectedGroups.has(f.group));
+  const merged = new Map([...inGroups, ...chosen].map(f => [familyRowId(f), f]));
+  return Array.from(merged.values());
 }
 
-export default function GiftShopMessageRecipients({ families, groups = [], group, onGroupChange, selectedIds, onToggle }) {
+export default function GiftShopMessageRecipients({ families, groups = [], selectedGroups, onToggleGroup, selectedIds, onToggle }) {
   const reachable = uniqueFamilies(families);
   const options = [
     { value: 'all', label: 'All families' },
@@ -40,19 +44,30 @@ export default function GiftShopMessageRecipients({ families, groups = [], group
     <div className="space-y-2">
       <div className="space-y-1.5">
         <Label>Send to</Label>
-        <Select value={group} onValueChange={onGroupChange}>
-          <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            {options.map(option => (
-              <SelectItem key={option.value} value={option.value}>
-                {option.label}{option.value === 'choose' ? '' : ` (${recipientsFor(families, option.value, selectedIds).length})`}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex flex-wrap gap-1.5">
+          {options.map(option => {
+            const on = selectedGroups.has(option.value);
+            const count = recipientsFor(families, new Set([option.value]), selectedIds).length;
+            return (
+              <button
+                key={option.value}
+                type="button"
+                onClick={() => onToggleGroup(option.value)}
+                className={cn(
+                  'rounded-full border px-2.5 py-1 text-xs font-medium transition-colors',
+                  on
+                    ? 'border-primary bg-primary/15 text-accent'
+                    : 'border-input text-muted-foreground hover:border-primary/50',
+                )}
+              >
+                {option.label}{option.value === 'choose' ? '' : ` (${count})`}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {group === 'choose' && (
+      {selectedGroups.has('choose') && (
         <div className="max-h-52 overflow-y-auto rounded-md border divide-y">
           {reachable.length === 0 ? (
             <p className="p-3 text-sm text-muted-foreground">No family has an email or phone number yet.</p>
