@@ -5,35 +5,43 @@
 import { sendGiftShopText } from './giftShopSms.ts';
 import { GIFT_SHOP_PROGRAM_NAME } from './giftShopInvites.ts';
 
-// A message can carry each family's six-digit check-in code. The codes live on
-// the family's registrations, so they are read once and matched to the family by
-// phone number, then by email address.
+// Every family's six-digit check-in code travels with each message until the
+// family has arrived and been checked in. The codes live on the family's
+// registrations, so they are read once and matched to the family by phone
+// number, then by email address.
 export async function loadCheckinCodeLookup(base44) {
   const rows = await base44.asServiceRole.entities.ProgramRegistration.filter({ program_name: GIFT_SHOP_PROGRAM_NAME });
   const byPhone = new Map();
   const byEmail = new Map();
+
+  // A family may hold several registrations under one contact. One code is
+  // enough, and the reminder keeps going out while any child is still expected.
+  const remember = (map, key, row) => {
+    if (!key) return;
+    const existing = map.get(key) || { code: '', pending: false };
+    if (!existing.code && row.checkin_code) existing.code = row.checkin_code;
+    if (row.checked_in !== true) existing.pending = true;
+    map.set(key, existing);
+  };
+
   (rows || []).forEach((row) => {
-    const code = row.checkin_code;
-    if (!code) return;
+    if (!row.checkin_code) return;
     const phone = String(row.parent_guardian_phone || row.participant_phone || '').replace(/\D/g, '').slice(-10);
-    if (phone.length === 10) byPhone.set(phone, code);
+    if (phone.length === 10) remember(byPhone, phone, row);
     const email = String(row.parent_guardian_email || row.participant_email || '').trim().toLowerCase();
-    if (email) byEmail.set(email, code);
+    if (email) remember(byEmail, email, row);
   });
 
   return (family) => {
     const phone = String(family.guardian_phone || '').replace(/\D/g, '').slice(-10);
-    if (phone.length === 10 && byPhone.has(phone)) return byPhone.get(phone);
-    const email = String(family.guardian_email || '').trim().toLowerCase();
-    return byEmail.get(email) || '';
+    const entry = (phone.length === 10 && byPhone.get(phone))
+      || byEmail.get(String(family.guardian_email || '').trim().toLowerCase());
+    // Once the family is checked in the code has done its job.
+    return entry && entry.pending ? entry.code : '';
   };
 }
 
-// The message text a family receives, with their own code at the end when the
-// reminder asks for it.
-export function messageBodyFor(body, code) {
-  return code ? `${body}\n\nYour check-in code: ${code}` : body;
-}
+const CODE_REMINDER = 'Reminder - Your Check-In code when you arrive at Kids Gift Shop is';
 
 const BRAND_LOGO = 'https://media.base44.com/images/public/6a249282cb496579542673b7/c7fbd36e2_logo.png';
 const CONTACT_EMAIL = 'info@candorasociety.com';
@@ -47,7 +55,20 @@ const escapeHtml = (value) => String(value || '').replace(/[&<>"]/g, (char) => (
 
 const firstNameOf = (name) => String(name || '').trim().split(/\s+/)[0] || 'there';
 
-export function emailHtml({ guardianName, subject, body, attachmentName }) {
+// The check-in reminder sits in its own highlighted block under the message, so
+// it never reads as another paragraph of the message itself.
+const codeReminderHtml = (code) => `
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0 0;">
+          <tr><td style="background:#fffaeb;border:1px solid #fccf03;border-radius:10px;padding:14px 16px;">
+            <p style="margin:0 0 4px;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#626784;font-family:Arial,sans-serif;">Reminder</p>
+            <p style="margin:0;font-size:15px;line-height:1.5;color:#080c21;font-family:Inter,Arial,sans-serif;">
+              Your Check-In code when you arrive at Kids Gift Shop is
+              <strong style="font-size:20px;letter-spacing:.08em;color:#0a0f29;">${escapeHtml(code)}</strong>
+            </p>
+          </td></tr>
+        </table>`;
+
+export function emailHtml({ guardianName, subject, body, attachmentName, checkinCode }) {
   return `<!doctype html>
 <html><body style="margin:0;padding:0;background:#f9fafb;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;padding:24px 12px;">
@@ -61,6 +82,7 @@ export function emailHtml({ guardianName, subject, body, attachmentName }) {
         <h1 style="margin:0 0 16px;font-size:22px;line-height:1.25;color:#0a0f29;font-family:Nunito,Arial,sans-serif;">${escapeHtml(subject)}</h1>
         <p style="margin:0 0 14px;font-size:15px;color:#080c21;">Hi ${escapeHtml(firstNameOf(guardianName))},</p>
         <div style="font-size:15px;line-height:1.6;color:#080c21;white-space:pre-wrap;">${escapeHtml(body)}</div>
+        ${checkinCode ? codeReminderHtml(checkinCode) : ''}
         ${attachmentName ? `<p style="margin:18px 0 0;font-size:14px;color:#626784;">Attached: ${escapeHtml(attachmentName)}</p>` : ''}
       </td></tr>
       <tr><td style="padding:16px 28px 22px;border-top:1px solid #dadce7;margin-top:20px;">
@@ -80,7 +102,8 @@ export function emailHtml({ guardianName, subject, body, attachmentName }) {
 // One family, both channels. A family with only a phone number is reached by
 // text alone; a family with only an email is reached by email alone. The family
 // is { family_key, guardian_name, guardian_email, guardian_phone }.
-export async function messageFamily(base44, family, { subject, body, attachment, sentByName }) {
+export async function messageFamily(base44, family, { subject, body, attachment, sentByName, checkinCode }) {
+  const code = String(checkinCode || '').trim();
   const familyKey = String(family.family_key || '').trim();
   const name = String(family.guardian_name || '').trim();
   const email = String(family.guardian_email || '').trim();
@@ -95,7 +118,7 @@ export async function messageFamily(base44, family, { subject, body, attachment,
       const sent = await base44.asServiceRole.integrations.Core.SendEmail({
         to: email,
         subject,
-        html: emailHtml({ guardianName: name, subject, body, attachmentName: attachment?.name }),
+        html: emailHtml({ guardianName: name, subject, body, attachmentName: attachment?.name, checkinCode: code }),
         category: 'transactional',
         from_name: 'Candora 360',
         ...(attachment?.file_uri
@@ -114,7 +137,10 @@ export async function messageFamily(base44, family, { subject, body, attachment,
   }
 
   if (phone) {
-    const text = await sendGiftShopText(phone, `${subject}\n\n${body}`);
+    const text = await sendGiftShopText(
+      phone,
+      code ? `${subject}\n\n${body}\n\n${CODE_REMINDER} ${code}` : `${subject}\n\n${body}`,
+    );
     if (text.ok) texted = true;
     // Keep the reason even when the email worked, so staff can see why a family
     // was only reached on one channel.

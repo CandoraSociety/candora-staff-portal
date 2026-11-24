@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
-import { messageFamily, loadCheckinCodeLookup, messageBodyFor } from '../../shared/giftShopFamilyMessage.ts';
+import { messageFamily, loadCheckinCodeLookup } from '../../shared/giftShopFamilyMessage.ts';
 
 // Sends the Kids Gift Shop messages the desk scheduled, once each one's time has
 // come. The scheduled workflow calls it every few minutes. It takes no input and
@@ -28,24 +28,20 @@ export default async function (req: Request): Promise<Response> {
         ? { name: item.attachment_name || 'attachment', file_uri: item.attachment_url }
         : null;
 
-      if (item.include_checkin_code && !codeForFamily) codeForFamily = await loadCheckinCodeLookup(base44);
+      if (!codeForFamily) codeForFamily = await loadCheckinCodeLookup(base44);
 
       const rows: any[] = [];
       // Small batches keep the worker's outbound connections in hand.
       for (let index = 0; index < families.length; index += 3) {
         const batch = families.slice(index, index + 3);
         const settled = await Promise.allSettled(
-          batch.map((family: any) => {
-            const code = item.include_checkin_code
-              ? (family.checkin_code || (codeForFamily ? codeForFamily(family) : ''))
-              : '';
-            return messageFamily(base44, family, {
-              subject: item.subject,
-              body: messageBodyFor(item.body, code),
-              attachment,
-              sentByName: item.sent_by_name || 'Scheduled message',
-            });
-          }),
+          batch.map((family: any) => messageFamily(base44, family, {
+            subject: item.subject,
+            body: item.body,
+            checkinCode: family.checkin_code || codeForFamily(family),
+            attachment,
+            sentByName: item.sent_by_name || 'Scheduled message',
+          })),
         );
         settled.forEach((outcome, position) => {
           rows.push(outcome.status === 'fulfilled'

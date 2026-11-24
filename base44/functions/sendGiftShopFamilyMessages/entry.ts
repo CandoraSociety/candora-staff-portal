@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
-import { messageFamily, loadCheckinCodeLookup, messageBodyFor } from '../../shared/giftShopFamilyMessage.ts';
+import { messageFamily, loadCheckinCodeLookup } from '../../shared/giftShopFamilyMessage.ts';
 
 // Sends one staff-written message to Kids Gift Shop families — by email and by
 // text, whichever contact details each family has on file — and keeps a record
@@ -37,9 +37,8 @@ export default async function (req: Request): Promise<Response> {
     if (!families.length) return Response.json({ error: 'Those families could not be identified.' }, { status: 400 });
 
     const results: any[] = [];
-    // A reminder can carry each family's six-digit check-in code.
-    const includeCode = payload.include_checkin_code === true;
-    const codeForFamily = includeCode ? await loadCheckinCodeLookup(base44) : null;
+    // Every message carries the family's check-in code until they arrive.
+    const codeForFamily = await loadCheckinCodeLookup(base44);
     // Small batches keep the worker's outbound connections in hand while a
     // whole status group is being messaged.
     for (let index = 0; index < families.length; index += 3) {
@@ -47,7 +46,8 @@ export default async function (req: Request): Promise<Response> {
       const settled = await Promise.allSettled(
         batch.map((family: any) => messageFamily(base44, family, {
           subject,
-          body: messageBodyFor(body, codeForFamily ? codeForFamily(family) : ''),
+          body,
+          checkinCode: family.checkin_code || codeForFamily(family),
           attachment,
           sentByName,
         })),
