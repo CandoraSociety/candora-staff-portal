@@ -10,7 +10,15 @@ export const GUIDE_VOICES = [
   { id: 'marin', label: 'Marin', note: 'Natural, conversational female' },
 ];
 
-export const shareLink = (guide) => `${window.location.origin}/interview-guide/${guide.token}`;
+// The published app's address. A guide's share link must never carry the builder
+// preview host, because the spokesperson opening it is not signed in to the preview.
+export const PUBLIC_APP_ORIGIN = 'https://candora-360.base44.app';
+
+export const shareLink = (guide) => {
+  const origin = typeof window !== 'undefined' ? window.location.origin : '';
+  const internal = !origin || /localhost|127\.0\.0\.1|preview/.test(origin);
+  return `${internal ? PUBLIC_APP_ORIGIN : origin}/interview-guide/${guide.token}`;
+};
 
 export const newToken = () =>
   (crypto.randomUUID ? crypto.randomUUID() : `${Date.now()}-${Math.random()}`).replace(/-/g, '');
