@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useToast } from '@/components/ui/use-toast';
 import { Clock, Loader2, Paperclip, Send, X } from 'lucide-react';
 import GiftShopMessageRecipients, { recipientsFor } from '@/components/winterwonderland/GiftShopMessageRecipients';
@@ -40,6 +41,7 @@ export default function GiftShopMessageDialog({ open, onOpenChange, families = [
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
   const [attachment, setAttachment] = useState(null);
+  const [includeDetails, setIncludeDetails] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [sending, setSending] = useState(false);
   const [results, setResults] = useState(null);
@@ -56,6 +58,7 @@ export default function GiftShopMessageDialog({ open, onOpenChange, families = [
       setSubject('');
       setBody('');
       setAttachment(null);
+      setIncludeDetails(false);
       setUploading(false);
       setSending(false);
       setResults(null);
@@ -112,6 +115,7 @@ export default function GiftShopMessageDialog({ open, onOpenChange, families = [
     setSubject('');
     setBody('');
     setAttachment(null);
+    setIncludeDetails(false);
     setTiming('now');
     setWhen('');
   };
@@ -135,6 +139,7 @@ export default function GiftShopMessageDialog({ open, onOpenChange, families = [
           subject: subject.trim(),
           body: body.trim(),
           attachment,
+          include_details: includeDetails,
         });
         collected.push(...(response.data?.results || []));
       }
@@ -179,6 +184,7 @@ export default function GiftShopMessageDialog({ open, onOpenChange, families = [
         })),
         recipient_count: recipients.length,
         send_at: sendAt.toISOString(),
+        include_details: includeDetails,
         status: 'pending',
         sent_by_name: me?.full_name || me?.email || '',
       });
@@ -255,6 +261,19 @@ export default function GiftShopMessageDialog({ open, onOpenChange, families = [
                   <Label>Message</Label>
                   <Textarea rows={6} value={body} onChange={e => setBody(e.target.value)} placeholder="Write the message the families will receive" />
                 </div>
+                <label className="flex items-start gap-2 rounded-md border px-3 py-2 cursor-pointer">
+                  <Checkbox
+                    checked={includeDetails}
+                    onCheckedChange={value => setIncludeDetails(value === true)}
+                    className="mt-0.5"
+                  />
+                  <span className="text-sm">
+                    Include their registration details
+                    <span className="block text-xs text-muted-foreground">
+                      Adds the event date, their shopping time, the children they registered and who each child’s gift is for — until they check in.
+                    </span>
+                  </span>
+                </label>
                 <div className="space-y-1.5">
                   <Label>Attachment</Label>
                   {attachment ? (

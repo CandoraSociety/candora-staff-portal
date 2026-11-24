@@ -1,5 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.54';
-import { messageFamily, loadCheckinCodeLookup } from '../../shared/giftShopFamilyMessage.ts';
+import { messageFamily, loadCheckinCodeLookup, loadFamilyDetailsLookup } from '../../shared/giftShopFamilyMessage.ts';
 
 // Sends the Kids Gift Shop messages the desk scheduled, once each one's time has
 // come. The scheduled workflow calls it every few minutes. It takes no input and
@@ -18,6 +18,7 @@ export default async function (req: Request): Promise<Response> {
     const due = (pending.items || []).filter((item: any) => new Date(item.send_at || 0).getTime() <= now);
     const results: any[] = [];
     let codeForFamily: any = null;
+    let detailsForFamily: any = null;
 
     for (const item of due) {
       // Claim it first, so a second run never sends the same message twice.
@@ -29,6 +30,8 @@ export default async function (req: Request): Promise<Response> {
         : null;
 
       if (!codeForFamily) codeForFamily = await loadCheckinCodeLookup(base44);
+      // A scheduled message keeps the choice staff made when they wrote it.
+      if (item.include_details && !detailsForFamily) detailsForFamily = await loadFamilyDetailsLookup(base44);
 
       const rows: any[] = [];
       // Small batches keep the worker's outbound connections in hand.
@@ -39,6 +42,7 @@ export default async function (req: Request): Promise<Response> {
             subject: item.subject,
             body: item.body,
             checkinCode: family.checkin_code || codeForFamily(family),
+            familyDetails: detailsForFamily ? detailsForFamily(family) : null,
             attachment,
             sentByName: item.sent_by_name || 'Scheduled message',
           })),

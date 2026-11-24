@@ -3,37 +3,31 @@
 // keeps the family's message history. Shared by the immediate send and the
 // scheduled send, so both behave the same way and both leave the same trail.
 import { greetText, sendGiftShopText } from './giftShopSms.ts';
-import { GIFT_SHOP_PROGRAM_NAME } from './giftShopInvites.ts';
+import { GIFT_SHOP_PROGRAM_NAME, slotLabel } from './giftShopInvites.ts';
+import { GIFT_SHOP_EVENT_DATE, giftSummary } from './giftShopCheckin.ts';
 
-// Every family's six-digit check-in code travels with each message until the
-// family has arrived and been checked in. The codes live on the family's
-// registrations, so they are read once and matched to the family by phone
-// number, then by email address.
-export async function loadCheckinCodeLookup(base44) {
+const phoneOf = (value) => String(value || '').replace(/\D/g, '').slice(-10);
+const nameOf = (value) => String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
+const emailOf = (value) => String(value || '').trim().toLowerCase();
+
+// The family's own registrations, matched as closely as possible: their name on
+// the number, then their name on the email address, and only then the number or
+// address on its own. Read once and reused, so a whole send is one lookup.
+export async function loadFamilyRowsLookup(base44) {
   const rows = await base44.asServiceRole.entities.ProgramRegistration.filter({ program_name: GIFT_SHOP_PROGRAM_NAME });
   const byPhoneName = new Map();
   const byEmailName = new Map();
   const byPhone = new Map();
   const byEmail = new Map();
 
-  const phoneOf = (value) => String(value || '').replace(/\D/g, '').slice(-10);
-  const nameOf = (value) => String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
-  const emailOf = (value) => String(value || '').trim().toLowerCase();
-
-  // A family may hold several registrations under one contact. One code is
-  // enough, and the reminder keeps going out while any child is still expected.
-  // The codes seen under a key are kept as a set, so a contact detail shared by
-  // more than one family can never hand out somebody else's code.
   const remember = (map, key, row) => {
     if (!key) return;
-    const entry = map.get(key) || { codes: new Set(), pending: false };
-    if (row.checkin_code) entry.codes.add(row.checkin_code);
-    if (row.checked_in !== true) entry.pending = true;
-    map.set(key, entry);
+    const bucket = map.get(key) || [];
+    bucket.push(row);
+    map.set(key, bucket);
   };
 
   (rows || []).forEach((row) => {
-    if (!row.checkin_code) return;
     const phone = phoneOf(row.parent_guardian_phone || row.participant_phone);
     const name = nameOf(row.parent_guardian_name || row.participant_name);
     const email = emailOf(row.parent_guardian_email || row.participant_email);
@@ -47,22 +41,53 @@ export async function loadCheckinCodeLookup(base44) {
     }
   });
 
-  // Only a key that points at one family's single code is used — anything shared
-  // between families stays silent rather than sending the wrong code.
-  const codeOf = (entry) => (entry && entry.pending && entry.codes.size === 1 ? [...entry.codes][0] : '');
-
   return (family) => {
     const phone = phoneOf(family.guardian_phone);
     const name = nameOf(family.guardian_name);
     const email = emailOf(family.guardian_email);
-    // The family's own rows are matched as closely as possible: their name on
-    // the number, then their name on the email address, and only then the
-    // number or address on its own.
-    const entry = (phone.length === 10 && name && byPhoneName.get(`${phone}|${name}`))
+    return (phone.length === 10 && name && byPhoneName.get(`${phone}|${name}`))
       || (email && name && byEmailName.get(`${email}|${name}`))
       || (phone.length === 10 && byPhone.get(phone))
-      || (email && byEmail.get(email));
-    return codeOf(entry);
+      || (email && byEmail.get(email))
+      || [];
+  };
+}
+
+// Every family's six-digit check-in code travels with each message until the
+// family has arrived and been checked in.
+export async function loadCheckinCodeLookup(base44) {
+  const rowsFor = await loadFamilyRowsLookup(base44);
+
+  return (family) => {
+    const rows = rowsFor(family);
+    const codes = new Set(rows.map((row) => row.checkin_code).filter(Boolean));
+    // Once the family is checked in the code has done its job.
+    const pending = rows.some((row) => row.checked_in !== true);
+    // Only a family with one single code is used — anything shared between
+    // families stays silent rather than sending the wrong code.
+    return pending && codes.size === 1 ? [...codes][0] : '';
+  };
+}
+
+// What a family registered for — the date, their shopping time and each child
+// with who their gifts are for — so a reminder can carry their own details.
+// Stays empty once the family has arrived, and whenever a contact detail is
+// shared by more than one family, so nobody is sent another family's children.
+export async function loadFamilyDetailsLookup(base44) {
+  const rowsFor = await loadFamilyRowsLookup(base44);
+
+  return (family) => {
+    const rows = rowsFor(family);
+    if (!rows.length) return null;
+    if (new Set(rows.map((row) => nameOf(row.parent_guardian_name || row.participant_name))).size > 1) return null;
+    if (!rows.some((row) => row.checked_in !== true)) return null;
+    return {
+      time_label: slotLabel(rows[0].time_slot),
+      children: rows.map((row) => ({
+        name: row.child_name || row.participant_name || 'Child',
+        gifts: giftSummary(row),
+      })),
+    };
   };
 }
 
@@ -94,7 +119,28 @@ const codeReminderHtml = (code) => `
           </td></tr>
         </table>`;
 
-export function emailHtml({ guardianName, subject, body, attachmentName, checkinCode }) {
+// The family's own registration sits in its own block: the date, their shopping
+// time, and each child with who their gifts are for.
+const detailsHtml = (details) => `
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin:20px 0 0;">
+          <tr><td style="background:#f9fafb;border:1px solid #dadce7;border-radius:10px;padding:14px 16px;">
+            <p style="margin:0 0 6px;font-size:11px;letter-spacing:.09em;text-transform:uppercase;color:#626784;font-family:Arial,sans-serif;">Your registration</p>
+            <p style="margin:0 0 8px;font-size:15px;line-height:1.5;color:#080c21;font-family:Inter,Arial,sans-serif;">
+              <strong>${escapeHtml(GIFT_SHOP_EVENT_DATE)}</strong>${details.time_label ? ` · ${escapeHtml(details.time_label)}` : ''}
+            </p>
+            <ul style="margin:0;padding-left:18px;font-size:15px;line-height:1.6;color:#080c21;font-family:Inter,Arial,sans-serif;">
+              ${details.children.map((child) => `<li style="margin:2px 0;"><strong>${escapeHtml(child.name)}</strong> — ${escapeHtml(child.gifts)}</li>`).join('')}
+            </ul>
+          </td></tr>
+        </table>`;
+
+// The same details as one plain paragraph for the text message.
+const detailsText = (details) => [
+  `Your registration: ${GIFT_SHOP_EVENT_DATE}${details.time_label ? `, ${details.time_label}` : ''}`,
+  ...details.children.map((child) => `${child.name} - ${child.gifts}`),
+].join('\n');
+
+export function emailHtml({ guardianName, subject, body, attachmentName, checkinCode, details }) {
   return `<!doctype html>
 <html><body style="margin:0;padding:0;background:#f9fafb;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:#f9fafb;padding:24px 12px;">
@@ -108,6 +154,7 @@ export function emailHtml({ guardianName, subject, body, attachmentName, checkin
         <h1 style="margin:0 0 16px;font-size:22px;line-height:1.25;color:#0a0f29;font-family:Nunito,Arial,sans-serif;">${escapeHtml(subject)}</h1>
         <p style="margin:0 0 14px;font-size:15px;color:#080c21;">Hi ${escapeHtml(firstNameOf(guardianName))},</p>
         <div style="font-size:15px;line-height:1.6;color:#080c21;white-space:pre-wrap;">${escapeHtml(body)}</div>
+        ${details ? detailsHtml(details) : ''}
         ${checkinCode ? codeReminderHtml(checkinCode) : ''}
         ${attachmentName ? `<p style="margin:18px 0 0;font-size:14px;color:#626784;">Attached: ${escapeHtml(attachmentName)}</p>` : ''}
       </td></tr>
@@ -128,8 +175,9 @@ export function emailHtml({ guardianName, subject, body, attachmentName, checkin
 // One family, both channels. A family with only a phone number is reached by
 // text alone; a family with only an email is reached by email alone. The family
 // is { family_key, guardian_name, guardian_email, guardian_phone }.
-export async function messageFamily(base44, family, { subject, body, attachment, sentByName, checkinCode }) {
+export async function messageFamily(base44, family, { subject, body, attachment, sentByName, checkinCode, familyDetails }) {
   const code = String(checkinCode || '').trim();
+  const details = familyDetails && (familyDetails.children || []).length ? familyDetails : null;
   const familyKey = String(family.family_key || '').trim();
   const name = String(family.guardian_name || '').trim();
   const email = String(family.guardian_email || '').trim();
@@ -144,7 +192,7 @@ export async function messageFamily(base44, family, { subject, body, attachment,
       const sent = await base44.asServiceRole.integrations.Core.SendEmail({
         to: email,
         subject,
-        html: emailHtml({ guardianName: name, subject, body, attachmentName: attachment?.name, checkinCode: code }),
+        html: emailHtml({ guardianName: name, subject, body, attachmentName: attachment?.name, checkinCode: code, details }),
         category: 'transactional',
         from_name: FROM_NAME,
         ...(attachment?.file_uri
@@ -163,10 +211,10 @@ export async function messageFamily(base44, family, { subject, body, attachment,
   }
 
   if (phone) {
-    const text = await sendGiftShopText(
-      phone,
-      greetText(name, code ? `${subject}\n\n${body}\n\n${CODE_REMINDER} ${code}` : `${subject}\n\n${body}`),
-    );
+    const parts = [subject, body];
+    if (details) parts.push(detailsText(details));
+    if (code) parts.push(`${CODE_REMINDER} ${code}`);
+    const text = await sendGiftShopText(phone, greetText(name, parts.join('\n\n')));
     if (text.ok) texted = true;
     // Keep the reason even when the email worked, so staff can see why a family
     // was only reached on one channel.

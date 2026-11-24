@@ -72,7 +72,7 @@ export async function stampFamilyCode(base44, rows) {
 }
 
 // "2 gifts (Mother, Father)" — the same wording the name tags use.
-const giftSummary = (reg) => {
+export const giftSummary = (reg) => {
   const count = Number(reg.gift_count) === 2 ? 2 : 1;
   const describe = (gender, recipient) => {
     const who = RECIPIENT_LABELS[recipient] || '';

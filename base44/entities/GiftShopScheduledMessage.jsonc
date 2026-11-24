@@ -58,6 +58,11 @@
       "default": false,
       "description": "When on, each family's own six-digit check-in code is added to the end of the message, so the reminder carries what they need at the desk"
     },
+    "include_details": {
+      "type": "boolean",
+      "default": false,
+      "description": "When on, each family's own registration is added to the message \u2014 the event date, their shopping time, the children they registered and who each child's gift is for \u2014 until they check in"
+    },
     "status": {
       "type": "string",
       "enum": [
