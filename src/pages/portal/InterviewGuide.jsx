@@ -6,6 +6,7 @@ import GuideTopBar from '@/components/interviewguide/GuideTopBar';
 import GuideQuestionCard from '@/components/interviewguide/GuideQuestionCard';
 import GuideQuickReference from '@/components/interviewguide/GuideQuickReference';
 import GuideReferenceTab from '@/components/interviewguide/GuideReferenceTab';
+import GuidePrintDocument from '@/components/interviewguide/GuidePrintDocument';
 import GuideAudioPlayer from '@/components/interviewguide/GuideAudioPlayer';
 import GuidePracticeTimer from '@/components/interviewguide/GuidePracticeTimer';
 import useGuideAudio from '@/components/interviewguide/useGuideAudio';
@@ -133,7 +134,8 @@ export default function InterviewGuide() {
   const shown = simulated ? questions.slice(simIndex, simIndex + 1) : questions;
 
   return (
-    <div className={`guide-reader min-h-screen ${bg} ${text}`} style={{ '--guide-scale': scale }}>
+    <>
+    <div className={`guide-reader min-h-screen print:hidden ${bg} ${text}`} style={{ '--guide-scale': scale }}>
       <GuideTopBar
         guide={guide}
         dark={dark}
@@ -307,5 +309,8 @@ export default function InterviewGuide() {
         />
       )}
     </div>
+
+    <GuidePrintDocument guide={guide} questions={questions} />
+    </>
   );
 }
