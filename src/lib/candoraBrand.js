@@ -10,7 +10,7 @@ export const CANDORA_BRAND = {
   province: 'Alberta',
   postalCode: 'T5W 4W1',
   phone: '780.474.5011',
-  email: 'graham.currie@candorasociety.com',
+  email: 'info@candorasociety.com',
   website: 'www.candora.ca',
 };
 
