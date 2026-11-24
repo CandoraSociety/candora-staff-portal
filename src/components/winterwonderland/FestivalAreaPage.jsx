@@ -18,7 +18,7 @@ function StatusPill({ status, options }) {
 
 // One festival area — its component details and its own scheduled events — with
 // any extra tabs the area needs (the Kids Gift Shop adds Registration).
-export default function FestivalAreaPage({ area, extraTabs = [], accent }) {
+export default function FestivalAreaPage({ area, extraTabs = [], accent, showEvents = true, overviewExtra }) {
   const { toast } = useToast();
   const qc = useQueryClient();
   const [componentDialog, setComponentDialog] = useState(false);
@@ -79,15 +79,18 @@ export default function FestivalAreaPage({ area, extraTabs = [], accent }) {
 
   const overview = !activeFestival ? (
     <Card><CardContent className="pt-6"><p className="text-muted-foreground text-sm">Create a festival first from the Dashboard.</p></CardContent></Card>
-  ) : !component ? (
-    <Card>
-      <CardContent className="pt-6 text-center space-y-3">
-        <p className="text-muted-foreground">{area.label} is not set up for this festival yet.</p>
-        <Button onClick={createComponent}><Plus className="h-4 w-4" /> Set up {area.label}</Button>
-      </CardContent>
-    </Card>
   ) : (
     <>
+      {overviewExtra?.({ festival: activeFestival, component })}
+      {!component ? (
+        <Card>
+          <CardContent className="pt-6 text-center space-y-3">
+            <p className="text-muted-foreground">{area.label} is not set up for this festival yet.</p>
+            <Button onClick={createComponent}><Plus className="h-4 w-4" /> Set up {area.label}</Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <>
       <Card>
         <CardHeader className="flex flex-row items-start justify-between gap-3">
           <div>
@@ -110,29 +113,35 @@ export default function FestivalAreaPage({ area, extraTabs = [], accent }) {
         </CardContent>
       </Card>
 
-      <div className="flex items-center justify-between">
-        <h2 className="text-lg font-display font-semibold">{area.label} Events</h2>
-        <Button size="sm" onClick={() => { setEditingEvent(null); setEventDialog(true); }}><Plus className="h-4 w-4" /> Add Event</Button>
-      </div>
-      {areaEvents.length === 0 ? (
-        <Card><CardContent className="pt-6"><p className="text-muted-foreground text-sm text-center">No events scheduled for {area.label} yet.</p></CardContent></Card>
-      ) : (
-        <div className="space-y-2">
-          {areaEvents.sort((a, b) => new Date(a.event_date) - new Date(b.event_date)).map(ev => (
-            <Card key={ev.id}>
-              <CardContent className="pt-4 flex items-start justify-between">
-                <div>
-                  <div className="flex items-center gap-2"><h4 className="font-medium text-sm">{ev.title}</h4><StatusPill status={ev.status} options={EVENT_STATUS_OPTIONS} /></div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {new Date(ev.event_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
-                    {ev.start_time ? ` at ${ev.start_time}` : ''}{ev.location ? ` • ${ev.location}` : ''}
-                  </p>
-                </div>
-                <Button variant="ghost" size="sm" onClick={() => { setEditingEvent(ev); setEventDialog(true); }}>Edit</Button>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+      {showEvents && (
+        <>
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-display font-semibold">{area.label} Events</h2>
+            <Button size="sm" onClick={() => { setEditingEvent(null); setEventDialog(true); }}><Plus className="h-4 w-4" /> Add Event</Button>
+          </div>
+          {areaEvents.length === 0 ? (
+            <Card><CardContent className="pt-6"><p className="text-muted-foreground text-sm text-center">No events scheduled for {area.label} yet.</p></CardContent></Card>
+          ) : (
+            <div className="space-y-2">
+              {areaEvents.sort((a, b) => new Date(a.event_date) - new Date(b.event_date)).map(ev => (
+                <Card key={ev.id}>
+                  <CardContent className="pt-4 flex items-start justify-between">
+                    <div>
+                      <div className="flex items-center gap-2"><h4 className="font-medium text-sm">{ev.title}</h4><StatusPill status={ev.status} options={EVENT_STATUS_OPTIONS} /></div>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        {new Date(ev.event_date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+                        {ev.start_time ? ` at ${ev.start_time}` : ''}{ev.location ? ` • ${ev.location}` : ''}
+                      </p>
+                    </div>
+                    <Button variant="ghost" size="sm" onClick={() => { setEditingEvent(ev); setEventDialog(true); }}>Edit</Button>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </>
+      )}
+        </>
       )}
     </>
   );

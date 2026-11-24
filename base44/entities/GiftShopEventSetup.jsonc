@@ -1,0 +1,143 @@
+{
+  "name": "GiftShopEventSetup",
+  "type": "object",
+  "description": "The Kids Gift Shop's own event logistics for one Winter Wonderland festival \u2014 when it runs, where the desk sits, how registration and shopping slots work, who coordinates it and what volunteers are needed. Filled in from the Overview tab's setup wizard and shown there; it is kept separate from the registration, check-in and messaging tabs.",
+  "properties": {
+    "festival_id": {
+      "type": "string",
+      "description": "The Winter Wonderland festival this setup belongs to"
+    },
+    "festival_year": {
+      "type": "number",
+      "description": "Festival year, kept alongside the id for quick reading"
+    },
+    "event_name": {
+      "type": "string",
+      "description": "What the event is called, e.g. Kids Gift Shop"
+    },
+    "event_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Day the gift shop runs"
+    },
+    "start_time": {
+      "type": "string",
+      "description": "First shopping slot of the day, 24-hour time, e.g. 10:30"
+    },
+    "end_time": {
+      "type": "string",
+      "description": "Last shopping slot of the day, 24-hour time, e.g. 14:45"
+    },
+    "venue": {
+      "type": "string",
+      "description": "Where the gift shop is held, e.g. Riverview Crossing Shopping Centre"
+    },
+    "desk_location": {
+      "type": "string",
+      "description": "Where families check in on the day, e.g. Unit 118 beside the food court"
+    },
+    "registration_opens": {
+      "type": "string",
+      "format": "date",
+      "description": "Day registration opens"
+    },
+    "registration_closes": {
+      "type": "string",
+      "format": "date",
+      "description": "Day registration closes"
+    },
+    "slot_minutes": {
+      "type": "number",
+      "description": "How long each family's shopping slot lasts, in minutes"
+    },
+    "children_per_slot": {
+      "type": "number",
+      "description": "How many children are booked into each shopping slot"
+    },
+    "gifts_per_child": {
+      "type": "number",
+      "description": "How many gifts each child shops for (1 or 2)"
+    },
+    "gift_price": {
+      "type": "number",
+      "description": "What a gift costs the family, in Canadian dollars"
+    },
+    "coordinator_name": {
+      "type": "string",
+      "description": "Staff member coordinating the gift shop"
+    },
+    "coordinator_phone": {
+      "type": "string",
+      "description": "Coordinator's phone number for the day of the event"
+    },
+    "coordinator_email": {
+      "type": "string",
+      "description": "Coordinator's email address"
+    },
+    "volunteers_needed": {
+      "type": "number",
+      "description": "How many volunteers (elves) the event needs"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Anything else staff need to know about the day"
+    },
+    "updated_by_name": {
+      "type": "string",
+      "description": "Staff member who last saved the setup"
+    }
+  },
+  "required": [
+    "festival_id",
+    "event_name"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
