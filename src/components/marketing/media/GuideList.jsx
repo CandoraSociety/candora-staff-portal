@@ -35,7 +35,7 @@ export default function GuideList() {
         title: 'Untitled interview guide',
         token: newToken(),
         status: 'draft',
-        voice: 'honey',
+        voice: 'nova',
         created_by_name: me?.full_name || '',
       });
     },
