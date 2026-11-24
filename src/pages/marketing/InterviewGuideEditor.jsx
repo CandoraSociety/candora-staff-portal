@@ -10,7 +10,7 @@ import GuideMetaPanel from '@/components/marketing/interviewguide/GuideMetaPanel
 import GuideNarrationPanel from '@/components/marketing/interviewguide/GuideNarrationPanel';
 import GuideQuestionsPanel from '@/components/marketing/interviewguide/GuideQuestionsPanel';
 import GuideReferencePanel from '@/components/marketing/interviewguide/GuideReferencePanel';
-import { generateNarration } from '@/lib/interviewGuides';
+import { generateNarration, narrateStructure } from '@/lib/interviewGuides';
 
 // Builds one interactive guide: its details, its spoken narration, its
 // questions and its quick reference.
@@ -58,6 +58,13 @@ export default function InterviewGuideEditor() {
     }
   };
 
+  // The voice is saved the moment it is chosen, so the audio generated next is
+  // always recorded in the voice that is on screen.
+  const setVoice = async (voice) => {
+    patch({ voice });
+    await base44.entities.InterviewGuide.update(id, { voice });
+  };
+
   const generateSection = async (key, text) => {
     setBusy((b) => ({ ...b, [key]: true }));
     try {
@@ -70,6 +77,24 @@ export default function InterviewGuideEditor() {
       toast.error(error.message || 'Audio generation failed');
     } finally {
       setBusy((b) => ({ ...b, [key]: false }));
+    }
+  };
+
+  const generateQuickReference = async (regenerate) => {
+    setBusy((b) => ({ ...b, quick_reference: true }));
+    try {
+      const result = await narrateStructure({
+        guideId: id,
+        scope: 'quick_reference',
+        voice: guide.voice,
+        regenerate,
+      });
+      await load();
+      toast.success(`Quick-reference narration ready — ${result?.narrated ?? 0} of ${result?.total ?? 0} clips`);
+    } catch (error) {
+      toast.error(error.message || 'Audio generation failed');
+    } finally {
+      setBusy((b) => ({ ...b, quick_reference: false }));
     }
   };
 
@@ -104,16 +129,18 @@ export default function InterviewGuideEditor() {
     await load();
   };
 
-  const generateQuestion = async (question) => {
+  const generateQuestion = async (question, regenerate) => {
     setBusy((b) => ({ ...b, [question.id]: true }));
     try {
-      const url = await generateNarration({ text: question.narration, voice: guide.voice });
-      await base44.entities.InterviewGuideQuestion.update(question.id, {
-        audio_url: url,
-        audio_generated_at: new Date().toISOString(),
+      const result = await narrateStructure({
+        guideId: id,
+        question_id: question.id,
+        scope: 'question',
+        voice: guide.voice,
+        regenerate,
       });
       await load();
-      toast.success('Audio generated and saved');
+      toast.success(`Narration ready — ${result?.narrated ?? 0} of ${result?.total ?? 0} clips`);
     } catch (error) {
       toast.error(error.message || 'Audio generation failed');
     } finally {
@@ -154,7 +181,15 @@ export default function InterviewGuideEditor() {
         </TabsContent>
 
         <TabsContent value="narration" className="mt-4">
-          <GuideNarrationPanel guide={guide} patch={patch} onGenerate={generateSection} busy={busy} />
+          <GuideNarrationPanel
+            guide={guide}
+            patch={patch}
+            busy={busy}
+            quickBusy={busy.quick_reference}
+            onGenerate={generateSection}
+            onGenerateQuickReference={generateQuickReference}
+            onVoiceChange={setVoice}
+          />
         </TabsContent>
 
         <TabsContent value="questions" className="mt-4">
@@ -170,6 +205,10 @@ export default function InterviewGuideEditor() {
 
         <TabsContent value="reference" className="mt-4 space-y-4">
           <GuideReferencePanel guide={guide} patch={patch} />
+          <p className="text-xs text-muted-foreground">
+            The quick-reference narration is read from this material. Regenerate it from the Narration tab after
+            changing anything here.
+          </p>
           <Button onClick={() => save()} disabled={saving}>
             <Save className="w-4 h-4 mr-1" /> {saving ? 'Saving…' : 'Save guide'}
           </Button>

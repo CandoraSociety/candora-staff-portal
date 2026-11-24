@@ -1,7 +1,7 @@
 {
   "name": "InterviewGuide",
   "type": "object",
-  "description": "One interactive media interview preparation guide - who it is for, the show and date, the spoken narration for its sections, and the quick-reference material. The questions themselves live in InterviewGuideQuestion. Staff create and publish a guide; the spokesperson opens it through its own secure link and can read, listen and practise without an app account.",
+  "description": "One interactive media interview preparation guide - who it is for, the show and date, the narrator voice, the spoken narration for its sections, and the quick-reference material. The questions themselves live in InterviewGuideQuestion. Staff create and publish a guide; the spokesperson opens it through its own secure link and can read, listen and practise without an app account.",
   "properties": {
     "title": {
       "type": "string",
@@ -54,21 +54,21 @@
     "voice": {
       "type": "string",
       "enum": [
-        "honey",
-        "sunny",
-        "river",
-        "storm",
-        "spark"
+        "nova",
+        "shimmer",
+        "sage",
+        "coral",
+        "marin"
       ],
       "enumColors": [
         "yellow",
         "pink",
         "blue",
-        "gray",
+        "green",
         "purple"
       ],
-      "default": "honey",
-      "description": "Narrator voice used when audio is generated for this guide. honey = warm and soft, sunny = bright and upbeat, river = calm and neutral"
+      "default": "nova",
+      "description": "Narrator voice used when audio is generated for this guide - a North American female voice, neutral pronunciation. nova = warm and mature (recommended), shimmer = soft, sage = calm, coral = friendly, marin = natural."
     },
     "intro_narration": {
       "type": "string",
@@ -86,13 +86,56 @@
       "type": "string",
       "description": "Stored audio file of the key messages narration"
     },
-    "quick_reference_narration": {
-      "type": "string",
-      "description": "Spoken version of the quick reference - statistics, dates, partners and reminders"
+    "quick_reference_segments": {
+      "type": "array",
+      "description": "The spoken quick reference, one short clip per category heading and per item, in the same order as the written quick reference below.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "cue",
+              "heading",
+              "point"
+            ],
+            "enumColors": [
+              "gray",
+              "purple",
+              "blue"
+            ]
+          },
+          "text": {
+            "type": "string",
+            "description": "Exactly what the narrator says for this clip"
+          },
+          "category_label": {
+            "type": "string",
+            "description": "Category this clip belongs to, shown while it plays"
+          },
+          "pause_after_ms": {
+            "type": "number",
+            "description": "Silence left after this clip before the next one, in milliseconds"
+          },
+          "audio_url": {
+            "type": "string"
+          },
+          "voice": {
+            "type": "string"
+          }
+        }
+      }
     },
-    "quick_reference_audio_url": {
+    "quick_reference_voice": {
       "type": "string",
-      "description": "Stored audio file of the quick reference narration"
+      "description": "Voice the quick-reference narration was recorded in"
+    },
+    "quick_reference_generated_at": {
+      "type": "string",
+      "format": "date-time"
     },
     "quick_reference": {
       "type": "array",

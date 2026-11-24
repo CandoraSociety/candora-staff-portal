@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Play, Pause, Eye, EyeOff, Check } from 'lucide-react';
+import EmphasisText from './EmphasisText';
 
 const palette = (dark) => ({
   card: dark ? 'bg-[#111a3d] border-[#26305a]' : 'bg-white border-[#dadce7]',
@@ -7,97 +8,153 @@ const palette = (dark) => ({
   muted: dark ? 'text-[#a9b0cd]' : 'text-[#626784]',
   soft: dark ? 'bg-[#0d1533]' : 'bg-[#f6f7fb]',
   rule: dark ? 'border-[#26305a]' : 'border-[#e8ebf3]',
+  chip: dark ? 'border-[#26305a] text-[#eef1ff] hover:bg-[#1b2550]' : 'border-[#dadce7] text-[#080c21] hover:bg-[#f0f2f8]',
 });
 
-export default function GuideQuestionCard({ question, number, dark, practice, active, playing, onListen }) {
+// One question and the preparation material behind it: the question as the host
+// will ask it, the key points grouped into thematic categories, and the key
+// message. The category or talking point being narrated is highlighted so the
+// written guide can be followed while listening.
+export default function GuideQuestionCard({
+  question, number, dark, practice, playing,
+  activeQuestionId, activeSegmentId,
+  onPlayQuestion, onPlayCategory, onPlayKeyMessage,
+}) {
   const [revealed, setRevealed] = useState(false);
   const [checked, setChecked] = useState({});
   const p = palette(dark);
-  const points = question.talking_points || [];
+
+  const categories = question.categories || [];
   const checklist = question.checklist || [];
   const showAnswers = !practice || revealed;
+  const hasAudio = (question.narration_segments || []).some((segment) => segment.audio_url);
+  const isThisQuestion = activeQuestionId === question.id;
+  const isActive = (segmentId) => isThisQuestion && activeSegmentId === segmentId;
+  const isKeyActive = isThisQuestion && (activeSegmentId === 'keylabel' || String(activeSegmentId || '').startsWith('k'));
 
   const toggleCheck = (item) => setChecked((c) => ({ ...c, [item]: !c[item] }));
 
   return (
     <article
       id={`question-${number}`}
-      className={`rounded-2xl border p-5 sm:p-6 ${p.card} ${active ? 'ring-2 ring-[#fccf03]' : ''}`}
+      className={`rounded-2xl border p-5 sm:p-6 ${p.card} ${isThisQuestion ? 'ring-2 ring-[#fccf03]' : ''}`}
     >
       <div className="flex gap-3 sm:gap-4">
         <span className="flex-shrink-0 w-9 h-9 rounded-xl bg-[#fccf03] text-[#0a0f29] font-display font-extrabold flex items-center justify-center">
           {number}
         </span>
-        <h2 className={`g-h2 font-display font-bold leading-snug ${p.text}`}>{question.question}</h2>
+        <div className="min-w-0">
+          <p className={`g-small font-semibold uppercase tracking-[0.14em] ${p.muted}`}>Question {number}</p>
+          <h2 className={`g-h2 font-display font-bold leading-snug ${p.text}`}>{question.question}</h2>
+        </div>
       </div>
 
       <div className="flex flex-wrap items-center gap-2 mt-4 print:hidden">
-        {question.audio_url ? (
+        {hasAudio ? (
           <button
             type="button"
-            onClick={onListen}
+            onClick={onPlayQuestion}
             className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-medium border transition-colors ${
-              active
+              isThisQuestion
                 ? 'bg-[#fccf03] text-[#0a0f29] border-[#fccf03]'
-                : dark ? 'border-[#26305a] text-[#eef1ff] hover:bg-[#1b2550]' : 'border-[#dadce7] text-[#080c21] hover:bg-[#f0f2f8]'
+                : p.chip
             }`}
           >
-            {active && playing ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-            {active && playing ? 'Playing this answer' : active ? 'Resume this answer' : 'Listen to this answer'}
+            {isThisQuestion && playing ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+            {isThisQuestion && playing ? 'Playing this briefing' : isThisQuestion ? 'Resume this briefing' : 'Listen to this briefing'}
           </button>
         ) : (
-          <span className={`text-xs ${p.muted}`}>Narration for this answer has not been generated yet.</span>
+          <span className={`text-xs ${p.muted}`}>Narration for this question has not been generated yet.</span>
         )}
 
         {practice && (
           <button
             type="button"
             onClick={() => setRevealed((r) => !r)}
-            className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-medium border ${
-              dark ? 'border-[#26305a] text-[#eef1ff] hover:bg-[#1b2550]' : 'border-[#dadce7] text-[#080c21] hover:bg-[#f0f2f8]'
-            }`}
+            className={`inline-flex items-center gap-2 rounded-full px-3.5 py-1.5 text-sm font-medium border ${p.chip}`}
           >
             {revealed ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            {revealed ? 'Hide talking points' : 'Reveal talking points'}
+            {revealed ? 'Hide the key points' : 'Reveal the key points'}
           </button>
         )}
       </div>
 
       {practice && !revealed && (
         <p className={`mt-4 text-sm rounded-xl px-4 py-3 ${p.soft} ${p.muted}`}>
-          Answer out loud in your own words first. Reveal the talking points when you're ready to compare.
+          Answer out loud in your own words first. Reveal the key points when you're ready to compare.
         </p>
       )}
 
       {showAnswers && (
         <div className="mt-5 space-y-5">
-          {points.length > 0 && (
-            <ul className="space-y-2.5">
-              {points.map((point, i) => (
-                <li key={i} className={`flex gap-2.5 ${p.text}`}>
-                  <span className="mt-[0.55em] w-1.5 h-1.5 rounded-full bg-[#fccf03] flex-shrink-0" />
-                  <div className="min-w-0">
-                    <span>{point.text}</span>
-                    {point.details?.length > 0 && (
-                      <ul className={`mt-1.5 space-y-1.5 pl-3 border-l ${p.rule}`}>
-                        {point.details.map((detail, j) => (
-                          <li key={j} className={`flex gap-2 ${p.muted}`}>
-                            <span className="mt-[0.6em] w-1 h-1 rounded-full bg-current flex-shrink-0 opacity-60" />
-                            <span>{detail}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    )}
-                  </div>
-                </li>
-              ))}
-            </ul>
-          )}
+          <p className={`g-small font-semibold uppercase tracking-[0.14em] ${p.muted}`}>
+            Key points and context for the response
+          </p>
+
+          {categories.map((category, categoryIndex) => (
+            <section key={categoryIndex} className="space-y-2">
+              <div className="flex items-start justify-between gap-3">
+                <h3
+                  className={`g-h3 font-display font-bold ${isActive(`h${categoryIndex}`) ? 'text-[#b38b00]' : p.text}`}
+                >
+                  {category.heading}
+                </h3>
+                {hasAudio && (
+                  <button
+                    type="button"
+                    onClick={() => onPlayCategory(categoryIndex)}
+                    aria-label={`Listen to ${category.heading}`}
+                    className={`flex-shrink-0 inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium print:hidden ${
+                      isActive(`h${categoryIndex}`) ? 'bg-[#fccf03] text-[#0a0f29] border-[#fccf03]' : p.chip
+                    }`}
+                  >
+                    <Play className="w-3 h-3" /> Listen
+                  </button>
+                )}
+              </div>
+
+              <ul className="space-y-2">
+                {(category.points || []).map((point, pointIndex) => {
+                  const active = isActive(`p${categoryIndex}-${pointIndex}`);
+                  return (
+                    <li
+                      key={pointIndex}
+                      id={`guide-seg-${question.id}-p${categoryIndex}-${pointIndex}`}
+                      className={`flex gap-2.5 rounded-lg px-2 py-1.5 -mx-2 transition-colors ${
+                        active ? 'bg-[#fccf03]/25' : ''
+                      }`}
+                    >
+                      <span className="mt-[0.6em] w-1.5 h-1.5 rounded-full bg-[#fccf03] flex-shrink-0" />
+                      <EmphasisText text={point} className={`min-w-0 ${p.text}`} />
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          ))}
 
           {question.key_message && (
-            <div className={`rounded-xl border-l-4 border-[#fccf03] px-4 py-3 ${p.soft}`}>
-              <p className="g-small font-semibold uppercase tracking-[0.14em] text-[#b38b00]">Key message</p>
-              <p className={`mt-1 ${p.text}`}>{question.key_message}</p>
+            <div
+              id={`guide-seg-${question.id}-keylabel`}
+              className={`rounded-xl border-l-4 border-[#fccf03] px-4 py-3 ${p.soft} ${isKeyActive ? 'ring-1 ring-[#fccf03]' : ''}`}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <p className="g-small font-semibold uppercase tracking-[0.14em] text-[#b38b00]">Key message</p>
+                {hasAudio && (
+                  <button
+                    type="button"
+                    onClick={onPlayKeyMessage}
+                    className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium print:hidden ${
+                      isKeyActive ? 'bg-[#fccf03] text-[#0a0f29] border-[#fccf03]' : p.chip
+                    }`}
+                  >
+                    <Play className="w-3 h-3" /> Listen
+                  </button>
+                )}
+              </div>
+              {String(question.key_message).split(/\n{2,}/).filter(Boolean).map((paragraph, index) => (
+                <p key={index} className={`mt-1 ${p.text}`}>{paragraph}</p>
+              ))}
             </div>
           )}
 

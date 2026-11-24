@@ -1,7 +1,7 @@
 {
   "name": "InterviewGuideQuestion",
   "type": "object",
-  "description": "One question inside an interview preparation guide - the question as the host will ask it, the written talking points, the single key message to land, and the spoken narration with its stored audio. Questions are ordered by display_order so staff can reorder them.",
+  "description": "One question inside an interview preparation guide - the question as the host will ask it, the preparation material grouped into thematic categories of talking points, the single key message to land, and the spoken narration broken into short clips (question, category headings, individual talking points, key message) each with the pause that follows it. Questions are ordered by display_order so staff can reorder them.",
   "properties": {
     "guide_id": {
       "type": "string",
@@ -16,27 +16,32 @@
       "type": "string",
       "description": "The question as the host will ask it"
     },
-    "talking_points": {
+    "categories": {
       "type": "array",
-      "description": "The written talking points, each with optional sub-points",
+      "description": "The preparation material for this question, grouped into thematic categories. Each category has a heading that is spoken aloud and shown as a subheading, and its own individual talking points. Written and spoken versions follow this same order.",
       "items": {
         "type": "object",
         "properties": {
-          "text": {
-            "type": "string"
+          "heading": {
+            "type": "string",
+            "description": "Thematic category heading, e.g. Our history and community"
           },
-          "details": {
+          "points": {
             "type": "array",
+            "description": "The individual talking points in this category, one short statement each",
             "items": {
               "type": "string"
             }
           }
-        }
+        },
+        "required": [
+          "heading"
+        ]
       }
     },
     "key_message": {
       "type": "string",
-      "description": "The one message to land in this answer"
+      "description": "The one message to land in this answer. Paragraphs are separated by a blank line."
     },
     "checklist": {
       "type": "array",
@@ -45,13 +50,70 @@
         "type": "string"
       }
     },
-    "narration": {
-      "type": "string",
-      "description": "Spoken version of this question and its talking points - conversational, written to be heard rather than read"
+    "narration_segments": {
+      "type": "array",
+      "description": "The spoken narration, one short clip per question, category heading, talking point and key message, each with the pause that follows it so the listener has time to absorb the material.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Stable id of this clip within the question, e.g. q, cue, h0, p1-2, keylabel, k0"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "question",
+              "cue",
+              "heading",
+              "point",
+              "keylabel",
+              "key"
+            ],
+            "enumColors": [
+              "blue",
+              "gray",
+              "purple",
+              "blue",
+              "yellow",
+              "green"
+            ],
+            "description": "question = the question as asked; cue = the spoken section cue; heading = a category heading; point = one talking point; keylabel = the words Key message; key = a paragraph of the key message"
+          },
+          "text": {
+            "type": "string",
+            "description": "Exactly what the narrator says for this clip"
+          },
+          "category_label": {
+            "type": "string",
+            "description": "Category this clip belongs to, shown while it plays"
+          },
+          "category_index": {
+            "type": "number",
+            "description": "Index of the category in categories, for category playback"
+          },
+          "point_index": {
+            "type": "number",
+            "description": "Index of the talking point inside its category"
+          },
+          "pause_after_ms": {
+            "type": "number",
+            "description": "Silence left after this clip before the next one, in milliseconds"
+          },
+          "audio_url": {
+            "type": "string",
+            "description": "Stored audio file of this clip"
+          },
+          "voice": {
+            "type": "string",
+            "description": "Voice this clip was recorded in, so a voice change is noticed"
+          }
+        }
+      }
     },
-    "audio_url": {
+    "voice_used": {
       "type": "string",
-      "description": "Stored audio file of this question's narration"
+      "description": "Voice the current narration was recorded in"
     },
     "audio_generated_at": {
       "type": "string",

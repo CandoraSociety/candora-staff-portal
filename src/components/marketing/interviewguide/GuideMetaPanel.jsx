@@ -7,7 +7,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Save, ExternalLink, Link2 } from 'lucide-react';
 import { shareLink } from '@/lib/interviewGuides';
 
-const VOICES = ['honey', 'sunny', 'river', 'storm', 'spark'];
 const STATUSES = ['draft', 'published', 'archived'];
 
 export default function GuideMetaPanel({ guide, patch, onSave, saving }) {
@@ -30,16 +29,10 @@ export default function GuideMetaPanel({ guide, patch, onSave, saving }) {
         <div><Label>Show</Label><Input value={guide.show_name || ''} onChange={(e) => patch({ show_name: e.target.value })} /></div>
         <div><Label>Outlet</Label><Input value={guide.outlet || ''} onChange={(e) => patch({ outlet: e.target.value })} /></div>
         <div><Label>Interview date</Label><Input type="date" value={guide.interview_date || ''} onChange={(e) => patch({ interview_date: e.target.value })} /></div>
-        <div>
-          <Label>Narrator voice</Label>
-          <Select value={guide.voice || 'honey'} onValueChange={(v) => patch({ voice: v })}>
-            <SelectTrigger><SelectValue /></SelectTrigger>
-            <SelectContent>
-              {VOICES.map((v) => <SelectItem key={v} value={v}>{v.charAt(0).toUpperCase() + v.slice(1)}</SelectItem>)}
-            </SelectContent>
-          </Select>
-        </div>
       </div>
+      <p className="text-xs text-muted-foreground">
+        The narrator voice is chosen and previewed on the Narration tab.
+      </p>
 
       <div className="grid grid-cols-2 gap-3">
         <div>

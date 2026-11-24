@@ -64,7 +64,9 @@ export default function GuideList() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
         {guides.map((guide) => {
           const count = questions.filter((q) => q.guide_id === guide.id).length;
-          const ready = questions.filter((q) => q.guide_id === guide.id && q.audio_url).length;
+          const ready = questions.filter(
+            (q) => q.guide_id === guide.id && (q.narration_segments || []).some((segment) => segment.audio_url)
+          ).length;
           return (
             <Card key={guide.id}>
               <CardContent className="p-4 space-y-2">

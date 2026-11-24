@@ -8,6 +8,7 @@ import GuideQuickReference from '@/components/interviewguide/GuideQuickReference
 import GuideAudioPlayer from '@/components/interviewguide/GuideAudioPlayer';
 import GuidePracticeTimer from '@/components/interviewguide/GuidePracticeTimer';
 import useGuideAudio from '@/components/interviewguide/useGuideAudio';
+import { buildPlaylist } from '@/lib/interviewGuides';
 
 const SCALES = [0.9, 1, 1.12, 1.25, 1.4];
 
@@ -21,6 +22,7 @@ export default function InterviewGuide() {
   const [practice, setPractice] = useState(false);
   const [simulated, setSimulated] = useState(false);
   const [simIndex, setSimIndex] = useState(0);
+  const [follow, setFollow] = useState(true);
 
   useEffect(() => {
     let alive = true;
@@ -43,27 +45,55 @@ export default function InterviewGuide() {
 
   const { guide, questions, loading, error } = state;
 
-  const sections = useMemo(() => {
-    if (!guide) return [];
-    const list = [];
-    if (guide.intro_audio_url) list.push({ id: 'intro', label: 'Introduction', url: guide.intro_audio_url });
-    questions.forEach((q, i) => {
-      if (q.audio_url) list.push({ id: `q-${q.id}`, label: `Question ${i + 1}`, url: q.audio_url });
+  const playlist = useMemo(() => buildPlaylist(guide, questions), [guide, questions]);
+  const audio = useGuideAudio(playlist);
+  const item = audio.current >= 0 ? playlist[audio.current] : null;
+
+  // Consecutive clips that belong to the same category, so the player can step
+  // between categories rather than between single talking points.
+  const groups = useMemo(() => {
+    const out = [];
+    playlist.forEach((entry, index) => {
+      const key = `${entry.sectionLabel}|${entry.categoryLabel}`;
+      const last = out[out.length - 1];
+      if (last && last.key === key) last.indices.push(index);
+      else out.push({ key, indices: [index] });
     });
-    if (guide.key_messages_audio_url) list.push({ id: 'key', label: 'Key messages', url: guide.key_messages_audio_url });
-    if (guide.quick_reference_audio_url) list.push({ id: 'quick', label: 'Quick reference', url: guide.quick_reference_audio_url });
-    return list;
-  }, [guide, questions]);
+    return out;
+  }, [playlist]);
 
-  const audio = useGuideAudio(sections);
-  const currentId = audio.section?.id;
+  const groupAt = groups.findIndex((group) => group.indices.includes(audio.current));
 
-  const playSection = (id) => {
-    const at = sections.findIndex((s) => s.id === id);
-    if (at < 0) return;
-    if (currentId === id && audio.playing) { audio.toggle(); return; }
-    audio.playAt(at);
+  const indicesFor = (predicate) =>
+    playlist.map((entry, index) => (predicate(entry) ? index : -1)).filter((index) => index >= 0);
+
+  const playAll = () => audio.playIndices(indicesFor(() => true));
+  const playIntro = () => audio.playIndices(indicesFor((entry) => entry.segmentId === 'intro'));
+  const playKeyMessages = () => audio.playIndices(indicesFor((entry) => entry.section === 'key'));
+  const playQuickReference = () => audio.playIndices(indicesFor((entry) => entry.section === 'quick'));
+  const playQuickBlock = (label) =>
+    audio.playIndices(indicesFor((entry) => entry.section === 'quick' && entry.categoryLabel === label));
+  const playQuestion = (questionId) =>
+    audio.playIndices(indicesFor((entry) => entry.questionId === questionId));
+  const playCategory = (questionId, categoryIndex) =>
+    audio.playIndices(indicesFor((entry) => entry.questionId === questionId && entry.categoryIndex === categoryIndex));
+  const playKeyMessage = (questionId) =>
+    audio.playIndices(indicesFor((entry) => entry.questionId === questionId && (entry.kind === 'keylabel' || entry.kind === 'key')));
+
+  const playGroup = (index) => {
+    const group = groups[index];
+    if (group) audio.playIndices(group.indices);
   };
+
+  // Keep the talking point being narrated in view, unless the listener has turned
+  // following off so they can browse the rest of the guide while it plays.
+  useEffect(() => {
+    if (!follow || !audio.playing || !item) return;
+    const target = item.questionId
+      ? document.getElementById(`guide-seg-${item.questionId}-${item.segmentId}`)
+      : null;
+    if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, [item?.key, follow, audio.playing]);
 
   const jumpQuickRef = () => {
     document.getElementById('quick-reference')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -109,8 +139,8 @@ export default function InterviewGuide() {
         onScale={(dir) => setScaleIndex((i) => Math.min(SCALES.length - 1, Math.max(0, i + dir)))}
         practice={practice}
         onTogglePractice={() => { setPractice((p) => !p); setSimulated(false); }}
-        onListenAll={() => audio.playAt(0)}
-        hasAudio={sections.length > 0}
+        onListenAll={playAll}
+        hasAudio={playlist.length > 0}
         onJumpQuickRef={jumpQuickRef}
       />
 
@@ -123,34 +153,36 @@ export default function InterviewGuide() {
             {guide.intro_audio_url && (
               <button
                 type="button"
-                onClick={() => playSection('intro')}
+                onClick={playIntro}
                 className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm font-medium ${
-                  currentId === 'intro' ? 'bg-[#fccf03] text-[#0a0f29] border-[#fccf03]' : softBtn
+                  item?.segmentId === 'intro' ? 'bg-[#fccf03] text-[#0a0f29] border-[#fccf03]' : softBtn
                 }`}
               >
                 <Play className="w-4 h-4" /> Listen to the introduction
               </button>
             )}
           </div>
-          <p className="mt-2">{guide.intro_narration}</p>
+          {String(guide.intro_narration || '').split(/\n{2,}/).filter(Boolean).map((paragraph, index) => (
+            <p key={index} className="mt-2">{paragraph}</p>
+          ))}
 
-          <div className="mt-4 flex flex-wrap gap-2">
+          <div className="mt-4 flex flex-wrap gap-2 print:hidden">
             <button
               type="button"
-              onClick={() => playSection('key')}
+              onClick={playKeyMessages}
               disabled={!guide.key_messages_audio_url}
               className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm font-medium disabled:opacity-40 ${
-                currentId === 'key' ? 'bg-[#fccf03] text-[#0a0f29] border-[#fccf03]' : softBtn
+                item?.section === 'key' ? 'bg-[#fccf03] text-[#0a0f29] border-[#fccf03]' : softBtn
               }`}
             >
               <Play className="w-3.5 h-3.5" /> Listen to key messages only
             </button>
             <button
               type="button"
-              onClick={() => playSection('quick')}
-              disabled={!guide.quick_reference_audio_url}
+              onClick={playQuickReference}
+              disabled={!playlist.some((entry) => entry.section === 'quick')}
               className={`inline-flex items-center gap-2 rounded-full border px-3.5 py-1.5 text-sm font-medium disabled:opacity-40 ${
-                currentId === 'quick' ? 'bg-[#fccf03] text-[#0a0f29] border-[#fccf03]' : softBtn
+                item?.section === 'quick' ? 'bg-[#fccf03] text-[#0a0f29] border-[#fccf03]' : softBtn
               }`}
             >
               <Play className="w-3.5 h-3.5" /> Listen to the quick reference
@@ -199,28 +231,31 @@ export default function InterviewGuide() {
           </div>
         )}
 
-        {shown.map((question) => {
-          const number = questions.indexOf(question) + 1;
-          return (
-            <GuideQuestionCard
-              key={question.id}
-              question={question}
-              number={number}
-              dark={dark}
-              practice={practice}
-              active={currentId === `q-${question.id}`}
-              playing={audio.playing}
-              onListen={() => playSection(`q-${question.id}`)}
-            />
-          );
-        })}
+        {shown.map((question) => (
+          <GuideQuestionCard
+            key={question.id}
+            question={question}
+            number={questions.findIndex((q) => q.id === question.id) + 1}
+            dark={dark}
+            practice={practice}
+            playing={audio.playing}
+            activeQuestionId={item?.questionId || null}
+            activeSegmentId={item?.questionId === question.id ? item.segmentId : null}
+            onPlayQuestion={() => playQuestion(question.id)}
+            onPlayCategory={(categoryIndex) => playCategory(question.id, categoryIndex)}
+            onPlayKeyMessage={() => playKeyMessage(question.id)}
+          />
+        ))}
 
         {!simulated && (
           <GuideQuickReference
             guide={guide}
             dark={dark}
-            active={currentId === 'quick'}
-            onListen={() => playSection('quick')}
+            active={item?.section === 'quick'}
+            activeCategory={item?.section === 'quick' ? item.categoryLabel : null}
+            playing={audio.playing}
+            onListen={playQuickReference}
+            onPlayBlock={playQuickBlock}
           />
         )}
 
@@ -240,7 +275,17 @@ export default function InterviewGuide() {
         </button>
       )}
 
-      {sections.length > 0 && <GuideAudioPlayer audio={audio} total={sections.length} dark={dark} />}
+      {playlist.length > 0 && (
+        <GuideAudioPlayer
+          audio={audio}
+          item={item}
+          dark={dark}
+          follow={follow}
+          onToggleFollow={() => setFollow((f) => !f)}
+          onPrevCategory={() => playGroup(groupAt - 1)}
+          onNextCategory={() => playGroup(groupAt + 1)}
+        />
+      )}
     </div>
   );
 }
