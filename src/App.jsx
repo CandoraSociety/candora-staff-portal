@@ -23,7 +23,6 @@ import SelfRegister from '@/pages/portal/SelfRegister';
 import GiftShopInvite from '@/pages/portal/GiftShopInvite';
 import CampaignPublicPage from '@/pages/portal/CampaignPublicPage';
 import InterviewGuide from '@/pages/portal/InterviewGuide';
-import InterviewGuideQuickReference from '@/pages/portal/InterviewGuideQuickReference';
 import GeneralDonationPage from '@/pages/portal/GeneralDonationPage';
 import GiftThankYou from '@/pages/portal/GiftThankYou';
 import CampaignGiftCardPage from '@/pages/portal/CampaignGiftCardPage';
@@ -521,7 +520,6 @@ const AuthenticatedApp = () => {
 
       {/* Interview preparation guide — opened by its own share link, no login */}
       <Route path="/interview-guide/:token" element={<InterviewGuide />} />
-      <Route path="/interview-guide/:token/quick-reference" element={<InterviewGuideQuickReference />} />
 
       {/* Public general donation page — general fund giving plus every open campaign */}
       <Route path="/donate" element={<GeneralDonationPage />} />

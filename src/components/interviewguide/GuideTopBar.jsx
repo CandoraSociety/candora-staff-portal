@@ -1,10 +1,10 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { Play, Sun, Moon, Type, ListChecks, X, Printer } from 'lucide-react';
 
-// Sticky top bar: brand, what this guide is, and the reading controls.
+// Sticky top bar: brand, what this guide is, the tab switch and the reading controls.
 export default function GuideTopBar({
-  guide, dark, onToggleDark, onScale, scale, practice, onTogglePractice, onListenAll, hasAudio, quickRefPath,
+  guide, dark, onToggleDark, onScale, scale, practice, onTogglePractice, onListenAll, hasAudio,
+  view, onChangeView,
 }) {
   const surface = dark ? 'bg-[#0a0f29] border-[#26305a] text-[#eef1ff]' : 'bg-white border-[#dadce7] text-[#080c21]';
   const muted = dark ? 'text-[#a9b0cd]' : 'text-[#626784]';
@@ -51,6 +51,30 @@ export default function GuideTopBar({
           {guide.spokesperson && <span>For {guide.spokesperson}</span>}
         </div>
 
+        <div
+          className={`flex gap-1 rounded-xl border p-1 print:hidden ${
+            dark ? 'border-[#26305a] bg-[#0e1734]' : 'border-[#dadce7] bg-[#f6f7fb]'
+          }`}
+        >
+          {[
+            { key: 'guide', label: 'The guide' },
+            { key: 'reference', label: 'Quick reference & key points' },
+          ].map((tab) => (
+            <button
+              key={tab.key}
+              type="button"
+              onClick={() => onChangeView(tab.key)}
+              className={`flex-1 rounded-lg px-3 py-1.5 text-sm font-semibold transition-colors ${
+                view === tab.key
+                  ? 'bg-[#fccf03] text-[#0a0f29]'
+                  : dark ? 'text-[#a9b0cd] hover:text-[#eef1ff]' : 'text-[#626784] hover:text-[#080c21]'
+              }`}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+
         <div className="flex flex-wrap items-center gap-2 print:hidden">
           <button
             type="button"
@@ -70,12 +94,6 @@ export default function GuideTopBar({
             {practice ? <X className="w-3.5 h-3.5" /> : <ListChecks className="w-3.5 h-3.5" />}
             {practice ? 'Exit practice mode' : 'Practise'}
           </button>
-          <Link
-            to={quickRefPath}
-            className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-medium ${btn}`}
-          >
-            Quick reference
-          </Link>
           <button
             type="button"
             onClick={() => window.print()}

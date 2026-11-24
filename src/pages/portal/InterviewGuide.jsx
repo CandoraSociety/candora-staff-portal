@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
 import { Play, ChevronLeft, ChevronRight, ListChecks } from 'lucide-react';
 import GuideTopBar from '@/components/interviewguide/GuideTopBar';
 import GuideQuestionCard from '@/components/interviewguide/GuideQuestionCard';
 import GuideQuickReference from '@/components/interviewguide/GuideQuickReference';
+import GuideReferenceTab from '@/components/interviewguide/GuideReferenceTab';
 import GuideAudioPlayer from '@/components/interviewguide/GuideAudioPlayer';
 import GuidePracticeTimer from '@/components/interviewguide/GuidePracticeTimer';
 import useGuideAudio from '@/components/interviewguide/useGuideAudio';
@@ -23,6 +24,7 @@ export default function InterviewGuide() {
   const [simulated, setSimulated] = useState(false);
   const [simIndex, setSimIndex] = useState(0);
   const [follow, setFollow] = useState(true);
+  const [view, setView] = useState('guide');
 
   useEffect(() => {
     let alive = true;
@@ -88,14 +90,17 @@ export default function InterviewGuide() {
   // Keep the talking point being narrated in view, unless the listener has turned
   // following off so they can browse the rest of the guide while it plays.
   useEffect(() => {
-    if (!follow || !audio.playing || !item) return;
-    const target = item.questionId
-      ? document.getElementById(`guide-seg-${item.questionId}-${item.segmentId}`)
-      : null;
+    if (!follow || !audio.playing || !item || !item.questionId) return;
+    const target = view === 'reference'
+      ? document.getElementById(`guide-key-${item.questionId}`)
+      : document.getElementById(`guide-seg-${item.questionId}-${item.segmentId}`);
     if (target) target.scrollIntoView({ behavior: 'smooth', block: 'center' });
-  }, [item?.key, follow, audio.playing]);
+  }, [item?.key, follow, audio.playing, view]);
 
-  const quickRefPath = `/interview-guide/${token}/quick-reference`;
+  const changeView = (next) => {
+    setView(next);
+    window.scrollTo({ top: 0 });
+  };
 
   const scale = SCALES[scaleIndex];
   const bg = dark ? 'bg-[#0a0f29]' : 'bg-[#f9fafb]';
@@ -139,10 +144,25 @@ export default function InterviewGuide() {
         onTogglePractice={() => { setPractice((p) => !p); setSimulated(false); }}
         onListenAll={playAll}
         hasAudio={playlist.length > 0}
-        quickRefPath={quickRefPath}
+        view={view}
+        onChangeView={changeView}
       />
 
       <main className="max-w-3xl mx-auto px-4 pt-5 pb-48 space-y-5">
+        {view === 'reference' ? (
+          <GuideReferenceTab
+            guide={guide}
+            questions={questions}
+            dark={dark}
+            item={item}
+            playing={audio.playing}
+            onPlayKeyMessages={playKeyMessages}
+            onPlayQuickReference={playQuickReference}
+            onPlayBlock={playQuickBlock}
+            onPlayKeyMessage={playKeyMessage}
+          />
+        ) : (
+        <>
         {guide.purpose && <p className={`${muted}`}>{guide.purpose}</p>}
 
         <section className={`rounded-2xl border p-5 sm:p-6 ${card}`}>
@@ -256,6 +276,8 @@ export default function InterviewGuide() {
             onPlayBlock={playQuickBlock}
           />
         )}
+        </>
+        )}
 
         <footer className={`text-center text-sm pt-4 ${muted}`}>
           <p className="font-semibold">Candora Society of Edmonton</p>
@@ -263,13 +285,14 @@ export default function InterviewGuide() {
         </footer>
       </main>
 
-      {!simulated && (
-        <Link
-          to={quickRefPath}
+      {!simulated && view === 'guide' && (
+        <button
+          type="button"
+          onClick={() => changeView('reference')}
           className="fixed right-4 bottom-32 z-30 rounded-full bg-[#0a0f29] text-white text-xs font-semibold px-4 py-2.5 shadow-lg print:hidden"
         >
           Quick reference
-        </Link>
+        </button>
       )}
 
       {playlist.length > 0 && (
