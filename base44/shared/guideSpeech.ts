@@ -52,6 +52,19 @@ export function spokenText(raw) {
     .trim();
 }
 
+// The on-air reminders printed in a band on the quick reference. Mirrors
+// ON_AIR_REMINDERS in src/lib/interviewTips.js (the sheet and the narration read
+// the same seven lines) - keep the two in step.
+export const ON_AIR_REMINDERS = [
+  { label: 'Be conversational', text: 'speak naturally rather than reciting prepared answers.' },
+  { label: 'Be concise', text: 'aim for 20 to 40 seconds per response, unless more detail is invited.' },
+  { label: 'Lead with the message', text: 'communicate the most important point first.' },
+  { label: 'Stay focused', text: 'answer the question without getting sidetracked.' },
+  { label: 'Make it relatable', text: 'use simple language and meaningful examples.' },
+  { label: 'Connect with the host', text: 'maintain natural eye contact, smile and show enthusiasm.' },
+  { label: 'Reinforce the ask', text: 'mention donation opportunities and Candora.ca/donate/ when appropriate.' },
+];
+
 const slug = (value) => String(value || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 
 // Runs `worker` over the items a few at a time, so a whole question is narrated
@@ -291,6 +304,26 @@ export function buildQuickReferenceSegments(guide, questions = []) {
       });
     });
   }
+
+  // The compact on-air reminders that close the sheet, one clip per reminder.
+  push({
+    id: 'qr-reminders',
+    kind: 'heading',
+    text: 'On-air reminders.',
+    category_label: 'On-air reminders',
+    pause_after_ms: PAUSES.heading,
+  });
+
+  ON_AIR_REMINDERS.forEach((reminder, index) => {
+    push({
+      id: `qr-reminder-${index}`,
+      kind: 'point',
+      text: spokenText(`${reminder.label}: ${reminder.text}`),
+      category_label: 'On-air reminders',
+      point_index: index,
+      pause_after_ms: index === ON_AIR_REMINDERS.length - 1 ? PAUSES.categoryEnd : PAUSES.point,
+    });
+  });
 
   if (segments.length > 1) {
     segments[segments.length - 1].pause_after_ms = PAUSES.sectionEnd;

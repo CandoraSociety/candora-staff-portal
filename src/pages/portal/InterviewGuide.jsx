@@ -6,12 +6,13 @@ import GuideTopBar from '@/components/interviewguide/GuideTopBar';
 import GuideQuestionCard from '@/components/interviewguide/GuideQuestionCard';
 import GuideQuickReference from '@/components/interviewguide/GuideQuickReference';
 import GuideReferenceTab from '@/components/interviewguide/GuideReferenceTab';
+import GuideTipsTab from '@/components/interviewguide/GuideTipsTab';
 import GuidePrintDocument from '@/components/interviewguide/GuidePrintDocument';
 import GuideCheatSheetPrint from '@/components/interviewguide/GuideCheatSheetPrint';
 import GuideAudioPlayer from '@/components/interviewguide/GuideAudioPlayer';
 import GuidePracticeTimer from '@/components/interviewguide/GuidePracticeTimer';
 import useGuideAudio from '@/components/interviewguide/useGuideAudio';
-import { buildPlaylist } from '@/lib/interviewGuides';
+import { buildPlaylist, buildTipsPlaylist } from '@/lib/interviewGuides';
 
 const SCALES = [0.9, 1, 1.12, 1.25, 1.4];
 
@@ -51,26 +52,30 @@ export default function InterviewGuide() {
   const { guide, questions, loading, error } = state;
 
   const playlist = useMemo(() => buildPlaylist(guide, questions), [guide, questions]);
-  const audio = useGuideAudio(playlist);
-  const item = audio.current >= 0 ? playlist[audio.current] : null;
+  const tipsPlaylist = useMemo(() => buildTipsPlaylist(guide), [guide]);
+  // The player reads whichever tab is open: the guide's own material, or the
+  // general interview coaching behind the tips tab.
+  const activePlaylist = view === 'tips' ? tipsPlaylist : playlist;
+  const audio = useGuideAudio(activePlaylist);
+  const item = audio.current >= 0 ? activePlaylist[audio.current] : null;
 
   // Consecutive clips that belong to the same category, so the player can step
   // between categories rather than between single talking points.
   const groups = useMemo(() => {
     const out = [];
-    playlist.forEach((entry, index) => {
+    activePlaylist.forEach((entry, index) => {
       const key = `${entry.sectionLabel}|${entry.categoryLabel}`;
       const last = out[out.length - 1];
       if (last && last.key === key) last.indices.push(index);
       else out.push({ key, indices: [index] });
     });
     return out;
-  }, [playlist]);
+  }, [activePlaylist]);
 
   const groupAt = groups.findIndex((group) => group.indices.includes(audio.current));
 
   const indicesFor = (predicate) =>
-    playlist.map((entry, index) => (predicate(entry) ? index : -1)).filter((index) => index >= 0);
+    activePlaylist.map((entry, index) => (predicate(entry) ? index : -1)).filter((index) => index >= 0);
 
   const playAll = () => audio.playIndices(indicesFor(() => true));
   const playIntro = () => audio.playIndices(indicesFor((entry) => entry.segmentId === 'intro'));
@@ -92,6 +97,11 @@ export default function InterviewGuide() {
 
   const playQuickSection = (index) =>
     audio.playIndices(indicesFor((entry) => entry.section === 'quick' && entry.categoryIndex === index));
+  const playReminders = () =>
+    audio.playIndices(indicesFor((entry) => entry.section === 'quick' && entry.categoryLabel === 'On-air reminders'));
+  const playTips = () => audio.playIndices(indicesFor((entry) => entry.section === 'tips'));
+  const playTipSection = (index) =>
+    audio.playIndices(indicesFor((entry) => entry.section === 'tips' && entry.categoryIndex === index));
 
   // Printing the cheat sheet prints only the sheet, not the whole guide.
   useEffect(() => {
@@ -116,6 +126,7 @@ export default function InterviewGuide() {
   }, [item?.key, follow, audio.playing, view]);
 
   const changeView = (next) => {
+    if (next !== view && audio.playing) audio.toggle();
     setView(next);
     window.scrollTo({ top: 0 });
   };
@@ -162,13 +173,23 @@ export default function InterviewGuide() {
         practice={practice}
         onTogglePractice={() => { setPractice((p) => !p); setSimulated(false); }}
         onListenAll={playAll}
-        hasAudio={playlist.length > 0}
+        hasAudio={view !== 'tips' && playlist.length > 0}
         view={view}
         onChangeView={changeView}
       />
 
       <main className="max-w-3xl mx-auto px-4 pt-5 pb-48 space-y-5">
-        {view === 'reference' ? (
+        {view === 'tips' ? (
+          <GuideTipsTab
+            guide={guide}
+            dark={dark}
+            item={item}
+            playing={audio.playing}
+            segments={guide.tips_segments || []}
+            onListenAll={playTips}
+            onPlaySection={playTipSection}
+          />
+        ) : view === 'reference' ? (
           <GuideReferenceTab
             guide={guide}
             questions={questions}
@@ -177,6 +198,7 @@ export default function InterviewGuide() {
             playing={audio.playing}
             onListen={playQuickReference}
             onPlaySection={playQuickSection}
+            onPlayReminders={playReminders}
             onPrint={printCheatSheet}
           />
         ) : (
@@ -313,7 +335,7 @@ export default function InterviewGuide() {
         </button>
       )}
 
-      {playlist.length > 0 && (
+      {activePlaylist.length > 0 && (
         <GuideAudioPlayer
           audio={audio}
           item={item}

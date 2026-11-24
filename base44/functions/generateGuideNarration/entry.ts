@@ -21,7 +21,7 @@ export default async function (req) {
     const user = await base44.auth.me().catch((e) => (e.status === 401 ? null : Promise.reject(e)));
     if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
 
-    const { guide_id, question_id, scope = 'question', voice, regenerate } = await req.json().catch(() => ({}));
+    const { guide_id, question_id, scope = 'question', voice, regenerate, segments } = await req.json().catch(() => ({}));
     if (!guide_id) return Response.json({ error: 'A guide is required.' }, { status: 400 });
 
     const guide = await base44.asServiceRole.entities.InterviewGuide
@@ -46,6 +46,42 @@ export default async function (req) {
         quick_reference_segments: result.segments,
         quick_reference_voice: chosen,
         quick_reference_generated_at: new Date().toISOString(),
+      });
+      return Response.json({
+        scope,
+        voice: chosen,
+        total: result.total,
+        narrated: result.narrated,
+        remaining: result.remaining,
+      });
+    }
+
+    // The general media interview coaching behind the tips tab. The content is the
+    // same for every guide, so the reader builds the clips from the shared tips
+    // module and sends them here to be narrated; only the audio is stored per guide.
+    if (scope === 'tips') {
+      const provided = Array.isArray(segments) ? segments : [];
+      const built = provided
+        .filter((segment) => segment && segment.id && String(segment.text || '').trim())
+        .map((segment) => ({
+          id: String(segment.id),
+          kind: segment.kind || 'point',
+          text: String(segment.text).slice(0, 4000),
+          category_label: segment.category_label || 'Interview tips',
+          category_index: typeof segment.category_index === 'number' ? segment.category_index : null,
+          point_index: typeof segment.point_index === 'number' ? segment.point_index : null,
+          pause_after_ms: Number(segment.pause_after_ms) || 0,
+        }));
+
+      if (!built.length) {
+        return Response.json({ error: 'There are no interview tips to narrate.' }, { status: 400 });
+      }
+
+      const result = await fillSegmentAudio(base44, built, { voice: chosen, regenerate: Boolean(regenerate) });
+      await base44.asServiceRole.entities.InterviewGuide.update(guide_id, {
+        tips_segments: result.segments,
+        tips_voice: chosen,
+        tips_generated_at: new Date().toISOString(),
       });
       return Response.json({
         scope,

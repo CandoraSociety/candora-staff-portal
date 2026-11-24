@@ -88,7 +88,7 @@
     },
     "quick_reference_segments": {
       "type": "array",
-      "description": "The spoken quick reference, one short clip per question, key message and cheat-sheet bullet, followed by the essential donation information. Read in the same order as the one-page quick reference.",
+      "description": "The spoken quick reference, one short clip per question, key message and cheat-sheet bullet, followed by the essential donation information and the on-air reminders. Read in the same order as the one-page quick reference.",
       "items": {
         "type": "object",
         "properties": {
@@ -146,6 +146,65 @@
       "description": "Voice the quick-reference narration was recorded in"
     },
     "quick_reference_generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "tips_segments": {
+      "type": "array",
+      "description": "The spoken general media interview coaching behind the Interview tips tab - one short clip per numbered section heading and per point, each with the pause that follows it. The tips themselves are the same for every guide, so only the audio is stored here.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "cue",
+              "heading",
+              "point"
+            ],
+            "enumColors": [
+              "gray",
+              "purple",
+              "blue"
+            ]
+          },
+          "text": {
+            "type": "string",
+            "description": "Exactly what the narrator says for this clip"
+          },
+          "category_label": {
+            "type": "string",
+            "description": "Tips section this clip belongs to, shown while it plays"
+          },
+          "category_index": {
+            "type": "number",
+            "description": "Position of the tips section this clip belongs to, for highlighting and per-section playback"
+          },
+          "point_index": {
+            "type": "number",
+            "description": "Position of this clip inside its section"
+          },
+          "pause_after_ms": {
+            "type": "number",
+            "description": "Silence left after this clip before the next one, in milliseconds"
+          },
+          "audio_url": {
+            "type": "string"
+          },
+          "voice": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "tips_voice": {
+      "type": "string",
+      "description": "Voice the interview tips narration was recorded in"
+    },
+    "tips_generated_at": {
       "type": "string",
       "format": "date-time"
     },

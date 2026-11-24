@@ -2,7 +2,7 @@ import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Mic, CheckCircle2, ListMusic } from 'lucide-react';
+import { Mic, CheckCircle2, ListMusic, Headphones } from 'lucide-react';
 import VoicePicker from './VoicePicker';
 
 const SECTIONS = [
@@ -14,10 +14,12 @@ const SECTIONS = [
 // guide is narrated in. The questions and the quick reference are narrated from
 // their written material, so there is no separate script to keep in step.
 export default function GuideNarrationPanel({
-  guide, patch, onGenerate, onGenerateQuickReference, busy, quickBusy, onVoiceChange,
+  guide, patch, onGenerate, onGenerateQuickReference, onGenerateTips, busy, quickBusy, tipsBusy, onVoiceChange,
 }) {
   const segments = guide.quick_reference_segments || [];
   const narrated = segments.filter((segment) => segment.audio_url).length;
+  const tipsSegments = guide.tips_segments || [];
+  const tipsNarrated = tipsSegments.filter((segment) => segment.audio_url).length;
 
   return (
     <div className="space-y-5">
@@ -83,6 +85,29 @@ export default function GuideNarrationPanel({
           )}
           <span className="text-xs text-muted-foreground">
             {segments.length ? `${narrated} of ${segments.length} clips ready` : 'No narration generated yet'}
+          </span>
+        </div>
+      </div>
+
+      <div className="rounded-xl border p-4 space-y-2">
+        <Label>Interview tips narration</Label>
+        <p className="text-xs text-muted-foreground">
+          The general media interview coaching shown in the Interview tips tab — twelve numbered sections, each heading
+          and point read on its own with a pause between them. The tips are the same for every guide, so this only has
+          to be recorded once per guide.
+        </p>
+        <div className="flex flex-wrap items-center gap-2">
+          <Button size="sm" variant="outline" disabled={tipsBusy} onClick={() => onGenerateTips(false)}>
+            <Headphones className="w-3.5 h-3.5 mr-1" />
+            {tipsBusy ? 'Generating…' : tipsNarrated ? 'Finish narration' : 'Generate narration'}
+          </Button>
+          {tipsNarrated > 0 && (
+            <Button size="sm" variant="ghost" disabled={tipsBusy} onClick={() => onGenerateTips(true)}>
+              Regenerate all
+            </Button>
+          )}
+          <span className="text-xs text-muted-foreground">
+            {tipsSegments.length ? `${tipsNarrated} of ${tipsSegments.length} clips ready` : 'No narration generated yet'}
           </span>
         </div>
       </div>

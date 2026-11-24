@@ -11,6 +11,7 @@ import GuideNarrationPanel from '@/components/marketing/interviewguide/GuideNarr
 import GuideQuestionsPanel from '@/components/marketing/interviewguide/GuideQuestionsPanel';
 import GuideReferencePanel from '@/components/marketing/interviewguide/GuideReferencePanel';
 import { generateNarration, narrateStructure } from '@/lib/interviewGuides';
+import { buildTipsSegments } from '@/lib/interviewTips';
 
 // Builds one interactive guide: its details, its spoken narration, its
 // questions and its quick reference.
@@ -95,6 +96,27 @@ export default function InterviewGuideEditor() {
       toast.error(error.message || 'Audio generation failed');
     } finally {
       setBusy((b) => ({ ...b, quick_reference: false }));
+    }
+  };
+
+  // The interview tips are the same general coaching for every guide, so the
+  // clips are built from the shared tips module and only the audio is stored here.
+  const generateTips = async (regenerate) => {
+    setBusy((b) => ({ ...b, tips: true }));
+    try {
+      const result = await narrateStructure({
+        guideId: id,
+        scope: 'tips',
+        voice: guide.voice,
+        segments: buildTipsSegments(),
+        regenerate,
+      });
+      await load();
+      toast.success(`Interview tips narration ready — ${result?.narrated ?? 0} of ${result?.total ?? 0} clips`);
+    } catch (error) {
+      toast.error(error.message || 'Audio generation failed');
+    } finally {
+      setBusy((b) => ({ ...b, tips: false }));
     }
   };
 
@@ -186,8 +208,10 @@ export default function InterviewGuideEditor() {
             patch={patch}
             busy={busy}
             quickBusy={busy.quick_reference}
+            tipsBusy={busy.tips}
             onGenerate={generateSection}
             onGenerateQuickReference={generateQuickReference}
+            onGenerateTips={generateTips}
             onVoiceChange={setVoice}
           />
         </TabsContent>
