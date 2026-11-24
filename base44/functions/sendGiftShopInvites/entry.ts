@@ -166,6 +166,8 @@ Deno.serve(async (req) => {
       // A family from a fresh list is linked to their Central Database profile,
       // or has one opened for them. Invitations already in the list were linked
       // when they were created, so they are left as they are.
+      // Being invited is not registering: an existing profile is never changed
+      // here — only a real Kids Gift Shop registration updates it.
       let central: any = null;
       if (!existing) {
         const person = splitName(name);
@@ -174,6 +176,7 @@ Deno.serve(async (req) => {
             program: 'kids_gift_shop',
             linkedId: invite.id,
             indicator: 'Invited to the Kids Gift Shop pre-registration (Winter Wonderland).',
+            createIfMissingOnly: true,
             personal: {
               first_name: person.first_name,
               last_name: person.last_name,

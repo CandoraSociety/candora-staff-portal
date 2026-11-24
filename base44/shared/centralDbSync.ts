@@ -36,6 +36,10 @@ export interface ParticipationInput {
   // holds the central RCClient record id to update — bypassing auto-match
   // and never creating a new record.
   linkedRcClientId?: string | null;
+  // When set, an existing central record is only reported back — nothing on it
+  // is changed. Used by a source that merely puts someone on a waiting list and
+  // has no participation to record yet (an invitation, not a registration).
+  createIfMissingOnly?: boolean;
   // Optional structured details stored alongside the indicator text (e.g.
   // Pathways start date, stream, status, outcome and end date). Rendered by
   // the RC client profile when present; the indicator stays as a fallback.
@@ -77,6 +81,8 @@ export async function syncParticipantToCentralDb(base44: any, input: Participati
   const entry = { program, linked_id: linkedId, indicator, updated_date: updatedDate, ...(input.details ? { details: input.details } : {}) };
 
   if (linked) {
+    // Waiting lists and invitations leave an existing profile untouched.
+    if (input.createIfMissingOnly) return { status: 'linked', rc_client_id: linked.id };
     const parts = Array.isArray(linked.program_participations) ? [...linked.program_participations] : [];
     const idx = parts.findIndex((p: any) => p.program === program);
     if (idx >= 0) {

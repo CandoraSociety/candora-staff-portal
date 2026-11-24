@@ -5,6 +5,7 @@
 // codes the same way.
 import { slotLabel, GIFT_SHOP_PROGRAM_NAME } from './giftShopInvites.ts';
 import { greetText, sendGiftShopText } from './giftShopSms.ts';
+import { syncParticipantToCentralDb } from './centralDbSync.ts';
 
 // The date and venue come from the event setup wizard's record, so starting
 // next year's event updates them everywhere. These are the fallbacks used
@@ -237,7 +238,37 @@ export async function confirmFamilyRegistration(base44, registrationIds) {
   if (!ids.length) return { checkin_code: null };
   const rows = await base44.entities.ProgramRegistration.filter({ id: { $in: ids } });
   const result = await sendRegistrationConfirmation(base44, rows || []);
+  // Registering is real participation, so the family's Central Database profile
+  // is updated here — an invitation alone never touches it.
+  try {
+    await syncRegistrationToCentralDb(base44, rows || []);
+  } catch (error) {
+    console.log('Central Database update after Kids Gift Shop registration failed:', error.message);
+  }
   return { checkin_code: result.checkin_code, emailed: result.emailed, texted: result.texted };
+}
+
+// Records the family's Kids Gift Shop registration on their central profile,
+// matching an existing profile by email or name and opening one when there is
+// none. A failure here never blocks a registration.
+async function syncRegistrationToCentralDb(base44, rows) {
+  const first = (rows || [])[0];
+  if (!first) return null;
+  const event = await loadGiftShopEvent(base44);
+  const parts = String(first.parent_guardian_name || '').trim().split(/\s+/).filter(Boolean);
+  const children = rows.length;
+  const indicator = `Registered for the Kids Gift Shop — ${children} ${children === 1 ? 'child' : 'children'} shopping at ${slotLabel(first.time_slot)} on ${event.event_date}.`;
+  return syncParticipantToCentralDb(base44, {
+    program: 'kids_gift_shop',
+    linkedId: first.id,
+    indicator,
+    personal: {
+      first_name: parts[0] || '',
+      last_name: parts.slice(1).join(' '),
+      phone: first.parent_guardian_phone || first.participant_phone || null,
+      email: first.parent_guardian_email || first.participant_email || null,
+    },
+  });
 }
 
 // Stamps the family's code if they do not have one yet, then sends them the
