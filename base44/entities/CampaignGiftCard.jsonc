@@ -1,0 +1,150 @@
+{
+  "name": "CampaignGiftCard",
+  "type": "object",
+  "description": "A charitable gift made on a campaign's public page in someone's honour \u2014 who it is for, the greeting card and message the supporter chose, and when it is delivered. Created only by the payment webhook once the money is confirmed, so a card is never sent for a gift that did not go through.",
+  "properties": {
+    "campaign_id": {
+      "type": "string",
+      "description": "Campaign the gift was made on"
+    },
+    "campaign_name": {
+      "type": "string",
+      "description": "Campaign name at the time of the gift (denormalized)"
+    },
+    "pillar_id": {
+      "type": "string",
+      "description": "Fundraising pillar the gift was directed to, when the campaign runs pillars"
+    },
+    "pillar_name": {
+      "type": "string",
+      "description": "Pillar name at the time of the gift, for reporting and the card itself"
+    },
+    "donation_id": {
+      "type": "string",
+      "description": "The recorded gift this card belongs to"
+    },
+    "amount": {
+      "type": "number",
+      "description": "Gift amount in CAD \u2014 the charitable gift itself, before any processing fee"
+    },
+    "donor_name": {
+      "type": "string",
+      "description": "Supporter who gave the gift"
+    },
+    "donor_email": {
+      "type": "string"
+    },
+    "is_anonymous": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the supporter asked not to be named on the card"
+    },
+    "recipient_name": {
+      "type": "string",
+      "description": "Person the gift is for \u2014 the name on the card"
+    },
+    "recipient_email": {
+      "type": "string",
+      "description": "Where the greeting card is emailed"
+    },
+    "message": {
+      "type": "string",
+      "description": "The supporter's own message, shown inside the card"
+    },
+    "theme_id": {
+      "type": "string",
+      "description": "Greeting card design chosen from the campaign's e-cards"
+    },
+    "theme_name": {
+      "type": "string"
+    },
+    "theme_image_url": {
+      "type": "string",
+      "description": "Artwork of the chosen card design, kept so the card still renders if the design is later changed"
+    },
+    "token": {
+      "type": "string",
+      "description": "Unguessable code carried in the card and certificate links. Generated once when the card is created."
+    },
+    "app_url": {
+      "type": "string",
+      "description": "Address of the app the gift was made in, so the card's links open on the right site"
+    },
+    "deliver_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Moment the card should be emailed \u2014 set by the supporter, or the time of the gift when they chose to send it straight away"
+    },
+    "delivered_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the card was actually emailed"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "scheduled",
+        "delivered",
+        "failed",
+        "cancelled"
+      ],
+      "enumColors": [
+        "yellow",
+        "green",
+        "red",
+        "gray"
+      ],
+      "default": "scheduled",
+      "description": "scheduled = waiting for its delivery time; delivered = emailed to the recipient; failed = it could not be sent; cancelled = called off by staff"
+    },
+    "failure_reason": {
+      "type": "string",
+      "description": "What stopped the card from going out, shown to staff"
+    }
+  },
+  "required": [
+    "campaign_id",
+    "recipient_name",
+    "token"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ArrowDown, ArrowUp, Plus, Trash2 } from 'lucide-react';
 import VariationRows, { cleanVariations } from '@/components/donors/VariationRows';
 
@@ -13,6 +14,7 @@ const blankTier = () => ({
   id: `tier-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
   name: '',
   description: '',
+  pillar_id: '',
   amount: '',
   allow_monthly: true,
   is_active: true,
@@ -147,6 +149,25 @@ export default function DonationOptionsEditor({ campaign, onSave, onSynced }) {
                   <Trash2 className="w-4 h-4" />
                 </Button>
               </div>
+              {campaign?.enable_pillars && (campaign.pillars || []).length > 0 && (
+                <div>
+                  <Label>Cause this option belongs to</Label>
+                  <Select
+                    value={tier.pillar_id || 'all'}
+                    onValueChange={(value) => set(index, 'pillar_id', value === 'all' ? '' : value)}
+                  >
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">Whole campaign</SelectItem>
+                      {(campaign.pillars || [])
+                        .filter((pillar) => pillar.name?.trim())
+                        .map((pillar) => (
+                          <SelectItem key={pillar.id} value={pillar.id}>{pillar.name}</SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <VariationRows
                 variations={tier.variations || []}
                 onChange={(next) => set(index, 'variations', next)}

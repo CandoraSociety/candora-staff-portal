@@ -3,6 +3,7 @@ import { secrets } from 'base44:runtime';
 import Stripe from 'npm:stripe@17.4.0';
 import { recordCampaignGift } from '../../shared/campaignGifts.ts';
 import { sendDonationThankYou } from '../../shared/donorThankYou.ts';
+import { createGiftCardForIntent, deliverGiftCard } from '../../shared/campaignGiftCards.ts';
 
 const intentFor = (base44, id) =>
   base44.asServiceRole.entities.CampaignDonationIntent
@@ -73,6 +74,8 @@ export default async function (req) {
       const donation = await recordCampaignGift(base44, {
         campaignId: intent.campaign_id,
         campaignName: intent.campaign_name,
+        pillarId: intent.pillar_id,
+        pillarName: intent.pillar_name,
         productName: intent.product_name,
         amount: Number(intent.amount) || paid / 100,
         feeAmount: Number(intent.fee_amount) || 0,
@@ -92,6 +95,20 @@ export default async function (req) {
         subscription_id: session.subscription || intent.subscription_id || '',
         payment_reference: session.payment_intent || '',
       });
+
+      // A gift made in someone's honour gets its greeting card — sent straight
+      // away, or held until the morning the supporter chose. A monthly gift is
+      // thanked each month instead of sending a card every time.
+      if (intent.is_gift && intent.frequency !== 'monthly') {
+        try {
+          const card = await createGiftCardForIntent(base44, intent, donation);
+          if (new Date(card.deliver_at).getTime() <= Date.now()) {
+            await deliverGiftCard(base44, card);
+          }
+        } catch (error) {
+          console.error('stripeCampaignWebhook: gift card failed', error?.message || error);
+        }
+      }
 
       // Thank the supporter with their receipt. The gift is already recorded, so
       // a thank-you that could not go out never fails the payment.
@@ -142,6 +159,8 @@ export default async function (req) {
       const donation = await recordCampaignGift(base44, {
         campaignId: intent.campaign_id,
         campaignName: intent.campaign_name,
+        pillarId: intent.pillar_id,
+        pillarName: intent.pillar_name,
         productName: intent.product_name,
         amount: Number(intent.amount) || invoice.amount_paid / 100,
         feeAmount: Number(intent.fee_amount) || 0,

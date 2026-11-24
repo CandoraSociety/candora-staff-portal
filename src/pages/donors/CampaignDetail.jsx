@@ -10,6 +10,12 @@ import CampaignProfileForm from '@/components/donors/campaign/CampaignProfileFor
 import DonationOptionsEditor from '@/components/donors/campaign/DonationOptionsEditor';
 import PublicPagePanel from '@/components/donors/campaign/PublicPagePanel';
 import CampaignGiftsList from '@/components/donors/campaign/CampaignGiftsList';
+import CampaignPillarsPanel from '@/components/donors/campaign/CampaignPillarsPanel';
+import CampaignGiftingPanel from '@/components/donors/campaign/CampaignGiftingPanel';
+import CampaignCertificatesPanel from '@/components/donors/campaign/CampaignCertificatesPanel';
+import CampaignDeliveriesPanel from '@/components/donors/campaign/CampaignDeliveriesPanel';
+import CampaignShareLinks from '@/components/donors/campaign/CampaignShareLinks';
+import CampaignPillarReport from '@/components/donors/campaign/CampaignPillarReport';
 import { activeTiers, formatMoney, publicCampaignUrl } from '@/lib/donorConstants';
 
 // A campaign's own workspace: the full profile, the giving options offered on
@@ -108,14 +114,23 @@ export default function CampaignDetail() {
 
       <Tabs value={tab} onValueChange={setTab}>
         <TabsList className="w-full justify-start overflow-x-auto">
-          <TabsTrigger value="profile">Profile</TabsTrigger>
+          <TabsTrigger value="profile">Overview</TabsTrigger>
+          <TabsTrigger value="pillars">Pillars</TabsTrigger>
           <TabsTrigger value="options">Giving options</TabsTrigger>
+          <TabsTrigger value="gifting">Gifting &amp; e-cards</TabsTrigger>
+          <TabsTrigger value="certificates">Certificates</TabsTrigger>
+          <TabsTrigger value="deliveries">Deliveries</TabsTrigger>
           <TabsTrigger value="page">Public page</TabsTrigger>
-          <TabsTrigger value="gifts">Gifts</TabsTrigger>
+          <TabsTrigger value="sharing">Sharing</TabsTrigger>
+          <TabsTrigger value="gifts">Donations</TabsTrigger>
+          <TabsTrigger value="reporting">Reporting</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile" className="mt-4">
           <CampaignProfileForm campaign={campaign} onSave={save} />
+        </TabsContent>
+        <TabsContent value="pillars" className="mt-4">
+          <CampaignPillarsPanel campaign={campaign} onSave={save} />
         </TabsContent>
         <TabsContent value="options" className="mt-4">
           <DonationOptionsEditor
@@ -124,11 +139,26 @@ export default function CampaignDetail() {
             onSynced={() => qc.invalidateQueries({ queryKey: ['donation-campaign', id] })}
           />
         </TabsContent>
+        <TabsContent value="gifting" className="mt-4">
+          <CampaignGiftingPanel campaign={campaign} onSave={save} />
+        </TabsContent>
+        <TabsContent value="certificates" className="mt-4">
+          <CampaignCertificatesPanel campaign={campaign} onSave={save} />
+        </TabsContent>
+        <TabsContent value="deliveries" className="mt-4">
+          <CampaignDeliveriesPanel campaign={campaign} />
+        </TabsContent>
         <TabsContent value="page" className="mt-4">
           <PublicPagePanel campaign={campaign} onSave={save} onManageOptions={() => setTab('options')} />
         </TabsContent>
+        <TabsContent value="sharing" className="mt-4">
+          <CampaignShareLinks campaign={campaign} />
+        </TabsContent>
         <TabsContent value="gifts" className="mt-4">
           <CampaignGiftsList gifts={gifts} />
+        </TabsContent>
+        <TabsContent value="reporting" className="mt-4">
+          <CampaignPillarReport campaign={campaign} gifts={gifts} />
         </TabsContent>
       </Tabs>
 

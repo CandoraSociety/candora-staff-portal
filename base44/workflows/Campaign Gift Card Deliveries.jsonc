@@ -1,0 +1,45 @@
+{
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "campaign_gift_card_deliveries",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "send_due_gift_cards": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "sendScheduledCampaignGiftCards",
+            "args": {}
+          },
+          "then": "end",
+          "x-base44": {
+            "title": "Send due gift cards",
+            "description": "Cards whose delivery day has arrived"
+          }
+        }
+      }
+    ]
+  },
+  "name": "Campaign Gift Card Deliveries",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "scheduled",
+      "events": [],
+      "schedule_mode": "recurring",
+      "cron_expression": "*/15 * * * *",
+      "one_time_date": null,
+      "timezone": "America/Resolute",
+      "interval_value": null,
+      "interval_unit": null,
+      "interval_anchor": null,
+      "ends_type": "never",
+      "ends_on_date": null,
+      "ends_after_count": null
+    }
+  },
+  "description": "Emails each charitable gift card on the morning its supporter chose, checking for cards that have come due every fifteen minutes."
+}

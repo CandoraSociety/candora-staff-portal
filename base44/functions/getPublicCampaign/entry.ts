@@ -38,12 +38,24 @@ export default async function (req) {
       .catch(() => ({ rows: [] }));
     const row = (totals.rows || [])[0] || {};
 
+    // Progress for each pillar, so every cause shows what it has raised on its
+    // own while the campaign's total stays the sum of them.
+    const pillarTotals = await base44.asServiceRole.entities.Donation
+      .aggregate({ query: { campaign_id: campaign.id }, groupBy: 'pillar_id', sum: ['amount'] })
+      .catch(() => ({ rows: [] }));
+    const pillars = (pillarTotals.rows || []).map((group) => ({
+      pillar_id: group.pillar_id || '',
+      raised: Number(group.sum_amount) || 0,
+      giftCount: Number(group.count) || 0,
+    }));
+
     const { notes, ...publicCampaign } = campaign;
 
     return Response.json({
       campaign: publicCampaign,
       raised: Number(row.sum_amount) || 0,
       giftCount: Number(row.count) || 0,
+      pillars,
       preview,
     });
   } catch (error) {

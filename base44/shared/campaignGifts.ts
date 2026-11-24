@@ -69,6 +69,8 @@ async function recalcDonorTotals(base44, donorId) {
 export async function recordCampaignGift(base44, {
   campaignId,
   campaignName,
+  pillarId = '',
+  pillarName = '',
   productName,
   amount,
   feeAmount = 0,
@@ -93,6 +95,8 @@ export async function recordCampaignGift(base44, {
     donation_type: frequency === 'monthly' ? 'recurring_monthly' : 'one_time',
     campaign_id: campaignId,
     campaign_name: campaignName,
+    pillar_id: pillarId || '',
+    pillar_name: pillarName || '',
     product_name: productName || '',
     payment_method: 'online',
     source: 'online_campaign',

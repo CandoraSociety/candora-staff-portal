@@ -1,7 +1,7 @@
 {
   "name": "DonationCampaign",
   "type": "object",
-  "description": "A fundraising appeal or campaign the donor portal tracks gifts against \u2014 e.g. Winter Warmth Appeal. Each campaign can publish its own public page with its story, progress and giving options, where supporters give online. Gifts point at it by id, so progress updates automatically as donations are recorded.",
+  "description": "A fundraising appeal or campaign the donor portal tracks gifts against \u2014 e.g. Winter Warmth Appeal. Each campaign can publish its own public page with its story, progress and giving options, where supporters give online. A campaign may also be split into fundraising pillars, offer charitable gifting with greeting cards, and issue certificates; those capabilities are switched on per campaign. Gifts point at it by id, so progress updates automatically as donations are recorded.",
   "properties": {
     "name": {
       "type": "string",
@@ -64,6 +64,19 @@
       "type": "string",
       "description": "Main photo at the top of the public page (publicly stored file URL)"
     },
+    "seasonal_theme": {
+      "type": "string",
+      "enum": [
+        "none",
+        "christmas"
+      ],
+      "enumColors": [
+        "gray",
+        "red"
+      ],
+      "default": "none",
+      "description": "Seasonal dressing for this campaign's public page. none = the site's normal look; christmas = festive accents, used only where a campaign asks for it."
+    },
     "public_page_enabled": {
       "type": "boolean",
       "default": false,
@@ -78,6 +91,114 @@
       "type": "boolean",
       "default": false,
       "description": "Marks this record as the general fund behind the public donation page at /donate. Its giving options are the preset general donations, and it is listed separately from the campaigns shown there."
+    },
+    "enable_pillars": {
+      "type": "boolean",
+      "default": false,
+      "description": "Run this campaign with fundraising pillars \u2014 each pillar has its own story, goal, giving options and share link, and is reported on its own while staying part of the one campaign."
+    },
+    "pillars": {
+      "type": "array",
+      "description": "The causes inside this campaign. A supporter gives to one of them, or to the campaign as a whole.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Stable id of the pillar, used by giving options and recorded gifts"
+          },
+          "name": {
+            "type": "string",
+            "description": "Pillar name as supporters see it, e.g. Joy \u2014 Kids Gift Shop"
+          },
+          "tagline": {
+            "type": "string",
+            "description": "One line under the pillar name"
+          },
+          "description": {
+            "type": "string",
+            "description": "What gifts to this pillar make possible"
+          },
+          "image_url": {
+            "type": "string",
+            "description": "Photo shown on the pillar card (publicly stored file URL)"
+          },
+          "goal_amount": {
+            "type": "number",
+            "description": "What this pillar is trying to raise"
+          },
+          "is_active": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether the pillar is shown on the public page"
+          },
+          "display_order": {
+            "type": "number",
+            "default": 0,
+            "description": "Position on the page, lowest first"
+          }
+        }
+      }
+    },
+    "enable_gifting": {
+      "type": "boolean",
+      "default": false,
+      "description": "Let supporters make their gift in someone's honour \u2014 they choose a greeting card, write a message and pick when it is delivered."
+    },
+    "ecard_themes": {
+      "type": "array",
+      "description": "The greeting card designs a supporter can choose when they make a gift in someone's honour.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "description": "Stable id of this card design"
+          },
+          "name": {
+            "type": "string",
+            "description": "How the design is labelled for supporters, e.g. Snowy evening"
+          },
+          "image_url": {
+            "type": "string",
+            "description": "Artwork of the card (publicly stored file URL)"
+          },
+          "message": {
+            "type": "string",
+            "description": "The greeting written inside the card when the supporter leaves their own message blank"
+          },
+          "is_active": {
+            "type": "boolean",
+            "default": true,
+            "description": "Whether supporters can pick this design"
+          },
+          "display_order": {
+            "type": "number",
+            "default": 0
+          }
+        }
+      }
+    },
+    "certificate_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Issue a personalized certificate with every gift made in someone's honour, ready for the recipient to open and print."
+    },
+    "certificate_title": {
+      "type": "string",
+      "description": "Heading on the certificate, e.g. Certificate of Giving"
+    },
+    "certificate_message": {
+      "type": "string",
+      "description": "The wording of the certificate, shown under the heading"
+    },
+    "certificate_signature": {
+      "type": "string",
+      "description": "Name signed on the certificate"
+    },
+    "certificate_signature_title": {
+      "type": "string",
+      "description": "Role under the signature, e.g. Executive Director"
     },
     "allow_custom_amount": {
       "type": "boolean",
@@ -96,7 +217,7 @@
     },
     "donation_products": {
       "type": "array",
-      "description": "The giving options offered on the campaign page \u2014 e.g. $50 supplies a week of lunches. Each option becomes a line item at checkout and is created as its own product and price in Stripe automatically. An option can offer several price variations, and can let the supporter name their own amount.",
+      "description": "The giving options offered on the campaign page \u2014 e.g. $50 supplies a week of lunches. Each option becomes a line item at checkout and is created as its own product and price in Stripe automatically. An option can offer several price variations, can let the supporter name their own amount, and can be attached to one pillar.",
       "items": {
         "type": "object",
         "properties": {
@@ -111,6 +232,10 @@
           "description": {
             "type": "string",
             "description": "What this gift makes possible"
+          },
+          "pillar_id": {
+            "type": "string",
+            "description": "The pillar this option belongs to. Empty means the option is for the campaign as a whole."
           },
           "amount": {
             "type": "number",

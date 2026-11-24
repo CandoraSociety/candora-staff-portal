@@ -32,6 +32,14 @@
     "campaign_name": {
       "type": "string"
     },
+    "pillar_id": {
+      "type": "string",
+      "description": "Fundraising pillar inside the campaign this gift was directed to, when the campaign runs pillars"
+    },
+    "pillar_name": {
+      "type": "string",
+      "description": "Pillar name at the time of the gift, kept so pillar reporting stays accurate if a pillar is later renamed"
+    },
     "product_name": {
       "type": "string",
       "description": "Giving option the supporter chose on the campaign page, e.g. Sponsor a lunch"

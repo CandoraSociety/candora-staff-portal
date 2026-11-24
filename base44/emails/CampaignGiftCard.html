@@ -1,0 +1,77 @@
+<mjml>
+  <mj-head>
+    <mj-title>A gift has been made in your honour — {{campaign_name}}</mj-title>
+    <mj-preview>{{donor_line}} made a gift to {{campaign_name}} in your honour.</mj-preview>
+    <mj-attributes>
+      <mj-all font-family="Inter, Helvetica, Arial, sans-serif" />
+      <mj-section background-color="#ffffff" padding="0 36px" />
+      <mj-text color="#080c21" font-size="15px" line-height="1.6" padding="0" />
+      <mj-button background-color="#fccf03" color="#0a0f29" border-radius="10px" font-weight="700" inner-padding="14px 28px" align="left" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body background-color="#f9fafb">
+    <mj-section background-color="#fccf03" padding="20px 36px">
+      <mj-column>
+        <mj-image src="https://media.base44.com/images/public/6a249282cb496579542673b7/c7fbd36e2_logo.png" alt="Candora 360" width="150px" align="left" padding="0" />
+      </mj-column>
+    </mj-section>
+
+    <mj-section padding="36px 36px 8px">
+      <mj-column>
+        <mj-text font-family="Nunito, Arial, sans-serif" font-size="30px" font-weight="800" line-height="1.15" padding="0 0 8px">
+          A gift has been made in your honour
+        </mj-text>
+        <mj-text color="#626784" font-size="15px" padding="0">
+          {{recipient_name}}, {{donor_line}} made a gift to {{campaign_name}} for you.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-section padding="20px 36px 8px">
+      <mj-column>
+        <mj-image src="{{card_image_url}}" alt="{{campaign_name}}" border-radius="10px" padding="0" />
+      </mj-column>
+    </mj-section>
+
+    <mj-section padding="16px 36px 8px">
+      <mj-column>
+        <mj-text font-size="17px" line-height="1.6" font-style="italic" padding="0 0 12px">
+          {{greeting}}
+        </mj-text>
+        <mj-text color="#626784" font-size="14px" padding="0">
+          {{pillar_line}}
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-section padding="12px 36px 8px">
+      <mj-column>
+        <mj-button href="{{card_link}}" align="left">
+          Open your card
+        </mj-button>
+      </mj-column>
+    </mj-section>
+
+    <mj-section padding="8px 36px 24px">
+      <mj-column>
+        <mj-text color="#626784" font-size="14px" padding="0">
+          {{certificate_note}}
+        </mj-text>
+        <mj-text font-size="14px" padding="8px 0 0">
+          <a href="{{certificate_link}}" style="color:#0a0f29;">Open your certificate</a>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+
+    <mj-section background-color="#0a0f29" padding="24px 36px">
+      <mj-column>
+        <mj-text color="#ffffff" font-size="14px" padding="0 0 4px">
+          Thank you for being part of this.
+        </mj-text>
+        <mj-text color="#c8cbdb" font-size="12px" padding="0">
+          Candora Society · This message was sent because a gift was made in your honour.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

@@ -41,10 +41,24 @@ export default async function (req) {
       return Response.json({ error: 'This campaign is not accepting gifts.' }, { status: 404 });
     }
 
+    // A campaign can be split into fundraising pillars. A supporter gives to one
+    // of them, or to the campaign as a whole (no pillar at all).
+    const pillars = (campaign.pillars || []).filter((pillar) => pillar.is_active !== false);
+    const pillarId = String(body.pillarId || '');
+    const pillar = pillarId ? pillars.find((item) => item.id === pillarId) : null;
+    if (pillarId && campaign.enable_pillars === true && !pillar) {
+      return Response.json({ error: 'Choose one of the campaign’s causes.' }, { status: 400 });
+    }
+
     const tiers = (campaign.donation_products || []).filter(
       (tier) => tier.is_active !== false && Number(tier.amount) > 0
     );
     const tier = tiers.find((option) => option.id === String(body.productId || ''));
+
+    // An option that belongs to a pillar can only ever be given to that pillar.
+    if (tier && pillar && tier.pillar_id && tier.pillar_id !== pillar.id) {
+      return Response.json({ error: 'That giving option belongs to another cause.' }, { status: 400 });
+    }
 
     let cents;
     let productId = '';
@@ -107,6 +121,45 @@ export default async function (req) {
       return Response.json({ error: 'Please enter a valid email address.' }, { status: 400 });
     }
 
+    // Charitable gifting: the supporter may send the gift as a greeting card, to
+    // arrive straight away or on a day they choose.
+    const isGift = body.isGift === true && campaign.enable_gifting === true;
+    let giftFields = {};
+    if (isGift) {
+      const recipientName = String(body.recipientName || '').trim().slice(0, 120);
+      const recipientEmail = String(body.recipientEmail || '').trim().toLowerCase().slice(0, 200);
+      const themes = (campaign.ecard_themes || []).filter((theme) => theme.is_active !== false);
+      const theme = themes.find((item) => item.id === String(body.cardThemeId || '')) || themes[0] || null;
+
+      if (!recipientName) return Response.json({ error: 'Who is the gift for?' }, { status: 400 });
+      if (!isEmail(recipientEmail)) {
+        return Response.json(
+          { error: 'Enter the email address the card should be sent to.' },
+          { status: 400 }
+        );
+      }
+
+      // A day is delivered at 9am Alberta time; anything in the past goes now.
+      let deliverAt = '';
+      const wanted = String(body.deliverAt || '').trim();
+      if (wanted) {
+        const parsed = new Date(wanted.length === 10 ? `${wanted}T16:00:00.000Z` : wanted);
+        if (!Number.isNaN(parsed.getTime()) && parsed.getTime() > Date.now()) {
+          deliverAt = parsed.toISOString();
+        }
+      }
+
+      giftFields = {
+        is_gift: true,
+        recipient_name: recipientName,
+        recipient_email: recipientEmail,
+        card_theme_id: theme?.id || '',
+        card_theme_name: theme?.name || '',
+        card_message: String(body.cardMessage || '').trim().slice(0, 1000),
+        deliver_at: deliverAt,
+      };
+    }
+
     const appUrl = String(req.headers.get('X-Base44-App-Url') || '').replace(/\/+$/, '');
     if (!appUrl) {
       console.error('campaignCheckout: missing X-Base44-App-Url header');
@@ -134,6 +187,10 @@ export default async function (req) {
       campaign_id: campaign.id,
       campaign_name: campaign.name,
       campaign_slug: campaign.slug || '',
+      pillar_id: pillar?.id || '',
+      pillar_name: pillar?.name || '',
+      app_url: appUrl,
+      ...giftFields,
       amount,
       fee_amount: feeCents / 100,
       charge_amount: totalCents / 100,

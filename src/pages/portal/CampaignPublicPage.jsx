@@ -1,10 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Heart, Loader2, Mail, XCircle } from 'lucide-react';
 import CampaignHero from '@/components/campaign-public/CampaignHero';
 import CampaignDonate from '@/components/campaign-public/CampaignDonate';
+import CampaignPillars from '@/components/campaign-public/CampaignPillars';
 import CandoraBrandLockup from '@/components/campaign-public/CandoraBrandLockup';
 import { CANDORA_BRAND, brandFooterLines } from '@/lib/candoraBrand';
 import moment from 'moment';
@@ -13,6 +14,10 @@ import moment from 'moment';
 // appeal and give by card; everything else in the portal stays behind login.
 export default function CampaignPublicPage() {
   const { slug } = useParams();
+  // A pillar's own share link opens this page already giving to that cause.
+  const [pillarId, setPillarId] = useState(
+    () => new URLSearchParams(window.location.search).get('pillar') || ''
+  );
 
   const { data, isLoading, isError } = useQuery({
     queryKey: ['public-campaign', slug],
@@ -42,7 +47,7 @@ export default function CampaignPublicPage() {
     );
   }
 
-  const { campaign, raised, giftCount, preview } = data;
+  const { campaign, raised, giftCount, preview, pillars: pillarTotals = [] } = data;
   const ended = campaign.end_date && moment(campaign.end_date).endOf('day').isBefore(moment());
   const closed = campaign.is_active === false || ended;
   const paragraphs = String(campaign.story || '').split(/\n{2,}/).filter(Boolean);
@@ -63,6 +68,13 @@ export default function CampaignPublicPage() {
           {campaign.description && (
             <p className="text-lg text-foreground/90 leading-relaxed">{campaign.description}</p>
           )}
+
+          <CampaignPillars
+            campaign={campaign}
+            totals={pillarTotals}
+            selectedPillarId={pillarId}
+            onSelect={setPillarId}
+          />
 
           {paragraphs.length > 0 ? (
             <div className="space-y-4 text-[15px] leading-relaxed text-foreground/85">
@@ -122,7 +134,11 @@ export default function CampaignPublicPage() {
                   Your gift wasn't completed — nothing was charged.
                 </p>
               )}
-              <CampaignDonate campaign={campaign} />
+              <CampaignDonate
+                campaign={campaign}
+                pillarId={pillarId}
+                onSelectPillar={setPillarId}
+              />
             </>
           )}
         </div>

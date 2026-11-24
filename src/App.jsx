@@ -24,6 +24,8 @@ import GiftShopInvite from '@/pages/portal/GiftShopInvite';
 import CampaignPublicPage from '@/pages/portal/CampaignPublicPage';
 import GeneralDonationPage from '@/pages/portal/GeneralDonationPage';
 import GiftThankYou from '@/pages/portal/GiftThankYou';
+import CampaignGiftCardPage from '@/pages/portal/CampaignGiftCardPage';
+import CampaignCertificatePage from '@/pages/portal/CampaignCertificatePage';
 import CustomerKiosk from '@/pages/portal/CustomerKiosk';
 import FillableMinutesPublic from '@/pages/board/FillableMinutesPublic';
 
@@ -469,6 +471,8 @@ const AuthenticatedApp = () => {
     || location.startsWith('/kiosk')
     || location.startsWith('/campaign')
     || location.startsWith('/donate')
+    || location.startsWith('/gift-card')
+    || location.startsWith('/certificate')
     || location.startsWith('/gift-shop-invite')
     || location.startsWith('/empoweru-apply');
 
@@ -516,6 +520,10 @@ const AuthenticatedApp = () => {
 
       {/* Where a supporter lands after paying — confirms the gift with Stripe */}
       <Route path="/donate/thank-you" element={<GiftThankYou />} />
+
+      {/* The greeting card a supporter sent, and the certificate that goes with it */}
+      <Route path="/gift-card/:token" element={<CampaignGiftCardPage />} />
+      <Route path="/certificate/:token" element={<CampaignCertificatePage />} />
 
       {/* EmpowerU cohort application form — public link, no login required, no portal access */}
       <Route path="/empoweru-apply/:cohortId" element={<EmpowerUPublicApplication />} />

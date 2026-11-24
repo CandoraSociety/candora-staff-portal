@@ -28,6 +28,7 @@ export default function CampaignProfileForm({ campaign, onSave }) {
       owner_name: '',
       contact_email: '',
       hero_image_url: '',
+      seasonal_theme: 'none',
       thank_you_message: '',
       tax_receipt_note: '',
       is_active: true,
@@ -62,6 +63,7 @@ export default function CampaignProfileForm({ campaign, onSave }) {
       owner_name: form.owner_name || '',
       contact_email: form.contact_email || '',
       hero_image_url: form.hero_image_url || '',
+      seasonal_theme: form.seasonal_theme || 'none',
       thank_you_message: form.thank_you_message || '',
       tax_receipt_note: form.tax_receipt_note || '',
       is_active: !!form.is_active,
@@ -150,6 +152,22 @@ export default function CampaignProfileForm({ campaign, onSave }) {
           </div>
           <p className="text-xs text-muted-foreground mt-1.5">
             Shown at the top of the campaign page (stored publicly — anyone with the link can open it).
+          </p>
+        </div>
+        <div>
+          <Label>Seasonal theme</Label>
+          <Select
+            value={form.seasonal_theme || 'none'}
+            onValueChange={(value) => set('seasonal_theme', value)}
+          >
+            <SelectTrigger className="mt-1.5"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              <SelectItem value="none">None — the site's normal look</SelectItem>
+              <SelectItem value="christmas">Christmas — festive accents</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground mt-1.5">
+            Only this campaign's page is dressed — every other campaign stays as it is.
           </p>
         </div>
         <div>

@@ -15,6 +15,14 @@
       "type": "string",
       "description": "Public page the gift was started from"
     },
+    "pillar_id": {
+      "type": "string",
+      "description": "Fundraising pillar the supporter directed the gift to, when the campaign runs pillars"
+    },
+    "pillar_name": {
+      "type": "string",
+      "description": "Pillar name at the time of the gift (denormalized)"
+    },
     "session_id": {
       "type": "string",
       "description": "Stripe checkout session id"
@@ -79,11 +87,45 @@
       "description": "Mobile number the supporter gave for a thank-you text, when they chose to share one"
     },
     "gift_message": {
-      "type": "string"
+      "type": "string",
+      "description": "Note the supporter left with their gift"
     },
     "is_anonymous": {
       "type": "boolean",
       "default": false
+    },
+    "is_gift": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the supporter made this gift in someone's honour, to be delivered as a greeting card"
+    },
+    "recipient_name": {
+      "type": "string",
+      "description": "Person the gift is for"
+    },
+    "recipient_email": {
+      "type": "string",
+      "description": "Where the greeting card is emailed"
+    },
+    "card_theme_id": {
+      "type": "string",
+      "description": "Greeting card design chosen from the campaign's e-cards"
+    },
+    "card_theme_name": {
+      "type": "string"
+    },
+    "card_message": {
+      "type": "string",
+      "description": "The supporter's own message, written inside the card"
+    },
+    "deliver_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Moment the supporter asked for the card to be delivered. Empty means straight away."
+    },
+    "app_url": {
+      "type": "string",
+      "description": "Address of the app the gift was started in, so the card's links open on the right site"
     },
     "status": {
       "type": "string",

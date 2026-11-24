@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,6 +8,7 @@ import { activeTiers, formatMoneyExact, tierAmountLabel } from '@/lib/donorConst
 import { feeToCover } from '@/lib/stripeFees';
 import { PAYMENTS_READY, startCampaignCheckout } from '@/lib/campaignPayments';
 import { DONATION_STORAGE_NOTE } from '@/lib/dataPrivacy';
+import CampaignGiftFields from '@/components/campaign-public/CampaignGiftFields';
 
 // The giving box on a campaign's public page. A supporter picks one of the
 // campaign's giving options (and a price variation where there are several, or
@@ -18,8 +19,17 @@ export default function CampaignDonate({
   heading = 'Give to this campaign',
   subheading = 'Every gift goes straight to the appeal.',
   returnPath,
+  pillarId = '',
+  onSelectPillar,
 }) {
-  const tiers = activeTiers(campaign);
+  // When a campaign runs pillars, the giving options narrow to the cause the
+  // supporter picked — plus the options that belong to the whole campaign.
+  const pillars = campaign.enable_pillars
+    ? (campaign.pillars || []).filter((pillar) => pillar.is_active !== false)
+    : [];
+  const tiers = activeTiers(campaign).filter(
+    (option) => !pillarId || !option.pillar_id || option.pillar_id === pillarId
+  );
   const allowCustom = campaign.allow_custom_amount !== false;
   const allowMonthly = campaign.allow_monthly !== false;
   const offerFeeCover = campaign.allow_fee_coverage !== false;
@@ -39,6 +49,25 @@ export default function CampaignDonate({
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [checkoutUrl, setCheckoutUrl] = useState('');
+  const [gift, setGift] = useState({
+    isGift: false,
+    recipientName: '',
+    recipientEmail: '',
+    cardThemeId: '',
+    cardMessage: '',
+    delivery: 'now',
+    deliverAt: '',
+  });
+
+  // A different cause brings a different set of options — keep the choice valid.
+  useEffect(() => {
+    setSelectedId((current) =>
+      current === 'custom' || tiers.some((option) => option.id === current)
+        ? current
+        : (tiers[0]?.id || 'custom')
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pillarId]);
 
   const tier = tiers.find((option) => option.id === selectedId);
   const variations = (tier?.variations || []).filter((variation) => Number(variation.amount) > 0);
@@ -50,7 +79,8 @@ export default function CampaignDonate({
   else if (variations.length) amount = Number(activeVariation?.amount) || 0;
   else if (tier) amount = Number(tier.amount);
 
-  const monthlyAllowed = allowMonthly && (selectedId === 'custom' || tier?.allow_monthly !== false);
+  // A card is a one-time gesture, so a gift in someone's honour is never monthly.
+  const monthlyAllowed = allowMonthly && !gift.isGift && (selectedId === 'custom' || tier?.allow_monthly !== false);
   const monthly = monthlyAllowed && frequency === 'monthly';
   const fee = amount > 0 ? feeToCover(amount) : 0;
   const total = amount > 0 ? amount + (coverFee ? fee : 0) : 0;
@@ -67,6 +97,17 @@ export default function CampaignDonate({
     if (!amount || amount <= 0) { setError('Choose or enter a gift amount.'); return; }
     if (!name.trim()) { setError('Please tell us your name.'); return; }
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email.trim())) { setError('Please enter a valid email address.'); return; }
+    if (gift.isGift) {
+      if (!gift.recipientName.trim()) { setError('Who is the gift for?'); return; }
+      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(gift.recipientEmail.trim())) {
+        setError('Enter the email address the card should be sent to.');
+        return;
+      }
+      if (gift.delivery === 'later' && !gift.deliverAt) {
+        setError('Choose the day the card should arrive.');
+        return;
+      }
+    }
 
     const variationLabel = activeVariation?.label || '';
     const productName = tier
@@ -92,6 +133,13 @@ export default function CampaignDonate({
         donorPhone: phone.trim(),
         anonymous,
         message: message.trim(),
+        pillarId,
+        isGift: gift.isGift,
+        recipientName: gift.isGift ? gift.recipientName.trim() : '',
+        recipientEmail: gift.isGift ? gift.recipientEmail.trim() : '',
+        cardThemeId: gift.isGift ? gift.cardThemeId : '',
+        cardMessage: gift.isGift ? gift.cardMessage.trim() : '',
+        deliverAt: gift.isGift && gift.delivery === 'later' ? gift.deliverAt : '',
         returnPath,
       });
       setCheckoutUrl(url);
@@ -110,6 +158,26 @@ export default function CampaignDonate({
         <h2 className="font-display font-bold text-lg">{heading}</h2>
         <p className="text-sm text-muted-foreground">{subheading}</p>
       </div>
+
+      {pillars.length > 0 && (
+        <div className="space-y-2">
+          <Label>Where your gift goes</Label>
+          <div className="flex flex-wrap gap-2">
+            {[{ id: '', name: 'Everything' }, ...pillars].map((option) => (
+              <button
+                key={option.id || 'all'}
+                type="button"
+                onClick={() => onSelectPillar?.(option.id)}
+                className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
+                  (pillarId || '') === option.id ? 'border-primary bg-primary/10' : 'hover:bg-muted/60'
+                }`}
+              >
+                {option.id ? option.name.split('—')[0].trim() : option.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {tiers.length > 0 && (
         <div className="space-y-2">
@@ -228,6 +296,15 @@ export default function CampaignDonate({
             </span>
           </span>
         </label>
+      )}
+
+      {campaign.enable_gifting && (
+        <CampaignGiftFields
+          campaign={campaign}
+          value={gift}
+          onChange={setGift}
+          donorName={name}
+        />
       )}
 
       <div className="space-y-3">
