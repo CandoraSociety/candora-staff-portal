@@ -11,6 +11,10 @@
       "type": "number",
       "description": "Festival year, kept alongside the id for quick reading"
     },
+    "event_label": {
+      "type": "string",
+      "description": "How this archived event is labelled on the archive card, e.g. 2026 test. When it is left empty the card shows the festival year."
+    },
     "event_name": {
       "type": "string",
       "description": "Name the event ran under, e.g. Kids Gift Shop"

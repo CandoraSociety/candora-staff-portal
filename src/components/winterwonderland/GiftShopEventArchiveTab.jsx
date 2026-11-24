@@ -62,7 +62,7 @@ export default function GiftShopEventArchiveTab() {
               <div>
                 <CardTitle className="text-base flex items-center gap-2">
                   {archive.event_name || 'Kids Gift Shop'}
-                  <Badge variant="secondary">{archive.festival_year || ''}</Badge>
+                  <Badge variant="secondary">{archive.event_label || archive.festival_year || ''}</Badge>
                 </CardTitle>
                 <p className="text-xs text-muted-foreground mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
                   <span className="flex items-center gap-1"><CalendarDays className="h-3.5 w-3.5" /> {dateLabel(archive.event_date)}</span>
