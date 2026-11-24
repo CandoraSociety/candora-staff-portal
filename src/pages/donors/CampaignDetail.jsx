@@ -17,7 +17,7 @@ import CampaignDeliveriesPanel from '@/components/donors/campaign/CampaignDelive
 import CampaignShareLinks from '@/components/donors/campaign/CampaignShareLinks';
 import CampaignPillarReport from '@/components/donors/campaign/CampaignPillarReport';
 import CampaignImagesPanel from '@/components/donors/campaign/CampaignImagesPanel';
-import { activeTiers, formatMoney, publicCampaignUrl } from '@/lib/donorConstants';
+import { activeTiers, campaignPagePath, formatMoney } from '@/lib/donorConstants';
 
 // A campaign's own workspace: the full profile, the giving options offered on
 // its public page, the page itself, and every gift it has brought in.
@@ -89,7 +89,7 @@ export default function CampaignDetail() {
         <div className="flex items-center gap-2">
           {slug && (
             <Button variant="outline" asChild>
-              <a href={publicCampaignUrl(slug)} target="_blank" rel="noreferrer">
+              <a href={campaignPagePath(slug)} target="_blank" rel="noopener noreferrer">
                 <ExternalLink className="w-4 h-4 mr-2" /> {campaign.public_page_enabled ? 'Open page' : 'Preview page'}
               </a>
             </Button>

@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Copy, ExternalLink, Globe, ImagePlus, Sparkles } from 'lucide-react';
-import { activeTiers, publicCampaignUrl, slugify, tierAmountLabel } from '@/lib/donorConstants';
+import { activeTiers, campaignPagePath, publicCampaignUrl, slugify, tierAmountLabel } from '@/lib/donorConstants';
 import HeroImageAiDialog from '@/components/donors/campaign/HeroImageAiDialog';
 import PublicPageAiCopyDialog from '@/components/donors/campaign/PublicPageAiCopyDialog';
 
@@ -96,7 +96,7 @@ export default function PublicPagePanel({ campaign, onSave, onManageOptions }) {
                 <Copy className="w-4 h-4 mr-2" /> {copied ? 'Copied' : 'Copy link'}
               </Button>
               <Button variant="outline" asChild>
-                <a href={url} target="_blank" rel="noreferrer">
+                <a href={campaignPagePath(slug)} target="_blank" rel="noopener noreferrer">
                   <ExternalLink className="w-4 h-4 mr-2" /> {enabled ? 'Open page' : 'Preview page'}
                 </a>
               </Button>

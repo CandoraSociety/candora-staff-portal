@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Copy, ExternalLink } from 'lucide-react';
-import { publicCampaignUrl } from '@/lib/donorConstants';
+import { campaignPagePath, publicCampaignUrl } from '@/lib/donorConstants';
 import { qrImageUrl } from '@/lib/giftShopElf';
 
 // The campaign's own link plus a link for each cause, ready to copy or print as
@@ -11,14 +11,16 @@ export default function CampaignShareLinks({ campaign }) {
   const [copied, setCopied] = useState('');
 
   const base = publicCampaignUrl(campaign?.slug);
+  const pagePath = campaignPagePath(campaign?.slug);
   const pillars = (campaign?.pillars || []).filter((pillar) => pillar.is_active !== false);
 
   const links = [
-    { id: 'campaign', name: campaign?.name || 'Campaign page', url: base },
+    { id: 'campaign', name: campaign?.name || 'Campaign page', url: base, path: pagePath },
     ...pillars.map((pillar) => ({
       id: pillar.id,
       name: pillar.name,
-      url: `${base}?pillar=${pillar.id}`,
+      url: `${base}?pillar=${encodeURIComponent(pillar.id)}`,
+      path: `${pagePath}?pillar=${encodeURIComponent(pillar.id)}`,
     })),
   ];
 
@@ -73,7 +75,7 @@ export default function CampaignShareLinks({ campaign }) {
                   <Copy className="w-3.5 h-3.5 mr-1.5" /> {copied === link.id ? 'Copied' : 'Copy link'}
                 </Button>
                 <Button variant="ghost" size="sm" asChild>
-                  <a href={link.url} target="_blank" rel="noreferrer">
+                  <a href={link.path} target="_blank" rel="noopener noreferrer">
                     <ExternalLink className="w-3.5 h-3.5 mr-1.5" /> Open
                   </a>
                 </Button>
