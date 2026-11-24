@@ -112,7 +112,7 @@ export default function CampaignPublicPage() {
         className="hidden xl:block absolute left-0 top-0 w-28 h-[32rem]"
       />
 
-      <main className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-10 grid gap-8 lg:gap-12 lg:grid-cols-[1.6fr_1fr] lg:items-start">
+      <main className="relative w-full max-w-[1600px] mx-auto px-5 sm:px-8 lg:px-12 py-10 grid gap-8 lg:gap-14 lg:grid-cols-[minmax(0,1.75fr)_minmax(340px,1fr)] lg:items-start">
         <article className="space-y-6">
           {campaign.description && (
             <p className="text-lg text-foreground/90 leading-relaxed">{campaign.description}</p>
@@ -194,7 +194,7 @@ export default function CampaignPublicPage() {
       </main>
 
       <footer className="bg-sidebar text-sidebar-foreground border-t border-sidebar-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 py-8 flex flex-wrap items-start justify-between gap-6">
+        <div className="w-full max-w-[1600px] mx-auto px-5 sm:px-8 lg:px-12 py-8 flex flex-wrap items-start justify-between gap-6">
           <CandoraBrandLockup compact />
           <div className="text-xs text-sidebar-foreground/70 space-y-1">
             {brandFooterLines().map((line) => <p key={line}>{line}</p>)}
