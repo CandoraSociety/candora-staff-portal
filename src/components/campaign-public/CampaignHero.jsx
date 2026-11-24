@@ -30,7 +30,7 @@ export default function CampaignHero({ campaign, raised }) {
 
       <CandoraGarland campaign={campaign} variant="top" className="absolute inset-x-0 top-0 h-20 sm:h-24" />
 
-      <div className={`relative max-w-5xl mx-auto px-4 sm:px-6 ${compact ? 'pt-6 pb-8' : 'pt-8 pb-12 sm:pb-16'}`}>
+      <div className={`relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-10 ${compact ? 'pt-6 pb-8' : 'pt-8 pb-12 sm:pb-16'}`}>
         <div className="flex items-start justify-between gap-4">
           <CandoraBrandLockup />
           <a
@@ -43,7 +43,7 @@ export default function CampaignHero({ campaign, raised }) {
           </a>
         </div>
 
-        <div className={`${compact ? 'mt-6 space-y-3' : 'mt-10 space-y-4'} max-w-2xl`}>
+        <div className={`${compact ? 'mt-6 space-y-3' : 'mt-10 space-y-4'} max-w-3xl`}>
           <h1 className={`font-display font-extrabold leading-tight ${compact ? 'text-2xl sm:text-4xl' : 'text-3xl sm:text-5xl'}`}>{campaign.name}</h1>
           {campaign.tagline && (
             <p className="text-base sm:text-lg text-white/80">{campaign.tagline}</p>
