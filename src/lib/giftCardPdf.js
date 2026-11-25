@@ -52,29 +52,40 @@ async function fetchImage(url) {
   }
 }
 
-// Shows the whole card design, scaled to fit its space on a white sheet, so no
-// part of the artwork is ever cropped off.
-function fittedArtwork(image, width, height, density = 2) {
+// Cover-crops the artwork into exactly the band it sits in, so nothing spills
+// over the edges of the card.
+function croppedArtwork(image, width, height, density = 2) {
   const canvas = document.createElement('canvas');
   canvas.width = Math.round(width * density);
   canvas.height = Math.round(height * density);
-  const ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  const scale = Math.min(
+  const scale = Math.max(
     canvas.width / image.img.naturalWidth,
     canvas.height / image.img.naturalHeight,
   );
-  const drawWidth = image.img.naturalWidth * scale;
-  const drawHeight = image.img.naturalHeight * scale;
-  ctx.drawImage(
-    image.img,
-    (canvas.width - drawWidth) / 2,
-    (canvas.height - drawHeight) / 2,
-    drawWidth,
-    drawHeight,
-  );
+  const sourceWidth = canvas.width / scale;
+  const sourceHeight = canvas.height / scale;
+  canvas
+    .getContext('2d')
+    .drawImage(
+      image.img,
+      (image.img.naturalWidth - sourceWidth) / 2,
+      (image.img.naturalHeight - sourceHeight) / 2,
+      sourceWidth,
+      sourceHeight,
+      0,
+      0,
+      canvas.width,
+      canvas.height,
+    );
   return canvas.toDataURL('image/png');
+}
+
+// The emblem the card's design carries, found on the campaign by design name.
+function resolveMotif(campaign, card) {
+  const name = clean(card?.theme_name);
+  if (!name) return null;
+  const theme = (campaign?.ecard_themes || []).find((item) => clean(item.name) === name);
+  return theme?.motif_url ? { image: theme.motif_url, dark: !!theme.motif_dark } : null;
 }
 
 // The largest of the given sizes at which the text still fits the space.
@@ -197,21 +208,26 @@ export async function downloadGiftCardPdf({ card, campaign, logoUrl }) {
   const artY = 142;
   const artH = 250;
   const captionH = 96;
-  const artW = innerW - 24;
-  const artInnerH = artH - captionH - 16;
   const art = await fetchImage(card?.theme_image_url || campaign?.hero_image_url);
   if (art) {
-    doc.addImage(
-      fittedArtwork(art, artW, artInnerH),
-      'PNG',
-      left + 12,
-      artY + 8,
-      artW,
-      artInnerH,
-    );
+    doc.addImage(croppedArtwork(art, innerW, artH), 'PNG', left, artY, innerW, artH);
   } else {
     doc.setFillColor(...NAVY);
     doc.rect(left, artY, innerW, artH, 'F');
+  }
+
+  // The design's own emblem, set into the corner of the artwork.
+  const motif = resolveMotif(campaign, card);
+  if (motif) {
+    const motifImage = await fetchImage(motif.image);
+    if (motifImage) {
+      const size = 60;
+      const motifX = right - 14 - size;
+      const motifY = artY + 14;
+      doc.setFillColor(...(motif.dark ? NAVY : WHITE));
+      doc.rect(motifX - 4, motifY - 4, size + 8, size + 8, 'F');
+      doc.addImage(croppedArtwork(motifImage, size, size), 'PNG', motifX, motifY, size, size);
+    }
   }
 
   doc.setFillColor(...NAVY);

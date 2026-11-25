@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import CampaignDonate from '@/components/campaign-public/CampaignDonate';
 import ChristmasIntro from '@/components/campaign-public/ChristmasIntro';
+import CandoraGarland from '@/components/campaign-public/CandoraGarland';
 import ChristmasPillarCard from '@/components/campaign-public/ChristmasPillarCard';
 import ChristmasGifting from '@/components/campaign-public/ChristmasGifting';
 import ChristmasCombinedGiving from '@/components/campaign-public/ChristmasCombinedGiving';
@@ -43,6 +44,8 @@ export default function ChristmasCampaignShowcase({ campaign, initialPillarId = 
 
   return (
     <div className="space-y-9">
+      <CandoraGarland campaign={campaign} variant="top" className="h-32 sm:h-40" />
+
       <ChristmasIntro campaign={campaign} raised={campaign.raised} />
 
       <section className="space-y-5">

@@ -49,6 +49,10 @@ export default function CampaignGiftCardPage() {
   const giftName = String(card.gift_name || '').trim();
   const giftDescription = String(card.gift_description || '').trim();
   const donationName = giftName || String(card.theme_name || '').trim();
+  // The emblem this card design carries, set into the corner of its artwork.
+  const motifTheme = (campaign?.ecard_themes || []).find((theme) => theme.name === card.theme_name);
+  const motif = motifTheme?.motif_url || '';
+  const motifDark = !!motifTheme?.motif_dark;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0a0f29] via-[#131b3d] to-[#0a0f29] px-4 py-10">
@@ -66,17 +70,25 @@ export default function CampaignGiftCardPage() {
             </span>
           </div>
 
-          <div className="bg-white">
-            <div className="flex h-56 sm:h-64 items-center justify-center p-6">
-              {art && <img src={art} alt="" className="max-h-full max-w-full object-contain" />}
-            </div>
-            <div className="bg-[#0a0f29] px-6 py-5 text-white">
+          <div className="relative h-56 sm:h-64 bg-[#0a0f29]">
+            {art && <img src={art} alt="" className="absolute inset-0 h-full w-full object-cover" />}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f29]/90 via-[#0a0f29]/30 to-transparent" />
+            {motif && (
+              <span
+                className={`absolute right-3 top-3 block h-16 w-16 overflow-hidden rounded-xl ring-1 ring-[#fccf03]/70 ${
+                  motifDark ? 'bg-[#0a0f29]' : 'bg-white'
+                }`}
+              >
+                <img src={motif} alt="" className="h-full w-full object-cover" />
+              </span>
+            )}
+            <div className="relative h-full flex flex-col justify-end p-6 text-white">
               {giftName && (
-                <span className="block text-[11px] font-semibold uppercase tracking-[0.2em] text-[#fccf03]">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#fccf03]">
                   {giftName}
                 </span>
               )}
-              <span className="block text-[11px] uppercase tracking-[0.22em] text-white/70">For</span>
+              <span className="text-[11px] uppercase tracking-[0.22em] text-white/70">For</span>
               <h1 className="font-display font-extrabold text-3xl leading-tight">
                 {card.recipient_name}
               </h1>

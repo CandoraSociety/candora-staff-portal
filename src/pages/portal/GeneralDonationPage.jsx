@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import CampaignDonate from '@/components/campaign-public/CampaignDonate';
 import CampaignsDirectory from '@/components/campaign-public/CampaignsDirectory';
 import CandoraBrandLockup from '@/components/campaign-public/CandoraBrandLockup';
+import CandoraGarland from '@/components/campaign-public/CandoraGarland';
 import { CANDORA_BRAND, brandFooterLines } from '@/lib/candoraBrand';
 import { findChristmasCampaign } from '@/lib/christmasCampaign';
 
@@ -27,7 +28,8 @@ export default function GeneralDonationPage() {
   const general = data?.general;
   // While the Christmas appeal is running, the page opens on it: the three
   // causes are the first thing a visitor sees, not a tab they have to find.
-  const christmasOpen = !!findChristmasCampaign(data?.campaigns || []);
+  const christmasCampaign = findChristmasCampaign(data?.campaigns || []);
+  const christmasOpen = !!christmasCampaign;
   const defaultTab = campaignParam || pillarParam || christmasOpen ? 'campaigns' : 'give';
 
   return (
@@ -45,6 +47,13 @@ export default function GeneralDonationPage() {
           </div>
         </div>
       </header>
+
+      <div className="relative">
+        <CandoraGarland
+          campaign={christmasCampaign}
+          variant="side"
+          className="hidden xl:block absolute right-2 top-0 h-[26rem]"
+        />
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
         {isLoading ? (
@@ -123,6 +132,7 @@ export default function GeneralDonationPage() {
           </Tabs>
         )}
       </main>
+      </div>
 
       <footer className="bg-sidebar text-sidebar-foreground border-t border-sidebar-border">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 flex flex-wrap items-start justify-between gap-6">

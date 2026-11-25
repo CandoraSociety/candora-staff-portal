@@ -8,6 +8,9 @@ const CANDORA_LOGO = 'https://media.base44.com/images/public/6a249282cb496579542
 // gift makes possible — updating as they type.
 export default function GiftCardPreview({ campaign, theme, recipientName, donorName, giftName, message, description, amount }) {
   const art = theme?.image_url || campaign?.hero_image_url || '';
+  // The emblem this card design carries, set into the corner of its artwork.
+  const motif = theme?.motif_url || '';
+  const motifDark = !!theme?.motif_dark;
   const greeting = String(message || '').trim() || theme?.message || '';
   const giftDescription = String(description || '').trim();
   const donationName = String(giftName || theme?.name || '').trim();
@@ -19,18 +22,26 @@ export default function GiftCardPreview({ campaign, theme, recipientName, donorN
         <span className="text-[9px] uppercase tracking-[0.18em] text-muted-foreground">Candora</span>
       </div>
 
-      <div className="bg-white">
-        <div className="flex aspect-[16/9] items-center justify-center p-3">
-          {art && <img src={art} alt="" className="max-h-full max-w-full object-contain" />}
-        </div>
-        <div className="bg-[#0a0f29] px-3 py-2 text-white">
+      <div className="relative aspect-[16/10] bg-[#0a0f29]">
+        {art && <img src={art} alt="" className="absolute inset-0 h-full w-full object-cover" />}
+        <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f29]/95 via-[#0a0f29]/35 to-transparent" />
+        {motif && (
+          <span
+            className={`absolute right-2 top-2 block h-10 w-10 overflow-hidden rounded-lg ring-1 ring-[#fccf03]/70 ${
+              motifDark ? 'bg-[#0a0f29]' : 'bg-white'
+            }`}
+          >
+            <img src={motif} alt="" className="h-full w-full object-cover" />
+          </span>
+        )}
+        <div className="relative h-full flex flex-col justify-end p-3 text-white">
           {giftName && (
-            <span className="block text-[10px] font-semibold uppercase tracking-[0.18em] text-[#fccf03]">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#fccf03]">
               {giftName}
             </span>
           )}
-          <span className="block text-[10px] uppercase tracking-[0.18em] text-white/70">A gift for</span>
-          <span className="block font-display font-bold text-lg leading-tight">
+          <span className="text-[10px] uppercase tracking-[0.18em] text-white/70">A gift for</span>
+          <span className="font-display font-bold text-lg leading-tight">
             {recipientName?.trim() || 'Someone special'}
           </span>
         </div>
