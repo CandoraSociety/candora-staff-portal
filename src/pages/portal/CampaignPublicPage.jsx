@@ -6,15 +6,15 @@ import { Heart, Loader2, Mail, XCircle } from 'lucide-react';
 import CampaignHero from '@/components/campaign-public/CampaignHero';
 import CampaignDonate from '@/components/campaign-public/CampaignDonate';
 import CampaignPillars from '@/components/campaign-public/CampaignPillars';
-import CandoraBrandLockup from '@/components/campaign-public/CandoraBrandLockup';
+import DonationFooter from '@/components/campaign-public/DonationFooter';
 import CandoraGarland from '@/components/campaign-public/CandoraGarland';
-import { CANDORA_BRAND, brandFooterLines } from '@/lib/candoraBrand';
 import moment from 'moment';
 
 // A campaign's public page — standalone, no staff sign-in. Supporters read the
 // appeal and give by card; everything else in the portal stays behind login.
-export default function CampaignPublicPage() {
-  const { slug } = useParams();
+export default function CampaignPublicPage({ campaignSlug, returnPath, children }) {
+  const { slug: routeSlug } = useParams();
+  const slug = campaignSlug || routeSlug;
   // A pillar's own share link opens this page already giving to that cause.
   const [pillarId, setPillarId] = useState(
     () => new URLSearchParams(window.location.search).get('pillar') || ''
@@ -187,23 +187,15 @@ export default function CampaignPublicPage() {
                 campaign={campaign}
                 pillarId={pillarId}
                 onSelectPillar={setPillarId}
+                returnPath={returnPath}
               />
             </>
           )}
         </div>
       </main>
 
-      <footer className="bg-sidebar text-sidebar-foreground border-t border-sidebar-border">
-        <div className="w-full max-w-[1600px] mx-auto px-5 sm:px-8 lg:px-12 py-8 flex flex-wrap items-start justify-between gap-6">
-          <CandoraBrandLockup compact />
-          <div className="text-xs text-sidebar-foreground/70 space-y-1">
-            {brandFooterLines().map((line) => <p key={line}>{line}</p>)}
-          </div>
-          <p className="text-xs text-sidebar-foreground/50 max-w-xs">
-            Gifts are processed securely. Thank you for supporting {CANDORA_BRAND.name}.
-          </p>
-        </div>
-      </footer>
+      {children}
+      <DonationFooter />
     </div>
   );
 }
