@@ -29,9 +29,13 @@ export default function CampaignDonate({
   const pillars = campaign.enable_pillars
     ? (campaign.pillars || []).filter((pillar) => pillar.is_active !== false)
     : [];
-  const tiers = activeTiers(campaign).filter(
-    (option) => !pillarId || !option.pillar_id || option.pillar_id === pillarId
-  );
+  // A gift to the whole campaign shows the combined options on their own; a gift
+  // to one cause shows that cause's options alongside them.
+  const allTiers = activeTiers(campaign);
+  const ownTiers = pillarId
+    ? allTiers.filter((option) => !option.pillar_id || option.pillar_id === pillarId)
+    : allTiers.filter((option) => !option.pillar_id);
+  const tiers = ownTiers.length ? ownTiers : allTiers;
   const allowCustom = campaign.allow_custom_amount !== false;
   const allowMonthly = campaign.allow_monthly !== false;
   const offerFeeCover = campaign.allow_fee_coverage !== false;
@@ -165,18 +169,18 @@ export default function CampaignDonate({
 
       {pillars.length > 0 && (
         <div className="space-y-2">
-          <Label>Where your gift goes</Label>
+          <Label>Select your donation</Label>
           <div className="flex flex-wrap gap-2">
-            {[{ id: '', name: 'Everything' }, ...pillars].map((option) => (
+            {pillars.map((option) => (
               <button
-                key={option.id || 'all'}
+                key={option.id}
                 type="button"
                 onClick={() => onSelectPillar?.(option.id)}
                 className={`rounded-full border px-3 py-1.5 text-xs font-medium transition-colors ${
                   (pillarId || '') === option.id ? 'border-primary bg-primary/10' : 'hover:bg-muted/60'
                 }`}
               >
-                {option.id ? pillarShortLabel(option) : option.name}
+                {pillarShortLabel(option)}
               </button>
             ))}
           </div>
