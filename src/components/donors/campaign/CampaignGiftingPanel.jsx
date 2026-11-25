@@ -76,6 +76,11 @@ export default function CampaignGiftingPanel({ campaign, onSave }) {
   };
 
   const previewTheme = themes[preview] || themes[0];
+  const previewPillar = (campaign?.pillars || []).find((pillar) => pillar.id === previewTheme?.id);
+  const previewDonation = (campaign?.donation_products || []).find(
+    (option) => option.is_active !== false && (option.pillar_id || '') === (previewPillar?.id || '')
+  );
+  const previewVariation = previewDonation?.variations?.[0];
 
   return (
     <div className="space-y-5">
@@ -163,12 +168,12 @@ export default function CampaignGiftingPanel({ campaign, onSave }) {
                 </div>
 
                 <div>
-                  <Label>Default greeting</Label>
+                  <Label>Gift wording (bottom box)</Label>
                   <Textarea
                     rows={2}
                     value={theme.message || ''}
                     onChange={(e) => set(index, 'message', e.target.value)}
-                    placeholder="Used when the supporter leaves their message blank"
+                    placeholder="The gift description beneath the donor's personal message"
                   />
                 </div>
 
@@ -192,8 +197,11 @@ export default function CampaignGiftingPanel({ campaign, onSave }) {
             theme={previewTheme}
             recipientName="Jordan"
             donorName="The Candora team"
+            giftName={previewPillar?.gift_name || previewTheme?.name}
             description={campaign?.description || ''}
-            message={previewTheme?.message}
+            donationName={previewDonation ? [previewDonation.name, previewVariation?.label].filter(Boolean).join(' — ') : ''}
+            amount={previewVariation?.amount ?? previewDonation?.amount}
+            message=""
           />
           <p className="text-xs text-muted-foreground">
             Cards are emailed with a link that opens the full card, so the artwork and message read

@@ -6,6 +6,7 @@ import { Gift, Heart, Loader2, XCircle } from 'lucide-react';
 import moment from 'moment';
 import GiftCardDownloadButton from '@/components/campaign-public/GiftCardDownloadButton';
 import { CHRISTMAS_ARTWORK } from '@/lib/christmasArtwork';
+import GiftCardMessageSections from '@/components/campaign-public/GiftCardMessageSections';
 
 const CANDORA_LOGO = 'https://media.base44.com/images/public/6a249282cb496579542673b7/6d7d8de5b7cf5f4838f9d1df98d171cc_kids-gift-shop-logo.png';
 
@@ -95,39 +96,14 @@ export default function CampaignGiftCardPage() {
               />
             </div>
 
-            <div className="relative overflow-hidden rounded-xl bg-[#0a0f29] px-4 py-3 pr-16 text-white">
-              <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#fccf03]">
-                {christmas && (
-                  <img
-                    src={CHRISTMAS_ARTWORK.star}
-                    alt=""
-                    aria-hidden="true"
-                    className="h-3.5 w-3.5 object-cover mix-blend-screen"
-                  />
-                )}
-                A gift to you
-              </p>
-              <p className="text-sm leading-relaxed mt-1 whitespace-pre-line">
-                {card.message || 'A gift has been made in your honour, to bring a little joy this season.'}
-              </p>
-              {christmas && (
-                <img
-                  src={CHRISTMAS_ARTWORK.bow}
-                  alt=""
-                  aria-hidden="true"
-                  className="pointer-events-none absolute right-1 top-1/2 w-14 -translate-y-1/2 mix-blend-screen"
-                />
-              )}
-            </div>
-
-            {giftDescription && (
-              <div className="rounded-xl border border-[#fccf03]/50 bg-[#fccf03]/10 p-4 space-y-1">
-                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#0a0f29]/70">
-                  {giftName || 'Your gift'}
-                </p>
-                <p className="text-sm leading-relaxed text-foreground/90">{giftDescription}</p>
-              </div>
-            )}
+            <GiftCardMessageSections
+              message={card.message}
+              giftWording={giftDescription}
+              giftName={giftName}
+              donationName={card.product_name}
+              amount={card.amount}
+              christmas={christmas}
+            />
 
             <div className="rounded-xl bg-muted/60 p-4 space-y-1 text-sm">
               <p className="font-medium">{card.campaign_name}</p>

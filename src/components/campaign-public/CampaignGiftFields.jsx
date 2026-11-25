@@ -8,7 +8,7 @@ import GiftCardPreview from '@/components/campaign-public/GiftCardPreview';
 // The charitable gifting part of the giving box: who the gift is for, the card
 // design, the message and when it should arrive. Every change flows straight
 // into the live preview beside it.
-export default function CampaignGiftFields({ campaign, value, onChange, donorName, pillar, amount }) {
+export default function CampaignGiftFields({ campaign, value, onChange, donorName, pillar, donationName, amount }) {
   const themes = (campaign?.ecard_themes || []).filter((theme) => theme.is_active !== false);
   const giftName =
     String(pillar?.gift_name || '').trim() || 'The Gift of Joy, Hope & Belonging';
@@ -111,7 +111,8 @@ export default function CampaignGiftFields({ campaign, value, onChange, donorNam
             donorName={donorName}
             giftName={giftName}
             description={String(pillar?.description || campaign?.description || '').trim()}
-            message={value.cardMessage || selectedTheme?.message}
+            message={value.cardMessage}
+            donationName={donationName}
             amount={amount}
           />
 

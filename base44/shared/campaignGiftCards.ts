@@ -5,6 +5,7 @@
 // through, and it is always tied to the Donation recorded for it.
 
 import { sendGiftShopText } from './giftShopSms.ts';
+import { getGiftCardContent, themeGiftWording } from './campaignGiftCardContent.ts';
 
 export function newGiftToken() {
   const bytes = crypto.getRandomValues(new Uint8Array(18));
@@ -28,11 +29,9 @@ export function pickTheme(campaign, themeId) {
   };
 }
 
-// The message a card opens with when the supporter leaves their own blank.
+// Kept separate from the donor's personal message on every design.
 export function themeGreeting(campaign, themeId) {
-  const themes = campaign?.ecard_themes || [];
-  const theme = themes.find((item) => item.id === String(themeId || '')) || themes[0];
-  return clean(theme?.message, 400);
+  return themeGiftWording(campaign, themeId);
 }
 
 // Writes the card for a confirmed gift. `deliverAt` in the past (or missing)
@@ -46,7 +45,7 @@ export async function createGiftCardForIntent(base44, intent, donation) {
   // What the gift makes possible, kept on the card so the recipient can read
   // what was given in their honour.
   const pillar = (campaign?.pillars || []).find((item) => item.id === (intent.pillar_id || ''));
-  const giftDescription = clean(pillar?.description || campaign?.description, 500);
+  const giftDescription = themeGiftWording(campaign, theme.id) || clean(pillar?.description || campaign?.description, 2000);
   const now = new Date();
   const wanted = intent.deliver_at ? new Date(intent.deliver_at) : now;
   const deliverAt = Number.isNaN(wanted.getTime()) || wanted.getTime() <= now.getTime() ? now : wanted;
@@ -95,13 +94,10 @@ export async function deliverGiftCard(base44, card) {
   const base = String(card.app_url || '').replace(/\/+$/, '');
   const cardLink = `${base}/gift-card/${card.token}`;
   const certificateLink = campaign?.certificate_enabled ? `${base}/certificate/${card.token}` : '';
-  const greeting = card.message || themeGreeting(campaign, card.theme_id);
-  const pillar = (campaign?.pillars || []).find((item) => item.id === card.pillar_id);
-  const giftName = clean(pillar?.gift_name, 80);
-  const giftDescription = clean(
-    card.gift_description || pillar?.description || campaign?.description,
-    500,
-  );
+  const greeting = clean(card.message, 1000);
+  const content = await getGiftCardContent(base44, card, campaign);
+  const giftName = content.gift_name;
+  const giftDescription = content.gift_description;
 
   try {
     const result = await base44.asServiceRole.integrations.Core.SendEmail({
@@ -115,6 +111,7 @@ export async function deliverGiftCard(base44, card) {
         gift_line: giftName,
         pillar_line: card.pillar_name ? `Your gift supports ${card.pillar_name}.` : '',
         gift_description: giftDescription,
+        donation_selection: [content.product_name, Number(card.amount) > 0 ? `${new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(Number(card.amount))} CAD` : ''].filter(Boolean).join(' · '),
         greeting,
         card_image_url: card.theme_image_url || campaign?.hero_image_url || '',
         card_link: cardLink,

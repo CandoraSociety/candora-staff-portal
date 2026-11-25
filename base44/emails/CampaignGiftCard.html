@@ -1,6 +1,6 @@
 <mjml>
   <mj-head>
-    <mj-title>A gift has been made in your honour — {{campaign_name}}</mj-title>
+    <mj-title>A gift has been made in your honour, {{campaign_name}}</mj-title>
     <mj-preview>{{donor_line}} made a gift to {{campaign_name}} in your honour.</mj-preview>
     <mj-attributes>
       <mj-all font-family="Inter, Helvetica, Arial, sans-serif" />
@@ -41,7 +41,13 @@
         <mj-text font-family="Georgia, 'Times New Roman', serif" font-size="40px" font-style="italic" color="#0a0f29" padding="0 0 14px">
           Merry Christmas!
         </mj-text>
-        <mj-text font-size="15px" line-height="1.6" padding="0">
+      </mj-column>
+    </mj-section>
+
+    <mj-section padding="0 36px 14px">
+      <mj-column background-color="#0a0f29" border-radius="10px" padding="14px 16px">
+        <mj-text color="#fccf03" font-size="11px" font-weight="700" letter-spacing="2px" text-transform="uppercase" padding="0 0 5px">A message for you</mj-text>
+        <mj-text color="#ffffff" font-size="15px" line-height="1.6" padding="0">
           {{greeting}}
         </mj-text>
       </mj-column>
@@ -55,6 +61,8 @@
         <mj-text color="#080c21" font-size="14px" line-height="1.6" padding="0">
           {{gift_description}}
         </mj-text>
+        <mj-text color="#626784" font-size="11px" padding="14px 0 4px">Donation selected</mj-text>
+        <mj-text color="#0a0f29" font-size="16px" font-weight="700" padding="0">{{donation_selection}}</mj-text>
       </mj-column>
     </mj-section>
 

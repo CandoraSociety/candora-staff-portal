@@ -329,6 +329,7 @@ export default function CampaignDonate({
           onChange={setGift}
           donorName={name}
           pillar={pillars.find((item) => item.id === pillarId) || null}
+          donationName={tier ? [tier.name, activeVariation?.label].filter(Boolean).join(' — ') : 'Custom gift'}
           amount={amount}
         />
       )}
