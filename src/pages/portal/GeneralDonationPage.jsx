@@ -1,7 +1,7 @@
 import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Heart, Loader2, XCircle } from 'lucide-react';
+import { ExternalLink, Heart, Loader2, XCircle } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import CampaignDonate from '@/components/campaign-public/CampaignDonate';
 import CampaignsDirectory from '@/components/campaign-public/CampaignsDirectory';
@@ -33,8 +33,18 @@ export default function GeneralDonationPage() {
   return (
     <div className="min-h-screen bg-background">
       <header className="bg-sidebar text-sidebar-foreground border-t-4 border-primary">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-6 pb-10 sm:pb-12 space-y-8">
-          <CandoraBrandLockup />
+        <div className="max-w-[1500px] mx-auto px-5 sm:px-8 lg:px-12 pt-6 pb-10 sm:pb-12 space-y-8">
+          <div className="flex items-start justify-between gap-4">
+            <CandoraBrandLockup />
+            <a
+              href="https://candora.ca"
+              target="_blank"
+              rel="noreferrer"
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-white/25 bg-white/10 px-3.5 py-2 text-xs font-semibold text-sidebar-foreground backdrop-blur transition hover:bg-white/20 sm:text-sm"
+            >
+              <ExternalLink className="w-4 h-4" /> Go to candora.ca
+            </a>
+          </div>
 
           <div className="max-w-2xl space-y-3">
             <h1 className="text-3xl sm:text-4xl font-display font-extrabold leading-tight">Make a donation</h1>
@@ -46,7 +56,7 @@ export default function GeneralDonationPage() {
         </div>
       </header>
 
-      <main className="max-w-5xl mx-auto px-4 sm:px-6 py-8">
+      <main className="max-w-6xl mx-auto px-5 sm:px-8 lg:px-10 py-8">
         {isLoading ? (
           <div className="flex justify-center py-20">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
@@ -125,7 +135,7 @@ export default function GeneralDonationPage() {
       </main>
 
       <footer className="bg-sidebar text-sidebar-foreground border-t border-sidebar-border">
-        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-8 flex flex-wrap items-start justify-between gap-6">
+        <div className="max-w-[1500px] mx-auto px-5 sm:px-8 lg:px-12 py-8 flex flex-wrap items-start justify-between gap-6">
           <CandoraBrandLockup compact />
           <div className="text-xs text-sidebar-foreground/70 space-y-1">
             {brandFooterLines().map((line) => <p key={line}>{line}</p>)}
