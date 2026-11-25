@@ -19,6 +19,10 @@
       "type": "string",
       "description": "Pillar name at the time of the gift, for reporting and the card itself"
     },
+    "gift_description": {
+      "type": "string",
+      "description": "What this gift makes possible, printed on the card under the supporter's message so the recipient can read what was given in their honour"
+    },
     "donation_id": {
       "type": "string",
       "description": "The recorded gift this card belongs to"

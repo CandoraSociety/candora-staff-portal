@@ -41,6 +41,10 @@ export async function createGiftCardForIntent(base44, intent, donation) {
     .catch((e) => (e.status === 404 ? null : Promise.reject(e)));
 
   const theme = pickTheme(campaign, intent.card_theme_id);
+  // What the gift makes possible, kept on the card so the recipient can read
+  // what was given in their honour.
+  const pillar = (campaign?.pillars || []).find((item) => item.id === (intent.pillar_id || ''));
+  const giftDescription = clean(pillar?.description || campaign?.description, 500);
   const now = new Date();
   const wanted = intent.deliver_at ? new Date(intent.deliver_at) : now;
   const deliverAt = Number.isNaN(wanted.getTime()) || wanted.getTime() <= now.getTime() ? now : wanted;
@@ -50,6 +54,7 @@ export async function createGiftCardForIntent(base44, intent, donation) {
     campaign_name: intent.campaign_name || campaign?.name || '',
     pillar_id: intent.pillar_id || '',
     pillar_name: intent.pillar_name || '',
+    gift_description: giftDescription,
     donation_id: donation.id,
     amount: Number(intent.amount) || 0,
     donor_name: intent.is_anonymous ? '' : (intent.donor_name || ''),
@@ -89,6 +94,10 @@ export async function deliverGiftCard(base44, card) {
   const greeting = card.message || themeGreeting(campaign, card.theme_id);
   const pillar = (campaign?.pillars || []).find((item) => item.id === card.pillar_id);
   const giftName = clean(pillar?.gift_name, 80);
+  const giftDescription = clean(
+    card.gift_description || pillar?.description || campaign?.description,
+    500,
+  );
 
   try {
     const result = await base44.asServiceRole.integrations.Core.SendEmail({
@@ -101,6 +110,7 @@ export async function deliverGiftCard(base44, card) {
         campaign_name: card.campaign_name,
         gift_line: giftName,
         pillar_line: card.pillar_name ? `Your gift supports ${card.pillar_name}.` : '',
+        gift_description: giftDescription,
         greeting,
         card_image_url: card.theme_image_url || campaign?.hero_image_url || '',
         card_link: cardLink,

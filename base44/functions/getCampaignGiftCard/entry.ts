@@ -19,11 +19,17 @@ export default async function (req) {
       .get(card.campaign_id)
       .catch((e) => (e.status === 404 ? null : Promise.reject(e)));
 
+    // What the gift made possible — kept on the card, with the cause's own
+    // wording as the fallback for cards written before it was stored.
+    const cardPillar = (campaign?.pillars || []).find((item) => item.id === card.pillar_id);
+
     return Response.json({
       card: {
         token: card.token,
         campaign_name: card.campaign_name,
         pillar_name: card.pillar_name || '',
+        gift_name: cardPillar?.gift_name || '',
+        gift_description: card.gift_description || cardPillar?.description || campaign?.description || '',
         recipient_name: card.recipient_name || '',
         donor_name: card.is_anonymous ? '' : (card.donor_name || ''),
         is_anonymous: !!card.is_anonymous,

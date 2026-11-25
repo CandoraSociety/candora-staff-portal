@@ -192,6 +192,7 @@ export default function CampaignGiftingPanel({ campaign, onSave }) {
             theme={previewTheme}
             recipientName="Jordan"
             donorName="The Candora team"
+            description={campaign?.description || ''}
             message={previewTheme?.message}
           />
           <p className="text-xs text-muted-foreground">

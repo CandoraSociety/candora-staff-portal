@@ -5,9 +5,11 @@ import { base44 } from '@/api/base44Client';
 import { Gift, Heart, Loader2, XCircle } from 'lucide-react';
 import moment from 'moment';
 
+const CANDORA_LOGO = 'https://media.base44.com/images/public/6a249282cb496579542673b7/c7fbd36e2_logo.png';
+
 // The greeting card a supporter sent — opened by its recipient from the email,
-// with no sign-in. It shows the card design, their message, the cause the gift
-// supports, and the certificate when the campaign issues one.
+// with no sign-in. It shows Candora's name, the card design, their message, what
+// the gift makes possible, and the certificate when the campaign issues one.
 export default function CampaignGiftCardPage() {
   const { token } = useParams();
 
@@ -41,8 +43,8 @@ export default function CampaignGiftCardPage() {
 
   const { card, campaign, certificate } = data;
   const art = card.theme_image_url || campaign?.hero_image_url || '';
-  const pillar = (campaign?.pillars || []).find((item) => item.id === card.pillar_id);
-  const giftName = String(pillar?.gift_name || '').trim();
+  const giftName = String(card.gift_name || '').trim();
+  const giftDescription = String(card.gift_description || '').trim();
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0a0f29] via-[#131b3d] to-[#0a0f29] px-4 py-10">
@@ -53,6 +55,13 @@ export default function CampaignGiftCardPage() {
         </div>
 
         <article className="rounded-3xl overflow-hidden bg-white shadow-2xl ring-2 ring-[#fccf03]">
+          <div className="flex items-center justify-between gap-3 px-6 py-4 border-b">
+            <img src={CANDORA_LOGO} alt="Candora Society" className="h-9 w-auto" />
+            <span className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
+              Candora Society
+            </span>
+          </div>
+
           <div className="relative h-56 sm:h-64 bg-[#0a0f29]">
             {art && <img src={art} alt="" className="absolute inset-0 h-full w-full object-cover" />}
             <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f29]/90 via-[#0a0f29]/30 to-transparent" />
@@ -73,6 +82,15 @@ export default function CampaignGiftCardPage() {
             <p className="text-[15px] leading-relaxed whitespace-pre-line italic text-foreground/90">
               {card.message || 'A gift has been made in your honour, to bring a little joy this season.'}
             </p>
+
+            {giftDescription && (
+              <div className="rounded-xl border border-[#fccf03]/50 bg-[#fccf03]/10 p-4 space-y-1">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#0a0f29]/70">
+                  {giftName || 'Your gift'}
+                </p>
+                <p className="text-sm leading-relaxed text-foreground/90">{giftDescription}</p>
+              </div>
+            )}
 
             <div className="rounded-xl bg-muted/60 p-4 space-y-1 text-sm">
               <p className="font-medium">{card.campaign_name}</p>

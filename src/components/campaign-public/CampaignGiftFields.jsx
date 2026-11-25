@@ -140,6 +140,7 @@ export default function CampaignGiftFields({ campaign, value, onChange, donorNam
             recipientName={value.recipientName}
             donorName={donorName}
             giftName={giftName}
+            description={String(pillar?.description || campaign?.description || '').trim()}
             message={value.cardMessage || selectedTheme?.message}
           />
         </div>
