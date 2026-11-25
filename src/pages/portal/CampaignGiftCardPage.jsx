@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
-import { Gift, Heart, Loader2, XCircle } from 'lucide-react';
+import { Heart, Loader2, XCircle } from 'lucide-react';
 import moment from 'moment';
 import GiftCardDownloadButton from '@/components/campaign-public/GiftCardDownloadButton';
 import { CHRISTMAS_ARTWORK } from '@/lib/christmasArtwork';
@@ -12,7 +12,7 @@ const CANDORA_LOGO = 'https://media.base44.com/images/public/6a249282cb496579542
 
 // The greeting card a supporter sent — opened by its recipient from the email,
 // with no sign-in. It shows Candora's name, the card design, their message, what
-// the gift makes possible, and the certificate when the campaign issues one.
+// the gift makes possible, and the printable version of the card.
 export default function CampaignGiftCardPage() {
   const { token } = useParams();
 
@@ -44,7 +44,7 @@ export default function CampaignGiftCardPage() {
     );
   }
 
-  const { card, campaign, certificate } = data;
+  const { card, campaign } = data;
   // The card's email links here with ?print=1 — the PDF is made and saved straight away.
   const wantsPdf = new URLSearchParams(window.location.search).get('print') === '1';
   const art = card.theme_image_url || campaign?.hero_image_url || '';
@@ -126,14 +126,6 @@ export default function CampaignGiftCardPage() {
                   className="inline-flex items-center gap-2 rounded-md bg-[#fccf03] text-[#0a0f29] px-4 py-2.5 text-sm font-semibold hover:bg-[#e6bd03]"
                 >
                   <Heart className="w-4 h-4" /> Pay it forward
-                </Link>
-              )}
-              {certificate?.enabled && (
-                <Link
-                  to={`/certificate/${card.token}`}
-                  className="inline-flex items-center gap-2 rounded-md border px-4 py-2.5 text-sm font-medium hover:bg-muted"
-                >
-                  <Gift className="w-4 h-4" /> Your certificate
                 </Link>
               )}
             </div>

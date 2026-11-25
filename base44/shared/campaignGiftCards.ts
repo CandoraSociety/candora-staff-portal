@@ -80,8 +80,8 @@ export async function createGiftCardForIntent(base44, intent, donation) {
 // supporter who gave it, and a text to the recipient when a mobile number was
 // given. Each channel stands on its own — an email that is refused no longer
 // stops the text or the supporter's copy from going out. The recipient never
-// sees the supporter's email address, and the card and certificate links are
-// built from the app address the gift was made in — never from the caller.
+// sees the supporter's email address, and the card links are built from the app
+// address the gift was made in — never from the caller.
 export async function deliverGiftCard(base44, card) {
   const recipientEmail = clean(card?.recipient_email, 200);
   const willText = !!card?.text_recipient && !!clean(card?.recipient_phone, 20);
@@ -99,7 +99,6 @@ export async function deliverGiftCard(base44, card) {
 
   const base = String(card.app_url || '').replace(/\/+$/, '');
   const cardLink = `${base}/gift-card/${card.token}`;
-  const certificateLink = campaign?.certificate_enabled ? `${base}/certificate/${card.token}` : '';
   const greeting = clean(card.message, 1000);
   const content = await getGiftCardContent(base44, card, campaign);
   const giftName = content.gift_name;
@@ -123,8 +122,6 @@ export async function deliverGiftCard(base44, card) {
     card_image_url: card.theme_image_url || campaign?.hero_image_url || '',
     card_link: cardLink,
     card_print_link: `${cardLink}?print=1`,
-    certificate_link: certificateLink,
-    certificate_note: certificateLink ? 'The personal certificate is ready to open and print.' : '',
   };
 
   // 1. The card itself, to the person it is for.
