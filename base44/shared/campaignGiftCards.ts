@@ -76,13 +76,19 @@ export async function createGiftCardForIntent(base44, intent, donation) {
   });
 }
 
-// Emails the card to its recipient. The recipient never sees the supporter's
-// email address, and the card and certificate links are built from the app
-// address the gift was made in — never from the caller.
+// Delivers a card: the card itself to its recipient, a watermarked copy to the
+// supporter who gave it, and a text to the recipient when a mobile number was
+// given. Each channel stands on its own — an email that is refused no longer
+// stops the text or the supporter's copy from going out. The recipient never
+// sees the supporter's email address, and the card and certificate links are
+// built from the app address the gift was made in — never from the caller.
 export async function deliverGiftCard(base44, card) {
-  if (!card?.recipient_email) {
+  const recipientEmail = clean(card?.recipient_email, 200);
+  const willText = !!card?.text_recipient && !!clean(card?.recipient_phone, 20);
+
+  if (!recipientEmail && !willText) {
     await base44.asServiceRole.entities.CampaignGiftCard
-      .update(card.id, { status: 'failed', failure_reason: 'No email address for the recipient.' })
+      .update(card.id, { status: 'failed', failure_reason: 'No email address or mobile number for the recipient.' })
       .catch(() => {});
     return { success: false, reason: 'missing_recipient' };
   }
@@ -98,70 +104,108 @@ export async function deliverGiftCard(base44, card) {
   const content = await getGiftCardContent(base44, card, campaign);
   const giftName = content.gift_name;
   const giftDescription = content.gift_description;
+  const donationSelection = [
+    content.product_name,
+    Number(card.amount) > 0
+      ? `${new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(Number(card.amount))} CAD`
+      : '',
+  ].filter(Boolean).join(' · ');
+  const donorLine = card.is_anonymous ? 'Someone who cares about you' : (card.donor_name || 'Someone who cares about you');
+  const recipientName = card.recipient_name || 'your recipient';
 
-  try {
-    const result = await base44.asServiceRole.integrations.Core.SendEmail({
-      to: card.recipient_email,
-      template_name: 'CampaignGiftCard',
-      category: 'transactional',
-      variables: {
-        recipient_name: card.recipient_name,
-        donor_line: card.is_anonymous ? 'Someone who cares about you' : (card.donor_name || 'Someone who cares about you'),
-        campaign_name: card.campaign_name,
-        gift_line: giftName,
-        pillar_line: card.pillar_name ? `Your gift supports ${card.pillar_name}.` : '',
-        gift_description: giftDescription,
-        donation_selection: [content.product_name, Number(card.amount) > 0 ? `${new Intl.NumberFormat('en-CA', { style: 'currency', currency: 'CAD' }).format(Number(card.amount))} CAD` : ''].filter(Boolean).join(' · '),
-        greeting,
-        card_image_url: card.theme_image_url || campaign?.hero_image_url || '',
-        card_link: cardLink,
-        card_print_link: `${cardLink}?print=1`,
-        certificate_link: certificateLink,
-        certificate_note: certificateLink
-          ? 'Your personal certificate is ready to open and print.'
-          : '',
-      },
-    });
+  const shared = {
+    campaign_name: card.campaign_name,
+    gift_line: giftName,
+    pillar_line: card.pillar_name ? `This gift supports ${card.pillar_name}.` : '',
+    gift_description: giftDescription,
+    donation_selection: donationSelection,
+    greeting,
+    card_image_url: card.theme_image_url || campaign?.hero_image_url || '',
+    card_link: cardLink,
+    card_print_link: `${cardLink}?print=1`,
+    certificate_link: certificateLink,
+    certificate_note: certificateLink ? 'The personal certificate is ready to open and print.' : '',
+  };
 
-    if (result?.success === false) {
-      const reason = result.reason || result.message || 'The email could not be sent.';
-      await base44.asServiceRole.entities.CampaignGiftCard
-        .update(card.id, { status: 'failed', failure_reason: reason })
-        .catch(() => {});
-      return { success: false, reason };
+  // 1. The card itself, to the person it is for.
+  let emailed = false;
+  let emailFailure = '';
+  if (recipientEmail) {
+    try {
+      const result = await base44.asServiceRole.integrations.Core.SendEmail({
+        to: recipientEmail,
+        template_name: 'CampaignGiftCard',
+        category: 'transactional',
+        variables: { ...shared, recipient_name: card.recipient_name, donor_line: donorLine },
+      });
+      if (result?.success === false) {
+        emailFailure = result.reason || result.message || 'The card email could not be sent.';
+      } else {
+        emailed = true;
+      }
+    } catch (error) {
+      emailFailure = error?.message || 'The card email could not be sent.';
     }
-
-    // When the supporter asked for a text too, it goes out with the card.
-    let textedAt = '';
-    let textFailure = '';
-    if (card.text_recipient && card.recipient_phone) {
-      const firstName = String(card.recipient_name || '').trim().split(/\s+/)[0];
-      const from = card.is_anonymous
-        ? 'Someone who cares about you'
-        : (card.donor_name || 'Someone who cares about you');
-      const text = await sendGiftShopText(
-        card.recipient_phone,
-        `Hi ${firstName || 'there'}, ${from} made a donation${
-          giftName ? ` — ${giftName} —` : ''
-        } to Candora Society as a gift to you. Open your card: ${cardLink}`,
-      );
-      if (text.ok) textedAt = new Date().toISOString();
-      else textFailure = text.reason || 'The text could not be sent.';
-    }
-
-    await base44.asServiceRole.entities.CampaignGiftCard.update(card.id, {
-      status: 'delivered',
-      delivered_at: new Date().toISOString(),
-      failure_reason: '',
-      ...(textedAt ? { texted_at: textedAt } : {}),
-      ...(textFailure ? { text_failure_reason: textFailure } : {}),
-    });
-    return { success: true };
-  } catch (error) {
-    const reason = error?.message || 'The email could not be sent.';
-    await base44.asServiceRole.entities.CampaignGiftCard
-      .update(card.id, { status: 'failed', failure_reason: reason })
-      .catch(() => {});
-    return { success: false, reason };
   }
+
+  // 2. The supporter's own watermarked copy — the backup that still reaches the
+  //    right person when the recipient's address was mistyped.
+  let donorCopied = false;
+  const donorEmail = clean(card.donor_email, 200);
+  if (donorEmail) {
+    try {
+      const result = await base44.asServiceRole.integrations.Core.SendEmail({
+        to: donorEmail,
+        template_name: 'CampaignGiftCardDonorCopy',
+        category: 'transactional',
+        variables: {
+          ...shared,
+          recipient_name: card.recipient_name,
+          recipient_email: recipientEmail,
+          sent_line: recipientEmail
+            ? `The card was emailed to ${recipientName} at ${recipientEmail}.`
+            : `No email address was given for ${recipientName}.`,
+        },
+      });
+      if (!(result && result.success === false)) donorCopied = true;
+    } catch (error) {
+      console.log('campaignGiftCards: donor copy failed', error?.message || error);
+    }
+  }
+
+  // 3. The text, when a mobile number was given — whatever the email did.
+  let textedAt = '';
+  let textFailure = '';
+  if (willText) {
+    const firstName = String(card.recipient_name || '').trim().split(/\s+/)[0];
+    const text = await sendGiftShopText(
+      card.recipient_phone,
+      `Hi ${firstName || 'there'}, ${donorLine} made a donation${
+        giftName ? ` — ${giftName} —` : ''
+      } to Candora Society as a gift to you. Open your card: ${cardLink}`,
+    );
+    if (text.ok) textedAt = new Date().toISOString();
+    else textFailure = text.reason || 'The text could not be sent.';
+  }
+
+  const reached = emailed || !!textedAt;
+  const failureNote = reached
+    ? (emailFailure ? `The card email could not be sent (${emailFailure}) — it went out by text instead.` : '')
+    : ([emailFailure, textFailure].filter(Boolean).join(' ') || 'The card could not be sent.');
+
+  await base44.asServiceRole.entities.CampaignGiftCard.update(card.id, {
+    status: reached ? 'delivered' : 'failed',
+    ...(reached ? { delivered_at: new Date().toISOString() } : {}),
+    failure_reason: failureNote,
+    ...(textedAt ? { texted_at: textedAt } : {}),
+    ...(textFailure ? { text_failure_reason: textFailure } : {}),
+  });
+
+  return {
+    success: reached,
+    emailed,
+    texted: !!textedAt,
+    donor_copy: donorCopied,
+    ...(reached ? {} : { reason: failureNote }),
+  };
 }

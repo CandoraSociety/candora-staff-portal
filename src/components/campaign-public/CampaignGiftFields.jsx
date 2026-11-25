@@ -84,6 +84,12 @@ export default function CampaignGiftFields({ campaign, value, onChange, donorNam
             </p>
           </div>
 
+          <p className="rounded-lg bg-card px-2.5 py-2 text-xs leading-relaxed text-muted-foreground">
+            Please double-check their email address and mobile number. The card and text go
+            straight to whatever is entered here, and a message sent to the wrong address cannot
+            be recalled. You’ll also get your own copy of the card.
+          </p>
+
           {themes.length > 0 && (
             <div>
               <Label>Choose a card</Label>
