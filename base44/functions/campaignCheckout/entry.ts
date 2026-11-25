@@ -149,10 +149,23 @@ export default async function (req) {
         }
       }
 
+      // A text to the recipient is optional. It goes out at the same moment the
+      // card does, so a card sent on a chosen day is texted on that day too.
+      const wantsText = body.textRecipient === true;
+      const recipientPhone = String(body.recipientPhone || '').replace(/[^\d+]/g, '').slice(0, 20);
+      if (wantsText && !/^\+?\d{10,15}$/.test(recipientPhone)) {
+        return Response.json(
+          { error: 'Enter the mobile number the text should go to.' },
+          { status: 400 }
+        );
+      }
+
       giftFields = {
         is_gift: true,
         recipient_name: recipientName,
         recipient_email: recipientEmail,
+        recipient_phone: wantsText ? recipientPhone : '',
+        text_recipient: wantsText,
         card_theme_id: theme?.id || '',
         card_theme_name: theme?.name || '',
         card_message: String(body.cardMessage || '').trim().slice(0, 1000),

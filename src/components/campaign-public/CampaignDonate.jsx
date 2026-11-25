@@ -63,6 +63,8 @@ export default function CampaignDonate({
     cardMessage: '',
     delivery: 'now',
     deliverAt: '',
+    textRecipient: false,
+    recipientPhone: '',
   });
 
   // A different cause brings a different set of options — keep the choice valid.
@@ -115,6 +117,10 @@ export default function CampaignDonate({
         setError('Choose the day the card should arrive.');
         return;
       }
+      if (gift.textRecipient && String(gift.recipientPhone || '').replace(/[^\d]/g, '').length < 10) {
+        setError('Enter the mobile number the text should go to, including the area code.');
+        return;
+      }
     }
 
     const variationLabel = activeVariation?.label || '';
@@ -148,6 +154,8 @@ export default function CampaignDonate({
         cardThemeId: gift.isGift ? gift.cardThemeId : '',
         cardMessage: gift.isGift ? gift.cardMessage.trim() : '',
         deliverAt: gift.isGift && gift.delivery === 'later' ? gift.deliverAt : '',
+        textRecipient: gift.isGift && !!gift.textRecipient,
+        recipientPhone: gift.isGift && gift.textRecipient ? gift.recipientPhone.trim() : '',
         returnPath,
       });
       setCheckoutUrl(url);
@@ -313,6 +321,7 @@ export default function CampaignDonate({
           onChange={setGift}
           donorName={name}
           pillar={pillars.find((item) => item.id === pillarId) || null}
+          amount={amount}
         />
       )}
 

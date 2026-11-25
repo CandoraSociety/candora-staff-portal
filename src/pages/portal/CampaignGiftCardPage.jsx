@@ -92,9 +92,11 @@ export default function CampaignGiftCardPage() {
                 A gift to you
               </p>
               <p className="text-sm leading-relaxed mt-1">
-                {donationName
-                  ? `A donation, ${donationName}, has been made to Candora Society as a gift to you.`
-                  : 'A donation has been made to Candora Society as a gift to you.'}
+                {`A donation${card.amount > 0 ? ` of $${Number(card.amount).toLocaleString('en-CA')}` : ''}`}
+                {donationName ? (
+                  <> — <span className="font-bold text-base text-[#fccf03]">{donationName}</span> —</>
+                ) : null}
+                {' has been made to Candora Society as a gift to you.'}
               </p>
             </div>
 
@@ -112,11 +114,6 @@ export default function CampaignGiftCardPage() {
               {card.pillar_name && (
                 <p className="text-muted-foreground">
                   {giftName ? `${giftName} · ${card.pillar_name}` : `Supporting ${card.pillar_name}`}
-                </p>
-              )}
-              {card.amount > 0 && (
-                <p className="text-muted-foreground">
-                  A gift of ${Number(card.amount).toLocaleString('en-CA')}
                 </p>
               )}
               {card.delivered_at && (

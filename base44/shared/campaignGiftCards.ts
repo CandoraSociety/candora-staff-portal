@@ -4,6 +4,8 @@
 // from the browser — so a card only exists for a gift that actually went
 // through, and it is always tied to the Donation recorded for it.
 
+import { sendGiftShopText } from './giftShopSms.ts';
+
 export function newGiftToken() {
   const bytes = crypto.getRandomValues(new Uint8Array(18));
   return Array.from(bytes)
@@ -62,6 +64,8 @@ export async function createGiftCardForIntent(base44, intent, donation) {
     is_anonymous: !!intent.is_anonymous,
     recipient_name: clean(intent.recipient_name, 120),
     recipient_email: clean(intent.recipient_email, 200),
+    recipient_phone: clean(intent.recipient_phone, 20),
+    text_recipient: !!intent.text_recipient,
     message: clean(intent.card_message, 1000),
     theme_id: theme.id,
     theme_name: theme.name,
@@ -130,10 +134,30 @@ export async function deliverGiftCard(base44, card) {
       return { success: false, reason };
     }
 
+    // When the supporter asked for a text too, it goes out with the card.
+    let textedAt = '';
+    let textFailure = '';
+    if (card.text_recipient && card.recipient_phone) {
+      const firstName = String(card.recipient_name || '').trim().split(/\s+/)[0];
+      const from = card.is_anonymous
+        ? 'Someone who cares about you'
+        : (card.donor_name || 'Someone who cares about you');
+      const text = await sendGiftShopText(
+        card.recipient_phone,
+        `Hi ${firstName || 'there'}, ${from} made a donation${
+          giftName ? ` — ${giftName} —` : ''
+        } to Candora Society as a gift to you. Open your card: ${cardLink}`,
+      );
+      if (text.ok) textedAt = new Date().toISOString();
+      else textFailure = text.reason || 'The text could not be sent.';
+    }
+
     await base44.asServiceRole.entities.CampaignGiftCard.update(card.id, {
       status: 'delivered',
       delivered_at: new Date().toISOString(),
       failure_reason: '',
+      ...(textedAt ? { texted_at: textedAt } : {}),
+      ...(textFailure ? { text_failure_reason: textFailure } : {}),
     });
     return { success: true };
   } catch (error) {

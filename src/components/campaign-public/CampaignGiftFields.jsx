@@ -8,7 +8,7 @@ import GiftCardPreview from '@/components/campaign-public/GiftCardPreview';
 // The charitable gifting part of the giving box: who the gift is for, the card
 // design, the message and when it should arrive. Every change flows straight
 // into the live preview beside it.
-export default function CampaignGiftFields({ campaign, value, onChange, donorName, pillar }) {
+export default function CampaignGiftFields({ campaign, value, onChange, donorName, pillar, amount }) {
   const themes = (campaign?.ecard_themes || []).filter((theme) => theme.is_active !== false);
   const giftName =
     String(pillar?.gift_name || '').trim() || 'The Gift of Joy, Hope & Belonging';
@@ -112,6 +112,7 @@ export default function CampaignGiftFields({ campaign, value, onChange, donorNam
             giftName={giftName}
             description={String(pillar?.description || campaign?.description || '').trim()}
             message={value.cardMessage || selectedTheme?.message}
+            amount={amount}
           />
 
           <div>
@@ -143,6 +144,36 @@ export default function CampaignGiftFields({ campaign, value, onChange, donorNam
               />
             )}
           </div>
+
+          <label className="flex items-start gap-2 text-sm cursor-pointer">
+            <input
+              type="checkbox"
+              className="mt-0.5"
+              checked={!!value.textRecipient}
+              onChange={(e) => set('textRecipient', e.target.checked)}
+            />
+            <span>
+              <span className="font-medium">Also send them a text</span>
+              <span className="block text-xs text-muted-foreground">
+                A short note that a gift was made in their honour, with a link to their card — sent at
+                the same time as the card.
+              </span>
+            </span>
+          </label>
+
+          {value.textRecipient && (
+            <div>
+              <Label htmlFor="gift-phone">Their mobile number</Label>
+              <Input
+                id="gift-phone"
+                type="tel"
+                placeholder="(780) 555-0123"
+                value={value.recipientPhone || ''}
+                onChange={(e) => set('recipientPhone', e.target.value)}
+                className="mt-1.5"
+              />
+            </div>
+          )}
         </div>
       )}
     </div>

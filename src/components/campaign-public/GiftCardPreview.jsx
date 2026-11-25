@@ -6,7 +6,7 @@ const CANDORA_LOGO = 'https://media.base44.com/images/public/6a249282cb496579542
 // The live preview of the greeting card a supporter is creating. It shows the
 // whole card — artwork, recipient, the message they are writing and what the
 // gift makes possible — updating as they type.
-export default function GiftCardPreview({ campaign, theme, recipientName, donorName, giftName, message, description }) {
+export default function GiftCardPreview({ campaign, theme, recipientName, donorName, giftName, message, description, amount }) {
   const art = theme?.image_url || campaign?.hero_image_url || '';
   const greeting = String(message || '').trim() || theme?.message || '';
   const giftDescription = String(description || '').trim();
@@ -53,9 +53,11 @@ export default function GiftCardPreview({ campaign, theme, recipientName, donorN
 
         <div className="rounded-lg bg-[#0a0f29] px-3 py-2 text-white">
           <p className="text-[11px] leading-relaxed">
-            {donationName
-              ? `A donation, ${donationName}, has been made to Candora Society as a gift to you.`
-              : 'A donation has been made to Candora Society as a gift to you.'}
+            {`A donation${Number(amount) > 0 ? ` of $${Number(amount).toLocaleString('en-CA')}` : ''}`}
+            {donationName ? (
+              <> — <span className="font-bold text-[#fccf03]">{donationName}</span> —</>
+            ) : null}
+            {' has been made to Candora Society as a gift to you.'}
           </p>
         </div>
 

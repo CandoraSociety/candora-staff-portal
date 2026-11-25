@@ -51,6 +51,24 @@
       "type": "string",
       "description": "Where the greeting card is emailed"
     },
+    "recipient_phone": {
+      "type": "string",
+      "description": "Mobile number the supporter gave for a text to the recipient, when they asked for one"
+    },
+    "text_recipient": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the supporter asked for a short text to the recipient as well as the card \u2014 it goes out at the same moment the card is emailed"
+    },
+    "texted_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the text was sent to the recipient"
+    },
+    "text_failure_reason": {
+      "type": "string",
+      "description": "What stopped the text from going out, shown to staff"
+    },
     "message": {
       "type": "string",
       "description": "The supporter's own message, shown inside the card"

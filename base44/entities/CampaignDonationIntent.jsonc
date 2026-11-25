@@ -107,6 +107,15 @@
       "type": "string",
       "description": "Where the greeting card is emailed"
     },
+    "recipient_phone": {
+      "type": "string",
+      "description": "Mobile number a text about the gift should go to, when the supporter asked for one"
+    },
+    "text_recipient": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the supporter asked for a text to the recipient alongside the card"
+    },
     "card_theme_id": {
       "type": "string",
       "description": "Greeting card design chosen from the campaign's e-cards"

@@ -1,13 +1,13 @@
 import { jsPDF } from 'jspdf';
 
-// Turns a gift card into a real, printable PDF — a 5 x 7 inch card that prints
-// cleanly on paper (the artwork is embedded as an image, the words are text).
-// Everything is drawn on the recipient's own device, so the card link in the
-// email is all they need.
+// Turns a gift card into a real, printable PDF — a letter-sized (8.5 x 11 in)
+// page the card prints cleanly on, with the artwork embedded as an image and the
+// words as text. Everything is drawn on the recipient's own device, so the card
+// link in the email is all they need.
 
-const PAGE_W = 360; // 5in
-const PAGE_H = 504; // 7in
-const MARGIN = 20;
+const PAGE_W = 612; // 8.5in
+const PAGE_H = 792; // 11in
+const MARGIN = 54;
 
 const GOLD = [252, 207, 3];
 const NAVY = [10, 15, 41];
@@ -17,6 +17,7 @@ const CREAM = [255, 248, 220];
 const WHITE = [255, 255, 255];
 
 const clean = (value) => String(value || '').trim();
+const money = (value) => `$${Number(value).toLocaleString('en-CA')}`;
 
 function imageFormat(dataUrl) {
   return /^data:image\/jpe?g/i.test(dataUrl) ? 'JPEG' : 'PNG';
@@ -102,6 +103,52 @@ function fitText(doc, text, maxWidth, maxHeight, sizes, style) {
   return { size, lines, lineHeight };
 }
 
+// Mixed-style text — a bold, larger donation name inside a sentence — wrapped to
+// the width, then drawn segment by segment.
+function wrapRuns(doc, runs, maxWidth) {
+  const lines = [[]];
+  let x = 0;
+  runs.forEach((run) => {
+    doc.setFont('helvetica', run.bold ? 'bold' : 'normal');
+    doc.setFontSize(run.size);
+    const spaceWidth = doc.getTextWidth(' ');
+    String(run.text || '')
+      .split(/\s+/)
+      .filter(Boolean)
+      .forEach((word) => {
+        const width = doc.getTextWidth(word);
+        let line = lines[lines.length - 1];
+        let gap = line.length ? spaceWidth : 0;
+        if (line.length && x + gap + width > maxWidth) {
+          lines.push([]);
+          line = lines[lines.length - 1];
+          x = 0;
+          gap = 0;
+        }
+        line.push({ ...run, text: word, gap });
+        x += gap + width;
+      });
+  });
+  return lines.filter((line) => line.length);
+}
+
+function drawRuns(doc, lines, x, y, lineHeight) {
+  let cursorY = y;
+  lines.forEach((line) => {
+    let cursorX = x;
+    line.forEach((segment) => {
+      doc.setFont('helvetica', segment.bold ? 'bold' : 'normal');
+      doc.setFontSize(segment.size);
+      doc.setTextColor(...segment.color);
+      cursorX += segment.gap;
+      doc.text(segment.text, cursorX, cursorY);
+      cursorX += doc.getTextWidth(segment.text);
+    });
+    cursorY += lineHeight;
+  });
+  return cursorY;
+}
+
 function fileNameFor(recipient) {
   const slug = recipient
     .normalize('NFD')
@@ -118,8 +165,8 @@ export async function downloadGiftCardPdf({ card, campaign, logoUrl }) {
   const left = MARGIN;
   const right = PAGE_W - MARGIN;
   const innerW = right - left;
-  const textX = left + 16;
-  const textW = innerW - 32;
+  const textX = left + 22;
+  const textW = innerW - 44;
 
   const recipient = clean(card?.recipient_name) || 'Someone special';
   const giftName = clean(card?.gift_name);
@@ -127,9 +174,7 @@ export async function downloadGiftCardPdf({ card, campaign, logoUrl }) {
   const campaignName = clean(campaign?.name || card?.campaign_name) || 'Candora Society';
   const donor = clean(card?.donor_name);
   const donationName = giftName || clean(card?.theme_name);
-  const donationNotice = donationName
-    ? `A donation, ${donationName}, has been made to Candora Society as a gift to you.`
-    : 'A donation has been made to Candora Society as a gift to you.';
+  const amount = Number(card?.amount) || 0;
 
   doc.setFillColor(...WHITE);
   doc.rect(0, 0, PAGE_W, PAGE_H, 'F');
@@ -137,23 +182,23 @@ export async function downloadGiftCardPdf({ card, campaign, logoUrl }) {
   // Header
   const logo = await fetchImage(logoUrl);
   if (logo) {
-    const logoH = 32;
-    const logoW = Math.min(120, (logo.img.naturalWidth / logo.img.naturalHeight) * logoH);
-    doc.addImage(logo.dataUrl, imageFormat(logo.dataUrl), left, 24, logoW, logoH);
+    const logoH = 52;
+    const logoW = Math.min(190, (logo.img.naturalWidth / logo.img.naturalHeight) * logoH);
+    doc.addImage(logo.dataUrl, imageFormat(logo.dataUrl), left, 56, logoW, logoH);
   }
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(6.5);
-  doc.setCharSpace(1.8);
+  doc.setFontSize(9);
+  doc.setCharSpace(2.4);
   doc.setTextColor(...MUTED);
-  doc.text('CANDORA SOCIETY', right, 46, { align: 'right' });
+  doc.text('CANDORA SOCIETY', right, 92, { align: 'right' });
   doc.setCharSpace(0);
   doc.setDrawColor(...GOLD);
-  doc.setLineWidth(1);
-  doc.line(left, 70, right, 70);
+  doc.setLineWidth(1.4);
+  doc.line(left, 126, right, 126);
 
   // Artwork with the recipient's name laid over it
-  const artY = 74;
-  const artH = 160;
+  const artY = 142;
+  const artH = 250;
   const art = await fetchImage(card?.theme_image_url || campaign?.hero_image_url);
   if (art) {
     doc.addImage(croppedArtwork(art, innerW, artH), 'PNG', left, artY, innerW, artH);
@@ -162,119 +207,162 @@ export async function downloadGiftCardPdf({ card, campaign, logoUrl }) {
     doc.rect(left, artY, innerW, artH, 'F');
   }
 
-  const captionH = 74;
+  const captionH = 96;
   doc.setFillColor(...NAVY);
   doc.rect(left, artY + artH - captionH, innerW, captionH, 'F');
 
-  let y = artY + artH - captionH + 16;
+  let y = artY + artH - captionH + 24;
   if (giftName) {
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(6.5);
-    doc.setCharSpace(1.8);
+    doc.setFontSize(9);
+    doc.setCharSpace(2.2);
     doc.setTextColor(...GOLD);
     doc.text(giftName.toUpperCase(), textX, y);
     doc.setCharSpace(0);
-    y += 13;
+    y += 20;
   }
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(6.5);
-  doc.setCharSpace(1.8);
+  doc.setFontSize(8);
+  doc.setCharSpace(2.2);
   doc.setTextColor(198, 201, 219);
   doc.text('A GIFT FOR', textX, y);
   doc.setCharSpace(0);
-  y += 20;
+  y += 30;
 
-  let nameSize = 20;
+  let nameSize = 30;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(nameSize);
-  while (nameSize > 11 && doc.getTextWidth(recipient) > textW) {
+  while (nameSize > 14 && doc.getTextWidth(recipient) > textW) {
     nameSize -= 1;
     doc.setFontSize(nameSize);
   }
   doc.setTextColor(...WHITE);
   doc.text(recipient, textX, y);
 
-  // What the card is: a donation made to Candora, given to this person
-  let noticeY = artY + artH + 20;
+  // What the card is: a donation of this much, in this name, made to Candora as
+  // a gift to the person holding it. The donation's name is set apart in bold.
+  let cursor = artY + artH + 22;
+  const noticeRuns = [
+    {
+      text: `A donation${amount > 0 ? ` of ${money(amount)}` : ''}`,
+      bold: false,
+      size: 14,
+      color: INK,
+    },
+  ];
+  if (donationName) {
+    noticeRuns.push({ text: '—', bold: false, size: 14, color: INK });
+    noticeRuns.push({ text: donationName, bold: true, size: 17, color: NAVY });
+    noticeRuns.push({
+      text: '— has been made to Candora Society as a gift to you.',
+      bold: false,
+      size: 14,
+      color: INK,
+    });
+  } else {
+    noticeRuns.push({
+      text: 'has been made to Candora Society as a gift to you.',
+      bold: false,
+      size: 14,
+      color: INK,
+    });
+  }
+
+  const noticeLines = wrapRuns(doc, noticeRuns, innerW - 56);
+  const noticeH = 16 + 14 + noticeLines.length * 23 + 16;
+
+  doc.setFillColor(...CREAM);
+  doc.setDrawColor(...GOLD);
+  doc.setLineWidth(1.2);
+  doc.roundedRect(left, cursor, innerW, noticeH, 8, 8, 'FD');
+
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7.5);
-  doc.setTextColor(...NAVY);
-  doc.splitTextToSize(donationNotice, textW).slice(0, 2).forEach((line) => {
-    doc.text(line, textX, noticeY);
-    noticeY += 10;
-  });
+  doc.setFontSize(8);
+  doc.setCharSpace(2);
+  doc.setTextColor(90, 74, 10);
+  doc.text('A GIFT TO YOU', left + 28, cursor + 28);
+  doc.setCharSpace(0);
+
+  drawRuns(doc, noticeLines, left + 28, cursor + 58, 23);
+  cursor += noticeH + 26;
+
+  const footerTop = PAGE_H - 76;
+  const descriptionSpace = 92;
 
   // The supporter's own words
   const message =
     clean(card?.message) || 'A gift has been made in your honour, to bring a little joy this season.';
-  const messageFit = fitText(doc, message, textW, 90, [12, 11, 10, 9, 8], 'italic');
+  const messageMax = Math.max(46, footerTop - 20 - descriptionSpace - cursor);
+  const messageFit = fitText(doc, message, textW, messageMax, [14, 13, 12, 11, 10], 'italic');
   doc.setFont('helvetica', 'italic');
   doc.setFontSize(messageFit.size);
   doc.setTextColor(...INK);
-  let lineY = noticeY + 6;
+  let lineY = cursor;
   messageFit.lines.forEach((line) => {
     doc.text(line, textX, lineY);
     lineY += messageFit.lineHeight;
   });
+  cursor = lineY + 10;
 
   // What the gift makes possible
   if (giftDescription) {
-    const boxTop = lineY + 12;
-    const descriptionFit = fitText(doc, giftDescription, textW - 26, 24, [9.5, 9, 8.5, 8], 'normal');
-    const boxH = 18 + 12 + descriptionFit.lines.length * descriptionFit.lineHeight + 12;
-    const boxBottom = Math.min(boxTop + boxH, PAGE_H - MARGIN - 46);
+    const boxTop = cursor;
+    const descMax = Math.max(30, footerTop - 16 - boxTop - 46);
+    const descriptionFit = fitText(doc, giftDescription, textW - 30, descMax, [12, 11, 10, 9.5], 'normal');
+    const boxH = 16 + 14 + descriptionFit.lines.length * descriptionFit.lineHeight + 16;
+    const boxBottom = Math.min(boxTop + boxH, footerTop - 10);
 
     doc.setFillColor(...CREAM);
     doc.setDrawColor(...GOLD);
-    doc.setLineWidth(0.8);
-    doc.roundedRect(left + 12, boxTop, innerW - 24, boxBottom - boxTop, 6, 6, 'FD');
+    doc.setLineWidth(1);
+    doc.roundedRect(left, boxTop, innerW, boxBottom - boxTop, 8, 8, 'FD');
 
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(6.5);
-    doc.setCharSpace(1.6);
+    doc.setFontSize(8);
+    doc.setCharSpace(1.8);
     doc.setTextColor(90, 74, 10);
-    doc.text((giftName || 'Your gift').toUpperCase(), left + 25, boxTop + 16);
+    doc.text((giftName || 'YOUR GIFT').toUpperCase(), left + 28, boxTop + 28);
     doc.setCharSpace(0);
 
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(descriptionFit.size);
     doc.setTextColor(...INK);
-    let descriptionY = boxTop + 30;
+    let descriptionY = boxTop + 48;
     descriptionFit.lines.forEach((line) => {
-      doc.text(line, left + 25, descriptionY);
+      doc.text(line, left + 28, descriptionY);
       descriptionY += descriptionFit.lineHeight;
     });
   }
 
   // Footer
-  const footerY = PAGE_H - MARGIN - 30;
+  const footerY = footerTop + 20;
   doc.setDrawColor(218, 220, 231);
-  doc.setLineWidth(0.6);
-  doc.line(textX, footerY - 18, right - 16, footerY - 18);
+  doc.setLineWidth(0.8);
+  doc.line(textX, footerTop, right - 22, footerTop);
 
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.5);
+  doc.setFontSize(11);
   doc.setTextColor(...INK);
   doc.text(campaignName, textX, footerY);
 
   if (donor) {
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
+    doc.setFontSize(10);
     doc.setTextColor(...MUTED);
-    doc.text(`from ${donor}`, right - 16, footerY, { align: 'right' });
+    doc.text(`from ${donor}`, right - 22, footerY, { align: 'right' });
   }
 
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(6.5);
-  doc.setCharSpace(1.4);
+  doc.setFontSize(8);
+  doc.setCharSpace(1.6);
   doc.setTextColor(...MUTED);
-  doc.text('CANDORA SOCIETY · CANDORA.CA', textX, footerY + 14);
+  doc.text('CANDORA SOCIETY · CANDORA.CA', textX, footerY + 18);
   doc.setCharSpace(0);
 
   // The gold frame, drawn last so its edges stay crisp
   doc.setDrawColor(...GOLD);
-  doc.setLineWidth(4);
-  doc.rect(10, 10, PAGE_W - 20, PAGE_H - 20);
+  doc.setLineWidth(5);
+  doc.rect(18, 18, PAGE_W - 36, PAGE_H - 36);
 
   const fileName = fileNameFor(recipient);
   doc.save(fileName);
