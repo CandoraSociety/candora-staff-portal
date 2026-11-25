@@ -10,7 +10,7 @@ import GiftShopEmailInvitesDialog from '@/components/winterwonderland/GiftShopEm
 import GiftShopMessageDialog from '@/components/winterwonderland/GiftShopMessageDialog';
 import GiftShopInviteRow from '@/components/winterwonderland/GiftShopInviteRow';
 import GiftShopSearchInput from '@/components/winterwonderland/GiftShopSearchInput';
-import { inviteLink, inviteDisplayStatus, familyMessageKey, INVITE_STATUS_META } from '@/lib/giftShopInvites';
+import { inviteLink, inviteDisplayStatus, inviteWasSent, familyMessageKey, INVITE_STATUS_META } from '@/lib/giftShopInvites';
 import { filterInvites } from '@/lib/giftShopSearch';
 
 // Pre-registration tab — private, single-use links for the families invited
@@ -62,16 +62,23 @@ export default function GiftShopPreRegistration() {
     .filter(family => family.family_key);
 
   const openInvites = invites.filter(i => inviteDisplayStatus(i) === 'invited');
+  // Send invitations only carries the families who have not had it yet, so
+  // pressing it after adding more families never repeats a send.
+  const unsentInvites = openInvites.filter(i => !inviteWasSent(i));
   const visible = filterInvites(invites, query);
   const registered = visible
     .filter(i => i.status === 'registered')
     .sort((a, b) => new Date(b.used_at || b.created_date || 0) - new Date(a.used_at || a.created_date || 0));
-  const waiting = visible
-    .filter(i => ['invited', 'expired'].includes(inviteDisplayStatus(i)))
-    .sort((a, b) => {
-      const rank = (i) => (inviteDisplayStatus(i) === 'invited' ? 0 : 1);
-      return rank(a) - rank(b) || (a.guardian_name || '').localeCompare(b.guardian_name || '');
-    });
+  const byName = (a, b) => (a.guardian_name || '').localeCompare(b.guardian_name || '');
+  const notSent = visible
+    .filter(i => inviteDisplayStatus(i) === 'invited' && !inviteWasSent(i))
+    .sort(byName);
+  const awaiting = visible
+    .filter(i => inviteDisplayStatus(i) === 'invited' && inviteWasSent(i))
+    .sort(byName);
+  const expired = visible
+    .filter(i => inviteDisplayStatus(i) === 'expired')
+    .sort(byName);
   const cancelled = visible
     .filter(i => inviteDisplayStatus(i) === 'revoked')
     .sort((a, b) => new Date(b.updated_date || b.created_date || 0) - new Date(a.updated_date || a.created_date || 0));
@@ -121,9 +128,11 @@ export default function GiftShopPreRegistration() {
               size="sm"
               variant="outline"
               onClick={() => setEmailOpen(true)}
-              disabled={!openInvites.some(i => i.guardian_email || i.guardian_phone)}
+              disabled={!unsentInvites.some(i => i.guardian_email || i.guardian_phone)}
             >
               <Mail className="h-4 w-4" /> Send invitations
+              {unsentInvites.filter(i => i.guardian_email || i.guardian_phone).length > 0
+                && ` (${unsentInvites.filter(i => i.guardian_email || i.guardian_phone).length})`}
             </Button>
             <Button
               size="sm"
@@ -139,8 +148,9 @@ export default function GiftShopPreRegistration() {
           </div>
           <p className="text-xs text-muted-foreground">
             Invite a family and Upload a family list create links only — use Send invitations to send them by email and
-            text once you have reviewed the list. Every link opens the standalone pre-registration form, which has no
-            access to any other part of Candora 360.
+            text once you have reviewed the list. Families who have already been sent their invitation are left out, so
+            pressing it again only reaches the new ones. Every link opens the standalone pre-registration form, which has
+            no access to any other part of Candora 360.
           </p>
         </CardContent>
       </Card>
@@ -179,15 +189,39 @@ export default function GiftShopPreRegistration() {
             <>
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold">Waiting to register</h3>
-                  <span className="text-xs text-muted-foreground">{waiting.length}</span>
+                  <h3 className="text-sm font-semibold">Not sent yet</h3>
+                  <span className="text-xs text-muted-foreground">{notSent.length}</span>
                 </div>
-                {waiting.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">No family is waiting to register.</p>
-                ) : waiting.map(invite => (
+                {notSent.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Every family on the list has been sent its invitation.</p>
+                ) : notSent.map(invite => (
                   <GiftShopInviteRow key={invite.id} invite={invite} messages={messagesByFamily[familyMessageKey(invite)] || []} onChanged={refresh} />
                 ))}
               </div>
+
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold">Invitation sent — waiting to register</h3>
+                  <span className="text-xs text-muted-foreground">{awaiting.length}</span>
+                </div>
+                {awaiting.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">No invitation has been sent yet.</p>
+                ) : awaiting.map(invite => (
+                  <GiftShopInviteRow key={invite.id} invite={invite} messages={messagesByFamily[familyMessageKey(invite)] || []} onChanged={refresh} />
+                ))}
+              </div>
+
+              {expired.length > 0 && (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold">Expired</h3>
+                    <span className="text-xs text-muted-foreground">{expired.length}</span>
+                  </div>
+                  {expired.map(invite => (
+                    <GiftShopInviteRow key={invite.id} invite={invite} messages={messagesByFamily[familyMessageKey(invite)] || []} onChanged={refresh} />
+                  ))}
+                </div>
+              )}
 
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
@@ -219,7 +253,7 @@ export default function GiftShopPreRegistration() {
 
       <GiftShopInviteDialog open={singleOpen} onOpenChange={setSingleOpen} onSaved={refresh} />
       <GiftShopInviteSendDialog open={sendOpen} onOpenChange={setSendOpen} onSaved={refresh} />
-      <GiftShopEmailInvitesDialog open={emailOpen} onOpenChange={setEmailOpen} invites={openInvites} onSent={refresh} />
+      <GiftShopEmailInvitesDialog open={emailOpen} onOpenChange={setEmailOpen} invites={unsentInvites} onSent={refresh} />
       <GiftShopMessageDialog open={messageOpen} onOpenChange={setMessageOpen} families={messageFamilies} onSent={refresh} />
     </div>
   );

@@ -46,6 +46,11 @@ export const inviteDisplayStatus = (invite) => {
   return invite?.status || 'invited';
 };
 
+// Whether the family has already been sent its invitation, on either channel.
+// The invitation is only ever sent once: staff can add more families and press
+// Send invitations again without anyone receiving it twice.
+export const inviteWasSent = (invite) => Boolean(invite?.emailed_at || invite?.texted_at);
+
 // Pre-registration closes on December 1, when registration opens to everyone
 // else. Once that date has passed, the next December 1 is used.
 export const defaultExpiryDate = () => {

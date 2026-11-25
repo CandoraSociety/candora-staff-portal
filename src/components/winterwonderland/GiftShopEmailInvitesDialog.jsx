@@ -11,7 +11,9 @@ import { useGiftShopEventDetails, inviteMessageDraft } from '@/lib/giftShopEvent
 const CHUNK_SIZE = 15;
 
 // Sends the invitations that are already in the list — the same links, by email
-// and by text. A family with no email address is reached by text alone.
+// and by text. A family with no email address is reached by text alone. Only
+// families that have not been sent their invitation yet are passed in, so a
+// second send reaches the new families and nobody else.
 export default function GiftShopEmailInvitesDialog({ open, onOpenChange, invites = [], onSent }) {
   const { toast } = useToast();
   const event = useGiftShopEventDetails();
@@ -71,7 +73,8 @@ export default function GiftShopEmailInvitesDialog({ open, onOpenChange, invites
         <DialogHeader>
           <DialogTitle>Send the invitations</DialogTitle>
           <DialogDescription>
-            Sends each family the link that is already in the list — by email and by text.{' '}
+            Sends each family the link that is already in the list — by email and by text. Only families who have not
+            been sent their invitation yet are included.{' '}
             {reachable.length} {reachable.length === 1 ? 'family can' : 'families can'} be reached.
           </DialogDescription>
         </DialogHeader>
