@@ -104,6 +104,16 @@ export default function CampaignGiftFields({ campaign, value, onChange, donorNam
             />
           </div>
 
+          <GiftCardPreview
+            campaign={campaign}
+            theme={selectedTheme}
+            recipientName={value.recipientName}
+            donorName={donorName}
+            giftName={giftName}
+            description={String(pillar?.description || campaign?.description || '').trim()}
+            message={value.cardMessage || selectedTheme?.message}
+          />
+
           <div>
             <Label>When should it arrive?</Label>
             <div className="grid grid-cols-2 gap-2 mt-1.5">
@@ -133,16 +143,6 @@ export default function CampaignGiftFields({ campaign, value, onChange, donorNam
               />
             )}
           </div>
-
-          <GiftCardPreview
-            campaign={campaign}
-            theme={selectedTheme}
-            recipientName={value.recipientName}
-            donorName={donorName}
-            giftName={giftName}
-            description={String(pillar?.description || campaign?.description || '').trim()}
-            message={value.cardMessage || selectedTheme?.message}
-          />
         </div>
       )}
     </div>

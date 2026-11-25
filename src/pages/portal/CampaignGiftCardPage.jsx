@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Gift, Heart, Loader2, XCircle } from 'lucide-react';
 import moment from 'moment';
+import GiftCardDownloadButton from '@/components/campaign-public/GiftCardDownloadButton';
 
 const CANDORA_LOGO = 'https://media.base44.com/images/public/6a249282cb496579542673b7/6d7d8de5b7cf5f4838f9d1df98d171cc_kids-gift-shop-logo.png';
 
@@ -42,6 +43,8 @@ export default function CampaignGiftCardPage() {
   }
 
   const { card, campaign, certificate } = data;
+  // The card's email links here with ?print=1 — the PDF is made and saved straight away.
+  const wantsPdf = new URLSearchParams(window.location.search).get('print') === '1';
   const art = card.theme_image_url || campaign?.hero_image_url || '';
   const giftName = String(card.gift_name || '').trim();
   const giftDescription = String(card.gift_description || '').trim();
@@ -129,6 +132,13 @@ export default function CampaignGiftCardPage() {
                 </Link>
               )}
             </div>
+
+            <GiftCardDownloadButton
+              card={card}
+              campaign={campaign}
+              logoUrl={CANDORA_LOGO}
+              autoStart={wantsPdf}
+            />
           </div>
         </article>
 

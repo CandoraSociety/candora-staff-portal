@@ -114,6 +114,7 @@ export async function deliverGiftCard(base44, card) {
         greeting,
         card_image_url: card.theme_image_url || campaign?.hero_image_url || '',
         card_link: cardLink,
+        card_print_link: `${cardLink}?print=1`,
         certificate_link: certificateLink,
         certificate_note: certificateLink
           ? 'Your personal certificate is ready to open and print.'
