@@ -19,6 +19,15 @@ export default function CampaignGiftFields({ campaign, value, onChange, donorNam
   // A mobile number is what sends the text — no separate choice to make.
   const willText = String(value.recipientPhone || '').replace(/\D/g, '').length >= 10;
 
+  // The card can only be sent forward, so the picker never offers a day or time
+  // that has already gone. Read in the supporter's own time zone.
+  const pad = (n) => String(n).padStart(2, '0');
+  const asDate = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+  const asTime = (d) => `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  const now = new Date();
+  const today = asDate(now);
+  const earliestTime = asTime(new Date(now.getTime() + 5 * 60000));
+
   return (
     <div className="space-y-3 rounded-xl border bg-muted/30 p-3">
       <label className="flex items-start gap-2 text-sm cursor-pointer">
@@ -166,20 +175,21 @@ export default function CampaignGiftFields({ campaign, value, onChange, donorNam
                   <Input
                     type="date"
                     aria-label="Day the card should arrive"
-                    min={new Date().toISOString().slice(0, 10)}
+                    min={today}
                     value={value.deliverAt || ''}
                     onChange={(e) => set('deliverAt', e.target.value)}
                   />
                   <Input
                     type="time"
                     aria-label="Time the card should arrive"
+                    min={value.deliverAt === today ? earliestTime : undefined}
                     value={value.deliverTime || ''}
                     onChange={(e) => set('deliverTime', e.target.value)}
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">
                   The card{willText ? ' and the text' : ''} arrive at this time, in your own
-                  time zone.
+                  time zone. A text is sent within 5 minutes of the time you choose.
                 </p>
               </div>
             )}

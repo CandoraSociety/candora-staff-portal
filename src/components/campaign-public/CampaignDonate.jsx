@@ -117,6 +117,13 @@ export default function CampaignDonate({
         setError('Choose the day and time the card should arrive.');
         return;
       }
+      if (gift.delivery === 'later') {
+        const arrival = new Date(`${gift.deliverAt}T${gift.deliverTime}`);
+        if (Number.isNaN(arrival.getTime()) || arrival.getTime() < Date.now()) {
+          setError('Choose a day and time still to come — the card cannot arrive in the past.');
+          return;
+        }
+      }
       const digits = String(gift.recipientPhone || '').replace(/[^\d]/g, '');
       if (digits.length > 0 && digits.length < 10) {
         setError('Enter their full mobile number, including the area code.');
