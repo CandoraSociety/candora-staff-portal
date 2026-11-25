@@ -248,107 +248,48 @@ export async function downloadGiftCardPdf({ card, campaign, logoUrl }) {
 
   let cursor = artY + artH + 22;
 
-  // A Christmas card opens with the greeting itself. The letter it was sent with
-  // sits in the notice box below, in place of the plain donation notice.
+  // The card opens with its greeting, and the supporter's letter sits in the
+  // notice box — the same fixed box the plain donation notice used to fill.
   if (christmas) {
     doc.setFont('times', 'italic');
     doc.setFontSize(34);
     doc.setTextColor(...NAVY);
     doc.text('Merry Christmas!', textX, cursor + 26);
     cursor += 46;
-
-    const bodyMax = Math.max(70, footerTop - 24 - cursor - (giftDescription ? descriptionSpace + 40 : 0));
-    const bodyFit = fitText(
-      doc,
-      message || 'A gift has been made in your honour, to bring a little joy this season.',
-      innerW - 56,
-      bodyMax,
-      [12, 11, 10, 9.5, 9],
-      'normal',
-    );
-    const noticeH = 16 + 14 + bodyFit.lines.length * bodyFit.lineHeight + 16;
-
-    doc.setFillColor(...CREAM);
-    doc.setDrawColor(...GOLD);
-    doc.setLineWidth(1.2);
-    doc.roundedRect(left, cursor, innerW, noticeH, 8, 8, 'FD');
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8);
-    doc.setCharSpace(2);
-    doc.setTextColor(90, 74, 10);
-    doc.text('A GIFT TO YOU', left + 28, cursor + 28);
-    doc.setCharSpace(0);
-
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(bodyFit.size);
-    doc.setTextColor(...INK);
-    let bodyY = cursor + 50;
-    bodyFit.lines.forEach((line) => {
-      doc.text(line, left + 28, bodyY);
-      bodyY += bodyFit.lineHeight;
-    });
-    cursor += noticeH + 20;
-  } else {
-    // What the card is: a donation of this much, in this name, made to Candora as
-    // a gift to the person holding it. The donation's name is set apart in bold.
-    const noticeRuns = [
-      {
-        text: `A donation${amount > 0 ? ` of ${money(amount)}` : ''}`,
-        bold: false,
-        size: 14,
-        color: INK,
-      },
-    ];
-    if (donationName) {
-      noticeRuns.push({ text: '—', bold: false, size: 14, color: INK });
-      noticeRuns.push({ text: donationName, bold: true, size: 17, color: NAVY });
-      noticeRuns.push({
-        text: '— has been made to Candora Society as a gift to you.',
-        bold: false,
-        size: 14,
-        color: INK,
-      });
-    } else {
-      noticeRuns.push({
-        text: 'has been made to Candora Society as a gift to you.',
-        bold: false,
-        size: 14,
-        color: INK,
-      });
-    }
-
-    const noticeLines = wrapRuns(doc, noticeRuns, innerW - 56);
-    const noticeH = 16 + 14 + noticeLines.length * 23 + 16;
-
-    doc.setFillColor(...CREAM);
-    doc.setDrawColor(...GOLD);
-    doc.setLineWidth(1.2);
-    doc.roundedRect(left, cursor, innerW, noticeH, 8, 8, 'FD');
-
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8);
-    doc.setCharSpace(2);
-    doc.setTextColor(90, 74, 10);
-    doc.text('A GIFT TO YOU', left + 28, cursor + 28);
-    doc.setCharSpace(0);
-
-    drawRuns(doc, noticeLines, left + 28, cursor + 58, 23);
-    cursor += noticeH + 26;
-
-    // The supporter's own words
-    const messageMax = Math.max(46, footerTop - 20 - descriptionSpace - cursor);
-    const messageFit = fitText(doc, message, textW, messageMax, [14, 13, 12, 11, 10], 'italic');
-    doc.setFont('helvetica', 'italic');
-    doc.setFontSize(messageFit.size);
-    doc.setTextColor(...INK);
-    let lineY = cursor;
-    messageFit.lines.forEach((line) => {
-      doc.text(line, textX, lineY);
-      lineY += messageFit.lineHeight;
-    });
-    cursor = lineY + 10;
   }
+
+  const bodyMax = Math.max(70, footerTop - 24 - cursor - (giftDescription ? descriptionSpace + 40 : 0));
+  const bodyFit = fitText(
+    doc,
+    message || 'A gift has been made in your honour, to bring a little joy this season.',
+    innerW - 56,
+    bodyMax,
+    [12, 11, 10, 9.5, 9],
+    'normal',
+  );
+  const noticeH = 16 + 14 + bodyFit.lines.length * bodyFit.lineHeight + 16;
+
+  doc.setFillColor(...CREAM);
+  doc.setDrawColor(...GOLD);
+  doc.setLineWidth(1.2);
+  doc.roundedRect(left, cursor, innerW, noticeH, 8, 8, 'FD');
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setCharSpace(2);
+  doc.setTextColor(90, 74, 10);
+  doc.text('A GIFT TO YOU', left + 28, cursor + 28);
+  doc.setCharSpace(0);
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(bodyFit.size);
+  doc.setTextColor(...INK);
+  let bodyY = cursor + 50;
+  bodyFit.lines.forEach((line) => {
+    doc.text(line, left + 28, bodyY);
+    bodyY += bodyFit.lineHeight;
+  });
+  cursor += noticeH + 20;
 
   // What the gift makes possible
   if (giftDescription) {
