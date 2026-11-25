@@ -64,7 +64,6 @@ export default function CampaignDonate({
     delivery: 'now',
     deliverAt: '',
     deliverTime: '',
-    textRecipient: false,
     recipientPhone: '',
   });
 
@@ -118,8 +117,9 @@ export default function CampaignDonate({
         setError('Choose the day and time the card should arrive.');
         return;
       }
-      if (gift.textRecipient && String(gift.recipientPhone || '').replace(/[^\d]/g, '').length < 10) {
-        setError('Enter the mobile number the text should go to, including the area code.');
+      const digits = String(gift.recipientPhone || '').replace(/[^\d]/g, '');
+      if (digits.length > 0 && digits.length < 10) {
+        setError('Enter their full mobile number, including the area code.');
         return;
       }
     }
@@ -131,6 +131,9 @@ export default function CampaignDonate({
         ? new Date(`${gift.deliverAt}T${gift.deliverTime}`).toISOString()
         : '';
 
+    // Their mobile number is what sends the text — nothing extra to tick.
+    const recipientPhone = gift.isGift ? gift.recipientPhone.trim() : '';
+    const sendText = recipientPhone.replace(/[^\d]/g, '').length >= 10;
     const variationLabel = activeVariation?.label || '';
     const productName = tier
       ? (variationLabel ? `${tier.name} — ${variationLabel}` : tier.name)
@@ -162,8 +165,8 @@ export default function CampaignDonate({
         cardThemeId: gift.isGift ? gift.cardThemeId : '',
         cardMessage: gift.isGift ? gift.cardMessage.trim() : '',
         deliverAt: deliverAtIso,
-        textRecipient: gift.isGift && !!gift.textRecipient,
-        recipientPhone: gift.isGift && gift.textRecipient ? gift.recipientPhone.trim() : '',
+        textRecipient: sendText,
+        recipientPhone: sendText ? recipientPhone : '',
         returnPath,
       });
       setCheckoutUrl(url);
@@ -344,7 +347,7 @@ export default function CampaignDonate({
           <Input id="donor-email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="mt-1.5" />
         </div>
         <div>
-          <Label htmlFor="donor-phone">Mobile for a thank-you text (optional)</Label>
+          <Label htmlFor="donor-phone">Mobile (optional)</Label>
           <Input
             id="donor-phone"
             type="tel"

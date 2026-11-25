@@ -16,6 +16,8 @@ export default function CampaignGiftFields({ campaign, value, onChange, donorNam
     themes.find((theme) => theme.id === value.cardThemeId) || themes[0] || null;
 
   const set = (key, next) => onChange({ ...value, [key]: next });
+  // A mobile number is what sends the text — no separate choice to make.
+  const willText = String(value.recipientPhone || '').replace(/\D/g, '').length >= 10;
 
   return (
     <div className="space-y-3 rounded-xl border bg-muted/30 p-3">
@@ -63,6 +65,23 @@ export default function CampaignGiftFields({ campaign, value, onChange, donorNam
                 className="mt-1.5"
               />
             </div>
+          </div>
+
+          <div>
+            <Label htmlFor="gift-phone">Their mobile number (optional)</Label>
+            <Input
+              id="gift-phone"
+              type="tel"
+              placeholder="(780) 555-0123"
+              value={value.recipientPhone || ''}
+              onChange={(e) => set('recipientPhone', e.target.value)}
+              className="mt-1.5"
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              {willText
+                ? 'They’ll get a short text about the gift when the card arrives.'
+                : 'Add their mobile and they’ll also get a text about the gift.'}
+            </p>
           </div>
 
           {themes.length > 0 && (
@@ -153,42 +172,13 @@ export default function CampaignGiftFields({ campaign, value, onChange, donorNam
                   />
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  The card{value.textRecipient ? ' and the text' : ''} arrive at this time, in your own
+                  The card{willText ? ' and the text' : ''} arrive at this time, in your own
                   time zone.
                 </p>
               </div>
             )}
           </div>
 
-          <label className="flex items-start gap-2 text-sm cursor-pointer">
-            <input
-              type="checkbox"
-              className="mt-0.5"
-              checked={!!value.textRecipient}
-              onChange={(e) => set('textRecipient', e.target.checked)}
-            />
-            <span>
-              <span className="font-medium">Also send them a text</span>
-              <span className="block text-xs text-muted-foreground">
-                A short note that a gift was made in their honour, with a link to their card — sent at
-                the same time as the card.
-              </span>
-            </span>
-          </label>
-
-          {value.textRecipient && (
-            <div>
-              <Label htmlFor="gift-phone">Their mobile number</Label>
-              <Input
-                id="gift-phone"
-                type="tel"
-                placeholder="(780) 555-0123"
-                value={value.recipientPhone || ''}
-                onChange={(e) => set('recipientPhone', e.target.value)}
-                className="mt-1.5"
-              />
-            </div>
-          )}
         </div>
       )}
     </div>
