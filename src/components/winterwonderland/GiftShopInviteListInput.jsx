@@ -14,6 +14,12 @@ export default function GiftShopInviteListInput({ rows, onRowsChange }) {
   const [reading, setReading] = useState(false);
   const [report, setReport] = useState(null);
 
+  // A family can arrive with only a phone number or an email address, so its
+  // name can be typed in here when the Central Database has none either.
+  const setName = (index, value) => {
+    onRowsChange(rows.map((row, at) => (at === index ? { ...row, guardian_name: value } : row)));
+  };
+
   const apply = (parsed, name) => {
     onRowsChange(parsed.rows);
     setReport({ fileName: name, readCount: parsed.readCount, merged: parsed.merged, dropped: parsed.dropped });
@@ -121,10 +127,26 @@ export default function GiftShopInviteListInput({ rows, onRowsChange }) {
             </p>
           )}
 
+          {rows.some(row => !row.guardian_name) && (
+            <p className="text-xs text-amber-800">
+              {rows.filter(row => !row.guardian_name).length} of these families have no name yet — the Central Database
+              can fill it in, or type it in below.
+            </p>
+          )}
+
           <div className="rounded-lg border divide-y text-xs max-h-40 overflow-y-auto">
             {rows.slice(0, 25).map((row, index) => (
-              <div key={`${row.guardian_email}-${index}`} className="grid grid-cols-[1.2fr_1.4fr_1fr_auto] gap-2 px-3 py-2">
-                <span className="truncate font-medium">{row.guardian_name}</span>
+              <div key={`${row.guardian_email}-${index}`} className="grid grid-cols-[1.2fr_1.4fr_1fr_auto] gap-2 px-3 py-2 items-center">
+                {row.guardian_name ? (
+                  <span className="truncate font-medium">{row.guardian_name}</span>
+                ) : (
+                  <Input
+                    value=""
+                    onChange={e => setName(index, e.target.value)}
+                    placeholder="Add a name"
+                    className="h-7 text-xs"
+                  />
+                )}
                 <span className="truncate text-muted-foreground">{row.guardian_email || 'no email'}</span>
                 <span className="truncate text-muted-foreground">{row.guardian_phone || 'no phone'}</span>
                 <span className="text-muted-foreground">{row.children_allowed}</span>

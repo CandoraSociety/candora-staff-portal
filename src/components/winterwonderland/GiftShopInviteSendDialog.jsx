@@ -9,7 +9,9 @@ import { defaultExpiryDate } from '@/lib/giftShopInvites';
 import GiftShopInviteListInput from '@/components/winterwonderland/GiftShopInviteListInput';
 import GiftShopInviteCreateResults from '@/components/winterwonderland/GiftShopInviteCreateResults';
 import GiftShopFamilyMatchReview from '@/components/winterwonderland/GiftShopFamilyMatchReview';
+import GiftShopCentralInfoReview from '@/components/winterwonderland/GiftShopCentralInfoReview';
 import { reviewFamilies } from '@/lib/giftShopFamilyMatches';
+import { findCentralInfo, applyCentralInfo } from '@/lib/giftShopCentralInfo';
 
 const CHUNK_SIZE = 15;
 
@@ -24,7 +26,10 @@ export default function GiftShopInviteSendDialog({ open, onOpenChange, onSaved }
   const [progress, setProgress] = useState({ done: 0, total: 0 });
   const [results, setResults] = useState(null);
   const [reviews, setReviews] = useState(null);
+  const [pendingRows, setPendingRows] = useState(null);
   const [decisions, setDecisions] = useState({});
+  const [central, setCentral] = useState(null);
+  const [included, setIncluded] = useState({});
   const [checking, setChecking] = useState(false);
 
   useEffect(() => {
@@ -35,20 +40,57 @@ export default function GiftShopInviteSendDialog({ open, onOpenChange, onSaved }
       setProgress({ done: 0, total: 0 });
       setResults(null);
       setReviews(null);
+      setPendingRows(null);
       setDecisions({});
+      setCentral(null);
+      setIncluded({});
       setChecking(false);
     }
   }, [open]);
 
-  // Every family on the list is checked against the ones already in the Kids Gift
-  // Shop before any card is opened, so a family that is already on file is
-  // confirmed first.
+  // A list often carries only a phone number or an email address, so the Central
+  // Database is asked first whether it already knows each family. Whatever it
+  // can add is offered for confirmation before anything is filled in.
   const create = async () => {
     if (!rows.length) return;
     setChecking(true);
     try {
-      const found = await reviewFamilies(rows);
+      const found = await findCentralInfo(rows);
       if (found.length) {
+        setCentral(found);
+        setIncluded(Object.fromEntries(found.map(match => [String(match.index), true])));
+        return;
+      }
+    } catch (err) {
+      toast({ title: 'Could not check the Central Database', description: err.message, variant: 'destructive' });
+      return;
+    } finally {
+      setChecking(false);
+    }
+    checkFamilies(rows);
+  };
+
+  const useCentralDetails = () => {
+    const next = applyCentralInfo(rows, central || [], included);
+    setCentral(null);
+    setRows(next);
+    checkFamilies(next);
+  };
+
+  const skipCentralDetails = () => {
+    setCentral(null);
+    checkFamilies(rows);
+  };
+
+  // Every family on the list is checked against the ones already in the Kids Gift
+  // Shop before any card is opened, so a family that is already on file is
+  // confirmed first.
+  const checkFamilies = async (list) => {
+    setChecking(true);
+    try {
+      const found = await reviewFamilies(list);
+      if (found.length) {
+        setPendingRows(list);
         setReviews(found);
         setDecisions({});
         return;
@@ -59,13 +101,13 @@ export default function GiftShopInviteSendDialog({ open, onOpenChange, onSaved }
     } finally {
       setChecking(false);
     }
-    submit({});
+    submit(list, {});
   };
 
   // A family confirmed as the same household is sent with the card already on
   // file, so the invitation links to it instead of opening a second family card.
-  const submit = async (chosen) => {
-    const families = rows.map((row, index) => {
+  const submit = async (list, chosen) => {
+    const families = list.map((row, index) => {
       if (chosen[String(index)] !== 'existing') return row;
       const match = (reviews || []).find(review => review.key === String(index))?.matches[0];
       if (!match) return row;
@@ -104,7 +146,7 @@ export default function GiftShopInviteSendDialog({ open, onOpenChange, onSaved }
       onSaved?.();
     } finally {
       setWorking(false);
-      setProgress({ done: rows.length, total: rows.length });
+      setProgress({ done: families.length, total: families.length });
     }
   };
 
@@ -121,15 +163,25 @@ export default function GiftShopInviteSendDialog({ open, onOpenChange, onSaved }
 
         {results ? (
           <GiftShopInviteCreateResults results={results} onDone={() => onOpenChange(false)} />
+        ) : central ? (
+          <GiftShopCentralInfoReview
+            rows={rows}
+            matches={central}
+            included={included}
+            onToggle={(key) => setIncluded(prev => ({ ...prev, [key]: !prev[key] }))}
+            onConfirm={useCentralDetails}
+            onSkip={skipCentralDetails}
+            working={checking}
+          />
         ) : reviews ? (
           <GiftShopFamilyMatchReview
             reviews={reviews}
             decisions={decisions}
             onDecide={(key, value) => setDecisions(prev => ({ ...prev, [key]: value }))}
-            onConfirm={() => submit(decisions)}
+            onConfirm={() => submit(pendingRows || rows, decisions)}
             onCancel={() => setReviews(null)}
             working={working}
-            confirmLabel={`Create ${rows.length} link${rows.length === 1 ? '' : 's'}`}
+            confirmLabel={`Create ${(pendingRows || rows).length} link${(pendingRows || rows).length === 1 ? '' : 's'}`}
           />
         ) : (
           <div className="space-y-5">
@@ -148,7 +200,7 @@ export default function GiftShopInviteSendDialog({ open, onOpenChange, onSaved }
           </div>
         )}
 
-        {!results && !reviews && (
+        {!results && !reviews && !central && (
           <DialogFooter className="gap-2 sm:justify-between">
             <Button variant="outline" onClick={() => onOpenChange(false)} disabled={working}>Cancel</Button>
             <Button onClick={create} disabled={working || checking || !rows.length}>

@@ -121,12 +121,23 @@ Deno.serve(async (req) => {
     for (const entry of queue) {
       const { existing, name, email, phone, childrenAllowed, existingFamily } = entry;
 
-      if (!name || (!email && !phone)) {
+      if (!email && !phone) {
         results.push({
           guardian_name: name,
           guardian_email: email,
           status: 'skipped',
-          message: 'Needs a guardian name and an email address or phone number.',
+          message: 'Needs an email address or phone number.',
+        });
+        continue;
+      }
+
+      if (!name) {
+        results.push({
+          guardian_name: name,
+          guardian_email: email,
+          guardian_phone: phone,
+          status: 'skipped',
+          message: 'Needs a guardian name — the Central Database had no name for this family.',
         });
         continue;
       }

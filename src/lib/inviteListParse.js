@@ -163,13 +163,11 @@ export function parseInviteMatrix(matrix) {
       continue;
     }
 
-    if (!out.guardian_name) {
-      dropped.push({ ...out, text: raw.filter(Boolean).join(' · '), reason: 'This row has contact details but no guardian name.' });
-      continue;
-    }
-
+    // A family only needs a way to reach them — a phone number or an email
+    // address. A missing name is not a reason to leave the family out: it is
+    // looked up in the Central Database, or typed in before the links are made.
     if (!hasContact) {
-      dropped.push({ ...out, text: raw.filter(Boolean).join(' · '), reason: 'This row has a guardian name but no email address or phone number.' });
+      dropped.push({ ...out, text: raw.filter(Boolean).join(' · '), reason: 'No email address or phone number on this row.' });
       continue;
     }
 
