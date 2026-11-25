@@ -27,7 +27,7 @@ export function greetText(name, body) {
 // Sends one text. It never throws: a text that could not go out is reported
 // back, so the caller can carry on with the email and still tell staff what
 // happened to the family.
-export async function sendGiftShopText(rawPhone, body) {
+export async function sendGiftShopText(rawPhone, body, mediaUrl = '') {
   const to = normalizeSmsPhone(rawPhone);
   if (!to) return { ok: false, reason: 'no_phone' };
 
@@ -39,6 +39,10 @@ export async function sendGiftShopText(rawPhone, body) {
     const authToken = secrets.get('TWILIO_AUTH_TOKEN');
 
     const form = new URLSearchParams({ To: to, From: GIFT_SHOP_SMS_FROM, Body: message });
+    // A picture rides with the message when one is given, so the card itself
+    // arrives in the text instead of a link to it.
+    const media = String(mediaUrl || '').trim();
+    if (media) form.append('MediaUrl', media);
     const res = await fetch(
       `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`,
       {

@@ -178,12 +178,16 @@ export async function deliverGiftCard(base44, card) {
   let textFailure = '';
   if (willText) {
     const firstName = String(card.recipient_name || '').trim().split(/\s+/)[0];
-    const text = await sendGiftShopText(
-      card.recipient_phone,
-      `Hi ${firstName || 'there'}, ${donorLine} made a donation${
-        giftName ? ` — ${giftName} —` : ''
-      } to Candora Society as a gift to you. Open your card: ${cardLink}`,
-    );
+    const body = `Hi ${firstName || 'there'}, ${donorLine} made a donation${
+      giftName ? ` — ${giftName} —` : ''
+    } to Candora Society as a gift to you. Merry Christmas!`;
+    // The card artwork travels with the message, so the card is in the text
+    // itself. A phone that cannot take a picture still gets the card by link.
+    const artwork = card.theme_image_url || campaign?.hero_image_url || '';
+    let text = await sendGiftShopText(card.recipient_phone, body, artwork);
+    if (!text.ok && artwork) {
+      text = await sendGiftShopText(card.recipient_phone, `${body} Your card: ${cardLink}`);
+    }
     if (text.ok) textedAt = new Date().toISOString();
     else textFailure = text.reason || 'The text could not be sent.';
   }
