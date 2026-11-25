@@ -5,6 +5,7 @@ import ChristmasPillarCard from '@/components/campaign-public/ChristmasPillarCar
 import ChristmasGifting from '@/components/campaign-public/ChristmasGifting';
 import ChristmasCombinedGiving from '@/components/campaign-public/ChristmasCombinedGiving';
 import ChristmasInfo from '@/components/campaign-public/ChristmasInfo';
+import CandoraGarland from '@/components/campaign-public/CandoraGarland';
 import { pillarShortLabel } from '@/lib/campaignDisplay';
 import { activePillars, raisedForPillar } from '@/lib/christmasCampaign';
 
@@ -42,7 +43,13 @@ export default function ChristmasCampaignShowcase({ campaign, initialPillarId = 
   const selected = pillars.find((pillar) => pillar.id === pillarId);
 
   return (
-    <div className="space-y-9">
+    <div className="relative space-y-9">
+      <CandoraGarland
+        campaign={campaign}
+        variant="top"
+        className="mx-auto block w-full max-w-4xl"
+      />
+
       <ChristmasIntro campaign={campaign} raised={campaign.raised} />
 
       <section className="space-y-5">
@@ -108,6 +115,12 @@ export default function ChristmasCampaignShowcase({ campaign, initialPillarId = 
       <ChristmasCombinedGiving onGiveAll={() => openGiving('')} />
 
       <ChristmasInfo campaign={campaign} />
+
+      <CandoraGarland
+        campaign={campaign}
+        variant="side"
+        className="absolute -right-16 top-0 hidden w-24 xl:block"
+      />
     </div>
   );
 }

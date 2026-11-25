@@ -5,6 +5,7 @@ import { base44 } from '@/api/base44Client';
 import { Gift, Heart, Loader2, XCircle } from 'lucide-react';
 import moment from 'moment';
 import GiftCardDownloadButton from '@/components/campaign-public/GiftCardDownloadButton';
+import { CHRISTMAS_ARTWORK } from '@/lib/christmasArtwork';
 
 const CANDORA_LOGO = 'https://media.base44.com/images/public/6a249282cb496579542673b7/6d7d8de5b7cf5f4838f9d1df98d171cc_kids-gift-shop-logo.png';
 
@@ -49,6 +50,7 @@ export default function CampaignGiftCardPage() {
   const giftName = String(card.gift_name || '').trim();
   const giftDescription = String(card.gift_description || '').trim();
   const donationName = giftName || String(card.theme_name || '').trim();
+  const christmas = campaign?.seasonal_theme === 'christmas';
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0a0f29] via-[#131b3d] to-[#0a0f29] px-4 py-10">
@@ -66,17 +68,16 @@ export default function CampaignGiftCardPage() {
             </span>
           </div>
 
-          <div className="bg-white">
-            <div className="flex h-56 sm:h-64 items-center justify-center p-6">
-              {art && <img src={art} alt="" className="max-h-full max-w-full object-contain" />}
-            </div>
-            <div className="bg-[#0a0f29] px-6 py-5 text-white">
+          <div className="relative h-56 sm:h-64 bg-[#0a0f29]">
+            {art && <img src={art} alt="" className="absolute inset-0 h-full w-full object-cover" />}
+            <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f29]/90 via-[#0a0f29]/30 to-transparent" />
+            <div className="relative h-full flex flex-col justify-end p-6 text-white">
               {giftName && (
-                <span className="block text-[11px] font-semibold uppercase tracking-[0.2em] text-[#fccf03]">
+                <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#fccf03]">
                   {giftName}
                 </span>
               )}
-              <span className="block text-[11px] uppercase tracking-[0.22em] text-white/70">For</span>
+              <span className="text-[11px] uppercase tracking-[0.22em] text-white/70">For</span>
               <h1 className="font-display font-extrabold text-3xl leading-tight">
                 {card.recipient_name}
               </h1>
@@ -84,12 +85,30 @@ export default function CampaignGiftCardPage() {
           </div>
 
           <div className="p-6 sm:p-8 space-y-5">
-            <p className="text-[15px] leading-relaxed whitespace-pre-line italic text-foreground/90">
-              {card.message || 'A gift has been made in your honour, to bring a little joy this season.'}
-            </p>
+            <div className="relative pr-12">
+              <p className="text-[15px] leading-relaxed whitespace-pre-line italic text-foreground/90">
+                {card.message || 'A gift has been made in your honour, to bring a little joy this season.'}
+              </p>
+              {christmas && (
+                <img
+                  src={CHRISTMAS_ARTWORK.ornament}
+                  alt=""
+                  aria-hidden="true"
+                  className="pointer-events-none absolute -top-2 right-0 w-10 mix-blend-multiply"
+                />
+              )}
+            </div>
 
-            <div className="rounded-xl bg-[#0a0f29] px-4 py-3 text-white">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#fccf03]">
+            <div className="relative overflow-hidden rounded-xl bg-[#0a0f29] px-4 py-3 pr-16 text-white">
+              <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-[#fccf03]">
+                {christmas && (
+                  <img
+                    src={CHRISTMAS_ARTWORK.star}
+                    alt=""
+                    aria-hidden="true"
+                    className="h-3.5 w-3.5 object-cover mix-blend-screen"
+                  />
+                )}
                 A gift to you
               </p>
               <p className="text-sm leading-relaxed mt-1">
@@ -99,6 +118,14 @@ export default function CampaignGiftCardPage() {
                 ) : null}
                 {' has been made to Candora Society as a gift to you.'}
               </p>
+              {christmas && (
+                <img
+                  src={CHRISTMAS_ARTWORK.bow}
+                  alt=""
+                  aria-hidden="true"
+                  className="pointer-events-none absolute right-1 top-1/2 w-14 -translate-y-1/2 mix-blend-screen"
+                />
+              )}
             </div>
 
             {giftDescription && (

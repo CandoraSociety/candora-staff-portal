@@ -1,19 +1,27 @@
 import React from 'react';
-import CandoraGarland from '@/components/campaign-public/CandoraGarland';
 import { formatMoney } from '@/lib/donorConstants';
 import { CHRISTMAS_HEADLINE, CHRISTMAS_INTRO } from '@/lib/christmasCampaign';
+import { CHRISTMAS_ARTWORK } from '@/lib/christmasArtwork';
 
 // Section A of the campaigns page: a compact Christmas header. It carries the
 // campaign's shared identity and hands straight over to the three causes, so it
 // never pushes them below the fold and never links to another campaign page.
+// The wreath is set into the header itself, on the navy, with its white sheet
+// screened away.
 export default function ChristmasIntro({ campaign, raised = 0 }) {
   const goal = Number(campaign.goal_amount) || 0;
   const pct = goal ? Math.min(100, Math.round((raised / goal) * 100)) : 0;
 
   return (
     <header className="relative overflow-hidden rounded-3xl bg-[#0a0f29] text-white">
-      <CandoraGarland campaign={campaign} variant="top" className="h-16 sm:h-20" />
-      <div className="relative max-w-3xl space-y-3 px-5 py-6 sm:px-8 sm:py-8">
+      <img
+        src={CHRISTMAS_ARTWORK.wreath}
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none absolute -right-6 top-1/2 hidden w-40 -translate-y-1/2 mix-blend-screen sm:block"
+      />
+
+      <div className="relative max-w-3xl space-y-3 px-5 py-7 sm:px-8 sm:py-9">
         <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#fccf03]">
           Candora Christmas
         </p>

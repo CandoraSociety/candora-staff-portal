@@ -55,6 +55,7 @@ export default async function (req) {
             slug: campaign.slug || '',
             tagline: campaign.tagline || '',
             hero_image_url: campaign.hero_image_url || '',
+            seasonal_theme: campaign.seasonal_theme || 'none',
           }
         : null,
     });

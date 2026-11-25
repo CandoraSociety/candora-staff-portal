@@ -52,28 +52,31 @@ async function fetchImage(url) {
   }
 }
 
-// Shows the whole card design, scaled to fit its space on a white sheet, so no
-// part of the artwork is ever cropped off.
-function fittedArtwork(image, width, height, density = 2) {
+// Cover-crops the artwork into exactly the band it sits in, so nothing spills
+// over the edges of the card.
+function croppedArtwork(image, width, height, density = 2) {
   const canvas = document.createElement('canvas');
   canvas.width = Math.round(width * density);
   canvas.height = Math.round(height * density);
-  const ctx = canvas.getContext('2d');
-  ctx.fillStyle = '#ffffff';
-  ctx.fillRect(0, 0, canvas.width, canvas.height);
-  const scale = Math.min(
+  const scale = Math.max(
     canvas.width / image.img.naturalWidth,
     canvas.height / image.img.naturalHeight,
   );
-  const drawWidth = image.img.naturalWidth * scale;
-  const drawHeight = image.img.naturalHeight * scale;
-  ctx.drawImage(
-    image.img,
-    (canvas.width - drawWidth) / 2,
-    (canvas.height - drawHeight) / 2,
-    drawWidth,
-    drawHeight,
-  );
+  const sourceWidth = canvas.width / scale;
+  const sourceHeight = canvas.height / scale;
+  canvas
+    .getContext('2d')
+    .drawImage(
+      image.img,
+      (image.img.naturalWidth - sourceWidth) / 2,
+      (image.img.naturalHeight - sourceHeight) / 2,
+      sourceWidth,
+      sourceHeight,
+      0,
+      0,
+      canvas.width,
+      canvas.height,
+    );
   return canvas.toDataURL('image/png');
 }
 
@@ -196,24 +199,15 @@ export async function downloadGiftCardPdf({ card, campaign, logoUrl }) {
   // Artwork with the recipient's name laid over it
   const artY = 142;
   const artH = 250;
-  const captionH = 96;
-  const artW = innerW - 24;
-  const artInnerH = artH - captionH - 16;
   const art = await fetchImage(card?.theme_image_url || campaign?.hero_image_url);
   if (art) {
-    doc.addImage(
-      fittedArtwork(art, artW, artInnerH),
-      'PNG',
-      left + 12,
-      artY + 8,
-      artW,
-      artInnerH,
-    );
+    doc.addImage(croppedArtwork(art, innerW, artH), 'PNG', left, artY, innerW, artH);
   } else {
     doc.setFillColor(...NAVY);
     doc.rect(left, artY, innerW, artH, 'F');
   }
 
+  const captionH = 96;
   doc.setFillColor(...NAVY);
   doc.rect(left, artY + artH - captionH, innerW, captionH, 'F');
 

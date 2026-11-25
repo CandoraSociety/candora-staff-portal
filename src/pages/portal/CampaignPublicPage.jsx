@@ -108,8 +108,8 @@ export default function CampaignPublicPage() {
 
       <CandoraGarland
         campaign={campaign}
-        variant="side"
-        className="hidden xl:block absolute left-0 top-0 w-28 h-[32rem]"
+        variant="top"
+        className="mx-auto block w-full max-w-4xl"
       />
 
       <main className="relative w-full max-w-[1600px] mx-auto px-5 sm:px-8 lg:px-12 py-10 grid gap-8 lg:gap-14 lg:grid-cols-[minmax(0,1.75fr)_minmax(340px,1fr)] lg:items-start">
