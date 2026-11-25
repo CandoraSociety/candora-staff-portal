@@ -29,7 +29,7 @@ export default function GuidePrintDocument({ guide, questions }) {
     <div className="hidden print:block bg-white text-[#080c21] text-[10.5pt] leading-[1.5]">
       <header className="flex items-start gap-4 border-b-2 border-[#fccf03] pb-3">
         <img
-          src="https://media.base44.com/images/public/6a249282cb496579542673b7/c7fbd36e2_logo.png"
+          src="https://media.base44.com/images/public/6a249282cb496579542673b7/6d7d8de5b7cf5f4838f9d1df98d171cc_kids-gift-shop-logo.png"
           alt="Candora Society"
           className="h-12 w-auto object-contain"
         />

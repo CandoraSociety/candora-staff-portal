@@ -5,7 +5,7 @@ import { base44 } from '@/api/base44Client';
 import { Gift, Heart, Loader2, XCircle } from 'lucide-react';
 import moment from 'moment';
 
-const CANDORA_LOGO = 'https://media.base44.com/images/public/6a249282cb496579542673b7/c7fbd36e2_logo.png';
+const CANDORA_LOGO = 'https://media.base44.com/images/public/6a249282cb496579542673b7/6d7d8de5b7cf5f4838f9d1df98d171cc_kids-gift-shop-logo.png';
 
 // The greeting card a supporter sent — opened by its recipient from the email,
 // with no sign-in. It shows Candora's name, the card design, their message, what

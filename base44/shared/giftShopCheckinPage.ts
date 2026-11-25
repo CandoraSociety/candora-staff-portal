@@ -3,7 +3,7 @@
 // no client SDK — the phone that scanned the desk QR code only ever receives
 // this one page, and it can never reach the app itself.
 
-const LOGO_URL = 'https://media.base44.com/images/public/6a249282cb496579542673b7/c7fbd36e2_logo.png';
+const LOGO_URL = 'https://media.base44.com/images/public/6a249282cb496579542673b7/6d7d8de5b7cf5f4838f9d1df98d171cc_kids-gift-shop-logo.png';
 
 const escapeHtml = (value) => String(value ?? '')
   .replace(/&/g, '&amp;')

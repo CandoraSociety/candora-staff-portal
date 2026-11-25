@@ -1,7 +1,7 @@
 import React from 'react';
 import { Gift } from 'lucide-react';
 
-const CANDORA_LOGO = 'https://media.base44.com/images/public/6a249282cb496579542673b7/c7fbd36e2_logo.png';
+const CANDORA_LOGO = 'https://media.base44.com/images/public/6a249282cb496579542673b7/6d7d8de5b7cf5f4838f9d1df98d171cc_kids-gift-shop-logo.png';
 
 // The live preview of the greeting card a supporter is creating. It shows
 // exactly what the recipient will see, updating as they type.

@@ -17,7 +17,7 @@ export default function GuideTopBar({
           <div className="flex items-center gap-2.5 min-w-0">
             <span className="w-9 h-9 rounded-lg bg-[#fccf03] flex items-center justify-center flex-shrink-0 overflow-hidden">
               <img
-                src="https://media.base44.com/images/public/6a249282cb496579542673b7/c7fbd36e2_logo.png"
+                src="https://media.base44.com/images/public/6a249282cb496579542673b7/6d7d8de5b7cf5f4838f9d1df98d171cc_kids-gift-shop-logo.png"
                 alt="Candora Society"
                 className="w-7 h-7 object-contain"
               />

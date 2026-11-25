@@ -27,7 +27,7 @@ const DATA_STORAGE_ACK =
   'That data is kept in the United States, is encrypted in transit and at rest, and can be accessed by authorized ' +
   'Candora staff and, when needed for support or security, by Base44. It is used only to run the Kids Gift Shop, and ' +
   `I can ask to see, correct or delete it by emailing ${GIFT_SHOP_CONTACT_EMAIL}.`;
-const LOGO_URL = 'https://media.base44.com/images/public/6a249282cb496579542673b7/c7fbd36e2_logo.png';
+const LOGO_URL = 'https://media.base44.com/images/public/6a249282cb496579542673b7/6d7d8de5b7cf5f4838f9d1df98d171cc_kids-gift-shop-logo.png';
 
 const AGE_LABELS = { '0-5': '0–5 years', '6-16': '6–16 years' };
 const GENDER_LABELS = { female: 'Female', male: 'Male' };
