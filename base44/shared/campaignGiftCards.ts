@@ -4,7 +4,7 @@
 // from the browser — so a card only exists for a gift that actually went
 // through, and it is always tied to the Donation recorded for it.
 
-import { sendGiftShopText } from './giftShopSms.ts';
+import { sendGiftShopText, waitForTextStatus } from './giftShopSms.ts';
 import { getGiftCardContent, themeGiftWording } from './campaignGiftCardContent.ts';
 
 export function newGiftToken() {
@@ -182,11 +182,20 @@ export async function deliverGiftCard(base44, card) {
       giftName ? ` — ${giftName} —` : ''
     } to Candora Society as a gift to you. Merry Christmas!`;
     // The card artwork travels with the message, so the card is in the text
-    // itself. A phone that cannot take a picture still gets the card by link.
+    // itself. Carriers can accept a picture and then refuse it, so the message's
+    // own status decides — a refused picture is resent as a plain text carrying
+    // the card link, which always gets through.
     const artwork = card.theme_image_url || campaign?.hero_image_url || '';
+    const withLink = `${body} Your card: ${cardLink}`;
     let text = await sendGiftShopText(card.recipient_phone, body, artwork);
-    if (!text.ok && artwork) {
-      text = await sendGiftShopText(card.recipient_phone, `${body} Your card: ${cardLink}`);
+    if (text.ok && artwork) {
+      const state = await waitForTextStatus(text.sid);
+      if (!state.delivered) {
+        console.log('campaignGiftCards: picture text refused, resending as plain text', state.reason);
+        text = await sendGiftShopText(card.recipient_phone, withLink);
+      }
+    } else if (!text.ok && artwork) {
+      text = await sendGiftShopText(card.recipient_phone, withLink);
     }
     if (text.ok) textedAt = new Date().toISOString();
     else textFailure = text.reason || 'The text could not be sent.';

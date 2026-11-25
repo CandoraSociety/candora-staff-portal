@@ -24,6 +24,42 @@ export function greetText(name, body) {
   return `Hi ${first || 'there'},\n\n${message}`;
 }
 
+// Twilio accepts a picture message before the carrier has decided whether it can
+// carry the picture at all, so a message only counts once its own status says
+// delivered. Waits a short while for that answer; a message still on its way is
+// treated as sent, since it has already left the desk.
+export async function waitForTextStatus(sid, { attempts = 5, delayMs = 2500 } = {}) {
+  if (!sid) return { delivered: false, reason: 'no message id' };
+
+  const accountSid = secrets.get('TWILIO_ACCOUNT_SID');
+  const authToken = secrets.get('TWILIO_AUTH_TOKEN');
+
+  for (let attempt = 0; attempt < attempts; attempt += 1) {
+    await new Promise((resolve) => setTimeout(resolve, delayMs));
+    try {
+      const res = await fetch(
+        `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages/${sid}.json`,
+        {
+          headers: { Authorization: 'Basic ' + btoa(`${accountSid}:${authToken}`) },
+          signal: AbortSignal.timeout(10000),
+        },
+      );
+      const data = await res.json().catch(() => ({}));
+      if (data?.status === 'delivered') return { delivered: true };
+      if (data?.status === 'failed' || data?.status === 'undelivered') {
+        return {
+          delivered: false,
+          reason: data?.error_message || `the carrier refused the message${data?.error_code ? ` (${data.error_code})` : ''}`,
+        };
+      }
+    } catch (error) {
+      console.log('Gift shop text status check error:', error.message);
+    }
+  }
+
+  return { delivered: true };
+}
+
 // Sends one text. It never throws: a text that could not go out is reported
 // back, so the caller can carry on with the email and still tell staff what
 // happened to the family.
