@@ -7,12 +7,17 @@ import { deliverGiftCard } from '../../shared/campaignGiftCards.ts';
 export default async function (req) {
   try {
     const base44 = createClientFromRequest(req);
-    const user = await base44.auth.me().catch(() => null);
-    if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
-    if (user.role !== 'admin') return Response.json({ error: 'Forbidden' }, { status: 403 });
-
     const body = await req.json().catch(() => ({}));
     let cards = [];
+
+    // Sending one named card is a staff action, so it needs an admin. The sweep
+    // for due cards is the schedule's own job and carries no signed-in user, and
+    // it can only ever send a card whose delivery time has already arrived.
+    if (body.card_id) {
+      const user = await base44.auth.me().catch(() => null);
+      if (!user) return Response.json({ error: 'Unauthorized' }, { status: 401 });
+      if (user.role !== 'admin') return Response.json({ error: 'Forbidden' }, { status: 403 });
+    }
 
     if (body.card_id) {
       const card = await base44.asServiceRole.entities.CampaignGiftCard

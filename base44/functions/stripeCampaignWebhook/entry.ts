@@ -99,9 +99,11 @@ export default async function (req) {
       // A gift made in someone's honour gets its greeting card — sent straight
       // away, or held until the morning the supporter chose. A monthly gift is
       // thanked each month instead of sending a card every time.
+      let giftCard = null;
       if (intent.is_gift && intent.frequency !== 'monthly') {
         try {
           const card = await createGiftCardForIntent(base44, intent, donation);
+          giftCard = card;
           if (new Date(card.deliver_at).getTime() <= Date.now()) {
             await deliverGiftCard(base44, card);
           }
@@ -118,6 +120,10 @@ export default async function (req) {
           donorPhone: intent.donor_phone || '',
           campaignSlug: intent.campaign_slug || '',
           appUrl: req.headers.get('X-Base44-App-Url') || '',
+          // The thank-you tells the supporter when their recipient's card arrives.
+          gift: giftCard
+            ? { recipient_name: giftCard.recipient_name, deliver_at: giftCard.deliver_at }
+            : null,
         });
       } catch (error) {
         console.error('stripeCampaignWebhook: thank-you failed', error?.message || error);

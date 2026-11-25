@@ -46,6 +46,27 @@ function clip(text, max) {
   return clean.length > max ? `${clean.slice(0, max - 1)}…` : clean;
 }
 
+// When the supporter made their gift in someone's honour, the thank-you says
+// what happens to the card: it goes out straight away, or on the day and time
+// the supporter chose, read in the organization's own time zone.
+function giftTimingLine(gift) {
+  const name = String(gift?.recipient_name || '').trim();
+  if (!name) return '';
+  const at = gift?.deliver_at ? new Date(gift.deliver_at) : null;
+  if (!at || Number.isNaN(at.getTime()) || at.getTime() <= Date.now() + 60000) {
+    return `${name} will receive their e-card immediately.`;
+  }
+  const when = at.toLocaleString('en-CA', {
+    timeZone: 'America/Edmonton',
+    weekday: 'long',
+    month: 'long',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+  return `${name} will receive their e-card on ${when}.`;
+}
+
 function toBase64(bytes) {
   let binary = '';
   const chunk = 0x8000;
@@ -280,7 +301,7 @@ async function sendText(rawPhone, body) {
 // on file, and the receipt number written back onto the donation so the donor
 // portal shows it as receipted. Never throws — the payment is already recorded,
 // so a thank-you that could not go out is only logged.
-export async function sendDonationThankYou(base44, { donation, donorPhone, appUrl, campaignSlug }) {
+export async function sendDonationThankYou(base44, { donation, donorPhone, appUrl, campaignSlug, gift = null }) {
   if (!donation?.id) return { sent: false, reason: 'no_donation' };
   if (donation.receipt_issued && donation.receipt_number) {
     return { sent: false, reason: 'already_thanked' };
@@ -301,6 +322,8 @@ export async function sendDonationThankYou(base44, { donation, donorPhone, appUr
   // each month, and one consolidated receipt for the whole year is issued in
   // early January (see sendAnnualDonationReceipts below).
   const receiptWanted = !monthly && amount >= RECEIPT_MINIMUM && donor?.receipt_preference !== 'none';
+  // The e-card the supporter sent in someone's honour, and when it arrives.
+  const giftLine = giftTimingLine(gift);
 
   let receiptNumber = '';
   let receiptBase64 = null;
@@ -350,7 +373,7 @@ export async function sendDonationThankYou(base44, { donation, donorPhone, appUr
           gift_date: longDate(giftDate),
           frequency_line: monthly
             ? 'Your monthly gift has been received and will repeat each month until you cancel.'
-            : 'Your gift has been received and put to work right away.',
+            : `Your gift has been received and put to work right away.${giftLine ? ` ${giftLine}` : ''}`,
           receipt_heading: monthly ? 'Your tax receipt comes once a year' : 'Your tax receipt',
           receipt_number: receiptBase64 ? receiptNumber : '',
           receipt_line: monthly
@@ -385,6 +408,7 @@ export async function sendDonationThankYou(base44, { donation, donorPhone, appUr
   let texted = false;
   if (phone && !donor?.do_not_contact) {
     const thanks = `Thank you ${firstNameOf(donation.donor_name)}! Candora received your ${formatMoney(amount)} gift to ${donation.campaign_name || 'the general fund'}.`
+      + (giftLine ? ` ${giftLine}` : '')
       + (monthly
         ? ' One tax receipt covering all your monthly gifts will be emailed to you in early January.'
         : receiptBase64
