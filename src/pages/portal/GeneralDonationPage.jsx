@@ -56,7 +56,7 @@ export default function GeneralDonationPage() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-5 sm:px-8 lg:px-10 py-8">
+      <main className="w-full max-w-6xl lg:max-w-[1500px] mx-auto px-5 sm:px-8 lg:px-12 xl:pr-28 py-8">
         {isLoading ? (
           <div className="flex justify-center py-20">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
