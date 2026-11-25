@@ -117,11 +117,12 @@ export async function downloadGiftCardPdf({ card, campaign, logoUrl }) {
   doc.setFontSize(9);
   doc.setCharSpace(2.4);
   doc.setTextColor(...MUTED);
-  // Right-aligned text ignores the letter-spacing when jsPDF measures it, so the
-  // width is measured here and the line drawn from it — otherwise the name runs
-  // out past the margin.
+  // jsPDF's width measurement ignores letter-spacing, so the tracking is added
+  // by hand here — otherwise the name runs out past the page edge.
   const orgName = 'CANDORA SOCIETY OF EDMONTON';
-  doc.text(orgName, right - doc.getTextWidth(orgName), 92);
+  const orgTracking = 2.4;
+  const orgWidth = doc.getTextWidth(orgName) + orgTracking * (orgName.length - 1);
+  doc.text(orgName, right - orgWidth, 92);
   doc.setCharSpace(0);
   doc.setDrawColor(...GOLD);
   doc.setLineWidth(1.4);
