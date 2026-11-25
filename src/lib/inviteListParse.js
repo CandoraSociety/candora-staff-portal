@@ -68,34 +68,123 @@ function columnFor(header) {
 
 const POSITIONAL = ['guardian_name', 'guardian_email', 'guardian_phone', 'children_allowed'];
 
-export function normalizeRows(matrix) {
+const digits = (value) => String(value || '').replace(/\D/g, '');
+const looksEmail = (value) => String(value || '').includes('@');
+const looksPhone = (value) => digits(value).length >= 10;
+
+// A list saved without a header row rarely sits in the column order we would
+// guess, so the email and phone columns are found in the data itself, and the
+// remaining details fill the free columns in their usual order.
+function columnsFromData(body) {
+  const sample = body.slice(0, 12);
+  const best = (test) => {
+    let at = -1;
+    let top = 0;
+    (sample[0] || []).forEach((_, index) => {
+      const score = sample.filter(row => test(row[index])).length;
+      if (score > top) { top = score; at = index; }
+    });
+    return top > 0 ? at : -1;
+  };
+
+  const emailAt = best(looksEmail);
+  const phoneAt = best(looksPhone);
+  if (emailAt < 0 && phoneAt < 0) return null;
+
+  const columns = [];
+  if (emailAt >= 0) columns[emailAt] = 'guardian_email';
+  if (phoneAt >= 0) columns[phoneAt] = 'guardian_phone';
+
+  // Whatever is still unmapped goes into the free columns in the usual order.
+  const free = [];
+  for (let index = 0; index < Math.max(columns.length, POSITIONAL.length); index += 1) {
+    if (!columns[index]) free.push(index);
+  }
+  POSITIONAL.filter(key => !columns.includes(key)).forEach((key, order) => {
+    if (free[order] !== undefined) columns[free[order]] = key;
+  });
+
+  return columns.length ? columns : null;
+}
+
+const contactKey = (row) => {
+  const email = String(row.guardian_email || '').toLowerCase().trim();
+  if (email) return `e:${email}`;
+  const phone = digits(row.guardian_phone).slice(-10);
+  return phone.length === 10 ? `p:${phone}` : '';
+};
+
+// Reads a matrix of cells into families, and reports every row it could not use
+// so nothing disappears from a list without staff being told.
+export function parseInviteMatrix(matrix) {
   const clean = (matrix || [])
     .map(row => (row || []).map(cell => String(cell ?? '').trim()))
     .filter(row => row.some(Boolean));
-  if (!clean.length) return [];
+  if (!clean.length) return { rows: [], dropped: [], merged: 0, readCount: 0 };
 
   const first = clean[0];
   const looksLikeData = first.some(cell => cell.includes('@') || /\d{3}/.test(cell));
   const hasHeader = !looksLikeData && first.some(cell => /name|guardian|parent|family|e-?mail|phone|cell|child/i.test(cell));
-  const columns = hasHeader ? first.map(columnFor) : POSITIONAL;
   const body = hasHeader ? clean.slice(1) : clean;
+  const columns = hasHeader ? first.map(columnFor) : (columnsFromData(body) || POSITIONAL);
 
-  return body
-    .map(row => {
-      const out = EMPTY_ROW();
-      columns.forEach((key, index) => {
-        if (!key) return;
-        const value = row[index] || '';
-        if (key === 'children_allowed') {
-          const count = Number(String(value).replace(/[^0-9]/g, ''));
-          if (count > 0) out.children_allowed = Math.min(6, count);
-        } else if (!out[key]) {
-          out[key] = value;
-        }
-      });
-      return out;
-    })
-    .filter(row => row.guardian_name && (row.guardian_email || row.guardian_phone));
+  const rows = [];
+  const dropped = [];
+  const seen = new Map();
+  let merged = 0;
+
+  for (const raw of body) {
+    const out = EMPTY_ROW();
+    columns.forEach((key, index) => {
+      if (!key) return;
+      const value = raw[index] || '';
+      if (key === 'children_allowed') {
+        const count = Number(digits(value));
+        if (count > 0) out.children_allowed = Math.min(6, count);
+      } else if (!out[key]) {
+        out[key] = value;
+      }
+    });
+
+    // A column read as a phone number has to hold a real number, so a stray
+    // child count or note is never mistaken for one.
+    if (out.guardian_phone && digits(out.guardian_phone).length < 7) out.guardian_phone = '';
+
+    const hasContact = Boolean(out.guardian_email || out.guardian_phone);
+
+    // A spreadsheet that merges a family's cells leaves the guardian's details on
+    // the first row of the block only, so a row carrying nothing but a child's
+    // details belongs to the family above it — it is not a family of its own.
+    if (!out.guardian_name && !hasContact) {
+      if (rows.length) merged += 1;
+      else {
+        dropped.push({ ...out, text: raw.filter(Boolean).join(' · '), reason: 'No guardian name or contact details could be read on this row.' });
+      }
+      continue;
+    }
+
+    if (!out.guardian_name) {
+      dropped.push({ ...out, text: raw.filter(Boolean).join(' · '), reason: 'This row has contact details but no guardian name.' });
+      continue;
+    }
+
+    if (!hasContact) {
+      dropped.push({ ...out, text: raw.filter(Boolean).join(' · '), reason: 'This row has a guardian name but no email address or phone number.' });
+      continue;
+    }
+
+    const key = contactKey(out);
+    if (key && seen.has(key)) {
+      const at = seen.get(key);
+      rows[at].children_allowed = Math.max(rows[at].children_allowed, out.children_allowed);
+      merged += 1;
+      continue;
+    }
+    if (key) seen.set(key, rows.length);
+    rows.push(out);
+  }
+
+  return { rows, dropped, merged, readCount: body.length };
 }
 
 export async function readInviteFile(file) {
@@ -104,11 +193,11 @@ export async function readInviteFile(file) {
   if (name.endsWith('.csv') || name.endsWith('.txt') || file.type === 'text/csv') {
     const text = await file.text();
     const parsed = Papa.parse(text, { skipEmptyLines: true });
-    return normalizeRows(parsed.data);
+    return parseInviteMatrix(parsed.data);
   }
 
   if (name.endsWith('.xlsx')) {
-    return normalizeRows(await readXlsx(file));
+    return parseInviteMatrix(await readXlsx(file));
   }
 
   throw new Error('That file type is not supported. Upload a CSV or an Excel (.xlsx) list.');
@@ -116,7 +205,7 @@ export async function readInviteFile(file) {
 
 // One family per pasted line: name, email, phone, children.
 export function rowsFromText(text) {
-  return normalizeRows(
+  return parseInviteMatrix(
     String(text || '')
       .split('\n')
       .map(line => line.split(line.includes('\t') ? '\t' : line.includes('|') ? '|' : ','))

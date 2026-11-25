@@ -12,6 +12,15 @@ export default function GiftShopInviteListInput({ rows, onRowsChange }) {
   const [text, setText] = useState('');
   const [error, setError] = useState('');
   const [reading, setReading] = useState(false);
+  const [report, setReport] = useState(null);
+
+  const apply = (parsed, name) => {
+    onRowsChange(parsed.rows);
+    setReport({ fileName: name, readCount: parsed.readCount, merged: parsed.merged, dropped: parsed.dropped });
+    if (!parsed.rows.length) {
+      setError('No families could be read. The list needs a name and an email or phone number for each family.');
+    }
+  };
 
   const handleFile = async (event) => {
     const file = event.target.files?.[0];
@@ -19,13 +28,11 @@ export default function GiftShopInviteListInput({ rows, onRowsChange }) {
     setReading(true);
     setError('');
     setText('');
+    setReport(null);
     try {
       const parsed = await readInviteFile(file);
       setFileName(file.name);
-      onRowsChange(parsed);
-      if (!parsed.length) {
-        setError('No families could be read. The list needs a name and an email or phone number for each family.');
-      }
+      apply(parsed, file.name);
     } catch (err) {
       setFileName('');
       onRowsChange([]);
@@ -40,7 +47,7 @@ export default function GiftShopInviteListInput({ rows, onRowsChange }) {
     setText(value);
     setError('');
     setFileName('');
-    onRowsChange(rowsFromText(value));
+    apply(rowsFromText(value), '');
   };
 
   return (
@@ -86,7 +93,34 @@ export default function GiftShopInviteListInput({ rows, onRowsChange }) {
           <p className="flex items-center gap-2 text-sm text-foreground">
             <CheckCircle2 className="h-4 w-4 text-green-600" />
             {rows.length} {rows.length === 1 ? 'family' : 'families'} ready
+            {report?.readCount > rows.length && (
+              <span className="text-muted-foreground font-normal">from {report.readCount} rows</span>
+            )}
           </p>
+
+          {report?.dropped?.length > 0 && (
+            <div className="rounded-lg border border-amber-300 bg-amber-50/60 p-3 space-y-2">
+              <p className="text-xs font-semibold text-amber-900">
+                {report.dropped.length} {report.dropped.length === 1 ? 'row was' : 'rows were'} left out — fix these in the file and upload it again
+              </p>
+              <div className="max-h-32 overflow-y-auto divide-y divide-amber-200">
+                {report.dropped.map((row, index) => (
+                  <div key={index} className="py-1.5">
+                    <p className="text-xs font-medium text-amber-900 truncate">{row.text || 'Empty row'}</p>
+                    <p className="text-xs text-amber-800/80">{row.reason}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {report?.merged > 0 && (
+            <p className="text-xs text-muted-foreground">
+              {report.merged} {report.merged === 1 ? 'row was' : 'rows were'} read as part of the family above them — the same
+              household, or a row with no name or contact of its own.
+            </p>
+          )}
+
           <div className="rounded-lg border divide-y text-xs max-h-40 overflow-y-auto">
             {rows.slice(0, 25).map((row, index) => (
               <div key={`${row.guardian_email}-${index}`} className="grid grid-cols-[1.2fr_1.4fr_1fr_auto] gap-2 px-3 py-2">
