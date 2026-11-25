@@ -1,4 +1,5 @@
 import React from 'react';
+import CandoraGarland from '@/components/campaign-public/CandoraGarland';
 import { formatMoney } from '@/lib/donorConstants';
 import { CHRISTMAS_HEADLINE, CHRISTMAS_INTRO } from '@/lib/christmasCampaign';
 
@@ -11,7 +12,8 @@ export default function ChristmasIntro({ campaign, raised = 0 }) {
 
   return (
     <header className="relative overflow-hidden rounded-3xl bg-[#0a0f29] text-white">
-      <div className="relative max-w-3xl space-y-3 px-5 py-7 sm:px-8 sm:py-9">
+      <CandoraGarland campaign={campaign} variant="top" className="h-16 sm:h-20" />
+      <div className="relative max-w-3xl space-y-3 px-5 py-6 sm:px-8 sm:py-8">
         <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#fccf03]">
           Candora Christmas
         </p>

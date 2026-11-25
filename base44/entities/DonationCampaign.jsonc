@@ -94,11 +94,11 @@
     },
     "garland_horizontal_url": {
       "type": "string",
-      "description": "Candora Christmas garland artwork laid above the public page (publicly stored file URL)"
+      "description": "Candora Christmas garland artwork laid across the top of the public page (publicly stored file URL, transparent PNG)"
     },
     "garland_vertical_url": {
       "type": "string",
-      "description": "Candora Christmas garland artwork hung down a side of the public page (publicly stored file URL)"
+      "description": "Candora Christmas garland artwork hung down a side of the public page (publicly stored file URL, transparent PNG)"
     },
     "image_history": {
       "type": "array",
@@ -253,15 +253,6 @@
           "image_url": {
             "type": "string",
             "description": "Artwork of the card (publicly stored file URL)"
-          },
-          "motif_url": {
-            "type": "string",
-            "description": "Small emblem set into the card itself, beside the artwork, e.g. the campaign's sunflower ornament or wreath (publicly stored file URL)"
-          },
-          "motif_dark": {
-            "type": "boolean",
-            "default": false,
-            "description": "True when the emblem's own artwork sits on a dark background, so it is set on the card's dark band rather than on white"
           },
           "message": {
             "type": "string",

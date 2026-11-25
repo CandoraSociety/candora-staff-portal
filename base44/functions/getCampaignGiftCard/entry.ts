@@ -55,12 +55,6 @@ export default async function (req) {
             slug: campaign.slug || '',
             tagline: campaign.tagline || '',
             hero_image_url: campaign.hero_image_url || '',
-            // The emblem each card design carries, so the card still shows it.
-            ecard_themes: (campaign.ecard_themes || []).map((theme) => ({
-              name: theme.name || '',
-              motif_url: theme.motif_url || '',
-              motif_dark: !!theme.motif_dark,
-            })),
           }
         : null,
     });

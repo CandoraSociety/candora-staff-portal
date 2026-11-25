@@ -3,6 +3,7 @@ import { ExternalLink } from 'lucide-react';
 import { formatMoney } from '@/lib/donorConstants';
 import { imageFocalStyle } from '@/lib/campaignDisplay';
 import CandoraBrandLockup from '@/components/campaign-public/CandoraBrandLockup';
+import CandoraGarland from '@/components/campaign-public/CandoraGarland';
 
 // The top of a campaign's public page: photo, name, tagline and progress, with
 // Candora's seasonal artwork over it where staff have supplied it.
@@ -26,6 +27,8 @@ export default function CampaignHero({ campaign, raised }) {
       )}
       <div className="absolute inset-0 bg-gradient-to-r from-[#0a0f29] via-[#0a0f29]/85 to-[#0a0f29]/30" />
       <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-[#0a0f29] to-transparent" />
+
+      <CandoraGarland campaign={campaign} variant="top" className="relative h-20 sm:h-24" />
 
       <div className={`relative w-full max-w-[1600px] mx-auto px-5 sm:px-8 lg:px-12 ${compact ? 'pt-6 pb-8' : 'pt-8 pb-12 sm:pb-16'}`}>
         <div className="flex items-start justify-between gap-4">
