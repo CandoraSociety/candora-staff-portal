@@ -78,9 +78,9 @@ export default function Campaigns() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Button variant="outline" asChild>
-            <a href="/donate" target="_blank" rel="noreferrer">
+            <Link to="/donate">
               <ExternalLink className="w-4 h-4 mr-2" /> Donation page
-            </a>
+            </Link>
           </Button>
           <Button onClick={openNew}><Plus className="w-4 h-4 mr-2" /> New campaign</Button>
         </div>
