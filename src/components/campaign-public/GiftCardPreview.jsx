@@ -10,6 +10,7 @@ export default function GiftCardPreview({ campaign, theme, recipientName, donorN
   const art = theme?.image_url || campaign?.hero_image_url || '';
   const greeting = String(message || '').trim() || theme?.message || '';
   const giftDescription = String(description || '').trim();
+  const donationName = String(giftName || theme?.name || '').trim();
 
   return (
     <div className="rounded-2xl border-2 border-[#fccf03] overflow-hidden bg-white shadow-sm">
@@ -48,6 +49,14 @@ export default function GiftCardPreview({ campaign, theme, recipientName, donorN
               Your message will appear here as you write it.
             </p>
           )}
+        </div>
+
+        <div className="rounded-lg bg-[#0a0f29] px-3 py-2 text-white">
+          <p className="text-[11px] leading-relaxed">
+            {donationName
+              ? `A donation, ${donationName}, has been made to Candora Society as a gift to you.`
+              : 'A donation has been made to Candora Society as a gift to you.'}
+          </p>
         </div>
 
         {giftDescription && (

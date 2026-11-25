@@ -126,6 +126,10 @@ export async function downloadGiftCardPdf({ card, campaign, logoUrl }) {
   const giftDescription = clean(card?.gift_description);
   const campaignName = clean(campaign?.name || card?.campaign_name) || 'Candora Society';
   const donor = clean(card?.donor_name);
+  const donationName = giftName || clean(card?.theme_name);
+  const donationNotice = donationName
+    ? `A donation, ${donationName}, has been made to Candora Society as a gift to you.`
+    : 'A donation has been made to Candora Society as a gift to you.';
 
   doc.setFillColor(...WHITE);
   doc.rect(0, 0, PAGE_W, PAGE_H, 'F');
@@ -149,7 +153,7 @@ export async function downloadGiftCardPdf({ card, campaign, logoUrl }) {
 
   // Artwork with the recipient's name laid over it
   const artY = 74;
-  const artH = 170;
+  const artH = 160;
   const art = await fetchImage(card?.theme_image_url || campaign?.hero_image_url);
   if (art) {
     doc.addImage(croppedArtwork(art, innerW, artH), 'PNG', left, artY, innerW, artH);
@@ -190,14 +194,24 @@ export async function downloadGiftCardPdf({ card, campaign, logoUrl }) {
   doc.setTextColor(...WHITE);
   doc.text(recipient, textX, y);
 
+  // What the card is: a donation made to Candora, given to this person
+  let noticeY = artY + artH + 20;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(7.5);
+  doc.setTextColor(...NAVY);
+  doc.splitTextToSize(donationNotice, textW).slice(0, 2).forEach((line) => {
+    doc.text(line, textX, noticeY);
+    noticeY += 10;
+  });
+
   // The supporter's own words
   const message =
     clean(card?.message) || 'A gift has been made in your honour, to bring a little joy this season.';
-  const messageFit = fitText(doc, message, textW, 118, [12, 11, 10, 9, 8], 'italic');
+  const messageFit = fitText(doc, message, textW, 90, [12, 11, 10, 9, 8], 'italic');
   doc.setFont('helvetica', 'italic');
   doc.setFontSize(messageFit.size);
   doc.setTextColor(...INK);
-  let lineY = artY + artH + 34;
+  let lineY = noticeY + 6;
   messageFit.lines.forEach((line) => {
     doc.text(line, textX, lineY);
     lineY += messageFit.lineHeight;
@@ -206,7 +220,7 @@ export async function downloadGiftCardPdf({ card, campaign, logoUrl }) {
   // What the gift makes possible
   if (giftDescription) {
     const boxTop = lineY + 12;
-    const descriptionFit = fitText(doc, giftDescription, textW - 26, 66, [9.5, 9, 8.5, 8], 'normal');
+    const descriptionFit = fitText(doc, giftDescription, textW - 26, 24, [9.5, 9, 8.5, 8], 'normal');
     const boxH = 18 + 12 + descriptionFit.lines.length * descriptionFit.lineHeight + 12;
     const boxBottom = Math.min(boxTop + boxH, PAGE_H - MARGIN - 46);
 

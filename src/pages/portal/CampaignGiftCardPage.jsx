@@ -48,6 +48,7 @@ export default function CampaignGiftCardPage() {
   const art = card.theme_image_url || campaign?.hero_image_url || '';
   const giftName = String(card.gift_name || '').trim();
   const giftDescription = String(card.gift_description || '').trim();
+  const donationName = giftName || String(card.theme_name || '').trim();
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0a0f29] via-[#131b3d] to-[#0a0f29] px-4 py-10">
@@ -85,6 +86,17 @@ export default function CampaignGiftCardPage() {
             <p className="text-[15px] leading-relaxed whitespace-pre-line italic text-foreground/90">
               {card.message || 'A gift has been made in your honour, to bring a little joy this season.'}
             </p>
+
+            <div className="rounded-xl bg-[#0a0f29] px-4 py-3 text-white">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-[#fccf03]">
+                A gift to you
+              </p>
+              <p className="text-sm leading-relaxed mt-1">
+                {donationName
+                  ? `A donation, ${donationName}, has been made to Candora Society as a gift to you.`
+                  : 'A donation has been made to Candora Society as a gift to you.'}
+              </p>
+            </div>
 
             {giftDescription && (
               <div className="rounded-xl border border-[#fccf03]/50 bg-[#fccf03]/10 p-4 space-y-1">
