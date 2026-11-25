@@ -28,6 +28,12 @@ export default function CampaignGiftFields({ campaign, value, onChange, donorNam
   const today = asDate(now);
   const earliestTime = asTime(new Date(now.getTime() + 5 * 60000));
 
+  // The chosen day and time, spelled out, so the supporter can see at a glance
+  // what they picked.
+  const chosen =
+    value.deliverAt && value.deliverTime ? new Date(`${value.deliverAt}T${value.deliverTime}`) : null;
+  const arrival = chosen && !Number.isNaN(chosen.getTime()) ? chosen : null;
+
   return (
     <div className="space-y-3 rounded-xl border bg-muted/30 p-3">
       <label className="flex items-start gap-2 text-sm cursor-pointer">
@@ -152,44 +158,90 @@ export default function CampaignGiftFields({ campaign, value, onChange, donorNam
 
           <div>
             <Label>When should it arrive?</Label>
-            <div className="grid grid-cols-2 gap-2 mt-1.5">
+            <div className="mt-1.5 space-y-2">
               {[
-                { value: 'now', label: 'Right away' },
-                { value: 'later', label: 'On a day I choose' },
+                {
+                  value: 'now',
+                  label: 'Right away',
+                  hint: 'The card is emailed as soon as your gift goes through.',
+                },
+                {
+                  value: 'later',
+                  label: 'On a day I choose',
+                  hint: 'You pick the date and time it arrives.',
+                },
               ].map((option) => (
-                <button
+                <label
                   key={option.value}
-                  type="button"
-                  onClick={() => set('delivery', option.value)}
-                  className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
-                    value.delivery === option.value ? 'border-primary bg-primary/10' : 'hover:bg-muted/60'
+                  className={`flex cursor-pointer items-start gap-2.5 rounded-lg border px-3 py-2.5 transition-colors ${
+                    value.delivery === option.value
+                      ? 'border-primary bg-primary/10 ring-1 ring-primary'
+                      : 'hover:bg-muted/60'
                   }`}
                 >
-                  {option.label}
-                </button>
+                  <input
+                    type="radio"
+                    name="gift-delivery"
+                    className="mt-1 accent-[#0a0f29]"
+                    checked={value.delivery === option.value}
+                    onChange={() =>
+                      onChange({
+                        ...value,
+                        delivery: option.value,
+                        // A date left behind while "Right away" is chosen must never
+                        // decide when the card arrives.
+                        ...(option.value === 'now' ? { deliverAt: '', deliverTime: '' } : {}),
+                      })
+                    }
+                  />
+                  <span>
+                    <span className="block text-sm font-medium">{option.label}</span>
+                    <span className="block text-xs text-muted-foreground">{option.hint}</span>
+                  </span>
+                </label>
               ))}
             </div>
             {value.delivery === 'later' && (
-              <div className="mt-2 space-y-1.5">
+              <div className="mt-2 space-y-1.5 rounded-lg border bg-card p-3">
                 <div className="grid grid-cols-2 gap-2">
-                  <Input
-                    type="date"
-                    aria-label="Day the card should arrive"
-                    min={today}
-                    value={value.deliverAt || ''}
-                    onChange={(e) => set('deliverAt', e.target.value)}
-                  />
-                  <Input
-                    type="time"
-                    aria-label="Time the card should arrive"
-                    min={value.deliverAt === today ? earliestTime : undefined}
-                    value={value.deliverTime || ''}
-                    onChange={(e) => set('deliverTime', e.target.value)}
-                  />
+                  <div>
+                    <Label htmlFor="gift-deliver-date" className="text-xs">
+                      Arrival date
+                    </Label>
+                    <Input
+                      id="gift-deliver-date"
+                      type="date"
+                      min={today}
+                      value={value.deliverAt || ''}
+                      onChange={(e) => set('deliverAt', e.target.value)}
+                      className="mt-1"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="gift-deliver-time" className="text-xs">
+                      Arrival time
+                    </Label>
+                    <Input
+                      id="gift-deliver-time"
+                      type="time"
+                      min={value.deliverAt === today ? earliestTime : undefined}
+                      value={value.deliverTime || ''}
+                      onChange={(e) => set('deliverTime', e.target.value)}
+                      className="mt-1"
+                    />
+                  </div>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  The card{willText ? ' and the text' : ''} arrive at this time, in your own
-                  time zone. A text is sent within 5 minutes of the time you choose.
+                  {arrival
+                    ? `The card${willText ? ' and the text' : ''} will arrive ${arrival.toLocaleDateString(undefined, {
+                        weekday: 'long',
+                        month: 'long',
+                        day: 'numeric',
+                      })} at ${arrival.toLocaleTimeString(undefined, {
+                        hour: 'numeric',
+                        minute: '2-digit',
+                      })}, in your own time zone.`
+                    : 'Choose the day and time, in your own time zone.'}
                 </p>
               </div>
             )}
