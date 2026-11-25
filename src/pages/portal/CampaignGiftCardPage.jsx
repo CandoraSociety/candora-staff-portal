@@ -66,16 +66,17 @@ export default function CampaignGiftCardPage() {
             </span>
           </div>
 
-          <div className="relative h-56 sm:h-64 bg-[#0a0f29]">
-            {art && <img src={art} alt="" className="absolute inset-0 h-full w-full object-cover" />}
-            <div className="absolute inset-0 bg-gradient-to-t from-[#0a0f29]/90 via-[#0a0f29]/30 to-transparent" />
-            <div className="relative h-full flex flex-col justify-end p-6 text-white">
+          <div className="bg-white">
+            <div className="flex h-56 sm:h-64 items-center justify-center p-6">
+              {art && <img src={art} alt="" className="max-h-full max-w-full object-contain" />}
+            </div>
+            <div className="bg-[#0a0f29] px-6 py-5 text-white">
               {giftName && (
-                <span className="text-[11px] font-semibold uppercase tracking-[0.2em] text-[#fccf03]">
+                <span className="block text-[11px] font-semibold uppercase tracking-[0.2em] text-[#fccf03]">
                   {giftName}
                 </span>
               )}
-              <span className="text-[11px] uppercase tracking-[0.22em] text-white/70">For</span>
+              <span className="block text-[11px] uppercase tracking-[0.22em] text-white/70">For</span>
               <h1 className="font-display font-extrabold text-3xl leading-tight">
                 {card.recipient_name}
               </h1>
