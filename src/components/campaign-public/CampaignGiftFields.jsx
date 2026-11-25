@@ -135,13 +135,27 @@ export default function CampaignGiftFields({ campaign, value, onChange, donorNam
               ))}
             </div>
             {value.delivery === 'later' && (
-              <Input
-                type="date"
-                className="mt-2"
-                min={new Date().toISOString().slice(0, 10)}
-                value={value.deliverAt || ''}
-                onChange={(e) => set('deliverAt', e.target.value)}
-              />
+              <div className="mt-2 space-y-1.5">
+                <div className="grid grid-cols-2 gap-2">
+                  <Input
+                    type="date"
+                    aria-label="Day the card should arrive"
+                    min={new Date().toISOString().slice(0, 10)}
+                    value={value.deliverAt || ''}
+                    onChange={(e) => set('deliverAt', e.target.value)}
+                  />
+                  <Input
+                    type="time"
+                    aria-label="Time the card should arrive"
+                    value={value.deliverTime || ''}
+                    onChange={(e) => set('deliverTime', e.target.value)}
+                  />
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  The card{value.textRecipient ? ' and the text' : ''} arrive at this time, in your own
+                  time zone.
+                </p>
+              </div>
             )}
           </div>
 

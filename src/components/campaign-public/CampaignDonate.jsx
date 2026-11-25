@@ -63,6 +63,7 @@ export default function CampaignDonate({
     cardMessage: '',
     delivery: 'now',
     deliverAt: '',
+    deliverTime: '',
     textRecipient: false,
     recipientPhone: '',
   });
@@ -113,8 +114,8 @@ export default function CampaignDonate({
         setError('Enter the email address the card should be sent to.');
         return;
       }
-      if (gift.delivery === 'later' && !gift.deliverAt) {
-        setError('Choose the day the card should arrive.');
+      if (gift.delivery === 'later' && (!gift.deliverAt || !gift.deliverTime)) {
+        setError('Choose the day and time the card should arrive.');
         return;
       }
       if (gift.textRecipient && String(gift.recipientPhone || '').replace(/[^\d]/g, '').length < 10) {
@@ -122,6 +123,13 @@ export default function CampaignDonate({
         return;
       }
     }
+
+    // The card and the text go out at the day and time the supporter picked,
+    // read in their own time zone.
+    const deliverAtIso =
+      gift.isGift && gift.delivery === 'later' && gift.deliverAt && gift.deliverTime
+        ? new Date(`${gift.deliverAt}T${gift.deliverTime}`).toISOString()
+        : '';
 
     const variationLabel = activeVariation?.label || '';
     const productName = tier
@@ -153,7 +161,7 @@ export default function CampaignDonate({
         recipientEmail: gift.isGift ? gift.recipientEmail.trim() : '',
         cardThemeId: gift.isGift ? gift.cardThemeId : '',
         cardMessage: gift.isGift ? gift.cardMessage.trim() : '',
-        deliverAt: gift.isGift && gift.delivery === 'later' ? gift.deliverAt : '',
+        deliverAt: deliverAtIso,
         textRecipient: gift.isGift && !!gift.textRecipient,
         recipientPhone: gift.isGift && gift.textRecipient ? gift.recipientPhone.trim() : '',
         returnPath,
