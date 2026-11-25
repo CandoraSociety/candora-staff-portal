@@ -86,9 +86,13 @@ export default function CampaignGiftCardPage() {
 
           <div className="p-6 sm:p-8 space-y-5">
             <div className="relative pr-12">
-              <p className="text-[15px] leading-relaxed whitespace-pre-line italic text-foreground/90">
-                {card.message || 'A gift has been made in your honour, to bring a little joy this season.'}
-              </p>
+              {christmas ? (
+                <p className="font-script text-5xl leading-none text-[#0a0f29]">Merry Christmas!</p>
+              ) : (
+                <p className="text-[15px] leading-relaxed whitespace-pre-line italic text-foreground/90">
+                  {card.message || 'A gift has been made in your honour, to bring a little joy this season.'}
+                </p>
+              )}
               {christmas && (
                 <img
                   src={CHRISTMAS_ARTWORK.ornament}
@@ -111,13 +115,19 @@ export default function CampaignGiftCardPage() {
                 )}
                 A gift to you
               </p>
-              <p className="text-sm leading-relaxed mt-1">
-                {`A donation${card.amount > 0 ? ` of $${Number(card.amount).toLocaleString('en-CA')}` : ''}`}
-                {donationName ? (
-                  <> — <span className="font-bold text-base text-[#fccf03]">{donationName}</span> —</>
-                ) : null}
-                {' has been made to Candora Society as a gift to you.'}
-              </p>
+              {christmas ? (
+                <p className="text-sm leading-relaxed mt-1 whitespace-pre-line">
+                  {card.message || 'A gift has been made in your honour, to bring a little joy this season.'}
+                </p>
+              ) : (
+                <p className="text-sm leading-relaxed mt-1">
+                  {`A donation${card.amount > 0 ? ` of $${Number(card.amount).toLocaleString('en-CA')}` : ''}`}
+                  {donationName ? (
+                    <> — <span className="font-bold text-base text-[#fccf03]">{donationName}</span> —</>
+                  ) : null}
+                  {' has been made to Candora Society as a gift to you.'}
+                </p>
+              )}
               {christmas && (
                 <img
                   src={CHRISTMAS_ARTWORK.bow}

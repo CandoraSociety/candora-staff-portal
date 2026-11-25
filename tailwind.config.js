@@ -109,6 +109,7 @@ module.exports = {
   			heading: ['Playfair Display', 'var(--font-heading)', 'serif'],
   			body: ['DM Sans', 'var(--font-body)', 'sans-serif'],
   			display: ['Nunito', 'var(--font-display)', 'sans-serif'],
+  			script: ['Great Vibes', 'cursive'],
   			jlheading: ['DM Sans', 'sans-serif'],
   			mono: ['var(--font-mono)']
   		},

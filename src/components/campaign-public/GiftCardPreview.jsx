@@ -42,17 +42,23 @@ export default function GiftCardPreview({ campaign, theme, recipientName, donorN
 
       <div className="p-4 space-y-3">
         <div className="relative pr-10">
-          <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
-            Message in the card
-          </p>
-          {greeting ? (
-            <p className="text-sm italic leading-relaxed whitespace-pre-line text-foreground/90">
-              {greeting}
-            </p>
+          {christmas ? (
+            <p className="font-script text-[32px] leading-none text-[#0a0f29]">Merry Christmas!</p>
           ) : (
-            <p className="text-sm text-muted-foreground italic">
-              Your message will appear here as you write it.
-            </p>
+            <>
+              <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                Message in the card
+              </p>
+              {greeting ? (
+                <p className="text-sm italic leading-relaxed whitespace-pre-line text-foreground/90">
+                  {greeting}
+                </p>
+              ) : (
+                <p className="text-sm text-muted-foreground italic">
+                  Your message will appear here as you write it.
+                </p>
+              )}
+            </>
           )}
           {christmas && (
             <img
@@ -76,13 +82,19 @@ export default function GiftCardPreview({ campaign, theme, recipientName, donorN
             )}
             A gift to you
           </p>
-          <p className="text-[11px] leading-relaxed">
-            {`A donation${Number(amount) > 0 ? ` of $${Number(amount).toLocaleString('en-CA')}` : ''}`}
-            {donationName ? (
-              <> — <span className="font-bold text-[#fccf03]">{donationName}</span> —</>
-            ) : null}
-            {' has been made to Candora Society as a gift to you.'}
-          </p>
+          {christmas ? (
+            <p className="mt-1 whitespace-pre-line text-[11px] leading-relaxed">
+              {greeting || 'A gift has been made in your honour, to bring a little joy this season.'}
+            </p>
+          ) : (
+            <p className="text-[11px] leading-relaxed">
+              {`A donation${Number(amount) > 0 ? ` of $${Number(amount).toLocaleString('en-CA')}` : ''}`}
+              {donationName ? (
+                <> — <span className="font-bold text-[#fccf03]">{donationName}</span> —</>
+              ) : null}
+              {' has been made to Candora Society as a gift to you.'}
+            </p>
+          )}
           {christmas && (
             <img
               src={CHRISTMAS_ARTWORK.bow}
