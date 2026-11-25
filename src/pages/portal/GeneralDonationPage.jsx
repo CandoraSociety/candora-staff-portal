@@ -33,7 +33,7 @@ export default function GeneralDonationPage() {
   return (
     <div className="min-h-screen bg-background">
       <header className="bg-sidebar text-sidebar-foreground border-t-4 border-primary">
-        <div className="max-w-[1500px] mx-auto px-5 sm:px-8 lg:px-12 pt-6 pb-10 sm:pb-12 space-y-8">
+        <div className="w-full max-w-[1600px] mx-auto px-5 sm:px-8 lg:px-12 pt-6 pb-10 sm:pb-12 space-y-8">
           <div className="flex items-start justify-between gap-4">
             <CandoraBrandLockup />
             <a
@@ -56,7 +56,7 @@ export default function GeneralDonationPage() {
         </div>
       </header>
 
-      <main className="w-full max-w-6xl lg:max-w-[1500px] mx-auto px-5 sm:px-8 lg:px-12 xl:pr-28 py-8">
+      <main className="w-full max-w-[1600px] mx-auto px-5 sm:px-8 lg:px-12 py-8">
         {isLoading ? (
           <div className="flex justify-center py-20">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
@@ -89,7 +89,7 @@ export default function GeneralDonationPage() {
                   <a className="text-sm underline inline-block" href="/donate">Give again</a>
                 </div>
               ) : general ? (
-                <div className="grid gap-8 lg:grid-cols-[1.3fr_1fr] lg:items-start">
+                <div className="grid gap-8 lg:gap-14 lg:grid-cols-[minmax(0,1.75fr)_minmax(340px,1fr)] lg:items-start">
                   <article className="space-y-4">
                     {general.description && (
                       <p className="text-lg text-foreground/90 leading-relaxed">{general.description}</p>
@@ -135,7 +135,7 @@ export default function GeneralDonationPage() {
       </main>
 
       <footer className="bg-sidebar text-sidebar-foreground border-t border-sidebar-border">
-        <div className="max-w-[1500px] mx-auto px-5 sm:px-8 lg:px-12 py-8 flex flex-wrap items-start justify-between gap-6">
+        <div className="w-full max-w-[1600px] mx-auto px-5 sm:px-8 lg:px-12 py-8 flex flex-wrap items-start justify-between gap-6">
           <CandoraBrandLockup compact />
           <div className="text-xs text-sidebar-foreground/70 space-y-1">
             {brandFooterLines().map((line) => <p key={line}>{line}</p>)}

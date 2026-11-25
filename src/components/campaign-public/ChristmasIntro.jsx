@@ -21,7 +21,7 @@ export default function ChristmasIntro({ campaign, raised = 0 }) {
         className="pointer-events-none absolute -right-6 top-1/2 hidden w-40 -translate-y-1/2 mix-blend-screen sm:block"
       />
 
-      <div className="relative max-w-3xl space-y-3 px-5 py-7 sm:px-8 sm:py-9">
+      <div className="relative max-w-3xl space-y-3 px-5 py-7 sm:px-8 sm:py-9 lg:pr-36">
         <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-[#fccf03]">
           Candora Christmas
         </p>
