@@ -63,9 +63,9 @@ export default function CampaignGiftCardPage() {
 
         <article className="rounded-3xl overflow-hidden bg-white shadow-2xl ring-2 ring-[#fccf03]">
           <div className="flex items-center justify-between gap-3 px-6 py-4 border-b">
-            <img src={CANDORA_LOGO} alt="Candora Society" className="h-9 w-auto" />
-            <span className="text-[10px] uppercase tracking-[0.22em] text-muted-foreground">
-              Candora Society
+            <img src={CANDORA_LOGO} alt="Candora Society of Edmonton" className="h-9 w-auto" />
+            <span className="text-[10px] uppercase tracking-[0.16em] text-muted-foreground">
+              Candora Society of Edmonton
             </span>
           </div>
 
@@ -148,7 +148,7 @@ export default function CampaignGiftCardPage() {
         </article>
 
         <p className="text-center text-xs text-white/50">
-          Sent with care by Candora Society · {card.theme_name || card.campaign_name}
+          Sent with care by Candora Society of Edmonton · {card.theme_name || card.campaign_name}
         </p>
       </div>
     </div>

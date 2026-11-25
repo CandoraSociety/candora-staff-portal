@@ -117,7 +117,11 @@ export async function downloadGiftCardPdf({ card, campaign, logoUrl }) {
   doc.setFontSize(9);
   doc.setCharSpace(2.4);
   doc.setTextColor(...MUTED);
-  doc.text('CANDORA SOCIETY', right, 92, { align: 'right' });
+  // Right-aligned text ignores the letter-spacing when jsPDF measures it, so the
+  // width is measured here and the line drawn from it — otherwise the name runs
+  // out past the margin.
+  const orgName = 'CANDORA SOCIETY OF EDMONTON';
+  doc.text(orgName, right - doc.getTextWidth(orgName), 92);
   doc.setCharSpace(0);
   doc.setDrawColor(...GOLD);
   doc.setLineWidth(1.4);
@@ -188,9 +192,9 @@ export async function downloadGiftCardPdf({ card, campaign, logoUrl }) {
   doc.text(campaignName, textX, footerY);
 
   if (donor) {
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
-    doc.setTextColor(...MUTED);
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(12);
+    doc.setTextColor(...INK);
     doc.text(`from ${donor}`, right - 22, footerY, { align: 'right' });
   }
 
@@ -198,7 +202,7 @@ export async function downloadGiftCardPdf({ card, campaign, logoUrl }) {
   doc.setFontSize(8);
   doc.setCharSpace(1.6);
   doc.setTextColor(...MUTED);
-  doc.text('CANDORA SOCIETY · CANDORA.CA', textX, footerY + 18);
+  doc.text('CANDORA SOCIETY OF EDMONTON · CANDORA.CA', textX, footerY + 18);
   doc.setCharSpace(0);
 
   // The gold frame, drawn last so its edges stay crisp
