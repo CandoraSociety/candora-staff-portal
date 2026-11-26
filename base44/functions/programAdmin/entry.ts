@@ -21,8 +21,8 @@ async function confirmedCount(base44, programId) {
   });
 }
 
-// Gives the next person in line the seat that just opened, and starts the clock on
-// how long the offer is held for them.
+// Gives the next person in line the seat that just opened. The offer stands until
+// staff hear back, or until they move it along by hand.
 async function offerToNextInLine(base44, program) {
   const waiting = (await base44.asServiceRole.entities.WebsiteProgramRegistration.filter(
     { program: program.id, status: 'waitlisted' },
@@ -31,14 +31,11 @@ async function offerToNextInLine(base44, program) {
   const next = waiting.find((item) => Number(item.waitlist_position) > 0) || waiting[0];
   if (!next) return null;
 
-  const hours = Number(program.waitlist_offer_hours) || 72;
-  const expires = new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
   const taken = await confirmedCount(base44, program.id);
 
   await base44.asServiceRole.entities.WebsiteProgramRegistration.update(next.id, {
     status: 'confirmed',
     waitlist_position: null,
-    waitlist_offer_expires_at: expires,
     decided_at: new Date().toISOString(),
   });
   await base44.asServiceRole.entities.WebsiteProgram.update(program.id, { seats_taken: taken + 1 });
@@ -56,23 +53,7 @@ async function offerToNextInLine(base44, program) {
     to: next.email,
     program,
     registration: next,
-    extra: {
-      offer_expires: new Date(expires).toLocaleString('en-CA', {
-        weekday: 'long',
-        month: 'long',
-        day: 'numeric',
-        hour: 'numeric',
-        minute: '2-digit',
-        timeZone: ALBERTA_TZ,
-      }),
-    },
-    nextStep: `A seat has opened and it is held for you until ${new Date(expires).toLocaleString('en-CA', {
-      month: 'long',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      timeZone: ALBERTA_TZ,
-    })}. If we do not hear from you by then it passes to the next person.`,
+    nextStep: 'A seat has opened and it is yours if you still want it. Please reply to confirm you are coming.',
     ctaLabel: 'Program details',
   });
 
@@ -254,13 +235,10 @@ export default async function (req) {
       if (!program) return Response.json({ error: 'Program not found' }, { status: 404 });
 
       const taken = await confirmedCount(base44, program.id);
-      const hours = Number(program.waitlist_offer_hours) || 72;
-      const expires = new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
 
       await svc.entities.WebsiteProgramRegistration.update(registration.id, {
         status: 'confirmed',
         waitlist_position: null,
-        waitlist_offer_expires_at: expires,
         decided_by: staffName,
         decided_at: new Date().toISOString(),
       });
@@ -281,16 +259,6 @@ export default async function (req) {
         to: registration.email,
         program,
         registration,
-        extra: {
-          offer_expires: new Date(expires).toLocaleString('en-CA', {
-            weekday: 'long',
-            month: 'long',
-            day: 'numeric',
-            hour: 'numeric',
-            minute: '2-digit',
-            timeZone: ALBERTA_TZ,
-          }),
-        },
         nextStep: 'A seat has been offered to you. Please reply to confirm you are coming.',
         ctaLabel: 'Program details',
       });

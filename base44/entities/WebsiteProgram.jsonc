@@ -169,11 +169,6 @@
       "default": true,
       "description": "When a seat frees up, the next person on the waitlist is offered it automatically"
     },
-    "waitlist_offer_hours": {
-      "type": "number",
-      "default": 72,
-      "description": "How long a waitlist offer stays open before it moves on to the next person"
-    },
     "schedule_summary": {
       "type": "string",
       "description": "How the schedule reads in words, e.g. Tuesdays and Thursdays, 1:00\u20133:30 PM"

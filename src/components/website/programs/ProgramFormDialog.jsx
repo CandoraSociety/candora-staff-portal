@@ -17,7 +17,7 @@ const EMPTY = {
   status: 'registration_open', status_locked: false, registration_required: true,
   registration_mode: 'register', intake_opens: '', intake_closes: '', capacity: '',
   waitlist_enabled: true, approval_required: false, auto_promote_from_waitlist: true,
-  waitlist_offer_hours: 72, schedule_summary: '', start_date: '', end_date: '',
+  schedule_summary: '', start_date: '', end_date: '',
   recurrence: '', session_start_time: '', session_end_time: '',
   featured: false, home_order: 0, is_published: false, tags: '',
 };
@@ -40,7 +40,6 @@ export default function ProgramFormDialog({ open, onOpenChange, program, onSaved
       ...EMPTY,
       ...(program || {}),
       capacity: program?.capacity ?? '',
-      waitlist_offer_hours: program?.waitlist_offer_hours ?? 72,
       home_order: program?.home_order ?? 0,
       tags: Array.isArray(program?.tags) ? program.tags.join(', ') : '',
     });
@@ -61,7 +60,6 @@ export default function ProgramFormDialog({ open, onOpenChange, program, onSaved
         slug,
         public_path: `/programs/${slug}`,
         capacity: form.capacity === '' ? null : Number(form.capacity),
-        waitlist_offer_hours: Number(form.waitlist_offer_hours) || 72,
         home_order: Number(form.home_order) || 0,
         tags: String(form.tags || '').split(',').map((tag) => tag.trim()).filter(Boolean),
       };
@@ -165,9 +163,6 @@ export default function ProgramFormDialog({ open, onOpenChange, program, onSaved
               </Field>
               <Field label="Registration opens"><Input type="date" value={form.intake_opens} onChange={(e) => set('intake_opens', e.target.value)} /></Field>
               <Field label="Registration closes"><Input type="date" value={form.intake_closes} onChange={(e) => set('intake_closes', e.target.value)} /></Field>
-              <Field label="Offer held for (hours)">
-                <Input type="number" value={form.waitlist_offer_hours} onChange={(e) => set('waitlist_offer_hours', e.target.value)} />
-              </Field>
               <Field label="Status shown" hint="Locked only when you need to override the computed status.">
                 <div className="flex gap-2">
                   <Select value={form.status} onValueChange={(value) => set('status', value)}>

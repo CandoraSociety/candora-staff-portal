@@ -70,11 +70,6 @@
       "type": "number",
       "description": "Place in line, 1 first. Empty once the person is not on the waitlist."
     },
-    "waitlist_offer_expires_at": {
-      "type": "string",
-      "format": "date-time",
-      "description": "When a waitlist offer stops being held for this person"
-    },
     "decline_reason": {
       "type": "string"
     },
