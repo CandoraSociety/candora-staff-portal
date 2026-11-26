@@ -1,0 +1,91 @@
+{
+  "name": "WebsiteLibraryItem",
+  "type": "object",
+  "description": "One document or one link the public website publishes \u2014 the AGM report, a brochure, the program calendar, or an outside resource such as a partner's site. Documents live in file storage and the record holds only the address, never the file itself.",
+  "properties": {
+    "title": {
+      "type": "string"
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "document",
+        "resource"
+      ],
+      "enumColors": [
+        "blue",
+        "purple"
+      ],
+      "default": "document",
+      "description": "document = a file we publish (AGM report, brochure, policy, calendar); resource = a link out to another site"
+    },
+    "category": {
+      "type": "string",
+      "description": "How it is grouped on the website, e.g. Annual reports, Brochures, Online resources"
+    },
+    "description": {
+      "type": "string"
+    },
+    "file_url": {
+      "type": "string",
+      "description": "Publicly stored file address for a document \u2014 never the file's bytes"
+    },
+    "external_url": {
+      "type": "string",
+      "description": "Where a resource link goes, e.g. our YouTube channel"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "Optional picture shown beside the item"
+    },
+    "is_published": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether the item appears on the website"
+    },
+    "display_order": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "title",
+    "kind"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

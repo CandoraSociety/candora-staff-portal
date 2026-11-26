@@ -146,6 +146,10 @@ import WebsitePages from '@/pages/website/WebsitePages';
 import WebsiteNews from '@/pages/website/WebsiteNews';
 import WebsiteSettings from '@/pages/website/WebsiteSettings';
 import WebsiteFeed from '@/pages/website/WebsiteFeed';
+import WebsitePrograms from '@/pages/website/WebsitePrograms';
+import WebsiteRegistrations from '@/pages/website/WebsiteRegistrations';
+import WebsiteVolunteers from '@/pages/website/WebsiteVolunteers';
+import WebsiteLibrary from '@/pages/website/WebsiteLibrary';
 import WebsiteSeo from '@/pages/website/WebsiteSeo';
 import WebsiteAds from '@/pages/website/WebsiteAds';
 import WebsitePresence from '@/pages/website/WebsitePresence';
@@ -954,6 +958,10 @@ const AuthenticatedApp = () => {
         <Route element={<WebsiteManagerLayout />}>
           <Route path="/website" element={<WebsiteHome />} />
           <Route path="/website/events" element={<WebsiteEvents />} />
+          <Route path="/website/programs" element={<WebsitePrograms />} />
+          <Route path="/website/registrations" element={<WebsiteRegistrations />} />
+          <Route path="/website/volunteers" element={<WebsiteVolunteers />} />
+          <Route path="/website/library" element={<WebsiteLibrary />} />
           <Route path="/website/pages" element={<WebsitePages />} />
           <Route path="/website/news" element={<WebsiteNews />} />
           <Route path="/website/seo" element={<WebsiteSeo />} />

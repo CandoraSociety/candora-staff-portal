@@ -1,0 +1,87 @@
+{
+  "name": "VolunteerRole",
+  "type": "object",
+  "description": "One volunteer opening as the public website lists it \u2014 what the role is, what it asks of someone, and where it happens. Replaces the old Apply Now buttons: the website shows the open roles from this record and the application form posts back to this app.",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "How the role is named, e.g. Community Lunch Volunteer"
+    },
+    "summary": {
+      "type": "string",
+      "description": "One line shown on the role card"
+    },
+    "description": {
+      "type": "string",
+      "description": "What the volunteer does and what the experience is like"
+    },
+    "commitment": {
+      "type": "string",
+      "description": "Time asked of the volunteer, e.g. Two Tuesday mornings a month"
+    },
+    "requirements": {
+      "type": "string",
+      "description": "What the volunteer needs, e.g. A police check we arrange with you"
+    },
+    "location_name": {
+      "type": "string"
+    },
+    "coordinator_name": {
+      "type": "string",
+      "description": "Staff member who receives applications for this role"
+    },
+    "coordinator_email": {
+      "type": "string",
+      "description": "Where new applications for this role are sent"
+    },
+    "is_open": {
+      "type": "boolean",
+      "default": true,
+      "description": "Only open roles appear on the website and accept applications"
+    },
+    "order": {
+      "type": "number",
+      "default": 0,
+      "description": "Position in the list, lowest first"
+    }
+  },
+  "required": [
+    "title"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

@@ -1,0 +1,149 @@
+{
+  "name": "WebsiteProgramRegistration",
+  "type": "object",
+  "description": "One person's request for a seat in a website program \u2014 what they gave, what the server decided, and where they stand on the waitlist. Written only by the registration endpoint, never from the browser, so a seat is never handed out by a page. This is personal information: staff read and manage it in Website Studio; the public website never sees it.",
+  "properties": {
+    "program": {
+      "type": "string",
+      "description": "The program the person registered for"
+    },
+    "program_name": {
+      "type": "string",
+      "description": "Program name at the time of registering (denormalized)"
+    },
+    "program_slug": {
+      "type": "string"
+    },
+    "session": {
+      "type": "string",
+      "description": "The dated session they picked, when the program has a calendar"
+    },
+    "full_name": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string",
+      "description": "Used to spot a duplicate registration for the same program"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "preferred_language": {
+      "type": "string"
+    },
+    "accessibility_needs": {
+      "type": "string"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Anything the person wanted staff to know"
+    },
+    "consent": {
+      "type": "boolean",
+      "default": false,
+      "description": "The person agreed to their details being used for this registration. A registration without it is refused."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending_approval",
+        "confirmed",
+        "waitlisted",
+        "declined",
+        "cancelled",
+        "attended",
+        "no_show"
+      ],
+      "enumColors": [
+        "yellow",
+        "green",
+        "purple",
+        "red",
+        "gray",
+        "blue",
+        "red"
+      ],
+      "default": "pending_approval",
+      "description": "pending_approval = waiting for a staff decision; confirmed = holds a seat; waitlisted = in line for a seat; declined = not accepted; cancelled = the person withdrew; attended / no_show = recorded after the session"
+    },
+    "waitlist_position": {
+      "type": "number",
+      "description": "Place in line, 1 first. Empty once the person is not on the waitlist."
+    },
+    "waitlist_offer_expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When a waitlist offer stops being held for this person"
+    },
+    "decline_reason": {
+      "type": "string"
+    },
+    "decided_by": {
+      "type": "string",
+      "description": "Staff member who made the last decision"
+    },
+    "decided_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "website",
+        "staff"
+      ],
+      "enumColors": [
+        "blue",
+        "gray"
+      ],
+      "default": "website",
+      "description": "Where the registration came from"
+    }
+  },
+  "required": [
+    "program",
+    "full_name",
+    "email",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

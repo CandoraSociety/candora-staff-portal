@@ -1,0 +1,277 @@
+{
+  "name": "WebsiteProgram",
+  "type": "object",
+  "description": "One program or workshop as the public website shows it \u2014 the story, the photo, where it runs, who it is for, what it costs, and how someone joins. The status is worked out from the intake dates and the seats taken unless staff lock it, so a page never has to be edited just because registration opened or a program filled.",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Program name as the website shows it, e.g. English Language Learning"
+    },
+    "slug": {
+      "type": "string",
+      "description": "Stable web address of the program page \u2014 the website links to /programs/<slug>. Set once and kept, even when the name changes."
+    },
+    "public_path": {
+      "type": "string",
+      "description": "Full path of the program page on the website, e.g. /programs/english-language-learning"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "adult_learning",
+        "family_community",
+        "employment",
+        "volunteer",
+        "other"
+      ],
+      "enumColors": [
+        "blue",
+        "pink",
+        "purple",
+        "green",
+        "gray"
+      ],
+      "default": "other",
+      "description": "Group the program is listed under"
+    },
+    "summary": {
+      "type": "string",
+      "description": "One or two lines used on cards and listings"
+    },
+    "description": {
+      "type": "string",
+      "description": "The full page copy \u2014 what the program is, who it helps and what to expect"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "Main photo of the program (publicly stored file URL)"
+    },
+    "poster_url": {
+      "type": "string",
+      "description": "Printable poster or brochure for the program (publicly stored file URL)"
+    },
+    "image_alt": {
+      "type": "string",
+      "description": "Alternative text describing the photo, read out by screen readers"
+    },
+    "location_name": {
+      "type": "string",
+      "description": "Where the program runs, e.g. Candora Society \u2014 12122 68 St NW"
+    },
+    "address": {
+      "type": "string",
+      "description": "Street address of the location"
+    },
+    "room": {
+      "type": "string",
+      "description": "Room or area inside the building"
+    },
+    "eligibility": {
+      "type": "string",
+      "description": "Who the program is for, e.g. Adults 18+ living in Edmonton"
+    },
+    "cost": {
+      "type": "string",
+      "description": "What it costs, as it should read on the page, e.g. Free"
+    },
+    "contact_name": {
+      "type": "string"
+    },
+    "contact_email": {
+      "type": "string"
+    },
+    "contact_phone": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "drop_in",
+        "rolling_intake",
+        "registration_opening_soon",
+        "registration_open",
+        "waitlist_only",
+        "full",
+        "closed",
+        "finished"
+      ],
+      "enumColors": [
+        "green",
+        "blue",
+        "yellow",
+        "green",
+        "purple",
+        "red",
+        "gray",
+        "gray"
+      ],
+      "default": "registration_open",
+      "description": "What the page says about joining. Worked out from the intake dates and seats unless status_locked is on."
+    },
+    "status_locked": {
+      "type": "boolean",
+      "default": false,
+      "description": "When on, the status above is used exactly as set and never recomputed \u2014 staff override for the exceptions."
+    },
+    "registration_required": {
+      "type": "boolean",
+      "default": true,
+      "description": "Off for a drop-in: the page shows no registration button at all."
+    },
+    "registration_mode": {
+      "type": "string",
+      "enum": [
+        "none",
+        "register",
+        "waitlist",
+        "approval"
+      ],
+      "enumColors": [
+        "gray",
+        "green",
+        "purple",
+        "yellow"
+      ],
+      "default": "register",
+      "description": "none = drop-in; register = seats confirmed instantly; waitlist = only a waitlist position; approval = a staff member decides before a seat is confirmed"
+    },
+    "intake_opens": {
+      "type": "string",
+      "format": "date",
+      "description": "Day registration opens. Before this day the page reads Registration opening soon."
+    },
+    "intake_closes": {
+      "type": "string",
+      "format": "date",
+      "description": "Day registration closes"
+    },
+    "capacity": {
+      "type": "number",
+      "description": "How many seats the program has. Leave empty or 0 for no limit."
+    },
+    "seats_taken": {
+      "type": "number",
+      "default": 0,
+      "description": "Seats held by confirmed registrations \u2014 kept up to date by the registration endpoint"
+    },
+    "waitlist_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether people can join a waitlist once the program is full"
+    },
+    "approval_required": {
+      "type": "boolean",
+      "default": false,
+      "description": "Every registration waits for a staff decision before it is confirmed"
+    },
+    "auto_promote_from_waitlist": {
+      "type": "boolean",
+      "default": true,
+      "description": "When a seat frees up, the next person on the waitlist is offered it automatically"
+    },
+    "waitlist_offer_hours": {
+      "type": "number",
+      "default": 72,
+      "description": "How long a waitlist offer stays open before it moves on to the next person"
+    },
+    "schedule_summary": {
+      "type": "string",
+      "description": "How the schedule reads in words, e.g. Tuesdays and Thursdays, 1:00\u20133:30 PM"
+    },
+    "start_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "end_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "recurrence": {
+      "type": "string",
+      "description": "How sessions repeat, e.g. weekly:tuesday,thursday \u2014 used when generating the calendar"
+    },
+    "session_start_time": {
+      "type": "string",
+      "description": "What time each generated session starts, 24-hour, e.g. 13:00"
+    },
+    "session_end_time": {
+      "type": "string",
+      "description": "What time each generated session ends, 24-hour, e.g. 15:30"
+    },
+    "featured": {
+      "type": "boolean",
+      "default": false,
+      "description": "Show this program in the featured rail on the home page"
+    },
+    "home_order": {
+      "type": "number",
+      "default": 0,
+      "description": "Position in the featured rail, lowest first"
+    },
+    "is_published": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the program is live on the website"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Words the program should be found for"
+    }
+  },
+  "required": [
+    "name",
+    "slug"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

@@ -1,0 +1,49 @@
+<mjml>
+  <mj-head>
+    <mj-title>We have your application to volunteer</mj-title>
+    <mj-preview>Thank you for offering your time to Candora.</mj-preview>
+    <mj-attributes>
+      <mj-all font-family="Inter, Helvetica, Arial, sans-serif" />
+      <mj-section background-color="#ffffff" padding="0 36px" />
+      <mj-text color="#080c21" font-size="15px" line-height="1.6" padding="0" />
+      <mj-button background-color="#fccf03" color="#0a0f29" border-radius="8px" font-size="15px" font-weight="700" inner-padding="14px 28px" padding="0" align="left" />
+      <mj-class name="h" font-family="Nunito, Helvetica, Arial, sans-serif" font-weight="800" />
+      <mj-class name="label" font-size="11px" letter-spacing="2px" text-transform="uppercase" font-weight="700" color="#626784" />
+      <mj-class name="muted" color="#626784" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body background-color="#f9fafb" width="600px">
+    <mj-wrapper padding="28px 12px" background-color="#f9fafb">
+      <mj-section background-color="#fccf03" padding="22px 36px" border-radius="8px 8px 0 0">
+        <mj-column>
+          <mj-image src="https://media.base44.com/images/public/6a249282cb496579542673b7/c7fbd36e2_logo.png" alt="Candora 360" width="40px" align="center" padding="0 0 10px" />
+          <mj-text align="center" font-size="12px" letter-spacing="4px" font-weight="700" text-transform="uppercase" color="#0a0f29">Candora 360</mj-text>
+        </mj-column>
+      </mj-section>
+      <mj-section padding="36px 36px 8px">
+        <mj-column>
+          <mj-text mj-class="h" font-size="28px" line-height="1.2" padding="0 0 10px">Thank you, {{first_name}}.</mj-text>
+          <mj-text mj-class="muted" font-size="15px">Your volunteer application has arrived and a staff member will read it. Nothing is confirmed until you hear from us.</mj-text>
+        </mj-column>
+      </mj-section>
+      <mj-section padding="22px 36px 0">
+        <mj-column background-color="#f9fafb" border-radius="8px" padding="18px 20px">
+          <mj-text mj-class="label" padding="0 0 4px">Role</mj-text>
+          <mj-text font-size="16px" font-weight="700" padding="0 0 14px">{{role_title}}</mj-text>
+          <mj-text mj-class="label" padding="0 0 4px">Commitment</mj-text>
+          <mj-text font-size="15px" padding="0 0 14px">{{commitment_line}}</mj-text>
+          <mj-text mj-class="label" padding="0 0 4px">Where</mj-text>
+          <mj-text font-size="15px" padding="0">{{place_line}}</mj-text>
+        </mj-column>
+      </mj-section>
+      <mj-section padding="24px 36px 8px"><mj-column><mj-button href="{{cta_url}}">{{cta_label}}</mj-button></mj-column></mj-section>
+      <mj-section padding="0 36px 32px"><mj-column><mj-text mj-class="muted" font-size="13px">{{next_step}}</mj-text></mj-column></mj-section>
+      <mj-section background-color="#0a0f29" padding="24px 36px" border-radius="0 0 8px 8px">
+        <mj-column>
+          <mj-text align="center" font-size="12px" color="#fccf03" font-weight="700" padding="0 0 6px">Candora Society of Edmonton</mj-text>
+          <mj-text align="center" font-size="12px" color="#c6c9db" padding="0">12122 68 St NW, Edmonton · candora360.ca</mj-text>
+        </mj-column>
+      </mj-section>
+    </mj-wrapper>
+  </mj-body>
+</mjml>

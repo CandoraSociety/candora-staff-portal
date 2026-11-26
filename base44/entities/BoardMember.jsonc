@@ -40,6 +40,10 @@
     "bio": {
       "type": "string"
     },
+    "photo_url": {
+      "type": "string",
+      "description": "Photo shown beside this member on the public website's board list (publicly stored file URL)"
+    },
     "committee": {
       "type": "string"
     },

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Outlet, Link, useLocation } from "react-router-dom";
-import { Globe2, LayoutDashboard, CalendarDays, FileText, Newspaper, Settings, Radio, Menu, X, ArrowLeft, Search, Megaphone, MapPin } from "lucide-react";
+import { Globe2, LayoutDashboard, CalendarDays, FileText, Newspaper, Settings, Radio, Menu, X, ArrowLeft, Search, Megaphone, MapPin, BookOpen, Users, HeartHandshake, FolderOpen } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Candora360Wordmark from "@/components/brand/Candora360Wordmark";
 import WebsiteAccessGate from "@/components/website/WebsiteAccessGate";
@@ -8,6 +8,10 @@ import WebsiteAccessGate from "@/components/website/WebsiteAccessGate";
 const NAV_ITEMS = [
   { label: "Overview", path: "/website", icon: LayoutDashboard },
   { label: "Events & Programs", path: "/website/events", icon: CalendarDays },
+  { label: "Programs & Workshops", path: "/website/programs", icon: BookOpen },
+  { label: "Registrations", path: "/website/registrations", icon: Users },
+  { label: "Volunteers", path: "/website/volunteers", icon: HeartHandshake },
+  { label: "Documents & Resources", path: "/website/library", icon: FolderOpen },
   { label: "Page Content", path: "/website/pages", icon: FileText },
   { label: "News & Updates", path: "/website/news", icon: Newspaper },
   { label: "Search & AI visibility", path: "/website/seo", icon: Search },

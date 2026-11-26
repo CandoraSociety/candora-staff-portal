@@ -1,0 +1,106 @@
+{
+  "name": "WebsiteProgramSession",
+  "type": "object",
+  "description": "One dated meeting of a program \u2014 what the website's calendar reads instead of a line of text. Sessions are generated 90 days ahead from the program's recurrence, and each carries its own seat count so a single date can fill up or be cancelled without touching the program.",
+  "properties": {
+    "program": {
+      "type": "string",
+      "description": "The program this session belongs to"
+    },
+    "program_name": {
+      "type": "string",
+      "description": "Program name at the time the session was created, so the calendar still reads correctly if the program is renamed"
+    },
+    "program_slug": {
+      "type": "string",
+      "description": "Web address of the program page the session links to"
+    },
+    "starts_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the session starts"
+    },
+    "ends_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the session ends"
+    },
+    "location_name": {
+      "type": "string"
+    },
+    "room": {
+      "type": "string"
+    },
+    "capacity": {
+      "type": "number",
+      "description": "Seats in this session. Empty or 0 means no limit."
+    },
+    "seats_taken": {
+      "type": "number",
+      "default": 0,
+      "description": "Seats held by confirmed registrations for this session"
+    },
+    "is_cancelled": {
+      "type": "boolean",
+      "default": false,
+      "description": "A cancelled session stays on the calendar marked cancelled, so nobody arrives to a locked door"
+    },
+    "note": {
+      "type": "string",
+      "description": "Anything the calendar should show for this date, e.g. no class \u2014 holiday"
+    }
+  },
+  "required": [
+    "program",
+    "starts_at"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

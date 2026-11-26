@@ -23,6 +23,34 @@
       "type": "string",
       "description": "Optional image shown with this block (publicly stored file URL)"
     },
+    "image_alt": {
+      "type": "string",
+      "description": "Alternative text describing the block's image, read out by screen readers"
+    },
+    "gallery": {
+      "type": "array",
+      "description": "Optional set of photos shown together with this block, e.g. the About page photography. Each one is a publicly stored file URL.",
+      "items": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "Publicly stored file URL of the photo"
+          },
+          "alt": {
+            "type": "string",
+            "description": "Alternative text describing the photo"
+          },
+          "caption": {
+            "type": "string",
+            "description": "Optional caption shown under the photo"
+          }
+        },
+        "required": [
+          "url"
+        ]
+      }
+    },
     "cta_label": {
       "type": "string",
       "description": "Optional button label"

@@ -1,0 +1,129 @@
+{
+  "name": "VolunteerApplication",
+  "type": "object",
+  "description": "One person's application for a volunteer role, sent from the website. Written only by the application endpoint. Nobody is ever approved automatically: every application starts as submitted and waits for a staff decision, and every decision is emailed to the applicant.",
+  "properties": {
+    "role": {
+      "type": "string",
+      "description": "The volunteer role applied for"
+    },
+    "role_title": {
+      "type": "string",
+      "description": "Role title at the time of applying (denormalized)"
+    },
+    "full_name": {
+      "type": "string"
+    },
+    "email": {
+      "type": "string",
+      "description": "Used to spot a duplicate application for the same role"
+    },
+    "phone": {
+      "type": "string"
+    },
+    "availability": {
+      "type": "string",
+      "description": "When the person can volunteer"
+    },
+    "skills": {
+      "type": "string"
+    },
+    "experience": {
+      "type": "string"
+    },
+    "references": {
+      "type": "string"
+    },
+    "consent": {
+      "type": "boolean",
+      "default": false
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "submitted",
+        "in_review",
+        "approved",
+        "declined",
+        "waitlisted"
+      ],
+      "enumColors": [
+        "blue",
+        "yellow",
+        "green",
+        "red",
+        "purple"
+      ],
+      "default": "submitted",
+      "description": "submitted = just arrived; in_review = a staff member is looking at it; approved = accepted as a volunteer; declined = not taken on this time; waitlisted = held for a future opening"
+    },
+    "decline_reason": {
+      "type": "string"
+    },
+    "decided_by": {
+      "type": "string"
+    },
+    "decided_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "website",
+        "staff"
+      ],
+      "enumColors": [
+        "blue",
+        "gray"
+      ],
+      "default": "website"
+    }
+  },
+  "required": [
+    "role",
+    "full_name",
+    "email",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "user"
+          }
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

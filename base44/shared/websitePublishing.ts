@@ -151,6 +151,12 @@ export function publicSection(section) {
     heading: section.heading || '',
     body: section.body || '',
     image_url: section.image_url || '',
+    image_alt: section.image_alt || '',
+    gallery: Array.isArray(section.gallery)
+      ? section.gallery
+          .filter((item) => item && item.url)
+          .map((item) => ({ url: item.url || '', alt: item.alt || '', caption: item.caption || '' }))
+      : [],
     cta_label: section.cta_label || '',
     cta_url: section.cta_url || '',
     order: Number(section.display_order) || 0,
