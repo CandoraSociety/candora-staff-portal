@@ -25,10 +25,9 @@ export default function WebsitePrograms() {
     try {
       const [page, seatRows] = await Promise.all([
         base44.entities.WebsiteProgram.filter({}, { sort: 'home_order', limit: 200 }),
-        base44.entities.WebsiteProgramRegistration.aggregate({
-          query: { status: 'confirmed' },
-          groupBy: 'program',
-        }),
+        base44.entities.WebsiteProgramRegistration
+          .aggregate({ query: { status: 'confirmed' }, groupBy: 'program' })
+          .catch(() => ({ rows: [] })),
       ]);
       setPrograms(page.items || []);
       const map = {};

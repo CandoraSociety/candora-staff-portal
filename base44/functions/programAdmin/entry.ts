@@ -63,6 +63,7 @@ async function offerToNextInLine(base44, program) {
         day: 'numeric',
         hour: 'numeric',
         minute: '2-digit',
+        timeZone: ALBERTA_TZ,
       }),
     },
     nextStep: `A seat has opened and it is held for you until ${new Date(expires).toLocaleString('en-CA', {
@@ -70,6 +71,7 @@ async function offerToNextInLine(base44, program) {
       day: 'numeric',
       hour: 'numeric',
       minute: '2-digit',
+      timeZone: ALBERTA_TZ,
     })}. If we do not hear from you by then it passes to the next person.`,
     ctaLabel: 'Program details',
   });
@@ -286,6 +288,7 @@ export default async function (req) {
             day: 'numeric',
             hour: 'numeric',
             minute: '2-digit',
+            timeZone: ALBERTA_TZ,
           }),
         },
         nextStep: 'A seat has been offered to you. Please reply to confirm you are coming.',
