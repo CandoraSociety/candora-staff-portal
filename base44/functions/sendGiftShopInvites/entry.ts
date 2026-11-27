@@ -2,6 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.44';
 import { syncParticipantToCentralDb } from '../../shared/centralDbSync.ts';
 import { sendGiftShopText } from '../../shared/giftShopSms.ts';
 import { loadGiftShopEvent } from '../../shared/giftShopEvent.ts';
+import { inviteEmailHtml, sendFamilyEmail } from '../../shared/giftShopMail.ts';
 
 // Creates one private pre-registration invitation per family in an uploaded
 // list, then sends each family their own single-use link by email and by text.
@@ -239,32 +240,39 @@ Deno.serve(async (req) => {
       let failure = null;
 
       if (email) {
-        try {
-          const sent = await base44.asServiceRole.integrations.Core.SendEmail({
-            to: email,
-            template_name: 'GiftShopPreRegistrationInvite',
-            variables: {
-              guardian_name: name,
-              children_allowed: String(childrenAllowed),
-              expires_on: formatDate(existing?.expires_at ? existing.expires_at.slice(0, 10) : expiresOn),
-              custom_message: message,
-              invite_link: link,
-              contact_email: CONTACT_EMAIL,
-              event_date: event.event_date,
-              event_location: event.event_location,
-            },
-            category: 'transactional',
-            from_name: 'CANDORA - Kids Gift Shop',
-          });
+        const expiresLabel = formatDate(existing?.expires_at ? existing.expires_at.slice(0, 10) : expiresOn);
+        const sent = await sendFamilyEmail(base44, {
+          to: email,
+          subject: 'Your Kids Gift Shop pre-registration link',
+          html: inviteEmailHtml({
+            guardianName: name,
+            customMessage: message,
+            eventDate: event.event_date,
+            eventLocation: event.event_location,
+            inviteLink: link,
+            childrenAllowed: String(childrenAllowed),
+            expiresOn: expiresLabel,
+            contactEmail: CONTACT_EMAIL,
+          }),
+          templateName: 'GiftShopPreRegistrationInvite',
+          variables: {
+            guardian_name: name,
+            children_allowed: String(childrenAllowed),
+            expires_on: expiresLabel,
+            custom_message: message,
+            invite_link: link,
+            contact_email: CONTACT_EMAIL,
+            event_date: event.event_date,
+            event_location: event.event_location,
+          },
+          fromName: 'CANDORA - Kids Gift Shop',
+        });
 
-          if (sent && sent.success === false) {
-            failure = sent.message || `The email could not be sent (${sent.reason || 'refused'}).`;
-          } else {
-            emailed = true;
-          }
-        } catch (error) {
-          console.log(`Invitation email failed for ${email}:`, error.message);
-          failure = error.message;
+        if (sent.ok) {
+          emailed = true;
+        } else {
+          console.log(`Invitation email failed for ${email}:`, sent.reason);
+          failure = sent.reason;
         }
       }
 

@@ -6,6 +6,7 @@ import { greetText, sendGiftShopText } from './giftShopSms.ts';
 import { GIFT_SHOP_PROGRAM_NAME, slotLabel } from './giftShopInvites.ts';
 import { GIFT_SHOP_EVENT_DATE, giftSummary } from './giftShopCheckin.ts';
 import { loadGiftShopEvent } from './giftShopEvent.ts';
+import { sendFamilyEmail } from './giftShopMail.ts';
 
 const phoneOf = (value) => String(value || '').replace(/\D/g, '').slice(-10);
 const nameOf = (value) => String(value || '').trim().toLowerCase().replace(/\s+/g, ' ');
@@ -204,26 +205,16 @@ export async function messageFamily(base44, family, { subject, body, attachment,
   let failure = null;
 
   if (email) {
-    try {
-      const sent = await base44.asServiceRole.integrations.Core.SendEmail({
-        to: email,
-        subject,
-        html: emailHtml({ guardianName: name, subject, body, attachmentName: attachment?.name, checkinCode: code, details }),
-        category: 'transactional',
-        from_name: FROM_NAME,
-        ...(attachment?.file_uri
-          ? { attachments: [{ filename: attachment.name || 'attachment', file_url: attachment.file_uri }] }
-          : {}),
-      });
-      if (sent && sent.success === false) {
-        failure = sent.message || `The email could not be sent (${sent.reason || 'refused'}).`;
-      } else {
-        emailed = true;
-      }
-    } catch (error) {
-      console.log(`Gift shop message email failed for ${email}:`, error.message);
-      failure = error.message;
-    }
+    const html = emailHtml({ guardianName: name, subject, body, attachmentName: attachment?.name, checkinCode: code, details });
+    const sent = await sendFamilyEmail(base44, {
+      to: email,
+      subject,
+      html,
+      fromName: FROM_NAME,
+      attachment,
+    });
+    if (sent.ok) emailed = true;
+    else failure = sent.reason;
   }
 
   if (phone) {
