@@ -34,7 +34,7 @@ export default function DonationsFeed() {
     return unsubscribe;
   }, [qc]);
 
-  const rows = gifts || [];
+  const rows = gifts?.items || [];
 
   return (
     <Card>
