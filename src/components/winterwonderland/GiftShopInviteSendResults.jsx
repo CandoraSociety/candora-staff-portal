@@ -22,7 +22,7 @@ function downloadLinks(results) {
 
 // What happened to each family after a send, and a way to finish by hand for
 // anyone neither the email nor the text could reach.
-export default function GiftShopInviteSendResults({ results, onDone }) {
+export default function GiftShopInviteSendResults({ results, onDone, sentLabel = 'Invitations sent' }) {
   const { toast } = useToast();
   const sent = results.filter(r => r.status === 'sent');
   const emailed = sent.filter(r => r.emailed).length;
@@ -44,7 +44,7 @@ export default function GiftShopInviteSendResults({ results, onDone }) {
     <div className="space-y-4">
       <div className="grid gap-3 sm:grid-cols-2">
         <div className="rounded-lg border bg-green-50/60 p-4">
-          <p className="flex items-center gap-2 text-xs font-medium text-green-800"><CheckCircle2 className="h-4 w-4" /> Invitations sent</p>
+          <p className="flex items-center gap-2 text-xs font-medium text-green-800"><CheckCircle2 className="h-4 w-4" /> {sentLabel}</p>
           <p className="text-2xl font-bold text-green-900">{sent.length}</p>
           <p className="text-xs text-green-800/80">{emailed} by email · {texted} by text</p>
         </div>

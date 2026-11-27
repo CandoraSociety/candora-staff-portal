@@ -65,3 +65,8 @@ export function useGiftShopEventDetails() {
 // current event's date and venue filled in.
 export const inviteMessageDraft = ({ eventDate, eventLocation }) =>
   `Our Kids Gift Shop is back for Winter Wonderland, and as one of the families we work with, yours is invited to choose a shopping time before registration opens to everyone else. The shop runs on ${eventDate} at ${eventLocation}. Pick a time that works for you and tell us who each child is shopping for — on the day, please come to the Kids Gift Shop registration desk and sign in every child who is participating.`;
+
+// The reminder staff start from when a family has had their invitation but has
+// not registered yet. It carries the same link, so nothing new has to be sent.
+export const inviteReminderDraft = ({ eventDate, eventLocation }) =>
+  `A friendly reminder that your family's invitation to the Kids Gift Shop is still open. The shop runs on ${eventDate} at ${eventLocation}, and we would love to see you there. Your link below is the same one we sent before: pick a shopping time that works for you and tell us who each child is shopping for. If you have already registered, please ignore this message.`;

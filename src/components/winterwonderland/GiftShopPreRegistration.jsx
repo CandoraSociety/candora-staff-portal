@@ -3,7 +3,8 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download, Mail, MessageSquare, Plus, ShieldCheck, Upload } from 'lucide-react';
+import { ChevronDown, Download, Mail, MessageSquare, Plus, ShieldCheck, Upload } from 'lucide-react';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import GiftShopInviteDialog from '@/components/winterwonderland/GiftShopInviteDialog';
 import GiftShopInviteSendDialog from '@/components/winterwonderland/GiftShopInviteSendDialog';
 import GiftShopEmailInvitesDialog from '@/components/winterwonderland/GiftShopEmailInvitesDialog';
@@ -20,7 +21,7 @@ export default function GiftShopPreRegistration() {
   const qc = useQueryClient();
   const [singleOpen, setSingleOpen] = useState(false);
   const [sendOpen, setSendOpen] = useState(false);
-  const [emailOpen, setEmailOpen] = useState(false);
+  const [emailMode, setEmailMode] = useState(null);
   const [messageOpen, setMessageOpen] = useState(false);
   const [query, setQuery] = useState('');
 
@@ -65,6 +66,12 @@ export default function GiftShopPreRegistration() {
   // Send invitations only carries the families who have not had it yet, so
   // pressing it after adding more families never repeats a send.
   const unsentInvites = openInvites.filter(i => !inviteWasSent(i));
+  // Families whose invitation has already gone out and who have not registered —
+  // the ones a registration reminder can reach.
+  const reminderInvites = openInvites.filter(i => inviteWasSent(i));
+  const reachable = (list) => list.filter(i => i.guardian_email || i.guardian_phone);
+  const unsentReachable = reachable(unsentInvites);
+  const reminderReachable = reachable(reminderInvites);
   const visible = filterInvites(invites, query);
   const registered = visible
     .filter(i => i.status === 'registered')
@@ -124,16 +131,29 @@ export default function GiftShopPreRegistration() {
           <div className="flex flex-wrap items-center gap-2 pt-1">
             <Button size="sm" onClick={() => setSingleOpen(true)}><Plus className="h-4 w-4" /> Invite a family</Button>
             <Button size="sm" variant="outline" onClick={() => setSendOpen(true)}><Upload className="h-4 w-4" /> Upload a family list</Button>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setEmailOpen(true)}
-              disabled={!unsentInvites.some(i => i.guardian_email || i.guardian_phone)}
-            >
-              <Mail className="h-4 w-4" /> Send invitations
-              {unsentInvites.filter(i => i.guardian_email || i.guardian_phone).length > 0
-                && ` (${unsentInvites.filter(i => i.guardian_email || i.guardian_phone).length})`}
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={!unsentReachable.length && !reminderReachable.length}
+                >
+                  <Mail className="h-4 w-4" /> Send invitations
+                  {unsentReachable.length > 0 && ` (${unsentReachable.length})`}
+                  <ChevronDown className="h-3.5 w-3.5" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start">
+                <DropdownMenuItem disabled={!unsentReachable.length} onClick={() => setEmailMode('invite')}>
+                  <Mail /> Send new invitations
+                  {unsentReachable.length > 0 && ` (${unsentReachable.length})`}
+                </DropdownMenuItem>
+                <DropdownMenuItem disabled={!reminderReachable.length} onClick={() => setEmailMode('reminder')}>
+                  <MessageSquare /> Send registration reminder
+                  {reminderReachable.length > 0 && ` (${reminderReachable.length})`}
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
             <Button
               size="sm"
               variant="outline"
@@ -148,9 +168,10 @@ export default function GiftShopPreRegistration() {
           </div>
           <p className="text-xs text-muted-foreground">
             Invite a family and Upload a family list create links only — use Send invitations to send them by email and
-            text once you have reviewed the list. Families who have already been sent their invitation are left out, so
-            pressing it again only reaches the new ones. Every link opens the standalone pre-registration form, which has
-            no access to any other part of Candora 360.
+            text once you have reviewed the list. New invitations only reach families who have not been sent theirs yet;
+            Send registration reminder sends the same link again to families whose invitation has gone out and who have
+            not registered. Every link opens the standalone pre-registration form, which has no access to any other part
+            of Candora 360.
           </p>
         </CardContent>
       </Card>
@@ -253,7 +274,13 @@ export default function GiftShopPreRegistration() {
 
       <GiftShopInviteDialog open={singleOpen} onOpenChange={setSingleOpen} onSaved={refresh} />
       <GiftShopInviteSendDialog open={sendOpen} onOpenChange={setSendOpen} onSaved={refresh} />
-      <GiftShopEmailInvitesDialog open={emailOpen} onOpenChange={setEmailOpen} invites={unsentInvites} onSent={refresh} />
+      <GiftShopEmailInvitesDialog
+        open={!!emailMode}
+        onOpenChange={(next) => { if (!next) setEmailMode(null); }}
+        invites={emailMode === 'reminder' ? reminderInvites : unsentInvites}
+        mode={emailMode || 'invite'}
+        onSent={refresh}
+      />
       <GiftShopMessageDialog open={messageOpen} onOpenChange={setMessageOpen} families={messageFamilies} onSent={refresh} />
     </div>
   );
