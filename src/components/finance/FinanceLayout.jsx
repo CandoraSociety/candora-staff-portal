@@ -2,7 +2,7 @@ import React from 'react';
 import { Outlet, Link, useLocation } from 'react-router-dom';
 import EAFloatingWidget from '@/components/ed/EAFloatingWidget';
 import ModuleGate from '@/components/shared/ModuleGate';
-import { LayoutDashboard, Wallet, Briefcase, UtensilsCrossed, Receipt, PiggyBank, CreditCard, PenTool, FileText, ChevronDown, TrendingUp } from 'lucide-react';
+import { LayoutDashboard, Wallet, Briefcase, UtensilsCrossed, Receipt, PiggyBank, CreditCard, PenTool, FileText, ChevronDown, TrendingUp, Heart } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useOrgSettings } from '@/lib/useOrgSettings';
 
@@ -22,6 +22,7 @@ const NAV_ITEMS = [
   { path: '/finance/cash-flow',    label: 'Cash Flow',               icon: TrendingUp },
   { path: '/finance/budgets',      label: 'Budgets',                 icon: PiggyBank },
   { path: '/finance/food',         label: 'Food Services',            icon: UtensilsCrossed },
+  { path: '/finance/donations',    label: 'Donations & Fundraising',   icon: Heart },
   { path: '/finance/e-signatures', label: 'E-Signatures',             icon: PenTool },
 ];
 

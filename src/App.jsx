@@ -443,6 +443,7 @@ import FinanceReimbursements from '@/pages/finance/FinanceReimbursements';
 import FinanceMasterCard from '@/pages/finance/FinanceMasterCard';
 import FinanceBudgets from '@/pages/finance/FinanceBudgets';
 import FinanceFoodServices from '@/pages/finance/FinanceFoodServices';
+import FinanceDonations from '@/pages/finance/FinanceDonations';
 import FinanceESignatures from '@/pages/finance/FinanceESignatures';
 import FinanceInvoiceGenerator from '@/pages/finance/FinanceInvoiceGenerator';
 import FinanceCashFlow from '@/pages/finance/FinanceCashFlow';
@@ -1008,6 +1009,7 @@ const AuthenticatedApp = () => {
           <Route path="/finance/cash-flow" element={<FinanceCashFlow />} />
           <Route path="/finance/budgets" element={<FinanceBudgets />} />
           <Route path="/finance/food" element={<FinanceFoodServices />} />
+          <Route path="/finance/donations" element={<FinanceDonations />} />
           <Route path="/finance/e-signatures" element={<FinanceESignatures />} />
           <Route path="/finance/invoice-generator" element={<FinanceInvoiceGenerator />} />
         </Route>
