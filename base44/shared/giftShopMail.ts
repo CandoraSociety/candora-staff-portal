@@ -1,15 +1,15 @@
-// Kids Gift Shop family email leaves through the staff member's own Candora
-// Outlook mailbox whenever one is connected, so it is sent from Candora's own
-// Microsoft 365 tenant. A family address that bounces then affects only that
-// mailbox, never the app's ability to reach every other family. The app's own
-// email service is used when no mailbox is connected, or when the message
-// carries an attachment — only the app service can take one straight from
-// storage.
-import { OUTLOOK_CONNECTOR_ID, graphRequest } from './outlookMail.ts';
+// Kids Gift Shop family email always leaves from ONE central Candora mailbox,
+// never from whichever staff member pressed Send. That single mailbox is the
+// app's shared Outlook connection, so a family address that bounces affects only
+// that one mailbox instead of the app's ability to reach every other family.
+// Until that shared mailbox is connected, the app's own email service carries
+// the message — and it also carries any message with an attachment, since only
+// the app service can take a file straight from storage.
+import { graphRequest } from './outlookMail.ts';
 
-async function outlookToken(base44) {
+async function centralMailboxToken(base44) {
   try {
-    const connection = await base44.asServiceRole.connectors.getCurrentAppUserConnection(OUTLOOK_CONNECTOR_ID);
+    const connection = await base44.asServiceRole.connectors.getConnection('outlook');
     return connection?.accessToken || null;
   } catch {
     return null;
@@ -20,7 +20,7 @@ async function outlookToken(base44) {
 // through a connected mailbox, 'app' when the app's email service carried it.
 export async function sendFamilyEmail(base44, { to, subject, html, templateName, variables, fromName, attachment = null }) {
   if (to && html && !attachment?.file_uri) {
-    const accessToken = await outlookToken(base44);
+    const accessToken = await centralMailboxToken(base44);
     if (accessToken) {
       try {
         await graphRequest(accessToken, '/me/sendMail', {
