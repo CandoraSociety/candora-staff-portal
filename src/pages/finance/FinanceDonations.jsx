@@ -2,8 +2,9 @@ import React from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Heart, Gift, Target } from 'lucide-react';
-import DonationsFeed, { donationMoney } from '@/components/finance/DonationsFeed';
+import DonationsTable, { donationMoney } from '@/components/finance/DonationsTable';
 
 function Stat({ label, value, hint, icon: Icon }) {
   return (
@@ -60,50 +61,68 @@ export default function FinanceDonations() {
         </p>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <Stat label="Total raised" value={donationMoney(totalRaised)} hint="All campaigns, all time" icon={Heart} />
-        <Stat label="Gifts received" value={totalGifts} hint="Donations recorded" icon={Gift} />
-        <Stat label="Active campaigns" value={activeCampaigns} hint="Currently fundraising" icon={Target} />
-      </div>
+      <Tabs defaultValue="donations" className="w-full">
+        <TabsList>
+          <TabsTrigger value="donations" className="flex items-center gap-2">
+            <Gift className="h-4 w-4" /> Donations
+          </TabsTrigger>
+          <TabsTrigger value="fundraising" className="flex items-center gap-2">
+            <Target className="h-4 w-4" /> Fundraising
+          </TabsTrigger>
+        </TabsList>
 
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Campaign progress</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {campaignRows.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-6">No campaigns with gifts or goals yet.</p>
-          ) : (
-            <div className="space-y-4">
-              {campaignRows.map((c) => {
-                const pct = c.goal > 0 ? Math.min(100, Math.round((c.raised / c.goal) * 100)) : null;
-                return (
-                  <div key={c.id} className="space-y-1.5">
-                    <div className="flex items-baseline justify-between gap-3">
-                      <p className="text-sm font-medium truncate">{c.name}</p>
-                      <p className="text-sm whitespace-nowrap">
-                        <span className="font-semibold">{donationMoney(c.raised)}</span>
-                        {c.goal > 0 && <span className="text-muted-foreground"> of {donationMoney(c.goal)}</span>}
-                      </p>
-                    </div>
-                    {c.goal > 0 && (
-                      <div className="h-2 rounded-full bg-muted overflow-hidden">
-                        <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
+        <TabsContent value="donations" className="mt-4 space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Stat label="Total raised" value={donationMoney(totalRaised)} hint="All campaigns, all time" icon={Heart} />
+            <Stat label="Gifts received" value={totalGifts} hint="Donations recorded" icon={Gift} />
+          </div>
+          <DonationsTable />
+        </TabsContent>
+
+        <TabsContent value="fundraising" className="mt-4 space-y-4">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Stat label="Active campaigns" value={activeCampaigns} hint="Currently fundraising" icon={Target} />
+            <Stat label="Raised against goals" value={donationMoney(totalRaised)} hint="All campaigns, all time" icon={Heart} />
+          </div>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Campaign progress</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {campaignRows.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-6">No campaigns with gifts or goals yet.</p>
+              ) : (
+                <div className="space-y-4">
+                  {campaignRows.map((c) => {
+                    const pct = c.goal > 0 ? Math.min(100, Math.round((c.raised / c.goal) * 100)) : null;
+                    return (
+                      <div key={c.id} className="space-y-1.5">
+                        <div className="flex items-baseline justify-between gap-3">
+                          <p className="text-sm font-medium truncate">{c.name}</p>
+                          <p className="text-sm whitespace-nowrap">
+                            <span className="font-semibold">{donationMoney(c.raised)}</span>
+                            {c.goal > 0 && <span className="text-muted-foreground"> of {donationMoney(c.goal)}</span>}
+                          </p>
+                        </div>
+                        {c.goal > 0 && (
+                          <div className="h-2 rounded-full bg-muted overflow-hidden">
+                            <div className="h-full rounded-full bg-primary" style={{ width: `${pct}%` }} />
+                          </div>
+                        )}
+                        <p className="text-[11px] text-muted-foreground">
+                          {c.gifts} {c.gifts === 1 ? 'gift' : 'gifts'}
+                          {pct !== null ? ` · ${pct}% of goal` : ''}
+                        </p>
                       </div>
-                    )}
-                    <p className="text-[11px] text-muted-foreground">
-                      {c.gifts} {c.gifts === 1 ? 'gift' : 'gifts'}
-                      {pct !== null ? ` · ${pct}% of goal` : ''}
-                    </p>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      <DonationsFeed />
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
